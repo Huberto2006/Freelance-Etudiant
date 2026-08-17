@@ -5,26 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { clsx } from "clsx";
 import { useAuth } from "@/lib/auth-context";
-
-const liensEtudiant = [
-  { href: "/tableau-de-bord", label: "Vue d'ensemble" },
-  { href: "/tableau-de-bord/profil", label: "Mon profil" },
-  { href: "/tableau-de-bord/mes-services", label: "Mes services" },
-  { href: "/tableau-de-bord/candidatures", label: "Mes candidatures" },
-  { href: "/tableau-de-bord/messages", label: "Messages" },
-];
-
-const liensClient = [
-  { href: "/tableau-de-bord", label: "Vue d'ensemble" },
-  { href: "/tableau-de-bord/profil", label: "Mon profil" },
-  { href: "/tableau-de-bord/mes-missions", label: "Mes missions" },
-  { href: "/tableau-de-bord/messages", label: "Messages" },
-];
-
-const liensAdmin = [
-  { href: "/tableau-de-bord", label: "Vue d'ensemble" },
-  { href: "/tableau-de-bord/admin", label: "Administration" },
-];
+import { liensSidebarParRole } from "@/lib/nav-links";
 
 export default function TableauDeBordLayout({
   children,
@@ -49,12 +30,7 @@ export default function TableauDeBordLayout({
     );
   }
 
-  const liens =
-    utilisateur.role === "etudiant"
-      ? liensEtudiant
-      : utilisateur.role === "client"
-        ? liensClient
-        : liensAdmin;
+  const liens = liensSidebarParRole[utilisateur.role];
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10">

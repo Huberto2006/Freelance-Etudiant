@@ -35,37 +35,49 @@ export function BarreRecherche({
       onSubmit={onSubmit}
       className="flex flex-col gap-3 sm:flex-row sm:items-end mb-8 border border-ink/20 bg-paper-light p-4"
     >
-      <div className="flex-1">
-        <label className="text-xs font-mono uppercase tracking-wider text-ink-soft block mb-1.5">
+      {/* Mots-clés */}
+      <div className="w-full sm:w-80">
+        <label className="mb-1.5 block h-5 text-xs font-mono uppercase tracking-wider text-ink-soft">
           Mots-clés
         </label>
+
         <Input
           value={motsCles}
           onChange={(e) => setMotsCles(e.target.value)}
           placeholder={placeholder}
+          className="w-full rounded-lg px-3 py-2"
         />
       </div>
-      <div className="w-full sm:w-40">
-        <label className="text-xs font-mono uppercase tracking-wider text-ink-soft block mb-1.5">
+
+      {/* Catégorie */}
+      <div className="w-full sm:w-80">
+        <label className="mb-1.5 block h-5 text-xs font-mono uppercase tracking-wider text-ink-soft">
           Catégorie
         </label>
+
         <Input
           value={categorie}
           onChange={(e) => setCategorie(e.target.value)}
           placeholder="Design…"
+          className="w-full rounded-lg px-3 py-2"
         />
       </div>
-      <div className="w-full sm:w-40">
-        <label className="text-xs font-mono uppercase tracking-wider text-ink-soft block mb-1.5">
+
+      {/* Compétence */}
+      <div className="w-full sm:w-80">
+        <label className="mb-1.5 block h-5 text-xs font-mono uppercase tracking-wider text-ink-soft">
           Compétence
         </label>
+
         <Input
           value={competence}
           onChange={(e) => setCompetence(e.target.value)}
           placeholder="Figma…"
+          className="w-full rounded-lg px-3 py-2"
         />
       </div>
-      <Button type="submit" variant="secondary">
+
+      <Button type="submit" variant="secondary" className="h-10">
         Filtrer
       </Button>
     </form>
