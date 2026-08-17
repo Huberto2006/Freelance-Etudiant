@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Palette "Kianja" — place de marche malgache */
+  --color-ink: #21261f;
+  --color-ink-soft: #3c3a2e;
+  --color-paper: #ede7d9;
+  --color-paper-light: #f5f1e6;
+  --color-ocre: #b8842b;
+  --color-ocre-dark: #94661d;
+  --color-rice: #24594a;
+  --color-rice-light: #34715f;
+  --color-brique: #a23e29;
+  --color-brique-light: #c0553c;
+
+  --font-display: "Zilla Slab", Georgia, serif;
+  --font-body: "Inter", -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+/* --- Mode sombre : on redefinit les memes jetons, les utilitaires suivent --- */
+.dark {
+  --color-ink: #ece6d8;
+  --color-ink-soft: #b9b3a2;
+  --color-paper: #17190f;
+  --color-paper-light: #21241a;
+  --color-ocre: #d9a54a;
+  --color-ocre-dark: #e8bd6d;
+  --color-rice: #5fa78f;
+  --color-rice-light: #7cc0a8;
+  --color-brique: #d1614a;
+  --color-brique-light: #e07d66;
+
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(33, 38, 31, 0.045) 1px, transparent 0);
+  background-size: 22px 22px;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.dark body {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(236, 230, 216, 0.05) 1px, transparent 0);
+}
+
+::selection {
+  background-color: var(--color-ocre);
+  color: var(--color-paper-light);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-rice);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Carte "notice punaisee" : le motif signature de l'interface --- */
+.notice-card {
+  position: relative;
+  background-color: var(--color-paper-light);
+  border: 1px solid rgba(60, 58, 46, 0.25);
+  box-shadow: 0 1px 0 rgba(33, 38, 31, 0.05), 0 8px 16px -12px rgba(33, 38, 31, 0.35);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.dark .notice-card {
+  border-color: rgba(236, 230, 216, 0.16);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 8px 16px -12px rgba(0, 0, 0, 0.7);
+}
+
+.notice-card:hover {
+  transform: rotate(-0.4deg) translateY(-2px);
+  box-shadow: 0 2px 0 rgba(33, 38, 31, 0.06), 0 16px 28px -14px rgba(33, 38, 31, 0.4);
+}
+
+.dark .notice-card:hover {
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35), 0 16px 28px -14px rgba(0, 0, 0, 0.8);
+}
+
+.notice-pin {
+  position: absolute;
+  top: -9px;
+  left: 18px;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 30%, #d9a54a, var(--color-ocre-dark));
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35);
+}
+
+/* --- Tampon circulaire de reputation --- */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 2px solid var(--color-rice);
+  color: var(--color-rice);
+  border-radius: 9999px;
+  transform: rotate(-8deg);
+  font-family: var(--font-mono);
+  position: relative;
+}
+
+.stamp::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px dashed var(--color-rice);
+  border-radius: 9999px;
+  opacity: 0.55;
+}
+
+.torn-edge {
+  mask-image: linear-gradient(to bottom, black calc(100% - 6px), transparent 100%);
+}
