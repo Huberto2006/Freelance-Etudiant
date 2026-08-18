@@ -2,18 +2,19 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
-import { UsersService } from '../users/users.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import { Role } from '../../common/enums/role.enum';
-import { EtudiantProfile } from '../etudiants/entities/etudiant-profile.entity';
-import { ClientProfile } from '../clients/entities/client-profile.entity';
-import { TypeClient } from '../../common/enums/type-client.enum';
-import { JwtPayload } from './interfaces/authenticated-user.interface';
+} from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
+import * as bcrypt from "bcrypt";
+import { UsersService } from "../users/users.service";
+import { RegisterDto } from "./dto/register.dto";
+import { LoginDto } from "./dto/login.dto";
+import { Role } from "../../common/enums/role.enum";
+import { EtudiantProfile } from "../etudiants/entities/etudiant-profile.entity";
+import { ClientProfile } from "../clients/entities/client-profile.entity";
+import { TypeClient } from "../../common/enums/type-client.enum";
+import { JwtPayload } from "./interfaces/authenticated-user.interface";
+import type { StringValue } from "ms";
 
 const SALT_ROUNDS = 12;
 
@@ -33,7 +34,7 @@ export class AuthService {
   async register(dto: RegisterDto) {
     if (dto.role !== Role.ETUDIANT && dto.role !== Role.CLIENT) {
       throw new BadRequestException(
-        'Seuls les roles etudiant ou client sont autorises a l\'inscription',
+        "Seuls les roles etudiant ou client sont autorises a l'inscription",
       );
     }
 
@@ -62,7 +63,9 @@ export class AuthService {
       profil.utilisateurId = utilisateur.id;
       profil.typeClient = dto.typeClient ?? TypeClient.PARTICULIER;
       profil.nomEntreprise =
-        profil.typeClient === TypeClient.ENTREPRISE ? dto.nomEntreprise : undefined;
+        profil.typeClient === TypeClient.ENTREPRISE
+          ? dto.nomEntreprise
+          : undefined;
       utilisateur.profilClient = profil;
     }
 
@@ -73,45 +76,59 @@ export class AuthService {
   async login(dto: LoginDto) {
     const utilisateur = await this.usersService.findByEmail(dto.email);
     if (!utilisateur) {
-      throw new UnauthorizedException('Identifiants invalides');
+      throw new UnauthorizedException("Identifiants invalides");
     }
     if (utilisateur.estSuspendu || !utilisateur.estActif) {
-      throw new UnauthorizedException('Ce compte est suspendu ou desactive');
+      throw new UnauthorizedException("Ce compte est suspendu ou desactive");
     }
     const motDePasseValide = await bcrypt.compare(
       dto.motDePasse,
       utilisateur.motDePasse,
     );
     if (!motDePasseValide) {
-      throw new UnauthorizedException('Identifiants invalides');
+      throw new UnauthorizedException("Identifiants invalides");
     }
-    return this.buildAuthResponse(utilisateur.id, utilisateur.email, utilisateur.role);
+    return this.buildAuthResponse(
+      utilisateur.id,
+      utilisateur.email,
+      utilisateur.role,
+    );
   }
 
   async refreshToken(refreshToken: string) {
     try {
       const payload = this.jwtService.verify<JwtPayload>(refreshToken, {
-        secret: this.configService.get<string>('jwt.refreshSecret'),
+        secret: this.configService.get<string>("jwt.refreshSecret"),
       });
       const utilisateur = await this.usersService.findById(payload.sub);
       if (!utilisateur || utilisateur.estSuspendu || !utilisateur.estActif) {
         throw new UnauthorizedException();
       }
-      return this.buildAuthResponse(utilisateur.id, utilisateur.email, utilisateur.role);
+      return this.buildAuthResponse(
+        utilisateur.id,
+        utilisateur.email,
+        utilisateur.role,
+      );
     } catch {
-      throw new UnauthorizedException('Refresh token invalide ou expire');
+      throw new UnauthorizedException("Refresh token invalide ou expire");
     }
   }
 
   private buildAuthResponse(id: string, email: string, role: Role) {
     const payload: JwtPayload = { sub: id, email, role };
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('jwt.secret'),
-      expiresIn: this.configService.get<string>('jwt.expiresIn'),
+      expiresIn: (this.configService.get<string>("JWT_EXPIRES_IN") ??
+        "15m") as StringValue,
     });
+    const jwtExpiresIn = (this.configService.get<string>("JWT_EXPIRES_IN") ??
+      "15m") as StringValue;
+
+    const refreshExpiresIn = (this.configService.get<string>(
+      "JWT_REFRESH_EXPIRES_IN",
+    ) ?? "7d") as StringValue;
     const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('jwt.refreshSecret'),
-      expiresIn: this.configService.get<string>('jwt.refreshExpiresIn'),
+      expiresIn: (this.configService.get<string>("JWT_REFRESH_EXPIRES_IN") ??
+        "7d") as StringValue,
     });
     return {
       accessToken,
