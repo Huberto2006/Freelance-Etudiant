@@ -58,7 +58,7 @@ function FormulaireInscription() {
         Créer un compte
       </h1>
 
-      <div className="flex mb-6 border border-ink/30 divide-x divide-ink/30">
+      <div className="flex mb-6 rounded-lg border border-ink/30 divide-x divide-ink/30 overflow-hidden">
         <button
           type="button"
           onClick={() => setRole("etudiant")}

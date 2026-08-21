@@ -10,6 +10,7 @@ import {
   BarreRecherche,
   type Filtres,
 } from '@/components/ui/BarreRecherche';
+import { FavoriBouton } from '@/components/ui/FavoriBouton';
 
 export default function ServicesPage() {
   const [services, setServices] = useState<ServiceOffert[]>([]);
@@ -31,6 +32,14 @@ export default function ServicesPage() {
 
     if (filtres.competence) {
       params.set('competence', filtres.competence);
+    }
+
+    if (filtres.budgetMin) {
+      params.set('budgetMin', filtres.budgetMin);
+    }
+
+    if (filtres.budgetMax) {
+      params.set('budgetMax', filtres.budgetMax);
     }
 
     try {
@@ -83,6 +92,7 @@ export default function ServicesPage() {
         <BarreRecherche
           onFiltrer={rechercher}
           placeholder="Design, développement, rédaction…"
+          avecBudget
         />
       </div>
 
@@ -134,6 +144,12 @@ export default function ServicesPage() {
                   )}
 
                 </div>
+
+                <FavoriBouton
+                  cibleType="service"
+                  cibleId={service.id}
+                  className="absolute right-4 top-4"
+                />
 
                 {/* Titre */}
                 <h3 className="text-lg font-semibold mt-3 line-clamp-2">

@@ -45,3 +45,23 @@ export const statutLivraisonLabel: Record<string, string> = {
   validee: "Validée",
   correction_demandee: "Correction demandée",
 };
+
+export const statutTransactionLabel: Record<string, string> = {
+  en_attente: "En attente de vérification",
+  confirmee: "Confirmé",
+  liberee: "Libéré",
+  annulee: "Annulé",
+};
+
+export const methodePaiementLabel: Record<string, string> = {
+  mvola: "Mvola",
+  orange_money: "Orange Money",
+  airtel_money: "Airtel Money",
+  virement: "Virement bancaire",
+};
+
+export const statutSignalementLabel: Record<string, string> = {
+  ouvert: "Ouvert",
+  en_cours: "En cours de traitement",
+  traite: "Traité",
+};

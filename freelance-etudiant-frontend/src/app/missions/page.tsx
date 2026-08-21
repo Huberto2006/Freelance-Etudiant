@@ -7,6 +7,7 @@ import type { Mission } from '@/lib/types';
 import { formatArgent, formatDate } from '@/lib/format';
 import { NoticeCard, Tag } from '@/components/ui/Notice';
 import { BarreRecherche, type Filtres } from '@/components/ui/BarreRecherche';
+import { FavoriBouton } from '@/components/ui/FavoriBouton';
 
 export default function MissionsPage() {
   const [missions, setMissions] = useState<Mission[]>([]);
@@ -20,6 +21,8 @@ export default function MissionsPage() {
     if (filtres.motsCles) params.set('motsCles', filtres.motsCles);
     if (filtres.categorie) params.set('categorie', filtres.categorie);
     if (filtres.competence) params.set('competence', filtres.competence);
+    if (filtres.budgetMin) params.set('budgetMin', filtres.budgetMin);
+    if (filtres.budgetMax) params.set('budgetMax', filtres.budgetMax);
 
     try {
       const data = await api.get(`/missions?${params.toString()}`, { auth: false }) as Mission[];
@@ -50,9 +53,9 @@ export default function MissionsPage() {
   }, []);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-10">
       <div className="mb-8">
-        <BarreRecherche onFiltrer={rechercher} />
+        <BarreRecherche onFiltrer={rechercher} avecBudget />
       </div>
 
       <h1 className="text-3xl font-bold mb-2">Panneau d&apos;affichage</h1>
@@ -79,11 +82,14 @@ export default function MissionsPage() {
                     <h3 className="text-lg font-semibold mt-2">{mission.titre}</h3>
                     <p className="text-muted-foreground mt-1">{mission.description}</p>
                   </div>
-                  <div className="text-right text-sm">
-                    <div className="font-medium">{formatArgent(mission.budget)}</div>
-                    <div className="text-muted-foreground">
-                      avant le {formatDate(mission.dateLimite)}
+                  <div className="flex items-start gap-2">
+                    <div className="text-right text-sm">
+                      <div className="font-medium">{formatArgent(mission.budget)}</div>
+                      <div className="text-muted-foreground">
+                        avant le {formatDate(mission.dateLimite)}
+                      </div>
                     </div>
+                    <FavoriBouton cibleType="mission" cibleId={mission.id} />
                   </div>
                 </div>
 
