@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "compilerOptions": {
+  "deleteOutDir": true
+  },
+  "portfolioUrls": [
+    "https://monportfolio.com",
+    "https://github.com/monprofil",
+    "https://behance.net/monprofil"
+  ],
+  "photoUrl": "https://.../photo.jpg"
+}

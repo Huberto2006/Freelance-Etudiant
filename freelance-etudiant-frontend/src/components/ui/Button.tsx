@@ -32,7 +32,7 @@ export function Button({
   return (
     <button
       className={clsx(
-        "font-body font-medium tracking-wide transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed",
+        "rounded-lg font-body font-medium tracking-wide transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed",
         variants[variant],
         sizes[size],
         className,

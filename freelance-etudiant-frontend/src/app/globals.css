@@ -18,6 +18,12 @@
   --font-display: "Zilla Slab", Georgia, serif;
   --font-body: "Inter", -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Rayons de bordure — coins adoucis, dans l'esprit du papier decoupe */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
 }
 
 /* --- Mode sombre : on redefinit les memes jetons, les utilitaires suivent --- */
@@ -79,6 +85,7 @@ body {
   position: relative;
   background-color: var(--color-paper-light);
   border: 1px solid rgba(60, 58, 46, 0.25);
+  border-radius: var(--radius-lg);
   box-shadow: 0 1px 0 rgba(33, 38, 31, 0.05), 0 8px 16px -12px rgba(33, 38, 31, 0.35);
   transition: transform 180ms ease, box-shadow 180ms ease;
 }

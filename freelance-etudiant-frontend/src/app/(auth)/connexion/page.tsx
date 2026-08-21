@@ -67,6 +67,13 @@ export default function ConnexionPage() {
             />
           </Field>
 
+          <Link
+            href="/mot-de-passe-oublie"
+            className="-mt-2 self-end text-xs text-ocre-dark hover:underline"
+          >
+            Mot de passe oublié ?
+          </Link>
+
           {erreur && <p className="text-sm text-brique">{erreur}</p>}
 
           <Button type="submit" disabled={envoi} className="mt-2">

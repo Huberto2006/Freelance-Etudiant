@@ -107,6 +107,84 @@ export interface Evaluation {
   dateEvaluation: string;
 }
 
+export type TypeNotification =
+  | "nouvelle_candidature"
+  | "candidature_acceptee"
+  | "candidature_refusee"
+  | "nouveau_message"
+  | "livraison_deposee"
+  | "livraison_validee"
+  | "correction_demandee"
+  | "nouvelle_evaluation"
+  | "paiement_initie"
+  | "paiement_confirme"
+  | "paiement_libere"
+  | "nouvelle_reaction";
+
+export interface NotificationItem {
+  id: string;
+  type: TypeNotification;
+  titre: string;
+  message: string;
+  lienUrl?: string | null;
+  estLue: boolean;
+  destinataireId: string;
+  dateCreation: string;
+}
+
+export type TypeCibleFavori = "mission" | "service" | "etudiant";
+
+export interface Favori {
+  id: string;
+  utilisateurId: string;
+  cibleType: TypeCibleFavori;
+  cibleId: string;
+  dateAjout: string;
+}
+
+export type MethodePaiement = "mvola" | "orange_money" | "airtel_money" | "virement";
+export type StatutTransaction = "en_attente" | "confirmee" | "liberee" | "annulee";
+
+export interface Transaction {
+  id: string;
+  candidatureId: string;
+  candidature?: Candidature;
+  clientId: string;
+  client?: Utilisateur;
+  etudiantId: string;
+  etudiant?: Utilisateur;
+  montant: number | string;
+  methode: MethodePaiement;
+  reference: string;
+  statut: StatutTransaction;
+  dateCreation: string;
+  dateConfirmation?: string | null;
+  dateLiberation?: string | null;
+}
+
+export type StatutSignalement = "ouvert" | "en_cours" | "traite";
+export type CibleSignalement = "utilisateur" | "service" | "mission";
+
+export interface Signalement {
+  id: string;
+  motif: string;
+  description: string;
+  cibleType: CibleSignalement;
+  cibleId: string;
+  statut: StatutSignalement;
+  signaleParId: string;
+  signalePar?: Utilisateur;
+  traiteParId?: string;
+  resolution?: string;
+  dateSignalement: string;
+  dateTraitement?: string | null;
+}
+
+export interface ReactionInfo {
+  total: number;
+  jaiReagi: boolean;
+}
+
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
