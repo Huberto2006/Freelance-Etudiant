@@ -13,11 +13,7 @@ import {
 
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
-import {
-  NoticeCard,
-  StampBadge,
-  StatCard,
-} from "@/components/ui/Notice";
+import { NoticeCard, StampBadge, StatCard } from "@/components/ui/Notice";
 import {
   BarreMensuelle,
   AnneauRepartition,
@@ -56,8 +52,9 @@ export default function TableauDeBordVueEnsemble() {
   const { utilisateur, chargement: chargementAuth } = useAuth();
 
   const [statsAdmin, setStatsAdmin] = useState<StatsAdmin | null>(null);
-  const [statsEtudiant, setStatsEtudiant] =
-    useState<StatsEtudiant | null>(null);
+  const [statsEtudiant, setStatsEtudiant] = useState<StatsEtudiant | null>(
+    null,
+  );
 
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -80,9 +77,7 @@ export default function TableauDeBordVueEnsemble() {
 
       try {
         if (utilisateur?.role === "admin") {
-          const data = await api.get<StatsAdmin>(
-            "/statistiques/admin",
-          );
+          const data = await api.get<StatsAdmin>("/statistiques/admin");
 
           if (actif) {
             setStatsAdmin(data);
@@ -102,9 +97,7 @@ export default function TableauDeBordVueEnsemble() {
         if (error instanceof ApiError) {
           setErreur(error.message);
         } else {
-          setErreur(
-            "Impossible de charger les statistiques.",
-          );
+          setErreur("Impossible de charger les statistiques.");
         }
       } finally {
         if (actif) {
@@ -132,9 +125,7 @@ export default function TableauDeBordVueEnsemble() {
   if (chargementAuth) {
     return (
       <div className="flex min-h-[300px] items-center justify-center">
-        <p className="text-sm text-ink-soft">
-          Chargement de votre compte…
-        </p>
+        <p className="text-sm text-ink-soft">Chargement de votre compte…</p>
       </div>
     );
   }
@@ -166,39 +157,6 @@ export default function TableauDeBordVueEnsemble() {
         </div>
       </div>
 
-      {/* Profil étudiant */}
-      {utilisateur?.role === "etudiant" &&
-        utilisateur.profilEtudiant && (
-          <NoticeCard className="mb-8 flex items-center gap-5">
-            <StampBadge
-              score={
-                Number(
-                  utilisateur.profilEtudiant.scoreReputation,
-                ) || 0
-              }
-              size={72}
-            />
-
-            <div>
-              <p className="font-display text-lg font-medium">
-                Score de réputation
-              </p>
-
-              <p className="text-sm text-ink-soft">
-                {
-                  utilisateur.profilEtudiant
-                    .nombreMissionsTerminees
-                }{" "}
-                projet(s) livré(s) · note moyenne{" "}
-                {Number(
-                  utilisateur.profilEtudiant.noteMoyenne,
-                ).toFixed(1)}
-                /5
-              </p>
-            </div>
-          </NoticeCard>
-        )}
-
       {/* Erreur */}
       {erreur && (
         <NoticeCard className="mb-6 border-brique/30">
@@ -208,87 +166,139 @@ export default function TableauDeBordVueEnsemble() {
 
       {/* Chargement */}
       {chargement ? (
-        <p className="text-sm text-ink-soft">
-          Chargement des statistiques…
-        </p>
+        <p className="text-sm text-ink-soft">Chargement des statistiques…</p>
       ) : (
         <>
           {/* ========================= */}
           {/* STATISTIQUES ÉTUDIANT */}
           {/* ========================= */}
 
-          {utilisateur?.role === "etudiant" &&
-            statsEtudiant && (
-              <div className="grid gap-4 sm:grid-cols-3">
-                <StatCard
-                  icon={BriefcaseBusiness}
-                  tone="ocre"
-                  label="Missions en cours"
-                  value={statsEtudiant.missionsEnCours}
-                />
+          {utilisateur?.role === "etudiant" && statsEtudiant && (
+            <div className="grid gap-4 sm:grid-cols-3">
+              {/* Missions en cours */}
+              <StatCard
+                icon={BriefcaseBusiness}
+                tone="ocre"
+                label="Missions en cours"
+                value={statsEtudiant.missionsEnCours}
+                sublabel="Mission(s) actuellement active(s)"
+              />
 
-                <StatCard
-                  icon={TrendingUp}
-                  tone="rice"
-                  label="Taux d'acceptation"
-                  value={`${statsEtudiant.tauxAcceptationCandidatures}%`}
-                />
+              {/* Taux d'acceptation */}
+              <StatCard
+                icon={TrendingUp}
+                tone="rice"
+                label="Taux d'acceptation"
+                value={`${statsEtudiant.tauxAcceptationCandidatures}%`}
+                sublabel="De vos candidatures"
+              />
 
-                <StatCard
-                  icon={Send}
-                  tone="brique"
-                  label="Candidatures envoyées"
-                  value={statsEtudiant.totalCandidatures}
-                />
+              {/* Candidatures */}
+              <StatCard
+                icon={Send}
+                tone="brique"
+                label="Candidatures envoyées"
+                value={statsEtudiant.totalCandidatures}
+                sublabel="Au total"
+              />
 
+              {/* Graphique revenus */}
+              <div className="sm:col-span-2">
                 <BarreMensuelle
-                  titre="Revenus mensuels"
-                  sous_titre="Montant encaissé par mois, missions livrées"
-                  donnees={statsEtudiant.revenusMensuels.map(
-                    (m) => ({
-                      mois: m.mois,
-                      revenu: m.revenu,
-                    }),
-                  )}
+                  titre="Évolution de mes revenus"
+                  sous_titre="Montants gagnés grâce aux missions livrées"
+                  donnees={statsEtudiant.revenusMensuels}
                   cleValeur="revenu"
                   cleLabel="mois"
                   couleur="var(--color-ocre)"
                   formatValeur={(v) =>
-                    `${Math.round(v / 1000)}k`
+                    v >= 1000
+                      ? `${Math.round(v / 1000)}k`
+                      : String(Math.round(v))
                   }
                 />
-
-                <NoticeCard className="sm:col-span-3 flex flex-col items-center justify-center gap-6 sm:flex-row sm:justify-between">
-                  <JaugeCirculaire
-                    valeur={
-                      statsEtudiant.tauxAcceptationCandidatures
-                    }
-                    label={
-                      <>
-                        Taux d&apos;acceptation
-                        <br />
-                        de vos candidatures
-                      </>
-                    }
-                    couleur="var(--color-rice)"
-                  />
-
-                  <div className="text-center sm:text-right">
-                    <p className="font-display text-2xl">
-                      {statsEtudiant.totalCandidatures}{" "}
-                      candidature(s)
-                    </p>
-
-                    <p className="text-sm text-ink-soft">
-                      envoyée(s) au total, pour{" "}
-                      {statsEtudiant.missionsEnCours} mission(s)
-                      {" "}en cours
-                    </p>
-                  </div>
-                </NoticeCard>
               </div>
-            )}
 
+              {/* Jauge acceptation */}
+              <NoticeCard className="flex flex-col items-center justify-center p-6">
+                <JaugeCirculaire
+                  valeur={statsEtudiant.tauxAcceptationCandidatures}
+                  label={
+                    <>
+                      Taux d&apos;acceptation
+                      <br />
+                      des candidatures
+                    </>
+                  }
+                  couleur="var(--color-rice)"
+                />
+
+                <p className="mt-4 text-center text-sm text-ink-soft">
+                  Plus votre taux est élevé, plus votre profil et vos
+                  candidatures sont efficaces.
+                </p>
+              </NoticeCard>
+
+              {/* Réputation */}
+              <NoticeCard className="sm:col-span-1 flex flex-col items-center justify-center gap-4 p-6">
+                <StampBadge
+                  score={
+                    Number(utilisateur.profilEtudiant?.scoreReputation) || 0
+                  }
+                  size={90}
+                />
+
+                <div className="text-center">
+                  <p className="font-display text-lg font-medium">
+                    Votre réputation
+                  </p>
+
+                  <p className="text-sm text-ink-soft">
+                    Basée sur vos missions et évaluations.
+                  </p>
+                </div>
+              </NoticeCard>
+
+              {/* Résumé activité */}
+              <NoticeCard className="sm:col-span-2 flex flex-col justify-center gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-display text-xl font-semibold">
+                    Votre activité
+                  </p>
+
+                  <p className="mt-1 text-sm text-ink-soft">
+                    Suivez l&apos;évolution de votre parcours sur la plateforme.
+                  </p>
+                </div>
+
+                <div className="flex gap-8 text-center">
+                  <div>
+                    <p className="font-display text-2xl font-semibold text-ocre-dark">
+                      {utilisateur.profilEtudiant?.nombreMissionsTerminees || 0}
+                    </p>
+                    <p className="text-xs text-ink-soft">Missions terminées</p>
+                  </div>
+
+                  <div>
+                    <p className="font-display text-2xl font-semibold text-ocre-dark">
+                      {Number(utilisateur.profilEtudiant?.noteMoyenne).toFixed(
+                        1,
+                      )}
+                      /5
+                    </p>
+                    <p className="text-xs text-ink-soft">Note moyenne</p>
+                  </div>
+
+                  <div>
+                    <p className="font-display text-2xl font-semibold text-ocre-dark">
+                      {statsEtudiant.totalCandidatures}
+                    </p>
+                    <p className="text-xs text-ink-soft">Candidatures</p>
+                  </div>
+                </div>
+              </NoticeCard>
+            </div>
+          )}
           {/* ========================= */}
           {/* STATISTIQUES ADMIN */}
           {/* ========================= */}
@@ -307,9 +317,7 @@ export default function TableauDeBordVueEnsemble() {
                 icon={Banknote}
                 tone="rice"
                 label="Volume d'affaires"
-                value={formatArgent(
-                  statsAdmin.volumeAffairesGlobal,
-                )}
+                value={formatArgent(statsAdmin.volumeAffairesGlobal)}
               />
 
               <StatCard
@@ -354,13 +362,11 @@ export default function TableauDeBordVueEnsemble() {
 
                 <div className="text-center sm:text-right">
                   <p className="font-display text-2xl">
-                    {statsAdmin.missions.total} mission(s) au
-                    total
+                    {statsAdmin.missions.total} mission(s) au total
                   </p>
 
                   <p className="text-sm text-ink-soft">
-                    {statsAdmin.missions.terminees} livrée(s) sur
-                    la plateforme
+                    {statsAdmin.missions.terminees} livrée(s) sur la plateforme
                   </p>
                 </div>
               </NoticeCard>
@@ -381,33 +387,28 @@ export default function TableauDeBordVueEnsemble() {
               </span>
 
               <p className="text-sm text-ink-soft">
-                Retrouvez vos missions publiées et les
-                candidatures reçues dans l&apos;onglet{" "}
-                <strong>Mes missions</strong>.
+                Retrouvez vos missions publiées et les candidatures reçues dans
+                l&apos;onglet <strong>Mes missions</strong>.
               </p>
             </NoticeCard>
           )}
 
           {/* Aucun résultat */}
-          {utilisateur?.role === "etudiant" &&
-            !statsEtudiant &&
-            !erreur && (
-              <NoticeCard>
-                <p className="text-sm text-ink-soft">
-                  Aucune statistique disponible pour le moment.
-                </p>
-              </NoticeCard>
-            )}
+          {utilisateur?.role === "etudiant" && !statsEtudiant && !erreur && (
+            <NoticeCard>
+              <p className="text-sm text-ink-soft">
+                Aucune statistique disponible pour le moment.
+              </p>
+            </NoticeCard>
+          )}
 
-          {utilisateur?.role === "admin" &&
-            !statsAdmin &&
-            !erreur && (
-              <NoticeCard>
-                <p className="text-sm text-ink-soft">
-                  Aucune statistique disponible pour le moment.
-                </p>
-              </NoticeCard>
-            )}
+          {utilisateur?.role === "admin" && !statsAdmin && !erreur && (
+            <NoticeCard>
+              <p className="text-sm text-ink-soft">
+                Aucune statistique disponible pour le moment.
+              </p>
+            </NoticeCard>
+          )}
         </>
       )}
     </div>

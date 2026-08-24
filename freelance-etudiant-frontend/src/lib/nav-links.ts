@@ -11,6 +11,7 @@ import {
   User,
   Wallet,
   Wrench,
+  Truck,
 } from "lucide-react";
 
 import type { Role } from "./types";
@@ -22,53 +23,11 @@ export interface LienNav {
 }
 
 /**
- * Liens affichés dans la navbar principale
- * une fois l'utilisateur authentifié.
+ * ============================================================
+ * NAVIGATION PUBLIQUE
+ * ============================================================
  */
-export const liensNavbarParRole: Record<Role, LienNav[]> = {
-  etudiant: [
-    {
-      href: "/missions",
-      label: "Missions",
-      icon: BriefcaseBusiness,
-    },
-    {
-      href: "/tableau-de-bord/mes-services",
-      label: "Mes services",
-      icon: Wrench,
-    },
-    {
-      href: "/tableau-de-bord/candidatures",
-      label: "Candidatures",
-      icon: ClipboardList,
-    },
-  ],
 
-  client: [
-    {
-      href: "/services",
-      label: "Services",
-      icon: Wrench,
-    },
-    {
-      href: "/tableau-de-bord/mes-missions",
-      label: "Mes missions",
-      icon: BriefcaseBusiness,
-    },
-  ],
-
-  admin: [
-    {
-      href: "/tableau-de-bord/admin",
-      label: "Administration",
-      icon: ShieldCheck,
-    },
-  ],
-};
-
-/**
- * Liens affichés quand personne n'est connecté.
- */
 export const liensNavbarPublics: LienNav[] = [
   {
     href: "/missions",
@@ -83,68 +42,38 @@ export const liensNavbarPublics: LienNav[] = [
 ];
 
 /**
- * Navigation complète de la sidebar du tableau de bord,
- * par rôle.
+ * ============================================================
+ * NAVIGATION PRINCIPALE
+ * ============================================================
+ *
+ * Navigation volontairement courte.
+ * La navigation complète est dans la sidebar du dashboard.
  */
-export const liensSidebarParRole: Record<Role, LienNav[]> = {
+
+export const liensNavbarParRole: Record<Role, LienNav[]> = {
   etudiant: [
     {
-      href: "/tableau-de-bord",
-      label: "Vue d'ensemble",
-      icon: LayoutDashboard,
-    },
-    {
-      href: "/tableau-de-bord/notifications",
-      label: "Notifications",
-      icon: Bell,
-    },
-    {
-      href: "/tableau-de-bord/profil",
-      label: "Mon profil",
-      icon: User,
-    },
-    {
-      href: "/tableau-de-bord/mes-services",
-      label: "Mes services",
-      icon: Wrench,
+      href: "/missions",
+      label: "Missions",
+      icon: BriefcaseBusiness,
     },
     {
       href: "/tableau-de-bord/candidatures",
-      label: "Mes candidatures",
+      label: "Candidatures",
       icon: ClipboardList,
     },
     {
-      href: "/tableau-de-bord/messages",
-      label: "Messages",
-      icon: MessageCircle,
-    },
-    {
-      href: "/tableau-de-bord/paiements",
-      label: "Paiements",
-      icon: Wallet,
-    },
-    {
-      href: "/tableau-de-bord/favoris",
-      label: "Favoris",
-      icon: Heart,
+      href: "/tableau-de-bord/livraisons",
+      label: "Livraisons",
+      icon: Truck,
     },
   ],
 
   client: [
     {
-      href: "/tableau-de-bord",
-      label: "Vue d'ensemble",
-      icon: LayoutDashboard,
-    },
-    {
-      href: "/tableau-de-bord/notifications",
-      label: "Notifications",
-      icon: Bell,
-    },
-    {
-      href: "/tableau-de-bord/profil",
-      label: "Mon profil",
-      icon: User,
+      href: "/services",
+      label: "Services",
+      icon: Wrench,
     },
     {
       href: "/tableau-de-bord/mes-missions",
@@ -152,21 +81,177 @@ export const liensSidebarParRole: Record<Role, LienNav[]> = {
       icon: BriefcaseBusiness,
     },
     {
-      href: "/tableau-de-bord/messages",
-      label: "Messages",
-      icon: MessageCircle,
+      href: "/tableau-de-bord/livraisons",
+      label: "Livraisons",
+      icon: Truck,
     },
+  ],
+
+  admin: [
+    {
+      href: "/tableau-de-bord/admin",
+      label: "Administration",
+      icon: ShieldCheck,
+    },
+  ],
+};
+
+/**
+ * ============================================================
+ * SIDEBAR DU TABLEAU DE BORD
+ * ============================================================
+ *
+ * Ordre :
+ *
+ * 1. Vue d'ensemble
+ * 2. Notifications
+ * 3. Activité
+ * 4. Livraisons
+ * 5. Finance
+ * 6. Communication
+ * 7. Profil
+ */
+
+export const liensSidebarParRole: Record<Role, LienNav[]> = {
+  // ==========================================================
+  // ÉTUDIANT
+  // ==========================================================
+
+  etudiant: [
+    {
+      href: "/tableau-de-bord",
+      label: "Vue d'ensemble",
+      icon: LayoutDashboard,
+    },
+
+    {
+      href: "/tableau-de-bord/notifications",
+      label: "Notifications",
+      icon: Bell,
+    },
+
+    // Activité
+    {
+      href: "/missions",
+      label: "Missions",
+      icon: BriefcaseBusiness,
+    },
+
+    {
+      href: "/tableau-de-bord/mes-services",
+      label: "Mes services",
+      icon: Wrench,
+    },
+
+    {
+      href: "/tableau-de-bord/candidatures",
+      label: "Mes candidatures",
+      icon: ClipboardList,
+    },
+
+    // Livraison
+    {
+      href: "/tableau-de-bord/livraisons",
+      label: "Livraisons",
+      icon: Truck,
+    },
+
+    // Finance
     {
       href: "/tableau-de-bord/paiements",
       label: "Paiements",
       icon: Wallet,
     },
+
+    // Communication
+    {
+      href: "/tableau-de-bord/messages",
+      label: "Messages",
+      icon: MessageCircle,
+    },
+
     {
       href: "/tableau-de-bord/favoris",
       label: "Favoris",
       icon: Heart,
     },
+
+    // Profil
+    {
+      href: "/tableau-de-bord/profil",
+      label: "Mon profil",
+      icon: User,
+    },
   ],
+
+  // ==========================================================
+  // CLIENT
+  // ==========================================================
+
+  client: [
+    {
+      href: "/tableau-de-bord",
+      label: "Vue d'ensemble",
+      icon: LayoutDashboard,
+    },
+
+    {
+      href: "/tableau-de-bord/notifications",
+      label: "Notifications",
+      icon: Bell,
+    },
+
+    // Activité
+    {
+      href: "/services",
+      label: "Services",
+      icon: Wrench,
+    },
+
+    {
+      href: "/tableau-de-bord/mes-missions",
+      label: "Mes missions",
+      icon: BriefcaseBusiness,
+    },
+
+    // Livraison
+    {
+      href: "/tableau-de-bord/livraisons",
+      label: "Livraisons",
+      icon: Truck,
+    },
+
+    // Finance
+    {
+      href: "/tableau-de-bord/paiements",
+      label: "Paiements",
+      icon: Wallet,
+    },
+
+    // Communication
+    {
+      href: "/tableau-de-bord/messages",
+      label: "Messages",
+      icon: MessageCircle,
+    },
+
+    {
+      href: "/tableau-de-bord/favoris",
+      label: "Favoris",
+      icon: Heart,
+    },
+
+    // Profil
+    {
+      href: "/tableau-de-bord/profil",
+      label: "Mon profil",
+      icon: User,
+    },
+  ],
+
+  // ==========================================================
+  // ADMINISTRATEUR
+  // ==========================================================
 
   admin: [
     {
@@ -174,21 +259,26 @@ export const liensSidebarParRole: Record<Role, LienNav[]> = {
       label: "Vue d'ensemble",
       icon: LayoutDashboard,
     },
+
     {
       href: "/tableau-de-bord/notifications",
       label: "Notifications",
       icon: Bell,
     },
+
+    // Administration
     {
       href: "/tableau-de-bord/admin",
       label: "Administration",
       icon: ShieldCheck,
     },
+
     {
       href: "/tableau-de-bord/admin/signalements",
       label: "Signalements",
       icon: Flag,
     },
+
     {
       href: "/tableau-de-bord/admin/paiements",
       label: "Paiements",
