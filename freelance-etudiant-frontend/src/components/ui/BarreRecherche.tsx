@@ -16,7 +16,6 @@ export interface Filtres {
 export function BarreRecherche({
   onFiltrer,
   placeholder = "Rechercher par mots-clés…",
-  avecBudget = false,
 }: {
   onFiltrer: (filtres: Filtres) => void;
   placeholder?: string;
@@ -25,8 +24,6 @@ export function BarreRecherche({
   const [motsCles, setMotsCles] = useState("");
   const [categorie, setCategorie] = useState("");
   const [competence, setCompetence] = useState("");
-  const [budgetMin, setBudgetMin] = useState("");
-  const [budgetMax, setBudgetMax] = useState("");
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,8 +31,6 @@ export function BarreRecherche({
       motsCles: motsCles || undefined,
       categorie: categorie || undefined,
       competence: competence || undefined,
-      budgetMin: budgetMin || undefined,
-      budgetMax: budgetMax || undefined,
     });
   }
 
@@ -107,40 +102,13 @@ export function BarreRecherche({
         </div>
       </div>
 
-      {avecBudget && (
-        <>
-          <div className="w-full sm:w-32">
-            <label className="mb-1.5 block h-5 text-xs font-mono uppercase tracking-wider text-ink-soft">
-              Budget min
-            </label>
-            <Input
-              type="number"
-              min={0}
-              value={budgetMin}
-              onChange={(e) => setBudgetMin(e.target.value)}
-              placeholder="0"
-              className="w-full rounded-lg py-2 px-3"
-            />
-          </div>
-          <div className="w-full sm:w-32">
-            <label className="mb-1.5 block h-5 text-xs font-mono uppercase tracking-wider text-ink-soft">
-              Budget max
-            </label>
-            <Input
-              type="number"
-              min={0}
-              value={budgetMax}
-              onChange={(e) => setBudgetMax(e.target.value)}
-              placeholder="500000"
-              className="w-full rounded-lg py-2 px-3"
-            />
-          </div>
-        </>
-      )}
-
-      <Button type="submit" variant="secondary" className="h-10 gap-2">
+      <Button
+        type="submit"
+        variant="secondary"
+        className="inline-flex h-10 w-full items-center justify-center gap-2 sm:w-auto"
+      >
         <Search size={15} />
-        Filtrer
+        <span>Filtrer</span>
       </Button>
     </form>
   );
