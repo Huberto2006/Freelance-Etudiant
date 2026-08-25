@@ -1,12 +1,14 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import type { Mission } from "@/lib/types";
 import { formatArgent, formatDate, statutMissionLabel } from "@/lib/format";
 import { NoticeCard, Tag } from "@/components/ui/Notice";
+import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 
@@ -82,10 +84,35 @@ export default function MissionDetailPage({
       <h1 className="font-display text-3xl sm:text-4xl font-semibold mb-3">
         {mission.titre}
       </h1>
-      <p className="text-sm text-ink-soft mb-8">
+      <p className="text-sm text-ink-soft mb-6">
         Publiée le {formatDate(mission.dateCreation)} · candidatures ouvertes
         jusqu&apos;au {formatDate(mission.dateLimite)}
       </p>
+
+      {/* Auteur de la publication */}
+      {mission.client && (
+        <Link
+          href={`/clients/${mission.client.utilisateurId}`}
+          className="mb-8 flex items-center gap-3 w-fit"
+        >
+          <Avatar
+            nom={mission.client.utilisateur?.nom ?? "Client"}
+            photoUrl={mission.client.utilisateur?.photoUrl}
+            size={44}
+          />
+          <div>
+            <p className="font-display font-medium hover:underline">
+              {mission.client.utilisateur?.nom ?? "Client Kianja"}
+            </p>
+            <p className="text-xs text-ink-soft/70">
+              {mission.client.nomEntreprise ??
+                (mission.client.typeClient === "entreprise"
+                  ? "Entreprise"
+                  : "Particulier")}
+            </p>
+          </div>
+        </Link>
+      )}
 
       <NoticeCard className="mb-8">
         <div className="grid gap-6 sm:grid-cols-2">

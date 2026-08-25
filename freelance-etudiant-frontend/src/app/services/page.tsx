@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Timer } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { ServiceOffert } from '@/lib/types';
-import { formatArgent } from '@/lib/format';
-import { NoticeCard, StampBadge, Tag } from '@/components/ui/Notice';
+import { formatArgent, formatDateCourte } from '@/lib/format';
+import { NoticeCard, Tag } from '@/components/ui/Notice';
+import { Avatar } from '@/components/ui/Avatar';
 import {
   BarreRecherche,
   type Filtres,
@@ -85,7 +87,7 @@ export default function ServicesPage() {
   }, []);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto max-w-2xl px-4 py-8">
 
       {/* Barre de recherche */}
       <div className="mb-8">
@@ -101,7 +103,7 @@ export default function ServicesPage() {
         Étals du kianja
       </p>
 
-      <h1 className="text-3xl font-bold mb-2">
+      <h1 className="text-3xl font-bold mb-6">
         Services
       </h1>
 
@@ -117,73 +119,74 @@ export default function ServicesPage() {
           </p>
         </NoticeCard>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-col gap-5">
+          {services.map((service) => {
+            const etudiant = service.etudiant;
+            const auteur = etudiant?.utilisateur;
 
-          {services.map((service) => (
-            <Link
-              key={service.id}
-              href={`/services/${service.id}`}
-              className="block h-full"
-            >
-              <NoticeCard className="h-full flex flex-col">
-
-                {/* Catégorie + réputation */}
-                <div className="flex items-start justify-between gap-3">
-
-                  <Tag tone="ocre">
-                    {service.categorie}
-                  </Tag>
-
-                  {service.etudiant && (
-                    <StampBadge
-                      score={
-                        Number(service.etudiant.scoreReputation) || 0
-                      }
-                      size={40}
-                    />
-                  )}
-
+            return (
+              <NoticeCard key={service.id} className="flex flex-col gap-4">
+                {/* En-tête façon publication : avatar + auteur */}
+                <div className="flex items-center gap-3">
+                  <Avatar
+                    nom={auteur?.nom ?? 'Étudiant'}
+                    photoUrl={auteur?.photoUrl}
+                    size={44}
+                    href={etudiant ? `/etudiants/${etudiant.utilisateurId}` : undefined}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={etudiant ? `/etudiants/${etudiant.utilisateurId}` : '#'}
+                      className="font-display font-medium hover:underline"
+                    >
+                      {auteur?.nom ?? 'Étudiant Kianja'}
+                    </Link>
+                    <p className="flex items-center gap-1.5 text-xs text-ink-soft/70">
+                      <Tag tone="rice">Étudiant</Tag>
+                      {etudiant && (
+                        <span>
+                          note {Number(etudiant.noteMoyenne).toFixed(1)}/5
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <FavoriBouton cibleType="service" cibleId={service.id} />
                 </div>
 
-                <FavoriBouton
-                  cibleType="service"
-                  cibleId={service.id}
-                  className="absolute right-4 top-4"
-                />
-
-                {/* Titre */}
-                <h3 className="text-lg font-semibold mt-3 line-clamp-2">
-                  {service.titre}
-                </h3>
-
-                {/* Description */}
-                <p className="text-sm text-muted-foreground mt-2 line-clamp-2 flex-1">
-                  {service.description}
-                </p>
-
-                {/* Étudiant */}
-                {service.etudiant?.utilisateur && (
-                  <p className="mt-3 text-xs text-ink-soft/80">
-                    par {service.etudiant.utilisateur.nom}
+                {/* Corps de la publication */}
+                <Link href={`/services/${service.id}`} className="block">
+                  <Tag tone="ocre">{service.categorie}</Tag>
+                  <h3 className="text-lg font-semibold mt-2">
+                    {service.titre}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-3">
+                    {service.description}
                   </p>
+                </Link>
+
+                {service.competences.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {service.competences.slice(0, 4).map((c) => (
+                      <Tag key={c} tone="rice">
+                        #{c}
+                      </Tag>
+                    ))}
+                  </div>
                 )}
 
-                {/* Prix + délai */}
-                <div className="mt-4 flex items-center justify-between">
-
-                  <span className="font-mono text-sm text-ocre-dark">
+                {/* Pied : prix + délai */}
+                <div className="flex items-center justify-between border-t border-ink/10 pt-3 text-sm">
+                  <span className="font-mono font-medium text-ocre-dark">
                     {formatArgent(service.prix)}
                   </span>
-
-                  <span className="text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 text-muted-foreground">
+                    <Timer size={13} />
                     livré en {service.delai} j
                   </span>
-
                 </div>
-
               </NoticeCard>
-            </Link>
-          ))}
+            );
+          })}
 
         </div>
       )}
