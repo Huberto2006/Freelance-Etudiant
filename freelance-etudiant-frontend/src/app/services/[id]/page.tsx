@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import type { ServiceOffert } from "@/lib/types";
 import { formatArgent, formatDate } from "@/lib/format";
 import { NoticeCard, StampBadge, Tag } from "@/components/ui/Notice";
+import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 
 export default function ServiceDetailPage({
@@ -92,7 +93,19 @@ export default function ServiceDetailPage({
       {etudiant && (
         <NoticeCard>
           <div className="flex items-center gap-4">
-            <StampBadge score={Number(etudiant.scoreReputation) || 0} />
+            <div className="relative shrink-0">
+              <Avatar
+                nom={etudiant.utilisateur?.nom ?? "Étudiant"}
+                photoUrl={etudiant.utilisateur?.photoUrl}
+                size={64}
+              />
+              <span className="absolute -bottom-1 -right-1">
+                <StampBadge
+                  score={Number(etudiant.scoreReputation) || 0}
+                  size={30}
+                />
+              </span>
+            </div>
             <div>
               <p className="font-display text-lg font-medium">
                 {etudiant.utilisateur?.nom}

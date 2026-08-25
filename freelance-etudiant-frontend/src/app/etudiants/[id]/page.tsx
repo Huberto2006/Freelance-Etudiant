@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import type { EtudiantProfile, Evaluation, ServiceOffert } from "@/lib/types";
 import { formatArgent, formatDateCourte } from "@/lib/format";
 import { NoticeCard, StampBadge, Tag } from "@/components/ui/Notice";
+import { Avatar } from "@/components/ui/Avatar";
 import { ReactionProfil } from "@/components/ui/ReactionProfil";
 import { FavoriBouton } from "@/components/ui/FavoriBouton";
 import { SignalerBouton } from "@/components/ui/SignalerBouton";
@@ -52,7 +53,16 @@ export default function ProfilEtudiantPage({
     <div className="mx-auto max-w-3xl px-5 py-14">
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
         <div className="flex items-start gap-5">
-          <StampBadge score={Number(etudiant.scoreReputation) || 0} size={72} />
+          <div className="relative shrink-0">
+            <Avatar
+              nom={etudiant.utilisateur?.nom ?? "Étudiant"}
+              photoUrl={etudiant.utilisateur?.photoUrl}
+              size={88}
+            />
+            <span className="absolute -bottom-1.5 -right-1.5">
+              <StampBadge score={Number(etudiant.scoreReputation) || 0} size={38} />
+            </span>
+          </div>
           <div>
             <h1 className="font-display text-3xl font-semibold">
               {etudiant.utilisateur?.nom}

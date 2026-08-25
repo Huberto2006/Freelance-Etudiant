@@ -2,11 +2,12 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, BriefcaseBusiness } from "lucide-react";
+import { BriefcaseBusiness } from "lucide-react";
 import { api } from "@/lib/api";
 import type { ClientProfile, Mission } from "@/lib/types";
 import { formatArgent } from "@/lib/format";
 import { NoticeCard, Tag } from "@/components/ui/Notice";
+import { Avatar } from "@/components/ui/Avatar";
 import { ReactionProfil } from "@/components/ui/ReactionProfil";
 import { SignalerBouton } from "@/components/ui/SignalerBouton";
 
@@ -48,12 +49,11 @@ export default function ProfilClientPage({
     <div className="mx-auto max-w-3xl px-5 py-14">
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
         <div className="flex items-start gap-5">
-          <span
-            className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-ocre/10 text-ocre-dark"
-            aria-hidden="true"
-          >
-            <Building2 size={28} />
-          </span>
+          <Avatar
+            nom={client.nomEntreprise || client.utilisateur?.nom || "Client"}
+            photoUrl={client.utilisateur?.photoUrl}
+            size={88}
+          />
           <div>
             <h1 className="font-display text-3xl font-semibold">
               {client.nomEntreprise || client.utilisateur?.nom}

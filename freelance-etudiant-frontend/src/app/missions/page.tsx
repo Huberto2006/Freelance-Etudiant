@@ -2,17 +2,18 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { CalendarClock } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { Mission } from '@/lib/types';
-import { formatArgent, formatDate } from '@/lib/format';
+import { formatArgent, formatDateCourte } from '@/lib/format';
 import { NoticeCard, Tag } from '@/components/ui/Notice';
+import { Avatar } from '@/components/ui/Avatar';
 import { BarreRecherche, type Filtres } from '@/components/ui/BarreRecherche';
 import { FavoriBouton } from '@/components/ui/FavoriBouton';
 
 export default function MissionsPage() {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [chargement, setChargement] = useState(true);
-  
 
   // Recherche appelée par BarreRecherche
   const rechercher = useCallback(async (filtres: Filtres = {}) => {
@@ -53,7 +54,7 @@ export default function MissionsPage() {
   }, []);
 
   return (
-    <div className="container mx-auto px-4 py-10">
+    <div className="container mx-auto max-w-2xl px-4 py-10">
       <div className="mb-8">
         <BarreRecherche onFiltrer={rechercher} avecBudget />
       </div>
@@ -68,41 +69,70 @@ export default function MissionsPage() {
           Aucune mission ne correspond à ces critères pour le moment.
         </NoticeCard>
       ) : (
-        <div className="grid gap-4">
-          {missions.map((mission) => (
-            <Link
-              key={mission.id}
-              href={`/missions/${mission.id}`}
-              className="block"
-            >
-              <NoticeCard>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <Tag>{mission.categorie}</Tag>
-                    <h3 className="text-lg font-semibold mt-2">{mission.titre}</h3>
-                    <p className="text-muted-foreground mt-1">{mission.description}</p>
+        <div className="flex flex-col gap-5">
+          {missions.map((mission) => {
+            const client = mission.client;
+            const auteur = client?.utilisateur;
+
+            return (
+              <NoticeCard key={mission.id} className="flex flex-col gap-4">
+                {/* En-tête façon publication : avatar + auteur */}
+                <div className="flex items-center gap-3">
+                  <Avatar
+                    nom={auteur?.nom ?? 'Client'}
+                    photoUrl={auteur?.photoUrl}
+                    size={44}
+                    href={client ? `/clients/${client.utilisateurId}` : undefined}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={client ? `/clients/${client.utilisateurId}` : '#'}
+                      className="font-display font-medium hover:underline"
+                    >
+                      {auteur?.nom ?? 'Client Kianja'}
+                    </Link>
+                    <p className="flex items-center gap-1.5 text-xs text-ink-soft/70">
+                      <Tag tone="ink">Client</Tag>
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarClock size={11} />
+                        {formatDateCourte(mission.dateCreation)}
+                      </span>
+                    </p>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <div className="text-right text-sm">
-                      <div className="font-medium">{formatArgent(mission.budget)}</div>
-                      <div className="text-muted-foreground">
-                        avant le {formatDate(mission.dateLimite)}
-                      </div>
-                    </div>
-                    <FavoriBouton cibleType="mission" cibleId={mission.id} />
-                  </div>
+                  <FavoriBouton cibleType="mission" cibleId={mission.id} />
                 </div>
 
+                {/* Corps de la publication */}
+                <Link href={`/missions/${mission.id}`} className="block">
+                  <Tag>{mission.categorie}</Tag>
+                  <h3 className="text-lg font-semibold mt-2">{mission.titre}</h3>
+                  <p className="text-muted-foreground mt-1 line-clamp-3">
+                    {mission.description}
+                  </p>
+                </Link>
+
                 {mission.competencesRequises.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-4">
+                  <div className="flex flex-wrap gap-2">
                     {mission.competencesRequises.slice(0, 4).map((c) => (
-                      <Tag key={c}>{c}</Tag>
+                      <Tag key={c} tone="rice">
+                        #{c}
+                      </Tag>
                     ))}
                   </div>
                 )}
+
+                {/* Pied : budget et échéance */}
+                <div className="flex items-center justify-between border-t border-ink/10 pt-3 text-sm">
+                  <span className="font-mono font-medium text-ocre-dark">
+                    {formatArgent(mission.budget)}
+                  </span>
+                  <span className="text-muted-foreground">
+                    candidatures avant le {formatDateCourte(mission.dateLimite)}
+                  </span>
+                </div>
               </NoticeCard>
-            </Link>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
