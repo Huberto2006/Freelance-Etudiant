@@ -15,4 +15,14 @@ export class EnvoyerMessageDto {
   @IsOptional()
   @IsUUID()
   missionId?: string;
+
+  @ApiProperty({ required: false, description: 'URL du fichier joint (retournee par /uploads/document)' })
+  @IsOptional()
+  @IsString()
+  pieceJointeUrl?: string;
+
+  @ApiProperty({ required: false, description: 'Nom original du fichier joint' })
+  @IsOptional()
+  @IsString()
+  pieceJointeNom?: string;
 }

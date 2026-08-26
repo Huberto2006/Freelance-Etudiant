@@ -613,6 +613,34 @@ export class CandidaturesService {
 
   /**
    * ========================================================
+   * CANDIDATURE ACCEPTEE ISSUE D'UNE DEMANDE DE SERVICE
+   * ========================================================
+   *
+   * Utilisee par DemandesServiceService lors de l'acceptation d'une
+   * demande de service : la mission privee vient d'etre creee, on cree
+   * directement une candidature au statut "acceptee" pour reutiliser tout
+   * le cycle existant (messagerie, livraison, paiement).
+   */
+  async creerAccepteeDirectement(params: {
+    missionId: string;
+    etudiantId: string;
+    prixPropose: number;
+    delaiPropose: number;
+    message?: string;
+  }): Promise<Candidature> {
+    const candidature = this.repo.create({
+      missionId: params.missionId,
+      etudiantId: params.etudiantId,
+      prixPropose: params.prixPropose,
+      delaiPropose: params.delaiPropose,
+      message: params.message,
+      statut: StatutCandidature.ACCEPTEE,
+    });
+    return this.repo.save(candidature);
+  }
+
+  /**
+   * ========================================================
    * VERIFICATION CANDIDATURE ACCEPTEE
    * ========================================================
    *

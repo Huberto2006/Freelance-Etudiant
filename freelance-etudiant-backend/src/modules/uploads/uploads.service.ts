@@ -36,4 +36,18 @@ export class UploadsService {
       url,
     };
   }
+
+  /**
+   * Formate la reponse d'un upload de document generique (piece jointe
+   * de message ou de cahier des charges) : conserve le nom original du
+   * fichier pour l'affichage/telechargement cote client, meme si le
+   * fichier est stocke sous un nom UUID sur le disque.
+   */
+  formatDocumentResponse(file: Express.Multer.File) {
+    return {
+      url: `/uploads/documents/${file.filename}`,
+      nomFichier: file.originalname,
+      tailleOctets: file.size,
+    };
+  }
 }

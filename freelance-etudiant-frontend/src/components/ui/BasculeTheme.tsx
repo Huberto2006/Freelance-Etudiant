@@ -1,135 +1,210 @@
 "use client";
 
-import {
-  useSyncExternalStore,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
 type Theme = "clair" | "sombre";
 
-function appliquer(theme: Theme) {
+const THEME_KEY = "kianja-theme";
+
+/**
+ * Vérifie si une valeur correspond à un thème valide.
+ */
+function estTheme(value: string | null): value is Theme {
+  return value === "clair" || value === "sombre";
+}
+
+/**
+ * Récupère le thème enregistré.
+ */
+function lireTheme(): Theme {
+  if (typeof window === "undefined") {
+    return "clair";
+  }
+
+  try {
+    const theme = window.localStorage.getItem(THEME_KEY);
+
+    return estTheme(theme) ? theme : "clair";
+  } catch {
+    return "clair";
+  }
+}
+
+/**
+ * Enregistre le thème.
+ */
+function enregistrerTheme(theme: Theme) {
+  try {
+    window.localStorage.setItem(THEME_KEY, theme);
+  } catch {
+    // localStorage indisponible
+  }
+}
+
+/**
+ * Applique le thème au document HTML.
+ */
+function appliquerTheme(theme: Theme) {
+  if (typeof document === "undefined") {
+    return;
+  }
+
   document.documentElement.classList.toggle(
     "dark",
     theme === "sombre",
   );
 }
 
-function lireTheme(): Theme {
-  try {
-    const stocke = window.localStorage.getItem("kianja-theme");
-
-    if (stocke === "sombre" || stocke === "clair") {
-      return stocke;
-    }
-  } catch {
-    // localStorage indisponible
-  }
-
-  return "clair";
-}
-
-function subscribe() {
-  return () => {};
-}
-
-function getSnapshot() {
-  return true;
-}
-
-function getServerSnapshot() {
-  return false;
-}
-
 export function BasculeTheme() {
-  const client = useSyncExternalStore(
-    subscribe,
-    getSnapshot,
-    getServerSnapshot,
-  );
-
   const [theme, setTheme] = useState<Theme>("clair");
+  const [estInitialise, setEstInitialise] = useState(false);
 
-  if (!client) {
+  /**
+   * Initialisation du thème côté navigateur.
+   */
+  useEffect(() => {
+    const themeInitial = lireTheme();
+
+    setTheme(themeInitial);
+    appliquerTheme(themeInitial);
+    setEstInitialise(true);
+  }, []);
+
+  /**
+   * Change le thème.
+   */
+  const basculer = () => {
+    const nouveauTheme: Theme =
+      theme === "clair" ? "sombre" : "clair";
+
+    setTheme(nouveauTheme);
+    appliquerTheme(nouveauTheme);
+    enregistrerTheme(nouveauTheme);
+  };
+
+  /**
+   * Évite les différences entre SSR et navigateur.
+   */
+  if (!estInitialise) {
     return (
       <button
         type="button"
         disabled
-        aria-label="Changer de thème"
-        title="Changer de thème"
-        className="flex h-8 w-8 items-center justify-center rounded-full border border-ink/20 text-ink-soft opacity-60"
+        aria-label="Chargement du thème"
+        title="Chargement du thème"
+        className="
+          flex h-9 w-9
+          items-center justify-center
+          rounded-full
+          border border-ink/20
+          text-ink-soft
+          opacity-50
+        "
       >
-        <span className="h-4 w-4" />
+        <span
+          className="
+            h-4 w-4
+            animate-pulse
+            rounded-full
+            bg-current
+          "
+        />
       </button>
     );
   }
 
-  const themeActuel = lireTheme();
-
-  function basculer() {
-    const suivant: Theme =
-      theme === "sombre" || themeActuel === "sombre"
-        ? "clair"
-        : "sombre";
-
-    setTheme(suivant);
-    appliquer(suivant);
-
-    try {
-      window.localStorage.setItem(
-        "kianja-theme",
-        suivant,
-      );
-    } catch {
-      // localStorage indisponible
-    }
-  }
-
-  const sombre =
-    theme === "sombre" || themeActuel === "sombre";
+  const modeSombre = theme === "sombre";
 
   return (
     <button
       type="button"
       onClick={basculer}
       aria-label={
-        sombre
+        modeSombre
           ? "Passer en mode clair"
           : "Passer en mode sombre"
       }
-      title={sombre ? "Mode clair" : "Mode sombre"}
-      className="flex h-8 w-8 items-center justify-center rounded-full border border-ink/20 text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
+      title={
+        modeSombre
+          ? "Passer en mode clair"
+          : "Passer en mode sombre"
+      }
+      className="
+        group
+        flex h-9 w-9
+        items-center justify-center
+        rounded-full
+        border border-ink/20
+        text-ink-soft
+        transition-all duration-200
+        hover:border-ocre
+        hover:bg-ocre/10
+        hover:text-ocre-dark
+        hover:shadow-sm
+        focus:outline-none
+        focus:ring-2
+        focus:ring-ocre/30
+        active:scale-95
+      "
     >
-      {sombre ? (
-        <svg
-          viewBox="0 0 24 24"
-          className="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="4" />
-          <path
-            strokeLinecap="round"
-            d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"
-          />
-        </svg>
-      ) : (
-        <svg
-          viewBox="0 0 24 24"
-          className="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"
-          />
-        </svg>
-      )}
+      <span
+        className="
+          flex h-full w-full
+          items-center justify-center
+          transition-transform duration-300
+          group-hover:rotate-12
+        "
+      >
+        {modeSombre ? (
+          /* MODE SOMBRE → soleil */
+          <svg
+            viewBox="0 0 24 24"
+            className="h-[18px] w-[18px]"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="4" />
+
+            <path
+              strokeLinecap="round"
+              d="
+                M12 2v2
+                M12 20v2
+                M2 12h2
+                M20 12h2
+                M4.93 4.93l1.41 1.41
+                M17.66 17.66l1.41 1.41
+                M19.07 4.93l-1.41 1.41
+                M6.34 17.66l-1.41 1.41
+              "
+            />
+          </svg>
+        ) : (
+          /* MODE CLAIR → lune */
+          <svg
+            viewBox="0 0 24 24"
+            className="h-[18px] w-[18px]"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="
+                M20.5 14.5
+                A8.5 8.5 0 1 1
+                9.5 3.5
+                A6.8 6.8 0 0 0
+                20.5 14.5Z
+              "
+            />
+          </svg>
+        )}
+      </span>
     </button>
   );
 }

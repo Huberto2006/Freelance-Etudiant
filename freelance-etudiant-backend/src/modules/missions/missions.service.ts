@@ -132,6 +132,40 @@ export class MissionsService {
   }
 
   /**
+   * Cree une mission "privee" issue de l'acceptation d'une demande de
+   * service (RGds3) : le client a commande directement un service publie
+   * par un etudiant, avec un cahier des charges. Cette mission n'est pas
+   * moderee/publique (elle ne doit pas apparaitre dans le panneau
+   * d'affichage ni recevoir d'autres candidatures) ; elle sert uniquement
+   * de support au cycle existant (livraison, paiement, messagerie).
+   */
+  async creerDepuisDemandeService(params: {
+    clientId: string;
+    titre: string;
+    description: string;
+    budget: number;
+    delaiJours: number;
+    categorie: string;
+    competencesRequises: string[];
+  }): Promise<Mission> {
+    const dateLimite = new Date();
+    dateLimite.setDate(dateLimite.getDate() + Math.max(1, params.delaiJours));
+
+    const mission = this.repo.create({
+      titre: params.titre,
+      description: params.description,
+      budget: params.budget,
+      dateLimite,
+      categorie: params.categorie,
+      competencesRequises: params.competencesRequises,
+      clientId: params.clientId,
+      statut: StatutMission.EN_COURS,
+      estModere: false,
+    });
+    return this.repo.save(mission);
+  }
+
+  /**
    * RG3 : une mission ne peut plus recevoir de candidature apres sa date
    * limite. Utilise par CandidaturesService avant creation d'une candidature.
    */

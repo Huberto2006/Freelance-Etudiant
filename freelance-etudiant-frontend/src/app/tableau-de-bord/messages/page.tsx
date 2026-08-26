@@ -20,6 +20,11 @@ import { formatDateCourte } from "@/lib/format";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Field";
 import { NoticeCard } from "@/components/ui/Notice";
+import {
+  PieceJointeAffichage,
+  SelecteurPieceJointe,
+  type PieceJointeValeur,
+} from "@/components/ui/PieceJointe";
 
 /* =========================================================
    PAGE
@@ -126,6 +131,11 @@ function MessagesContent() {
     nouveauMessage,
     setNouveauMessage,
   ] = useState("");
+
+  const [
+    pieceJointe,
+    setPieceJointe,
+  ] = useState<PieceJointeValeur | null>(null);
 
   const [
     chargement,
@@ -457,10 +467,17 @@ function MessagesContent() {
 
           contenu:
             nouveauMessage.trim(),
+
+          pieceJointeUrl:
+            pieceJointe?.url,
+
+          pieceJointeNom:
+            pieceJointe?.nom,
         },
       );
 
       setNouveauMessage("");
+      setPieceJointe(null);
 
       /*
        * Recharge la conversation après envoi.
@@ -664,6 +681,15 @@ function MessagesContent() {
                               }
                             </p>
 
+                            {message.pieceJointeUrl && (
+                              <div className="mt-2">
+                                <PieceJointeAffichage
+                                  url={message.pieceJointeUrl}
+                                  nom={message.pieceJointeNom}
+                                />
+                              </div>
+                            )}
+
                             <p
                               className={`mt-1 text-[10px] font-mono ${
                                 estMoi
@@ -688,35 +714,43 @@ function MessagesContent() {
 
                 <form
                   onSubmit={envoyer}
-                  className="mt-3 flex gap-2"
+                  className="mt-3 flex flex-col gap-2"
                 >
-                  <Textarea
-                    rows={1}
-                    value={
-                      nouveauMessage
-                    }
-                    onChange={(e) =>
-                      setNouveauMessage(
-                        e.target.value,
-                      )
-                    }
-                    placeholder="Écrire un message…"
-                    className="flex-1"
+                  <div className="flex gap-2">
+                    <Textarea
+                      rows={1}
+                      value={
+                        nouveauMessage
+                      }
+                      onChange={(e) =>
+                        setNouveauMessage(
+                          e.target.value,
+                        )
+                      }
+                      placeholder="Écrire un message…"
+                      className="flex-1"
+                      disabled={envoi}
+                    />
+
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={
+                        envoi ||
+                        !nouveauMessage.trim()
+                      }
+                    >
+                      {envoi
+                        ? "Envoi…"
+                        : "Envoyer"}
+                    </Button>
+                  </div>
+
+                  <SelecteurPieceJointe
+                    valeur={pieceJointe}
+                    onChange={setPieceJointe}
                     disabled={envoi}
                   />
-
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={
-                      envoi ||
-                      !nouveauMessage.trim()
-                    }
-                  >
-                    {envoi
-                      ? "Envoi…"
-                      : "Envoyer"}
-                  </Button>
                 </form>
               </NoticeCard>
             )}

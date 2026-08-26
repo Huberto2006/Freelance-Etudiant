@@ -6,6 +6,8 @@ export interface MessageAvecUtilisateurs {
   expediteur?: { id: string; nom: string };
   destinataire?: { id: string; nom: string };
   missionId?: string | null;
+  pieceJointeUrl?: string | null;
+  pieceJointeNom?: string | null;
   estLu: boolean;
   dateEnvoi: string;
 }
