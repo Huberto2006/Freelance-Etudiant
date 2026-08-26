@@ -1,288 +1,165 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Bell,
-  BriefcaseBusiness,
-  ClipboardList,
-  Flag,
-  Heart,
-  LayoutDashboard,
   MessageCircle,
-  ShieldCheck,
-  User,
-  Wallet,
-  Wrench,
-  Truck,
+  Settings,
 } from "lucide-react";
 
 import type { Role } from "./types";
 
-export interface LienNav {
+export interface SousLienNav {
   href: string;
   label: string;
-  icon: LucideIcon;
 }
 
-/**
- * ============================================================
- * NAVIGATION PUBLIQUE
- * ============================================================
- */
+export interface GroupeNav {
+  label: string;
+  href?: string;
 
-export const liensNavbarPublics: LienNav[] = [
-  {
-    href: "/missions",
-    label: "Missions",
-    icon: BriefcaseBusiness,
-  },
-  {
-    href: "/services",
-    label: "Services",
-    icon: Wrench,
-  },
-];
+  // Icône uniquement pour les éléments globaux
+  icon?: LucideIcon;
 
-/**
- * ============================================================
- * NAVIGATION PRINCIPALE
- * ============================================================
- *
- * Navigation volontairement courte.
- * La navigation complète est dans la sidebar du dashboard.
- */
+  // Sous-liens pour les menus déroulants
+  liens?: SousLienNav[];
+}
 
-export const liensNavbarParRole: Record<Role, LienNav[]> = {
-  etudiant: [
-    {
-      href: "/missions",
-      label: "Missions",
-      icon: BriefcaseBusiness,
-    },
-    {
-      href: "/tableau-de-bord/candidatures",
-      label: "Candidatures",
-      icon: ClipboardList,
-    },
-    {
-      href: "/tableau-de-bord/livraisons",
-      label: "Livraisons",
-      icon: Truck,
-    },
-  ],
-
-  client: [
-    {
-      href: "/services",
-      label: "Services",
-      icon: Wrench,
-    },
-    {
-      href: "/tableau-de-bord/mes-missions",
-      label: "Mes missions",
-      icon: BriefcaseBusiness,
-    },
-    {
-      href: "/tableau-de-bord/livraisons",
-      label: "Livraisons",
-      icon: Truck,
-    },
-  ],
-
-  admin: [
-    {
-      href: "/tableau-de-bord/admin",
-      label: "Administration",
-      icon: ShieldCheck,
-    },
-  ],
-};
-
-/**
- * ============================================================
- * SIDEBAR DU TABLEAU DE BORD
- * ============================================================
- *
- * Ordre :
- *
- * 1. Vue d'ensemble
- * 2. Notifications
- * 3. Activité
- * 4. Livraisons
- * 5. Finance
- * 6. Communication
- * 7. Profil
- */
-
-export const liensSidebarParRole: Record<Role, LienNav[]> = {
+export const navigationParRole: Record<Role, GroupeNav[]> = {
   // ==========================================================
   // ÉTUDIANT
   // ==========================================================
-
   etudiant: [
     {
+      label: "Tableau de bord",
       href: "/tableau-de-bord",
-      label: "Vue d'ensemble",
-      icon: LayoutDashboard,
     },
-
     {
-      href: "/tableau-de-bord/notifications",
+      label: "Missions",
+      href: "/missions",
+    },
+    {
+      label: "Services",
+      href: "/services",
+    },
+    {
+      label: "Livraisons",
+      href: "/tableau-de-bord/livraisons",
+    },
+    {
       label: "Notifications",
+      href: "/tableau-de-bord/notifications",
       icon: Bell,
     },
-
-    // Activité
     {
-      href: "/missions",
-      label: "Missions",
-      icon: BriefcaseBusiness,
-    },
-
-    {
-      href: "/tableau-de-bord/mes-services",
-      label: "Mes services",
-      icon: Wrench,
-    },
-
-    {
-      href: "/tableau-de-bord/candidatures",
-      label: "Mes candidatures",
-      icon: ClipboardList,
-    },
-
-    // Livraison
-    {
-      href: "/tableau-de-bord/livraisons",
-      label: "Livraisons",
-      icon: Truck,
-    },
-
-    // Finance
-    {
-      href: "/tableau-de-bord/paiements",
-      label: "Paiements",
-      icon: Wallet,
-    },
-
-    // Communication
-    {
-      href: "/tableau-de-bord/messages",
       label: "Messages",
+      href: "/tableau-de-bord/messages",
       icon: MessageCircle,
     },
-
     {
-      href: "/tableau-de-bord/favoris",
-      label: "Favoris",
-      icon: Heart,
-    },
-
-    // Profil
-    {
-      href: "/tableau-de-bord/profil",
-      label: "Mon profil",
-      icon: User,
+      label: "Paramètres",
+      icon: Settings,
+      liens: [
+        {
+          href: "/tableau-de-bord/paiements",
+          label: "Paiements",
+        },
+        {
+          href: "/tableau-de-bord/favoris",
+          label: "Favoris",
+        },
+      ],
     },
   ],
 
   // ==========================================================
   // CLIENT
   // ==========================================================
-
   client: [
     {
+      label: "Tableau de bord",
       href: "/tableau-de-bord",
-      label: "Vue d'ensemble",
-      icon: LayoutDashboard,
     },
-
     {
-      href: "/tableau-de-bord/notifications",
+      label: "Missions",
+      href: "/missions",
+    },
+    {
+      label: "Services",
+      href: "/services",
+    },
+    {
+      label: "Livraisons",
+      href: "/tableau-de-bord/livraisons",
+    },
+    {
       label: "Notifications",
+      href: "/tableau-de-bord/notifications",
       icon: Bell,
     },
-
-    // Activité
     {
-      href: "/services",
-      label: "Services",
-      icon: Wrench,
-    },
-
-    {
-      href: "/tableau-de-bord/mes-missions",
-      label: "Mes missions",
-      icon: BriefcaseBusiness,
-    },
-
-    // Livraison
-    {
-      href: "/tableau-de-bord/livraisons",
-      label: "Livraisons",
-      icon: Truck,
-    },
-
-    // Finance
-    {
-      href: "/tableau-de-bord/paiements",
-      label: "Paiements",
-      icon: Wallet,
-    },
-
-    // Communication
-    {
-      href: "/tableau-de-bord/messages",
       label: "Messages",
+      href: "/tableau-de-bord/messages",
       icon: MessageCircle,
     },
-
     {
-      href: "/tableau-de-bord/favoris",
-      label: "Favoris",
-      icon: Heart,
-    },
-
-    // Profil
-    {
-      href: "/tableau-de-bord/profil",
-      label: "Mon profil",
-      icon: User,
+      label: "Paramètres",
+      icon: Settings,
+      liens: [
+        {
+          href: "/tableau-de-bord/paiements",
+          label: "Paiements",
+        },
+        {
+          href: "/tableau-de-bord/favoris",
+          label: "Favoris",
+        },
+      ],
     },
   ],
 
   // ==========================================================
   // ADMINISTRATEUR
   // ==========================================================
-
   admin: [
     {
+      label: "Tableau de bord",
       href: "/tableau-de-bord",
-      label: "Vue d'ensemble",
-      icon: LayoutDashboard,
     },
-
     {
-      href: "/tableau-de-bord/notifications",
+      label: "Administration",
+      liens: [
+        {
+          href: "/tableau-de-bord/admin",
+          label: "Gestion",
+        },
+        {
+          href: "/tableau-de-bord/admin/signalements",
+          label: "Signalements",
+        },
+        {
+          href: "/tableau-de-bord/admin/paiements",
+          label: "Paiements",
+        },
+      ],
+    },
+    {
       label: "Notifications",
+      href: "/tableau-de-bord/notifications",
       icon: Bell,
     },
-
-    // Administration
     {
-      href: "/tableau-de-bord/admin",
-      label: "Administration",
-      icon: ShieldCheck,
+      label: "Messages",
+      href: "/tableau-de-bord/messages",
+      icon: MessageCircle,
     },
-
     {
-      href: "/tableau-de-bord/admin/signalements",
-      label: "Signalements",
-      icon: Flag,
-    },
-
-    {
-      href: "/tableau-de-bord/admin/paiements",
-      label: "Paiements",
-      icon: Wallet,
+      label: "Paramètres",
+      icon: Settings,
+      liens: [
+        {
+          href: "/tableau-de-bord/profil",
+          label: "Mon profil",
+        },
+      ],
     },
   ],
 };

@@ -2,12 +2,19 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { api } from "@/lib/api";
+import { FileText, SendHorizonal } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { api, ApiError } from "@/lib/api";
 import type { ServiceOffert } from "@/lib/types";
 import { formatArgent, formatDate } from "@/lib/format";
 import { NoticeCard, StampBadge, Tag } from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { Field, Input, Textarea } from "@/components/ui/Field";
+import {
+  SelecteurPieceJointe,
+  type PieceJointeValeur,
+} from "@/components/ui/PieceJointe";
 
 export default function ServiceDetailPage({
   params,
@@ -15,15 +22,52 @@ export default function ServiceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const { utilisateur } = useAuth();
   const [service, setService] = useState<ServiceOffert | null>(null);
   const [chargement, setChargement] = useState(true);
+
+  const [afficherFormulaire, setAfficherFormulaire] = useState(false);
+  const [cahierDesCharges, setCahierDesCharges] = useState("");
+  const [budgetPropose, setBudgetPropose] = useState("");
+  const [delaiSouhaite, setDelaiSouhaite] = useState("");
+  const [pieceJointe, setPieceJointe] = useState<PieceJointeValeur | null>(null);
+  const [envoi, setEnvoi] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [succes, setSucces] = useState(false);
 
   useEffect(() => {
     api
       .get<ServiceOffert>(`/services/${id}`, { auth: false })
-      .then(setService)
+      .then((data) => {
+        setService(data);
+        setBudgetPropose(String(data.prix));
+        setDelaiSouhaite(String(data.delai));
+      })
       .finally(() => setChargement(false));
   }, [id]);
+
+  async function commander(e: React.FormEvent) {
+    e.preventDefault();
+    setErreur(null);
+    setEnvoi(true);
+    try {
+      await api.post(`/services/${id}/demandes`, {
+        cahierDesCharges,
+        budgetPropose: budgetPropose ? Number(budgetPropose) : undefined,
+        delaiSouhaite: delaiSouhaite ? Number(delaiSouhaite) : undefined,
+        pieceJointeUrl: pieceJointe?.url,
+        pieceJointeNom: pieceJointe?.nom,
+      });
+      setSucces(true);
+      setAfficherFormulaire(false);
+    } catch (err) {
+      setErreur(
+        err instanceof ApiError ? err.message : "Impossible d'envoyer la demande",
+      );
+    } finally {
+      setEnvoi(false);
+    }
+  }
 
   if (chargement) {
     return <p className="mx-auto max-w-3xl px-5 py-16 text-sm text-ink-soft">Chargement…</p>;
@@ -38,6 +82,7 @@ export default function ServiceDetailPage({
   }
 
   const etudiant = service.etudiant;
+  const estProprietaire = utilisateur?.id === etudiant?.utilisateurId;
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-14">
@@ -127,6 +172,98 @@ export default function ServiceDetailPage({
           </Link>
         </NoticeCard>
       )}
+
+      {/* --- Commande du service --- */}
+      {succes ? (
+        <NoticeCard className="mt-8 border-rice/50">
+          <p className="text-rice font-medium">
+            Votre demande a bien été envoyée avec votre cahier des charges.
+            L&apos;étudiant peut maintenant l&apos;examiner.
+          </p>
+        </NoticeCard>
+      ) : utilisateur?.role === "client" && !estProprietaire ? (
+        afficherFormulaire ? (
+          <NoticeCard className="mt-8">
+            <div className="mb-4 flex items-center gap-2">
+              <FileText size={18} className="text-ocre-dark" />
+              <h2 className="font-display text-xl font-semibold">
+                Cahier des charges
+              </h2>
+            </div>
+            <p className="text-sm text-ink-soft mb-5">
+              Décrivez précisément votre besoin : contexte, livrables
+              attendus, contraintes. L&apos;étudiant s&apos;appuiera sur ces
+              informations pour réaliser le projet.
+            </p>
+            <form onSubmit={commander} className="flex flex-col gap-5">
+              <Field label="Cahier des charges" htmlFor="cahierDesCharges">
+                <Textarea
+                  id="cahierDesCharges"
+                  rows={7}
+                  required
+                  minLength={20}
+                  value={cahierDesCharges}
+                  onChange={(e) => setCahierDesCharges(e.target.value)}
+                  placeholder="Contexte du projet, pages/fonctionnalités attendues, style souhaité, contraintes techniques…"
+                />
+              </Field>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Budget proposé (Ar)" htmlFor="budgetPropose">
+                  <Input
+                    id="budgetPropose"
+                    type="number"
+                    min={0}
+                    value={budgetPropose}
+                    onChange={(e) => setBudgetPropose(e.target.value)}
+                  />
+                </Field>
+                <Field label="Délai souhaité (jours)" htmlFor="delaiSouhaite">
+                  <Input
+                    id="delaiSouhaite"
+                    type="number"
+                    min={1}
+                    value={delaiSouhaite}
+                    onChange={(e) => setDelaiSouhaite(e.target.value)}
+                  />
+                </Field>
+              </div>
+              <div>
+                <p className="mb-1.5 text-xs font-mono uppercase tracking-wider text-ink-soft">
+                  Pièce jointe (optionnel)
+                </p>
+                <SelecteurPieceJointe
+                  valeur={pieceJointe}
+                  onChange={setPieceJointe}
+                  disabled={envoi}
+                />
+              </div>
+              {erreur && <p className="text-sm text-brique">{erreur}</p>}
+              <div className="flex gap-3">
+                <Button type="submit" disabled={envoi} className="gap-2">
+                  <SendHorizonal size={15} />
+                  {envoi ? "Envoi…" : "Envoyer ma demande"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setAfficherFormulaire(false)}
+                >
+                  Annuler
+                </Button>
+              </div>
+            </form>
+          </NoticeCard>
+        ) : (
+          <Button
+            size="lg"
+            className="mt-8 gap-2"
+            onClick={() => setAfficherFormulaire(true)}
+          >
+            <FileText size={16} />
+            Commander ce service
+          </Button>
+        )
+      ) : null}
     </div>
   );
 }

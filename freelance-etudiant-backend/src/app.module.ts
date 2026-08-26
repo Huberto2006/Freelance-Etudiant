@@ -27,6 +27,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { ReactionsModule } from './modules/reactions/reactions.module';
 import { FavorisModule } from './modules/favoris/favoris.module';
 import { PaiementsModule } from './modules/paiements/paiements.module';
+import { DemandesServiceModule } from './modules/demandes-service/demandes-service.module';
 
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { UploadsModule } from './modules/uploads/uploads.module';
@@ -85,6 +86,7 @@ import { UploadsModule } from './modules/uploads/uploads.module';
     ReactionsModule,
     FavorisModule,
     PaiementsModule,
+    DemandesServiceModule,
   ],
   providers: [
     {

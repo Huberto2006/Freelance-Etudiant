@@ -65,3 +65,9 @@ export const statutSignalementLabel: Record<string, string> = {
   en_cours: "En cours de traitement",
   traite: "Traité",
 };
+
+export const statutDemandeServiceLabel: Record<string, string> = {
+  en_attente: "En attente de réponse",
+  acceptee: "Acceptée",
+  refusee: "Refusée",
+};

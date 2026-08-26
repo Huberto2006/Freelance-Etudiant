@@ -46,6 +46,12 @@ export class Message {
   @Column({ type: 'boolean', name: 'est_lu', default: false })
   estLu: boolean;
 
+  @Column({ name: 'piece_jointe_url', type: 'varchar', length: 300, nullable: true })
+  pieceJointeUrl?: string | null;
+
+  @Column({ name: 'piece_jointe_nom', type: 'varchar', length: 255, nullable: true })
+  pieceJointeNom?: string | null;
+
   @CreateDateColumn({ name: 'date_envoi', type: 'timestamptz' })
   dateEnvoi: Date;
 }
