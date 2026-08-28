@@ -41,9 +41,12 @@ export class DemandesServiceController {
   }
 
   @Get('demandes-service/:id')
-  @ApiOperation({ summary: 'Consulter une demande de service' })
-  async findOne(@Param('id') id: string) {
-    return this.demandesServiceService.findOne(id);
+  @ApiOperation({ summary: 'Consulter une demande de service (client, etudiant fournisseur ou admin)' })
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.demandesServiceService.findOnePourUtilisateur(id, user);
   }
 
   @Roles(Role.ETUDIANT)

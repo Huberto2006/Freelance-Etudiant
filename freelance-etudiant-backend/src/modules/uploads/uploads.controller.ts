@@ -9,6 +9,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { randomUUID } from 'crypto';
+import { existsSync, mkdirSync } from 'fs';
 import { UploadsService } from './uploads.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
@@ -17,6 +18,18 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UseGuards } from '@nestjs/common';
+
+/**
+ * Garantit l'existence du repertoire de destination avant l'ecriture du
+ * fichier par Multer. Sans cela, l'upload echoue avec ENOENT tant que le
+ * dossier n'a pas ete cree manuellement sur le serveur.
+ */
+function assurerRepertoire(destination: string): string {
+  if (!existsSync(destination)) {
+    mkdirSync(destination, { recursive: true });
+  }
+  return destination;
+}
 
 @ApiTags('Uploads')
 @ApiBearerAuth()
@@ -33,7 +46,7 @@ export class UploadsController {
     FileInterceptor('file', {
       storage: diskStorage({
         destination: (req, file, cb) => {
-          cb(null, 'uploads/profiles');
+          cb(null, assurerRepertoire('uploads/profiles'));
         },
 
         filename: (req, file, cb) => {
@@ -91,7 +104,7 @@ export class UploadsController {
     FileInterceptor('file', {
       storage: diskStorage({
         destination: (req, file, cb) => {
-          cb(null, 'uploads/documents');
+          cb(null, assurerRepertoire('uploads/documents'));
         },
 
         filename: (req, file, cb) => {

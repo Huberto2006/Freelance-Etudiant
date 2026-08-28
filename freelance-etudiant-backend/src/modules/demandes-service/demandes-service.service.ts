@@ -14,6 +14,7 @@ import { MissionsService } from '../missions/missions.service';
 import { CandidaturesService } from '../candidatures/candidatures.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { Role } from '../../common/enums/role.enum';
 
 @Injectable()
 export class DemandesServiceService {
@@ -83,6 +84,31 @@ export class DemandesServiceService {
     if (!demande) {
       throw new NotFoundException('Demande de service introuvable');
     }
+    return demande;
+  }
+
+  /**
+   * Consultation d'une demande de service restreinte aux acteurs de la
+   * demande : le client qui l'a passee, l'etudiant fournisseur du service,
+   * ou un administrateur. Corrige une faille IDOR : le cahier des charges
+   * est une donnee privee qui ne doit pas etre lisible par n'importe quel
+   * utilisateur authentife devinant l'identifiant.
+   */
+  async findOnePourUtilisateur(
+    id: string,
+    utilisateur: { id: string; role: Role },
+  ): Promise<DemandeService> {
+    const demande = await this.findOne(id);
+
+    const estClient = demande.clientId === utilisateur.id;
+    const estFournisseur = demande.service?.etudiantId === utilisateur.id;
+
+    if (!estClient && !estFournisseur && utilisateur.role !== Role.ADMIN) {
+      throw new ForbiddenException(
+        "Vous n'avez pas acces a cette demande de service",
+      );
+    }
+
     return demande;
   }
 

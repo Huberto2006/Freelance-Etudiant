@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import {
   LogOut,
+  Search,
   User,
   ChevronDown,
 } from "lucide-react";
@@ -516,6 +517,60 @@ export function Navbar() {
         )}
 
         {/* ====================================================
+            NAVIGATION PUBLIQUE (VISITEURS NON CONNECTES)
+            ==================================================== */}
+
+        {!chargement && !utilisateur && (
+          <nav
+            className="
+              hidden flex-1
+              items-center gap-0.5
+              md:flex
+            "
+            aria-label="Navigation publique"
+          >
+            {[
+              { href: "/missions", label: "Missions" },
+              { href: "/services", label: "Services" },
+            ].map((lien) => {
+              const actif = estActif(lien.href);
+
+              return (
+                <Link
+                  key={lien.href}
+                  href={lien.href}
+                  aria-current={actif ? "page" : undefined}
+                  className={clsx(
+                    `
+                      shrink-0
+                      rounded-lg
+                      px-2.5 py-2
+                      text-xs
+                      font-medium
+                      transition-all
+                      sm:px-3
+                      sm:text-sm
+                    `,
+                    actif
+                      ? `
+                        bg-ocre/10
+                        text-ocre-dark
+                      `
+                      : `
+                        text-ink-soft
+                        hover:bg-ink/5
+                        hover:text-ink
+                      `,
+                  )}
+                >
+                  {lien.label}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
+
+        {/* ====================================================
             ACTIONS À DROITE
             ==================================================== */}
 
@@ -526,6 +581,42 @@ export function Navbar() {
             items-center gap-0.5
           "
         >
+          {/* ==================================================
+              RECHERCHE COMPACTE (DESKTOP)
+              ================================================== */}
+
+          <form
+            action="/services"
+            role="search"
+            className="mr-2 hidden w-52 lg:block xl:w-64"
+          >
+            <div className="relative">
+              <Search
+                size={14}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+                aria-hidden="true"
+              />
+
+              <input
+                type="search"
+                name="q"
+                placeholder="Rechercher un service…"
+                aria-label="Rechercher un service"
+                className="
+                  w-full
+                  rounded-full
+                  border border-ink/25
+                  bg-paper-light
+                  py-1.5 pl-8 pr-3
+                  text-xs text-ink
+                  placeholder:text-ink-soft/50
+                  transition-colors
+                  focus:border-rice
+                "
+              />
+            </div>
+          </form>
+
           {/* ==================================================
               MESSAGES / NOTIFICATIONS / PARAMÈTRES
               ================================================== */}

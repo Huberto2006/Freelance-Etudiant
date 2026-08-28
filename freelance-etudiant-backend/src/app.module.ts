@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 
 import appConfig from './config/app.config';
@@ -89,6 +89,14 @@ import { UploadsModule } from './modules/uploads/uploads.module';
     DemandesServiceModule,
   ],
   providers: [
+    {
+      // Rate limiting global (100 requetes/min/IP). Enregistre AVANT le
+      // JwtAuthGuard afin de proteger egalement les routes d'authentification
+      // (brute force sur /auth/login). Le module etait configure mais le
+      // garde n'etait jamais enregistre : le throttling etait inactif.
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
