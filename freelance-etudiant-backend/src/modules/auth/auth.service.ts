@@ -99,8 +99,13 @@ export class AuthService {
 
   async refreshToken(refreshToken: string) {
     try {
+      // Meme secret que celui utilise pour SIGNER le refresh token dans
+      // buildAuthResponse() : un secret dedie (JWT_REFRESH_SECRET) avec
+      // repli sur le secret principal s'il n'est pas defini.
       const payload = this.jwtService.verify<JwtPayload>(refreshToken, {
-        secret: this.configService.get<string>("jwt.refreshSecret"),
+        secret:
+          this.configService.get<string>("jwt.refreshSecret") ??
+          this.configService.get<string>("JWT_SECRET"),
       });
       const utilisateur = await this.usersService.findById(payload.sub);
       if (!utilisateur || utilisateur.estSuspendu || !utilisateur.estActif) {
@@ -182,16 +187,25 @@ export class AuthService {
       expiresIn: (this.configService.get<string>("JWT_EXPIRES_IN") ??
         "15m") as StringValue,
     });
-    const jwtExpiresIn = (this.configService.get<string>("JWT_EXPIRES_IN") ??
-      "15m") as StringValue;
 
-    const refreshExpiresIn = (this.configService.get<string>(
-      "JWT_REFRESH_EXPIRES_IN",
-    ) ?? "7d") as StringValue;
+    /*
+     * Correctif : le refresh token doit etre signe avec un secret DEDIE
+     * (JWT_REFRESH_SECRET) et non avec le secret du JwtModule. C'est le
+     * secret que refreshToken() utilise pour la verification ; signe avec
+     * le secret principal, la verification echouait systematiquement.
+     * Repli sur le secret principal si le secret dedie est absent.
+     */
+    const refreshSecret =
+      this.configService.get<string>("jwt.refreshSecret") ??
+      this.configService.get<string>("JWT_SECRET");
+
     const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: (this.configService.get<string>("JWT_REFRESH_EXPIRES_IN") ??
-        "7d") as StringValue,
+      secret: refreshSecret,
+      expiresIn: (this.configService.get<string>(
+        "JWT_REFRESH_EXPIRES_IN",
+      ) ?? "7d") as StringValue,
     });
+
     return {
       accessToken,
       refreshToken,

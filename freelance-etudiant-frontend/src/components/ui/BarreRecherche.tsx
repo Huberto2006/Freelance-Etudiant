@@ -16,14 +16,20 @@ export interface Filtres {
 export function BarreRecherche({
   onFiltrer,
   placeholder = "Rechercher par mots-clés…",
+  avecBudget,
+  filtresInitiaux,
 }: {
   onFiltrer: (filtres: Filtres) => void;
   placeholder?: string;
   avecBudget?: boolean;
+  /** Valeurs pre-remplies depuis l'URL (ex. /services?q=design). */
+  filtresInitiaux?: Filtres;
 }) {
-  const [motsCles, setMotsCles] = useState("");
-  const [categorie, setCategorie] = useState("");
-  const [competence, setCompetence] = useState("");
+  const [motsCles, setMotsCles] = useState(filtresInitiaux?.motsCles ?? "");
+  const [categorie, setCategorie] = useState(filtresInitiaux?.categorie ?? "");
+  const [competence, setCompetence] = useState(
+    filtresInitiaux?.competence ?? "",
+  );
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();

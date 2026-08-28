@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
-import { api, ApiError, getToken, setToken } from "./api";
+import { api, ApiError, getToken, setToken, setRefreshToken, clearTokens } from "./api";
 import type { AuthResponse, Role, Utilisateur } from "./types";
 
 interface RegisterPayload {
@@ -51,7 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUtilisateur(moi);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        setToken(null);
+        // La requete a deja tente un rafraichissement : echec final,
+        // on purge la session locale complete.
+        clearTokens();
       }
       setUtilisateur(null);
     } finally {
@@ -72,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         { auth: false },
       );
       setToken(res.accessToken);
+      setRefreshToken(res.refreshToken);
       await rafraichirProfil();
     },
     [rafraichirProfil],
@@ -83,13 +86,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         auth: false,
       });
       setToken(res.accessToken);
+      setRefreshToken(res.refreshToken);
       await rafraichirProfil();
     },
     [rafraichirProfil],
   );
 
   const deconnecter = useCallback(() => {
-    setToken(null);
+    clearTokens();
     setUtilisateur(null);
     router.push("/");
   }, [router]);
