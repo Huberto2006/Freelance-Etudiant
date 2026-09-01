@@ -2,6 +2,7 @@
 
 import {
   Suspense,
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -11,6 +12,7 @@ import { useSearchParams } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
+import { useSocket } from "@/lib/socket-context";
 import { api, ApiError } from "@/lib/api";
 
 import type { MessageAvecUtilisateurs } from "@/lib/message-types";
@@ -65,6 +67,7 @@ export default function MessagesPage() {
 
 function MessagesContent() {
   const { utilisateur } = useAuth();
+  const { socket } = useSocket();
 
   const searchParams =
     useSearchParams();
@@ -175,7 +178,7 @@ function MessagesContent() {
      CHARGER LES CONVERSATIONS
      ========================================================= */
 
-  async function chargerConversations() {
+  const chargerConversations = useCallback(async () => {
     try {
       const data =
         await api.get<
@@ -197,7 +200,7 @@ function MessagesContent() {
           : "Impossible de charger les conversations.",
       );
     }
-  }
+  }, []);
 
   /* =========================================================
      CHARGEMENT INITIAL
@@ -315,12 +318,52 @@ function MessagesContent() {
     ]);
 
   /* =========================================================
+     MESSAGES NON LUS PAR CONTACT (source : table messages)
+     ========================================================= */
+
+  /*
+   * Indicateur de messagerie : nombre de messages non lus
+   * recus de chaque contact, deduit des conversations chargees
+   * via GET /messages (champ estLu de l'entite Message).
+   *
+   * IMPORTANT : cet etat appartient au systeme MESSAGES et
+   * reste totalement independant du compteur de notifications
+   * 🔔 (table notifications). Lire un message ne change aucune
+   * notification, et marquer une notification comme lue ne
+   * change aucun message.
+   */
+  const nonLusParContact = useMemo(() => {
+    const compteurs = new Map<string, number>();
+
+    if (!utilisateur) {
+      return compteurs;
+    }
+
+    for (const message of conversations) {
+      if (
+        message.destinataireId === utilisateur.id &&
+        !message.estLu
+      ) {
+        const actuel =
+          compteurs.get(message.expediteurId) ?? 0;
+
+        compteurs.set(
+          message.expediteurId,
+          actuel + 1,
+        );
+      }
+    }
+
+    return compteurs;
+  }, [conversations, utilisateur]);
+
+  /* =========================================================
      CHARGER UNE CONVERSATION
      ========================================================= */
 
   async function chargerFil(
     contactId: string,
-  ) {
+  ): Promise<MessageAvecUtilisateurs[]> {
     setChargementFil(true);
     setErreur(null);
 
@@ -333,6 +376,8 @@ function MessagesContent() {
         );
 
       setFil(data);
+
+      return data;
     } catch (error) {
       console.error(
         "Erreur lors du chargement de la conversation :",
@@ -344,10 +389,110 @@ function MessagesContent() {
           ? error.message
           : "Impossible de charger cette conversation.",
       );
+
+      return [];
     } finally {
       setChargementFil(false);
     }
   }
+
+  /* =========================================================
+     MARQUER LES MESSAGES RECUS COMME LUS (systeme MESSAGES)
+     ========================================================= */
+
+  /*
+   * Marque comme lus les messages recus d'une conversation
+   * ouverte, via l'endpoint existant PATCH /messages/:id/lu.
+   *
+   * Cette action appartient exclusivement a la MESSAGERIE :
+   * elle ne modifie AUCUNE notification (les deux etats
+   * "message lu" et "notification lue" restent independants).
+   */
+  const marquerFilCommeLu = useCallback(
+    async (messages: MessageAvecUtilisateurs[]) => {
+      if (!utilisateur) {
+        return;
+      }
+
+      const nonLus = messages.filter(
+        (message) =>
+          message.destinataireId ===
+            utilisateur.id && !message.estLu,
+      );
+
+      if (nonLus.length === 0) {
+        return;
+      }
+
+      try {
+        await Promise.all(
+          nonLus.map((message) =>
+            api.patch(`/messages/${message.id}/lu`),
+          ),
+        );
+
+        /*
+         * Mise a jour locale du fil (estLu -> true).
+         */
+        setFil((prev) =>
+          prev.map((message) =>
+            message.estLu
+              ? message
+              : { ...message, estLu: true },
+          ),
+        );
+
+        /*
+         * Rafraichit les indicateurs non-lus de la
+         * liste de contacts (systeme messages uniquement).
+         */
+        await chargerConversations();
+      } catch (error) {
+        console.error(
+          "Erreur lors du marquage des messages comme lus :",
+          error,
+        );
+      }
+    },
+    [utilisateur, chargerConversations],
+  );
+
+  /*
+   * Marque un seul message recu comme lu (utilise quand un
+   * message arrive en temps reel dans la conversation deja
+   * ouverte : l'utilisateur le voit, il est donc lu).
+   */
+  const marquerMessageRecuCommeLu = useCallback(
+    async (message: MessageAvecUtilisateurs) => {
+      if (
+        !utilisateur ||
+        message.destinataireId !== utilisateur.id ||
+        message.estLu
+      ) {
+        return;
+      }
+
+      try {
+        await api.patch(`/messages/${message.id}/lu`);
+
+        setFil((prev) =>
+          prev.map((item) =>
+            item.id === message.id
+              ? { ...item, estLu: true }
+              : item,
+          ),
+        );
+
+        void chargerConversations();
+      } catch (error) {
+        console.error(
+          "Erreur lors du marquage du message comme lu :",
+          error,
+        );
+      }
+    },
+    [utilisateur, chargerConversations],
+  );
 
   /* =========================================================
      CHANGEMENT DE CONTACT
@@ -366,7 +511,16 @@ function MessagesContent() {
   ) {
     setContactSelectionne(contact);
 
-    void chargerFil(contact.id);
+    /*
+     * Ouvrir la conversation = voir les messages recus :
+     * on les marque donc comme lus via l'endpoint
+     * PATCH /messages/:id/lu (responsabilite MESSAGERIE
+     * uniquement -- aucune notification n'est modifiee ici,
+     * le compteur 🔔 reste independant).
+     */
+    void chargerFil(contact.id).then((filCharge) =>
+      marquerFilCommeLu(filCharge),
+    );
   }
 
   /* =========================================================
@@ -407,6 +561,14 @@ function MessagesContent() {
 
         if (!cancelled) {
           setFil(data);
+
+          /*
+           * Conversation ouverte via l'URL (?contact=...) :
+           * les messages recus affiches sont marques comme
+           * lus (systeme messages, independant des
+           * notifications).
+           */
+          void marquerFilCommeLu(data);
         }
       } catch (error) {
         console.error(
@@ -436,6 +598,67 @@ function MessagesContent() {
   }, [
     contactDepuisUrl,
     contactSelectionne,
+    marquerFilCommeLu,
+  ]);
+
+  /* =========================================================
+     TEMPS RÉEL — NOUVEAUX MESSAGES (Socket.IO)
+     ========================================================= */
+
+  /*
+   * Ecoute les messages poussés par le serveur (destinataire OU
+   * expéditeur, pour la synchronisation multi-onglets).
+   *
+   * Dédoublonnage par id : l'expéditeur reçoit son propre message en
+   * écho via Socket.IO alors qu'il l'a déjà ajouté localement via le
+   * rechargement REST qui suit l'envoi (voir `envoyer()` ci-dessous).
+   */
+  useEffect(() => {
+    if (!socket || !utilisateur) return;
+
+    function onNouveauMessage(
+      message: MessageAvecUtilisateurs,
+    ) {
+      const autreId =
+        message.expediteurId === utilisateur?.id
+          ? message.destinataireId
+          : message.expediteurId;
+
+      if (contactActif?.id === autreId) {
+        setFil((prev) =>
+          prev.some((m) => m.id === message.id)
+            ? prev
+            : [...prev, message],
+        );
+
+        /*
+         * Message recu dans la conversation deja ouverte :
+         * l'utilisateur le voit immediatement, il est donc
+         * lu. Marquage cote MESSAGERIE uniquement (PATCH
+         * /messages/:id/lu) -- aucune notification n'est
+         * creée ni modifiee ici, et le badge 🔔 n'est PAS
+         * decremente : il ne s'effacera que lorsque la
+         * notification correspondante sera lue.
+         */
+        void marquerMessageRecuCommeLu(message);
+      }
+
+      // Rafraîchit la liste des contacts (aperçu du dernier message,
+      // ordre) sans bloquer l'affichage du fil ci-dessus.
+      void chargerConversations();
+    }
+
+    socket.on("message:nouveau", onNouveauMessage);
+
+    return () => {
+      socket.off("message:nouveau", onNouveauMessage);
+    };
+  }, [
+    socket,
+    utilisateur,
+    contactActif,
+    marquerMessageRecuCommeLu,
+    chargerConversations,
   ]);
 
   /* =========================================================
@@ -599,9 +822,27 @@ function MessagesContent() {
                       : "border-ink/15 hover:border-ink/40"
                   }`}
                 >
-                  <p className="font-medium">
-                    {contact.nom}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">
+                      {contact.nom}
+                    </p>
+
+                    {/*
+                      Indicateur de MESSAGES non lus (●),
+                      deduit du champ estLu de la table
+                      messages. Totalement independant du
+                      compteur de notifications 🔔.
+                    */}
+                    {(nonLusParContact.get(
+                      contact.id,
+                    ) ?? 0) > 0 && (
+                      <span
+                        className="h-2 w-2 shrink-0 rounded-full bg-ocre-dark"
+                        title={`${nonLusParContact.get(contact.id)} message(s) non lu(s)`}
+                        aria-label={`${nonLusParContact.get(contact.id)} message(s) non lu(s)`}
+                      />
+                    )}
+                  </div>
 
                   <p className="hidden truncate text-xs text-ink-soft/70 sm:block">
                     {contact.dernier ||

@@ -279,7 +279,7 @@ export default function PaiementsPage() {
 
           api
             .get<Candidature[]>(
-              "/candidatures/client/toutes",
+              "/candidatures/client",
             )
             .catch(() => [] as Candidature[]),
         ]);

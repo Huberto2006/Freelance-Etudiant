@@ -28,6 +28,9 @@ import { ReactionsModule } from './modules/reactions/reactions.module';
 import { FavorisModule } from './modules/favoris/favoris.module';
 import { PaiementsModule } from './modules/paiements/paiements.module';
 import { DemandesServiceModule } from './modules/demandes-service/demandes-service.module';
+import { CommentairesModule } from './modules/commentaires/commentaires.module';
+import { ReactionsContenuModule } from './modules/reactions-contenu/reactions-contenu.module';
+import { RealtimeModule } from './modules/realtime/realtime.module';
 
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { UploadsModule } from './modules/uploads/uploads.module';
@@ -87,6 +90,9 @@ import { UploadsModule } from './modules/uploads/uploads.module';
     FavorisModule,
     PaiementsModule,
     DemandesServiceModule,
+    CommentairesModule,
+    ReactionsContenuModule,
+    RealtimeModule,
   ],
   providers: [
     {

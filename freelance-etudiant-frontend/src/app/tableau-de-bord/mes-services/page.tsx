@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Wrench, X } from "lucide-react";
+import { Plus, Pencil, Wrench, X } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import type { ServiceOffert } from "@/lib/types";
 import { formatArgent } from "@/lib/format";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { NoticeCard, Tag } from "@/components/ui/Notice";
+import { SelecteurImage } from "@/components/ui/SelecteurImage";
 
 export default function MesServicesPage() {
   const [services, setServices] = useState<ServiceOffert[]>([]);
@@ -15,6 +16,8 @@ export default function MesServicesPage() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [afficherFormulaire, setAfficherFormulaire] =
     useState(false);
+  const [serviceEnEdition, setServiceEnEdition] =
+    useState<ServiceOffert | null>(null);
   const [actionEnCours, setActionEnCours] = useState<string | null>(
     null,
   );
@@ -180,9 +183,10 @@ export default function MesServicesPage() {
         <Button
           variant="secondary"
           className="gap-2"
-          onClick={() =>
-            setAfficherFormulaire((v) => !v)
-          }
+          onClick={() => {
+            setServiceEnEdition(null);
+            setAfficherFormulaire((v) => !v);
+          }}
         >
           {afficherFormulaire ? (
             <>
@@ -207,7 +211,7 @@ export default function MesServicesPage() {
         </NoticeCard>
       )}
 
-      {/* Formulaire */}
+      {/* Formulaire de création */}
       {afficherFormulaire && (
         <div className="mb-8">
           <FormulaireService
@@ -215,6 +219,21 @@ export default function MesServicesPage() {
               setAfficherFormulaire(false);
               await charger();
             }}
+          />
+        </div>
+      )}
+
+      {/* Formulaire d'édition */}
+      {serviceEnEdition && (
+        <div className="mb-8">
+          <FormulaireService
+            key={serviceEnEdition.id}
+            serviceExistant={serviceEnEdition}
+            onCree={async () => {
+              setServiceEnEdition(null);
+              await charger();
+            }}
+            onAnnuler={() => setServiceEnEdition(null)}
           />
         </div>
       )}
@@ -280,7 +299,21 @@ export default function MesServicesPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="gap-1.5"
+                    disabled={action}
+                    onClick={() => {
+                      setAfficherFormulaire(false);
+                      setServiceEnEdition(service);
+                    }}
+                  >
+                    <Pencil size={13} />
+                    Modifier
+                  </Button>
+
                   <Button
                     size="sm"
                     variant="ghost"
@@ -323,16 +356,28 @@ export default function MesServicesPage() {
    ========================================================= */
 
 function FormulaireService({
+  serviceExistant,
   onCree,
+  onAnnuler,
 }: {
+  serviceExistant?: ServiceOffert;
   onCree: () => void | Promise<void>;
+  onAnnuler?: () => void;
 }) {
-  const [titre, setTitre] = useState("");
-  const [description, setDescription] = useState("");
-  const [categorie, setCategorie] = useState("");
-  const [prix, setPrix] = useState("");
-  const [delai, setDelai] = useState("");
-  const [competences, setCompetences] = useState("");
+  const enEdition = Boolean(serviceExistant);
+
+  const [titre, setTitre] = useState(serviceExistant?.titre ?? "");
+  const [description, setDescription] = useState(serviceExistant?.description ?? "");
+  const [categorie, setCategorie] = useState(serviceExistant?.categorie ?? "");
+  const [prix, setPrix] = useState(serviceExistant ? String(serviceExistant.prix) : "");
+  const [delai, setDelai] = useState(serviceExistant ? String(serviceExistant.delai) : "");
+  const [competences, setCompetences] = useState(
+    serviceExistant?.competences.join(", ") ?? "",
+  );
+  const [imageUrl, setImageUrl] = useState<string | null>(
+    serviceExistant?.imagesUrls?.[0] ?? null,
+  );
+  const [imageModifiee, setImageModifiee] = useState(false);
 
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(
@@ -348,18 +393,27 @@ function FormulaireService({
     setEnvoi(true);
 
     try {
-      await api.post("/services", {
+      const payload = {
         titre: titre.trim(),
         description: description.trim(),
         categorie: categorie.trim(),
         prix: Number(prix),
         delai: Number(delai),
+        // Comme pour les missions : on n'envoie imagesUrls que si
+        // l'image a été modifiée, pour conserver l'image actuelle sinon.
+        ...(imageModifiee ? { imagesUrls: imageUrl ? [imageUrl] : [] } : {}),
 
         competences: competences
           .split(",")
           .map((c) => c.trim())
           .filter(Boolean),
-      });
+      };
+
+      if (enEdition && serviceExistant) {
+        await api.patch(`/services/${serviceExistant.id}`, payload);
+      } else {
+        await api.post("/services", payload);
+      }
 
       await onCree();
     } catch (err) {
@@ -381,13 +435,25 @@ function FormulaireService({
   return (
     <NoticeCard>
       <h2 className="font-display text-xl font-semibold mb-4">
-        Nouveau service
+        {enEdition ? "Modifier le service" : "Nouveau service"}
       </h2>
 
       <form
         onSubmit={onSubmit}
         className="flex flex-col gap-5"
       >
+        {/* Image principale */}
+        <Field label="Image principale" htmlFor="service-image">
+          <SelecteurImage
+            valeur={imageUrl}
+            onChange={(url) => {
+              setImageUrl(url);
+              setImageModifiee(true);
+            }}
+            disabled={envoi}
+          />
+        </Field>
+
         {/* Titre */}
         <Field
           label="Titre"
@@ -500,15 +566,31 @@ function FormulaireService({
         )}
 
         {/* Bouton */}
-        <Button
-          type="submit"
-          disabled={envoi}
-          className="self-start"
-        >
-          {envoi
-            ? "Publication…"
-            : "Publier"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="submit"
+            disabled={envoi}
+            className="self-start"
+          >
+            {envoi
+              ? enEdition
+                ? "Enregistrement…"
+                : "Publication…"
+              : enEdition
+                ? "Enregistrer les modifications"
+                : "Publier"}
+          </Button>
+          {enEdition && onAnnuler && (
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={envoi}
+              onClick={onAnnuler}
+            >
+              Annuler
+            </Button>
+          )}
+        </div>
       </form>
     </NoticeCard>
   );

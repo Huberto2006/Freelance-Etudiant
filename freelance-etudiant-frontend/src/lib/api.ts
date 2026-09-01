@@ -15,6 +15,14 @@ const API_ORIGIN = (() => {
 })();
 
 /**
+ * Origine du serveur (sans /api/v1), reutilisee par socket-context.tsx
+ * pour se connecter au meme serveur que l'API REST.
+ */
+export function getApiOrigin(): string {
+  return API_ORIGIN;
+}
+
+/**
  * Transforme un chemin relatif renvoye par l'API (ex. "/uploads/profiles/x.jpg")
  * en URL absolue exploitable dans un <img src>.
  */
@@ -67,6 +75,19 @@ export class ApiError extends Error {
     super(message);
     this.status = status;
   }
+}
+
+/**
+ * Callback optionnel enregistré par AuthContext pour être informé
+ * immédiatement lorsque la session devient réellement invalide (le
+ * rafraîchissement du jeton a échoué). Sans ce hook, l'état React
+ * `utilisateur` resterait "connecté" jusqu'au prochain rechargement,
+ * alors que toutes les requêtes échoueraient silencieusement.
+ */
+let onSessionExpired: (() => void) | null = null;
+
+export function setOnSessionExpired(callback: (() => void) | null): void {
+  onSessionExpired = callback;
 }
 
 interface RequestOptions extends RequestInit {
@@ -176,6 +197,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       response = await executerRequete(path, options);
     } else {
       clearTokens();
+      onSessionExpired?.();
     }
   }
 
@@ -224,6 +246,7 @@ export const api = {
         response = await envoyer();
       } else {
         clearTokens();
+        onSessionExpired?.();
       }
     }
 

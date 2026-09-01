@@ -10,6 +10,7 @@ export enum TypeNotification {
   LIVRAISON_VALIDEE = 'livraison_validee',
   CORRECTION_DEMANDEE = 'correction_demandee',
   NOUVELLE_EVALUATION = 'nouvelle_evaluation',
+  NOUVEAU_COMMENTAIRE = 'nouveau_commentaire',
   PAIEMENT_INITIE = 'paiement_initie',
   PAIEMENT_CONFIRME = 'paiement_confirme',
   PAIEMENT_LIBERE = 'paiement_libere',

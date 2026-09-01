@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { BriefcaseBusiness, Plus, X, PackageCheck } from "lucide-react";
+import { BriefcaseBusiness, Pencil, Plus, X, PackageCheck } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
 import type { Candidature, Mission } from "@/lib/types";
@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { NoticeCard, StampBadge, Tag } from "@/components/ui/Notice";
+import { SelecteurImage } from "@/components/ui/SelecteurImage";
 
 export default function MesMissionsPage() {
   const [missions, setMissions] = useState<Mission[]>([]);
@@ -23,6 +24,7 @@ export default function MesMissionsPage() {
   const [erreur, setErreur] = useState<string | null>(null);
 
   const [afficherFormulaire, setAfficherFormulaire] = useState(false);
+  const [missionEnEdition, setMissionEnEdition] = useState<Mission | null>(null);
 
   const [missionOuverte, setMissionOuverte] = useState<string | null>(null);
 
@@ -109,7 +111,10 @@ export default function MesMissionsPage() {
         <Button
           variant="secondary"
           className="gap-2"
-          onClick={() => setAfficherFormulaire((v) => !v)}
+          onClick={() => {
+            setMissionEnEdition(null);
+            setAfficherFormulaire((v) => !v);
+          }}
         >
           {afficherFormulaire ? (
             <>
@@ -146,6 +151,24 @@ export default function MesMissionsPage() {
               setAfficherFormulaire(false);
               await charger();
             }}
+          />
+        </div>
+      )}
+
+      {/* =====================================================
+          FORMULAIRE D'ÉDITION
+          ===================================================== */}
+
+      {missionEnEdition && (
+        <div className="mb-8">
+          <FormulaireMission
+            key={missionEnEdition.id}
+            missionExistante={missionEnEdition}
+            onCree={async () => {
+              setMissionEnEdition(null);
+              await charger();
+            }}
+            onAnnuler={() => setMissionEnEdition(null)}
           />
         </div>
       )}
@@ -189,19 +212,34 @@ export default function MesMissionsPage() {
                   </p>
                 </div>
 
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() =>
-                    setMissionOuverte(
-                      missionOuverte === mission.id ? null : mission.id,
-                    )
-                  }
-                >
-                  {missionOuverte === mission.id
-                    ? "Masquer les candidatures"
-                    : "Voir les candidatures"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="gap-1.5"
+                    onClick={() => {
+                      setAfficherFormulaire(false);
+                      setMissionEnEdition(mission);
+                    }}
+                  >
+                    <Pencil size={13} />
+                    Modifier
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() =>
+                      setMissionOuverte(
+                        missionOuverte === mission.id ? null : mission.id,
+                      )
+                    }
+                  >
+                    {missionOuverte === mission.id
+                      ? "Masquer les candidatures"
+                      : "Voir les candidatures"}
+                  </Button>
+                </div>
               </div>
 
               {/* =================================================
@@ -225,13 +263,33 @@ export default function MesMissionsPage() {
    FORMULAIRE DE CRÉATION D'UNE MISSION
    ========================================================= */
 
-function FormulaireMission({ onCree }: { onCree: () => void | Promise<void> }) {
-  const [titre, setTitre] = useState("");
-  const [description, setDescription] = useState("");
-  const [categorie, setCategorie] = useState("");
-  const [budget, setBudget] = useState("");
-  const [dateLimite, setDateLimite] = useState("");
-  const [competencesRequises, setCompetencesRequises] = useState("");
+function FormulaireMission({
+  missionExistante,
+  onCree,
+  onAnnuler,
+}: {
+  missionExistante?: Mission;
+  onCree: () => void | Promise<void>;
+  onAnnuler?: () => void;
+}) {
+  const enEdition = Boolean(missionExistante);
+
+  const [titre, setTitre] = useState(missionExistante?.titre ?? "");
+  const [description, setDescription] = useState(missionExistante?.description ?? "");
+  const [categorie, setCategorie] = useState(missionExistante?.categorie ?? "");
+  const [budget, setBudget] = useState(
+    missionExistante ? String(missionExistante.budget) : "",
+  );
+  const [dateLimite, setDateLimite] = useState(
+    missionExistante ? missionExistante.dateLimite.slice(0, 10) : "",
+  );
+  const [competencesRequises, setCompetencesRequises] = useState(
+    missionExistante?.competencesRequises.join(", ") ?? "",
+  );
+  const [imageUrl, setImageUrl] = useState<string | null>(
+    missionExistante?.imageUrl ?? null,
+  );
+  const [imageModifiee, setImageModifiee] = useState(false);
 
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -243,18 +301,30 @@ function FormulaireMission({ onCree }: { onCree: () => void | Promise<void> }) {
     setEnvoi(true);
 
     try {
-      await api.post("/missions", {
+      const payload = {
         titre: titre.trim(),
         description: description.trim(),
         categorie: categorie.trim(),
         budget: Number(budget),
         dateLimite,
+        // On n'envoie imageUrl que si elle a réellement été modifiée :
+        // le PATCH backend ne modifie que les champs présents dans le
+        // payload, donc omettre ce champ conserve l'image actuelle.
+        // On envoie explicitement `null` (et non `undefined`, qui serait
+        // supprimé par JSON.stringify) pour permettre de retirer l'image.
+        ...(imageModifiee ? { imageUrl } : {}),
 
         competencesRequises: competencesRequises
           .split(",")
           .map((c) => c.trim())
           .filter(Boolean),
-      });
+      };
+
+      if (enEdition && missionExistante) {
+        await api.patch(`/missions/${missionExistante.id}`, payload);
+      } else {
+        await api.post("/missions", payload);
+      }
 
       await onCree();
     } catch (err) {
@@ -269,10 +339,23 @@ function FormulaireMission({ onCree }: { onCree: () => void | Promise<void> }) {
   return (
     <NoticeCard>
       <h2 className="mb-4 font-display text-xl font-semibold">
-        Nouvelle mission
+        {enEdition ? "Modifier la mission" : "Nouvelle mission"}
       </h2>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-5">
+        {/* Image principale */}
+
+        <Field label="Image principale" htmlFor="imageMission">
+          <SelecteurImage
+            valeur={imageUrl}
+            onChange={(url) => {
+              setImageUrl(url);
+              setImageModifiee(true);
+            }}
+            disabled={envoi}
+          />
+        </Field>
+
         {/* Titre */}
 
         <Field label="Titre" htmlFor="titre">
@@ -359,9 +442,27 @@ function FormulaireMission({ onCree }: { onCree: () => void | Promise<void> }) {
 
         {/* Bouton */}
 
-        <Button type="submit" disabled={envoi} className="self-start">
-          {envoi ? "Publication…" : "Publier"}
-        </Button>
+        <div className="flex gap-2">
+          <Button type="submit" disabled={envoi} className="self-start">
+            {envoi
+              ? enEdition
+                ? "Enregistrement…"
+                : "Publication…"
+              : enEdition
+                ? "Enregistrer les modifications"
+                : "Publier"}
+          </Button>
+          {enEdition && onAnnuler && (
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={envoi}
+              onClick={onAnnuler}
+            >
+              Annuler
+            </Button>
+          )}
+        </div>
       </form>
     </NoticeCard>
   );

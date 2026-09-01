@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
-import { api, ApiError, getToken, setToken, setRefreshToken, clearTokens } from "./api";
+import { api, ApiError, getToken, setToken, setRefreshToken, clearTokens, setOnSessionExpired } from "./api";
 import type { AuthResponse, Role, Utilisateur } from "./types";
 
 interface RegisterPayload {
@@ -64,6 +64,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     rafraichirProfil();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Synchronise immédiatement l'état React quand api.ts détecte qu'un
+  // rafraîchissement de jeton a définitivement échoué (session expirée).
+  useEffect(() => {
+    setOnSessionExpired(() => setUtilisateur(null));
+    return () => setOnSessionExpired(null);
   }, []);
 
   const connecter = useCallback(

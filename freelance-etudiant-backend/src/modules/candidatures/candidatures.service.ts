@@ -301,8 +301,21 @@ export class CandidaturesService {
 
     /**
      * Les autres candidatures de la même mission
-     * sont automatiquement refusées.
+     * sont automatiquement refusées. On les recupere
+     * d'abord (avec l'etudiant) pour pouvoir notifier
+     * chacun apres la mise a jour groupee.
      */
+    const autresCandidatures = await this.repo.find({
+      where: {
+        missionId: candidature.missionId,
+        statut: StatutCandidature.EN_ATTENTE,
+      },
+      relations: ['etudiant'],
+    });
+    const autresCandidaturesAAvertir = autresCandidatures.filter(
+      (c) => c.id !== candidature.id,
+    );
+
     await this.repo
       .createQueryBuilder()
       .update(Candidature)
@@ -327,6 +340,18 @@ export class CandidaturesService {
         },
       )
       .execute();
+
+    await Promise.all(
+      autresCandidaturesAAvertir.map((c) =>
+        this.notificationsService.creer({
+          destinataireId: c.etudiant.utilisateurId,
+          type: TypeNotification.CANDIDATURE_REFUSEE,
+          titre: 'Candidature refusée',
+          message: `Votre candidature pour "${candidature.mission.titre}" a été refusée.`,
+          lienUrl: '/tableau-de-bord/candidatures',
+        }),
+      ),
+    );
 
     /**
      * La mission passe en cours.

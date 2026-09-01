@@ -9,11 +9,9 @@ import { Repository } from 'typeorm';
 import { Message } from './entities/message.entity';
 import { EnvoyerMessageDto } from './dto/envoyer-message.dto';
 
-import { NotificationsService } from '../notifications/notifications.service';
-import { TypeNotification } from '../../common/enums/type-notification.enum';
-
 import { CandidaturesService } from '../candidatures/candidatures.service';
 import { UsersService } from '../users/users.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 import { Role } from '../../common/enums/role.enum';
 import { Utilisateur } from '../users/entities/utilisateur.entity';
@@ -24,11 +22,11 @@ export class MessagesService {
     @InjectRepository(Message)
     private readonly repo: Repository<Message>,
 
-    private readonly notificationsService: NotificationsService,
-
     private readonly candidaturesService: CandidaturesService,
 
     private readonly usersService: UsersService,
+
+    private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
   /**
@@ -141,24 +139,38 @@ export class MessagesService {
     const saved =
       await this.repo.save(message);
 
-    await this.notificationsService.creer({
-      destinataireId:
+    // Recharge avec les relations (expediteur/destinataire) pour que le
+    // payload temps reel ait exactement la meme forme que les messages
+    // deja renvoyes par GET /messages/conversation/:id (type
+    // MessageAvecUtilisateurs cote frontend).
+    const messageComplet =
+      await this.repo.findOne({
+        where: { id: saved.id },
+        relations: ['expediteur', 'destinataire'],
+      });
+
+    if (messageComplet) {
+      // Diffuse au destinataire (nouveau message a afficher) et a
+      // l'expediteur lui-meme (synchronisation multi-onglets/appareils).
+      this.realtimeGateway.emitToUser(
         dto.destinataireId,
+        'message:nouveau',
+        messageComplet,
+      );
+      this.realtimeGateway.emitToUser(
+        expediteurId,
+        'message:nouveau',
+        messageComplet,
+      );
+    }
 
-      type:
-        TypeNotification.NOUVEAU_MESSAGE,
-
-      titre:
-        'Nouveau message',
-
-      message:
-        dto.contenu.length > 80
-          ? `${dto.contenu.slice(0, 80)}…`
-          : dto.contenu,
-
-      lienUrl:
-        '/tableau-de-bord/messages',
-    });
+    // Mise a jour en temps reel du compteur de messages non lus pour le destinataire
+    const totalNonLus = await this.compterNonLus(dto.destinataireId);
+    this.realtimeGateway.emitToUser(
+      dto.destinataireId,
+      'message:compteur',
+      { total: totalNonLus },
+    );
 
     return saved;
   }
@@ -414,6 +426,20 @@ export class MessagesService {
 
   /**
    * ========================================================
+   * COMPTER LES MESSAGES NON LUS
+   * ========================================================
+   */
+  async compterNonLus(userId: string): Promise<number> {
+    return this.repo.count({
+      where: {
+        destinataireId: userId,
+        estLu: false,
+      },
+    });
+  }
+
+  /**
+   * ========================================================
    * MARQUER COMME LU
    * ========================================================
    */
@@ -430,5 +456,8 @@ export class MessagesService {
         estLu: true,
       },
     );
+
+    const total = await this.compterNonLus(userId);
+    this.realtimeGateway.emitToUser(userId, 'message:compteur', { total });
   }
 }

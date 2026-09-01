@@ -38,6 +38,14 @@ export class CreateMissionDto {
   @IsArray()
   @IsString({ each: true })
   competencesRequises?: string[];
+
+  @ApiProperty({
+    required: false,
+    description: "URL de l'image principale (renvoyee par POST /uploads/document)",
+  })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }
 
 export class UpdateMissionDto {
@@ -74,4 +82,12 @@ export class UpdateMissionDto {
   @IsArray()
   @IsString({ each: true })
   competencesRequises?: string[];
+
+  @ApiProperty({
+    required: false,
+    description: "URL de l'image principale (renvoyee par POST /uploads/document)",
+  })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }
