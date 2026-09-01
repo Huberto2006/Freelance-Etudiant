@@ -67,6 +67,35 @@ export class Transaction {
   })
   statut: StatutTransaction;
 
+  /**
+   * Fournisseur du paiement : 'mvola' (paiement en ligne verifie par
+   * le backend aupres de l'API) ou 'manuel' (declaration d'un transfert
+   * hors plateforme, verifiee par un administrateur).
+   */
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  provider?: string | null;
+
+  /**
+   * Identifiant serveur du fournisseur (serverCorrelationId MVola).
+   * Cle d'idempotence : un meme webhook/polling ne peut valider deux
+   * fois la meme transaction.
+   */
+  @Column({
+    name: 'provider_correlation_id',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  providerCorrelationId?: string | null;
+
+  /** Numero du payeur (paiement mobile en ligne uniquement). */
+  @Column({ name: 'telephone_debite', type: 'varchar', length: 20, nullable: true })
+  telephoneDebite?: string | null;
+
+  /** Dernier statut brut renvoye par le fournisseur (traçabilite). */
+  @Column({ name: 'provider_statut', type: 'varchar', length: 50, nullable: true })
+  providerStatut?: string | null;
+
   @CreateDateColumn({ name: 'date_creation', type: 'timestamptz' })
   dateCreation: Date;
 

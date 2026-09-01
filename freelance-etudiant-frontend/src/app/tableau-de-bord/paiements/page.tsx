@@ -47,9 +47,51 @@ const toneParStatut: Record<
 
 function CarteTransaction({
   transaction,
+  onVerifie,
 }: {
   transaction: Transaction;
+  onVerifie?: () => void;
 }) {
+  const [verification, setVerification] =
+    useState(false);
+  const [messageVerification, setMessageVerification] =
+    useState<string | null>(null);
+
+  // Paiement en ligne MVola encore en attente : le statut reel est
+  // verifie par le BACKEND aupres du fournisseur (jamais par le
+  // frontend, qui ne fait que demander la verification).
+  const verifiable =
+    transaction.provider === "mvola" &&
+    transaction.statut === "en_attente" &&
+    Boolean(onVerifie);
+
+  async function verifier() {
+    if (!onVerifie) return;
+    setVerification(true);
+    setMessageVerification(null);
+    try {
+      const maj = await api.post<Transaction>(
+        `/paiements/${transaction.id}/verifier`,
+      );
+      setMessageVerification(
+        maj.statut === "confirmee"
+          ? "Paiement confirmé par MVola."
+          : maj.statut === "annulee"
+            ? "Paiement refusé par MVola."
+            : "MVola n'a pas encore confirmé le paiement. Réessayez après avoir validé la demande USSD.",
+      );
+      onVerifie();
+    } catch (err) {
+      setMessageVerification(
+        err instanceof ApiError
+          ? err.message
+          : "Verification impossible pour le moment.",
+      );
+    } finally {
+      setVerification(false);
+    }
+  }
+
   return (
     <NoticeCard className="flex flex-col gap-2">
       <div className="flex items-start justify-between gap-3">
@@ -61,6 +103,7 @@ function CarteTransaction({
           <p className="mt-0.5 font-mono text-xs text-ink-soft/70">
             {methodePaiementLabel[transaction.methode]} · réf.{" "}
             {transaction.reference}
+            {transaction.provider === "mvola" ? " · en ligne" : ""}
           </p>
         </div>
 
@@ -78,6 +121,25 @@ function CarteTransaction({
           {formatDateCourte(transaction.dateCreation)}
         </p>
       </div>
+
+      {verifiable && (
+        <Button
+          variant="secondary"
+          className="self-start"
+          disabled={verification}
+          onClick={() => void verifier()}
+        >
+          {verification
+            ? "Vérification…"
+            : "Vérifier le statut auprès de MVola"}
+        </Button>
+      )}
+
+      {messageVerification && (
+        <p className="text-xs text-ink-soft">
+          {messageVerification}
+        </p>
+      )}
     </NoticeCard>
   );
 }
@@ -102,11 +164,16 @@ function FormulairePaiement({
   const [methode, setMethode] =
     useState<MethodePaiement>("mvola");
 
+  const [telephone, setTelephone] = useState("");
   const [reference, setReference] = useState("");
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(
     null,
   );
+
+  // MVola = paiement en ligne reel (le debit est demande via l'API
+  // MVola) ; virement = declaration manuelle verifiee par un admin.
+  const paiementMvola = methode === "mvola";
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -117,11 +184,17 @@ function FormulairePaiement({
     try {
       await api.post(
         `/candidatures/${candidature.id}/paiement`,
-        {
-          montant: Number(montant),
-          methode,
-          reference,
-        },
+        paiementMvola
+          ? {
+              montant: Number(montant),
+              methode,
+              telephoneDebite: telephone,
+            }
+          : {
+              montant: Number(montant),
+              methode,
+              reference,
+            },
       );
 
       onEnvoye();
@@ -155,9 +228,20 @@ function FormulairePaiement({
       </div>
 
       <p className="mb-4 text-sm text-ink-soft">
-        Effectuez le transfert via mobile money vers le compte de la
-        plateforme, puis renseignez la référence ci-dessous pour
-        vérification par un administrateur.
+        {paiementMvola ? (
+          <>
+            Payer en ligne via MVola : indiquez votre numero MVola,
+            une demande de confirmation vous sera envoyee par le
+            fournisseur. Le paiement est ensuite verifie par la
+            plateforme aupres de MVola.
+          </>
+        ) : (
+          <>
+            Effectuez le virement bancaire vers le compte de la
+            plateforme, puis renseignez la reference ci-dessous pour
+            verification par un administrateur.
+          </>
+        )}
       </p>
 
       <form
@@ -169,7 +253,7 @@ function FormulairePaiement({
             <Input
               id="montant"
               type="number"
-              min={0}
+              min={1}
               required
               value={montant}
               onChange={(e) =>
@@ -190,41 +274,64 @@ function FormulairePaiement({
                 )
               }
             >
-              <option value="mvola">Mvola</option>
-              <option value="orange_money">
-                Orange Money
-              </option>
-              <option value="airtel_money">
-                Airtel Money
+              <option value="mvola">
+                MVola (paiement en ligne)
               </option>
               <option value="virement">
                 Virement bancaire
+              </option>
+              <option value="orange_money" disabled>
+                Orange Money (indisponible)
+              </option>
+              <option value="airtel_money" disabled>
+                Airtel Money (indisponible)
               </option>
             </Select>
           </Field>
         </div>
 
-        <div className="w-full sm:w-56">
-          <Field
-            label="Référence du transfert"
-            htmlFor="reference"
-          >
-            <Input
-              id="reference"
-              required
-              value={reference}
-              onChange={(e) =>
-                setReference(e.target.value)
-              }
-              placeholder="MV240815.1234.A56789"
-            />
-          </Field>
-        </div>
+        {paiementMvola ? (
+          <div className="w-full sm:w-56">
+            <Field
+              label="Numéro MVola"
+              htmlFor="telephone"
+            >
+              <Input
+                id="telephone"
+                required
+                value={telephone}
+                onChange={(e) =>
+                  setTelephone(e.target.value)
+                }
+                placeholder="0341234567"
+              />
+            </Field>
+          </div>
+        ) : (
+          <div className="w-full sm:w-56">
+            <Field
+              label="Référence du virement"
+              htmlFor="reference"
+            >
+              <Input
+                id="reference"
+                required
+                value={reference}
+                onChange={(e) =>
+                  setReference(e.target.value)
+                }
+                placeholder="REF-123456"
+              />
+            </Field>
+          </div>
+        )}
 
         <Button type="submit" disabled={envoi}>
           {envoi
             ? "Envoi…"
-            : "Déclarer le paiement"}
+            : paiementMvola
+              ? "Payer avec MVola"
+              : "Déclarer le paiement"}
         </Button>
       </form>
 
@@ -484,6 +591,7 @@ export default function PaiementsPage() {
             <CarteTransaction
               key={transaction.id}
               transaction={transaction}
+              onVerifie={recharger}
             />
           ))}
         </div>

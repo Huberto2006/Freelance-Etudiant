@@ -13,3 +13,4 @@ export default registerAs('app', () => ({
     'http://localhost:3001',
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3001',
 }));
+
