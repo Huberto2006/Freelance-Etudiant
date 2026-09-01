@@ -5,14 +5,17 @@ import { PaiementsService } from './paiements.service';
 import { PaiementsController } from './paiements.controller';
 import { CandidaturesModule } from '../candidatures/candidatures.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { MvolaService } from './mvola.service';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Transaction]),
     CandidaturesModule,
     NotificationsModule,
+    UsersModule,
   ],
-  providers: [PaiementsService],
+  providers: [PaiementsService, MvolaService],
   controllers: [PaiementsController],
   exports: [PaiementsService],
 })

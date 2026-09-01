@@ -285,6 +285,15 @@
 
     statut: StatutTransaction;
 
+    /**
+     * 'mvola' = paiement en ligne verifie par le backend aupres du
+     * fournisseur ; 'manuel' = declaration verifiee par un admin.
+     */
+    provider?: string | null;
+
+    /** Dernier statut brut renvoye par le fournisseur (ex. "Pending"). */
+    providerStatut?: string | null;
+
     dateCreation: string;
 
     dateConfirmation?: string | null;

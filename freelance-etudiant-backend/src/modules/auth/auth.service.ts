@@ -16,9 +16,11 @@ import { EtudiantProfile } from "../etudiants/entities/etudiant-profile.entity";
 import { ClientProfile } from "../clients/entities/client-profile.entity";
 import { TypeClient } from "../../common/enums/type-client.enum";
 import { JwtPayload } from "./interfaces/authenticated-user.interface";
+import { EmailService } from "../email/email.service";
 import type { StringValue } from "ms";
 
 const SALT_ROUNDS = 12;
+const RESET_PASSWORD_EXPIRE_MINUTES = 60;
 
 @Injectable()
 export class AuthService {
@@ -26,6 +28,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly emailService: EmailService,
   ) {}
 
   /**
@@ -134,7 +137,9 @@ export class AuthService {
       const jetonHache = crypto.createHash("sha256").update(jeton).digest("hex");
 
       utilisateur.resetPasswordToken = jetonHache;
-      utilisateur.resetPasswordExpire = new Date(Date.now() + 60 * 60 * 1000);
+      utilisateur.resetPasswordExpire = new Date(
+        Date.now() + RESET_PASSWORD_EXPIRE_MINUTES * 60 * 1000,
+      );
       await this.usersService.save(utilisateur);
 
       const frontendUrl =
@@ -142,10 +147,15 @@ export class AuthService {
         "http://localhost:3001";
       const lien = `${frontendUrl}/reinitialiser-mot-de-passe?token=${jeton}`;
 
-      // Aucun service SMTP configure dans ce projet academique : le lien
-      // est journalise cote serveur pour permettre les tests manuels.
-      // eslint-disable-next-line no-console
-      console.log(`[reset-password] Lien pour ${dto.email} : ${lien}`);
+      // Envoi du VRAI email via SMTP (Nodemailer). En dev sans SMTP
+      // configure, EmailService journalise le contenu en console.
+      // L'echec d'envoi ne modifie jamais la reponse : elle doit rester
+      // identique que le compte existe ou non (anti-enumeration).
+      await this.emailService.envoyerResetPassword(dto.email, {
+        nom: utilisateur.nom,
+        lien,
+        dureeMinutes: RESET_PASSWORD_EXPIRE_MINUTES,
+      });
     }
 
     return {

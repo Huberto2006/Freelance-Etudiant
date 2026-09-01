@@ -17,7 +17,11 @@ import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 
 async function bootstrap() {
   const app =
-    await NestFactory.create<NestExpressApplication>(AppModule);
+    await NestFactory.create<NestExpressApplication>(AppModule, {
+      // Conserve le corps brut des requetes (req.rawBody) : indispensable
+      // pour verifier la signature HMAC des webhooks de paiement.
+      rawBody: true,
+    });
 
   const configService = app.get(ConfigService);
 

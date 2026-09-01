@@ -38,7 +38,7 @@ export class ReputationService {
       where: { utilisateurId: etudiantId },
     });
 
-    const { moyenne, nombreEvaluations } = await this.calculerNoteMoyenne(etudiantId);
+    const { moyenne } = await this.calculerNoteMoyenne(etudiantId);
 
     const candidaturesAcceptees = await this.candidatureRepo.count({
       where: { etudiantId, statut: StatutCandidature.ACCEPTEE },
