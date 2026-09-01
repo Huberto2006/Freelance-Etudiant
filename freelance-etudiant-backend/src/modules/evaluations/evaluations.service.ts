@@ -4,7 +4,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { Evaluation } from './entities/evaluation.entity';
 import { CreateEvaluationDto } from './dto/create-evaluation.dto';
 import { LivraisonsService } from '../livraisons/livraisons.service';
@@ -55,7 +55,22 @@ export class EvaluationsService {
       evaluateurId,
       evalueId: livraison.candidature.etudiantId,
     });
-    const saved = await this.repo.save(evaluation);
+
+    let saved: Evaluation;
+    try {
+      saved = await this.repo.save(evaluation);
+    } catch (error) {
+      // Filet de securite si deux requetes simultanees passent la
+      // verification `existante` ci-dessus en meme temps : la contrainte
+      // UNIQUE(livraison_id) en base rejette la seconde ecriture.
+      if (
+        error instanceof QueryFailedError &&
+        (error as unknown as { code?: string }).code === '23505'
+      ) {
+        throw new ConflictException('Cette livraison a deja ete evaluee');
+      }
+      throw error;
+    }
 
     await this.reputationService.recalculerScore(livraison.candidature.etudiantId);
 

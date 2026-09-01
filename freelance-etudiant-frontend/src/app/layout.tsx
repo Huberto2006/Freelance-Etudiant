@@ -14,6 +14,7 @@ import "@fontsource/ibm-plex-mono/600.css";
 import "./globals.css";
 
 import { AuthProvider } from "@/lib/auth-context";
+import { SocketProvider } from "@/lib/socket-context";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 
@@ -38,13 +39,15 @@ export default function RootLayout({
       
       <body className="min-h-full flex flex-col">
         <AuthProvider>
-          <Navbar />
+          <SocketProvider>
+            <Navbar />
 
-          <main className="flex-1">
-            {children}
-          </main>
+            <main className="flex-1">
+              {children}
+            </main>
 
-          <Footer />
+            <Footer />
+          </SocketProvider>
         </AuthProvider>
       </body>
     </html>

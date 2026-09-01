@@ -123,6 +123,8 @@
 
     statut: StatutMission;
 
+    imageUrl?: string | null;
+
     clientId: string;
 
     /**
@@ -207,6 +209,7 @@
     | "livraison_validee"
     | "correction_demandee"
     | "nouvelle_evaluation"
+    | "nouveau_commentaire"
     | "paiement_initie"
     | "paiement_confirme"
     | "paiement_libere"
@@ -329,6 +332,36 @@
     total: number;
 
     jaiReagi: boolean;
+  }
+
+  export type TypeCibleContenu = "mission" | "service";
+
+  export interface Commentaire {
+    id: string;
+
+    contenu: string;
+
+    auteurId: string;
+
+    auteur?: Utilisateur;
+
+    cibleType: TypeCibleContenu;
+
+    cibleId: string;
+
+    dateCreation: string;
+
+    dateModification: string;
+  }
+
+  export type TypeReactionContenu = "jaime" | "jenaimepas";
+
+  export interface InfoReactionsContenu {
+    jaime: number;
+
+    jenaimepas: number;
+
+    maReaction: TypeReactionContenu | null;
   }
 
   export type StatutDemandeService =

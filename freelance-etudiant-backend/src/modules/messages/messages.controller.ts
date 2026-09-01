@@ -20,6 +20,13 @@ export class MessagesController {
     return this.messagesService.envoyer(user.id, dto);
   }
 
+  @Get('non-lus/compteur')
+  @ApiOperation({ summary: 'Compter mes messages non lus' })
+  async compteur(@CurrentUser() user: AuthenticatedUser) {
+    const total = await this.messagesService.compterNonLus(user.id);
+    return { total };
+  }
+
   @Get()
   @ApiOperation({ summary: 'Lister mes conversations' })
   async mesConversations(@CurrentUser() user: AuthenticatedUser) {

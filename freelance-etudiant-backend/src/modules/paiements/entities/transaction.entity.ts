@@ -20,27 +20,31 @@ import {
  *        verifie manuellement la reception (pas d'API bancaire disponible
  *        dans ce projet academique), puis les fonds sont "liberes" a la
  *        validation de la livraison correspondante.
+ * RGp2 : une transaction est une piece comptable et ne doit jamais
+ *        disparaitre par cascade (suppression d'un compte, d'une
+ *        candidature ou d'une mission). Toutes les relations sont donc en
+ *        RESTRICT.
  */
 @Entity('transactions')
 export class Transaction {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Candidature, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Candidature, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'candidature_id' })
   candidature: Candidature;
 
   @Column({ name: 'candidature_id' })
   candidatureId: string;
 
-  @ManyToOne(() => Utilisateur, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Utilisateur, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'client_id' })
   client: Utilisateur;
 
   @Column({ name: 'client_id' })
   clientId: string;
 
-  @ManyToOne(() => Utilisateur, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Utilisateur, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'etudiant_id' })
   etudiant: Utilisateur;
 

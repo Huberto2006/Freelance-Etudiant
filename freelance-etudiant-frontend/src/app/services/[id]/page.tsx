@@ -4,13 +4,15 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { FileText, SendHorizonal } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, getFileUrl } from "@/lib/api";
 import type { ServiceOffert } from "@/lib/types";
 import { formatArgent, formatDate } from "@/lib/format";
 import { NoticeCard, StampBadge, Tag } from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
+import { BoutonsReaction } from "@/components/ui/BoutonsReaction";
+import { SectionCommentaires } from "@/components/ui/SectionCommentaires";
 import {
   SelecteurPieceJointe,
   type PieceJointeValeur,
@@ -86,6 +88,17 @@ export default function ServiceDetailPage({
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-14">
+      {service.imagesUrls?.[0] && (
+        <div className="mb-6 overflow-hidden rounded-2xl border border-ink/10">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={getFileUrl(service.imagesUrls[0]) ?? undefined}
+            alt=""
+            className="max-h-96 w-full object-cover"
+          />
+        </div>
+      )}
+
       <Tag tone="ocre">{service.categorie}</Tag>
       <h1 className="mt-4 font-display text-3xl sm:text-4xl font-semibold mb-3">
         {service.titre}
@@ -264,6 +277,14 @@ export default function ServiceDetailPage({
           </Button>
         )
       ) : null}
+
+      <div className="mt-6 mb-10">
+        <BoutonsReaction cibleType="service" cibleId={service.id} />
+      </div>
+
+      <div className="border-t border-ink/10 pt-8">
+        <SectionCommentaires cibleType="service" cibleId={service.id} />
+      </div>
     </div>
   );
 }

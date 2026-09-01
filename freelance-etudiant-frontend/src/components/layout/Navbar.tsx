@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { clsx } from "clsx";
 import {
+  ChevronDown,
   LogOut,
   Search,
   User,
-  ChevronDown,
 } from "lucide-react";
 import {
   useEffect,
@@ -25,12 +24,10 @@ import { getFileUrl } from "@/lib/api";
 
 import { Button } from "@/components/ui/Button";
 import { BasculeTheme } from "@/components/ui/BasculeTheme";
+import { MessagesLink } from "@/components/ui/MessagesLink";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 
 export function Navbar() {
-  // ==========================================================
-  // AUTHENTIFICATION
-  // ==========================================================
-
   const {
     utilisateur,
     deconnecter,
@@ -39,191 +36,181 @@ export function Navbar() {
 
   const pathname = usePathname();
 
-  // ==========================================================
-  // ÉTATS
-  // ==========================================================
+  const [
+    menuProfilOuvert,
+    setMenuProfilOuvert,
+  ] = useState(false);
 
-  const [menuProfilOuvert, setMenuProfilOuvert] =
-    useState(false);
+  const [
+    menuParametresOuvert,
+    setMenuParametresOuvert,
+  ] = useState(false);
 
-  const [menuOuvert, setMenuOuvert] =
-    useState<string | null>(null);
+  const navbarRef =
+    useRef<HTMLElement>(null);
 
-  // ==========================================================
-  // RÉFÉRENCE NAVBAR
-  // ==========================================================
-
-  const navbarRef = useRef<HTMLElement>(null);
-
-  // ==========================================================
-  // NAVIGATION SELON LE RÔLE
-  // ==========================================================
+  /*
+   * ==========================================================
+   * NAVIGATION TOPBAR
+   * ==========================================================
+   */
 
   const groupes = utilisateur
-    ? navigationParRole[utilisateur.role] ?? []
+    ? navigationParRole[
+        utilisateur.role
+      ] ?? []
     : [];
 
-  // ==========================================================
-  // SÉPARATION DES LIENS
-  // ==========================================================
+  /*
+   * La Navbar conserve uniquement :
+   *
+   * - Messages
+   * - Paramètres
+   *
+   * Les autres liens sont affichés
+   * dans la Sidebar.
+   */
 
-  const liensTexte = groupes.filter(
-    (groupe) => !groupe.icon,
+  const liensTopbar = groupes.filter(
+    (item) => item.label === "Paramètres",
   );
 
-  const liensIcones = groupes.filter(
-    (groupe) => groupe.icon,
-  );
+  /*
+   * ==========================================================
+   * LIEN ACTIF
+   * ==========================================================
+   */
 
-  // ==========================================================
-  // ORDRE DES ICÔNES
-  // ==========================================================
+  function isActive(href: string): boolean {
+    if (pathname === href) {
+      return true;
+    }
 
-  const ordreIcones = [
-    "Messages",
-    "Notifications",
-    "Paramètres",
-  ];
+    /*
+     * Le dashboard principal ne doit pas
+     * être actif sur ses sous-pages.
+     */
 
-  const liensIconesTries = [...liensIcones].sort(
-    (a, b) => {
-      const indexA = ordreIcones.indexOf(a.label);
-      const indexB = ordreIcones.indexOf(b.label);
+    if (
+      href ===
+      "/tableau-de-bord"
+    ) {
+      return false;
+    }
 
-      return (
-        (indexA === -1 ? 99 : indexA) -
-        (indexB === -1 ? 99 : indexB)
-      );
-    },
-  );
+    return pathname.startsWith(
+      `${href}/`,
+    );
+  }
 
-  // ==========================================================
-  // FERMER LES MENUS
-  // ==========================================================
+  /*
+   * ==========================================================
+   * FERMER LES MENUS
+   * ==========================================================
+   */
 
-  const fermerMenus = () => {
-    setMenuOuvert(null);
+  function closeMenus() {
     setMenuProfilOuvert(false);
-  };
+    setMenuParametresOuvert(false);
+  }
 
-  // ==========================================================
-  // CLIC À L'EXTÉRIEUR + ESCAPE
-  // ==========================================================
+  /*
+   * ==========================================================
+   * DÉCONNEXION
+   * ==========================================================
+   */
+
+  function logout() {
+    closeMenus();
+    deconnecter();
+  }
+
+  /*
+   * ==========================================================
+   * CLIC EXTÉRIEUR + ESCAPE
+   * ==========================================================
+   */
 
   useEffect(() => {
-    function gererInteraction(event: MouseEvent | KeyboardEvent) {
-      // Escape
+    function handleClickOutside(
+      event: MouseEvent,
+    ) {
       if (
-        event instanceof KeyboardEvent &&
-        event.key === "Escape"
-      ) {
-        fermerMenus();
-        return;
-      }
-
-      // Clic extérieur
-      if (
-        event instanceof MouseEvent &&
         navbarRef.current &&
         !navbarRef.current.contains(
           event.target as Node,
         )
       ) {
-        fermerMenus();
+        closeMenus();
+      }
+    }
+
+    function handleKeyboard(
+      event: KeyboardEvent,
+    ) {
+      if (event.key === "Escape") {
+        closeMenus();
       }
     }
 
     document.addEventListener(
       "mousedown",
-      gererInteraction,
+      handleClickOutside,
     );
 
     document.addEventListener(
       "keydown",
-      gererInteraction,
+      handleKeyboard,
     );
 
     return () => {
       document.removeEventListener(
         "mousedown",
-        gererInteraction,
+        handleClickOutside,
       );
 
       document.removeEventListener(
         "keydown",
-        gererInteraction,
+        handleKeyboard,
       );
     };
   }, []);
 
-  // ==========================================================
-  // DÉCONNEXION
-  // ==========================================================
-
-  function handleDeconnexion() {
-    fermerMenus();
-    deconnecter();
-  }
-
-  // ==========================================================
-  // LIEN ACTIF
-  // ==========================================================
-
-  function estActif(href: string) {
-    if (pathname === href) {
-      return true;
-    }
-
-    if (href === "/tableau-de-bord") {
-      return false;
-    }
-
-    return pathname.startsWith(`${href}/`);
-  }
-
-  // ==========================================================
-  // GROUPE ACTIF
-  // ==========================================================
-
-  function groupeEstActif(
-    groupe: (typeof groupes)[number],
-  ) {
-    if (groupe.href) {
-      return estActif(groupe.href);
-    }
-
-    return (
-      groupe.liens?.some((lien) =>
-        estActif(lien.href),
-      ) ?? false
-    );
-  }
-
-  // ==========================================================
-  // AFFICHAGE
-  // ==========================================================
+  /*
+   * ==========================================================
+   * RENDU
+   * ==========================================================
+   */
 
   return (
     <header
       ref={navbarRef}
       className="
-        sticky top-0 z-40
-        border-b border-ink/15
+        fixed
+        left-0
+        right-0
+        top-0
+        z-50
+        h-16
+        border-b
+        border-ink/10
         bg-paper/95
         backdrop-blur-md
+        lg:left-[var(--sidebar-width)]
       "
     >
       <div
         className="
-          mx-auto flex max-w-7xl
-          items-center gap-2
-          px-3 py-2
-          sm:px-4
+          flex
+          h-full
+          items-center
+          px-4
+          sm:px-5
         "
       >
         {/* ====================================================
-            LOGO
-            ==================================================== */}
+            LOGO MOBILE
+        ==================================================== */}
 
         <Link
           href={
@@ -231,27 +218,30 @@ export function Navbar() {
               ? "/tableau-de-bord"
               : "/"
           }
-          onClick={fermerMenus}
           className="
-            flex shrink-0
-            items-center gap-2
-            rounded-lg
-            px-1.5 py-1
-            transition-colors
-            hover:bg-ink/5
+            flex
+            items-center
+            gap-2
+            lg:hidden
           "
-          aria-label="Kianja - Accueil"
+          aria-label="Kianja"
         >
           <span
             className="
-              flex h-8 w-8
-              items-center justify-center
+              flex
+              h-8
+              w-8
+              items-center
+              justify-center
               rounded-full
-              border-2 border-rice
-              font-mono text-[10px]
-              font-bold text-rice
+              border-2
+              border-rice
+              bg-ink
+              font-mono
+              text-[10px]
+              font-bold
+              text-rice
             "
-            aria-hidden="true"
           >
             K
           </span>
@@ -259,8 +249,9 @@ export function Navbar() {
           <span
             className="
               hidden
-              font-display text-lg
-              font-semibold tracking-tight
+              font-display
+              text-lg
+              font-semibold
               sm:block
             "
           >
@@ -269,404 +260,136 @@ export function Navbar() {
         </Link>
 
         {/* ====================================================
-            NAVIGATION PRINCIPALE
-            ==================================================== */}
+            ESPACE
+        ==================================================== */}
 
-        {!chargement && utilisateur && (
-          <nav
-            className="
-              flex flex-1
-              items-center gap-0.5
-              overflow-x-auto
-              scrollbar-none
-            "
-            aria-label="Navigation principale"
-          >
-            {liensTexte.map((groupe) => {
-              const estGroupe =
-                !!(
-                  groupe.liens &&
-                  groupe.liens.length > 0
-                );
-
-              const actif =
-                groupeEstActif(groupe);
-
-              const ouvert =
-                menuOuvert === groupe.label;
-
-              // ==================================================
-              // LIEN SIMPLE
-              // ==================================================
-
-              if (
-                groupe.href &&
-                !estGroupe
-              ) {
-                return (
-                  <Link
-                    key={groupe.href}
-                    href={groupe.href}
-                    onClick={fermerMenus}
-                    aria-current={
-                      actif
-                        ? "page"
-                        : undefined
-                    }
-                    className={clsx(
-                      `
-                        shrink-0
-                        rounded-lg
-                        px-2.5 py-2
-                        text-xs
-                        font-medium
-                        transition-all
-                        sm:px-3
-                        sm:text-sm
-                      `,
-                      actif
-                        ? `
-                          bg-ocre/10
-                          text-ocre-dark
-                        `
-                        : `
-                          text-ink-soft
-                          hover:bg-ink/5
-                          hover:text-ink
-                        `,
-                    )}
-                  >
-                    {groupe.label}
-                  </Link>
-                );
-              }
-
-              // ==================================================
-              // GROUPE AVEC SOUS-MENU
-              // ==================================================
-
-              if (estGroupe) {
-                return (
-                  <div
-                    key={groupe.label}
-                    className="
-                      relative shrink-0
-                    "
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMenuProfilOuvert(
-                          false,
-                        );
-
-                        setMenuOuvert(
-                          ouvert
-                            ? null
-                            : groupe.label,
-                        );
-                      }}
-                      className={clsx(
-                        `
-                          flex items-center
-                          gap-1
-                          rounded-lg
-                          px-2.5 py-2
-                          text-xs
-                          font-medium
-                          transition-all
-                          sm:px-3
-                          sm:text-sm
-                        `,
-                        actif
-                          ? `
-                            bg-ocre/10
-                            text-ocre-dark
-                          `
-                          : `
-                            text-ink-soft
-                            hover:bg-ink/5
-                            hover:text-ink
-                          `,
-                      )}
-                      aria-expanded={ouvert}
-                      aria-haspopup="menu"
-                    >
-                      {groupe.label}
-
-                      <ChevronDown
-                        size={14}
-                        className={clsx(
-                          `
-                            transition-transform
-                            duration-200
-                          `,
-                          ouvert &&
-                            "rotate-180",
-                        )}
-                        aria-hidden="true"
-                      />
-                    </button>
-
-                    {/* ==========================================
-                        SOUS-MENU
-                        ========================================== */}
-
-                    {ouvert && (
-                      <div
-                        role="menu"
-                        className="
-                          absolute left-0
-                          top-full z-50
-                          mt-2 w-60
-                          overflow-hidden
-                          rounded-xl
-                          border border-ink/10
-                          bg-paper
-                          py-1
-                          shadow-xl
-                          animate-in
-                          fade-in
-                          slide-in-from-top-1
-                          duration-150
-                        "
-                      >
-                        {/* TITRE */}
-
-                        <div
-                          className="
-                            border-b
-                            border-ink/10
-                            px-4 py-3
-                          "
-                        >
-                          <p
-                            className="
-                              text-xs
-                              font-medium
-                              text-ink
-                            "
-                          >
-                            {groupe.label}
-                          </p>
-                        </div>
-
-                        {/* SOUS-LIENS */}
-
-                        {groupe.liens?.map(
-                          (lien) => {
-                            const sousLienActif =
-                              estActif(
-                                lien.href,
-                              );
-
-                            return (
-                              <Link
-                                key={
-                                  lien.href
-                                }
-                                href={
-                                  lien.href
-                                }
-                                role="menuitem"
-                                aria-current={
-                                  sousLienActif
-                                    ? "page"
-                                    : undefined
-                                }
-                                onClick={
-                                  fermerMenus
-                                }
-                                className={clsx(
-                                  `
-                                    flex
-                                    items-center
-                                    px-4 py-2.5
-                                    text-sm
-                                    transition-colors
-                                  `,
-                                  sousLienActif
-                                    ? `
-                                      bg-ocre/10
-                                      font-medium
-                                      text-ocre-dark
-                                    `
-                                    : `
-                                      text-ink-soft
-                                      hover:bg-ink/5
-                                      hover:text-ink
-                                    `,
-                                )}
-                              >
-                                {
-                                  lien.label
-                                }
-                              </Link>
-                            );
-                          },
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
-              return null;
-            })}
-          </nav>
-        )}
+        <div className="flex-1" />
 
         {/* ====================================================
-            NAVIGATION PUBLIQUE (VISITEURS NON CONNECTES)
-            ==================================================== */}
-
-        {!chargement && !utilisateur && (
-          <nav
-            className="
-              hidden flex-1
-              items-center gap-0.5
-              md:flex
-            "
-            aria-label="Navigation publique"
-          >
-            {[
-              { href: "/missions", label: "Missions" },
-              { href: "/services", label: "Services" },
-            ].map((lien) => {
-              const actif = estActif(lien.href);
-
-              return (
-                <Link
-                  key={lien.href}
-                  href={lien.href}
-                  aria-current={actif ? "page" : undefined}
-                  className={clsx(
-                    `
-                      shrink-0
-                      rounded-lg
-                      px-2.5 py-2
-                      text-xs
-                      font-medium
-                      transition-all
-                      sm:px-3
-                      sm:text-sm
-                    `,
-                    actif
-                      ? `
-                        bg-ocre/10
-                        text-ocre-dark
-                      `
-                      : `
-                        text-ink-soft
-                        hover:bg-ink/5
-                        hover:text-ink
-                      `,
-                  )}
-                >
-                  {lien.label}
-                </Link>
-              );
-            })}
-          </nav>
-        )}
-
-        {/* ====================================================
-            ACTIONS À DROITE
-            ==================================================== */}
+            ACTIONS TOPBAR
+        ==================================================== */}
 
         <div
           className="
-            ml-auto
-            flex shrink-0
-            items-center gap-0.5
+            flex
+            items-center
+            gap-1
           "
         >
           {/* ==================================================
-              RECHERCHE COMPACTE (DESKTOP)
-              ================================================== */}
+              RECHERCHE DESKTOP
+          ================================================== */}
 
           <form
             action="/services"
             role="search"
-            className="mr-2 hidden w-52 lg:block xl:w-64"
+            className="
+              mr-2
+              hidden
+              md:block
+            "
           >
-            <div className="relative">
+            <div
+              className="
+                relative
+                w-52
+                lg:w-64
+                xl:w-72
+              "
+            >
               <Search
-                size={14}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
-                aria-hidden="true"
+                size={15}
+                className="
+                  pointer-events-none
+                  absolute
+                  left-3
+                  top-1/2
+                  -translate-y-1/2
+                  text-ink-soft/60
+                "
               />
 
               <input
                 type="search"
                 name="q"
-                placeholder="Rechercher un service…"
-                aria-label="Rechercher un service"
+                placeholder="Rechercher..."
+                aria-label="Rechercher"
                 className="
+                  h-9
                   w-full
                   rounded-full
-                  border border-ink/25
+                  border
+                  border-ink/15
                   bg-paper-light
-                  py-1.5 pl-8 pr-3
-                  text-xs text-ink
+                  pl-9
+                  pr-3
+                  text-xs
+                  text-ink
+                  outline-none
+                  transition
                   placeholder:text-ink-soft/50
-                  transition-colors
                   focus:border-rice
+                  focus:ring-2
+                  focus:ring-rice/10
                 "
               />
             </div>
           </form>
 
           {/* ==================================================
-              MESSAGES / NOTIFICATIONS / PARAMÈTRES
-              ================================================== */}
+              RECHERCHE MOBILE
+          ================================================== */}
+
+          <Link
+            href="/services"
+            className="
+              flex
+              h-9
+              w-9
+              items-center
+              justify-center
+              rounded-lg
+              text-ink-soft
+              transition-colors
+              hover:bg-ink/5
+              hover:text-ink
+              md:hidden
+            "
+            aria-label="Rechercher"
+            title="Rechercher"
+          >
+            <Search size={18} />
+          </Link>
+
+          {/* ==================================================
+              UTILISATEUR CONNECTÉ
+          ================================================== */}
 
           {!chargement &&
-            utilisateur &&
-            liensIconesTries.length > 0 && (
-              <div
-                className="
-                  flex items-center
-                  gap-0.5
-                "
-              >
-                {liensIconesTries.map(
-                  (groupe) => {
-                    const Icon =
-                      groupe.icon;
+            utilisateur && (
+              <>
+                {/* ==============================================
+                    MESSAGES / PARAMÈTRES
+                ============================================== */}
 
-                    if (!Icon) {
-                      return null;
-                    }
-
-                    const actif =
-                      groupeEstActif(
-                        groupe,
-                      );
-
-                    const ouvert =
-                      menuOuvert ===
-                      groupe.label;
-
-                    const estParametres =
-                      groupe.label ===
-                      "Paramètres";
-
-                    // ==================================================
-                    // PARAMÈTRES
-                    // ==================================================
+                {liensTopbar.map(
+                  (item) => {
+                    /*
+                     * ==========================================
+                     * PARAMÈTRES
+                     * ==========================================
+                     */
 
                     if (
-                      estParametres
+                      item.label ===
+                      "Paramètres"
                     ) {
                       return (
                         <div
                           key={
-                            groupe.label
+                            item.label
                           }
-                          className="
-                            relative
-                          "
+                          className="relative"
                         >
                           <button
                             type="button"
@@ -675,76 +398,66 @@ export function Navbar() {
                                 false,
                               );
 
-                              setMenuOuvert(
-                                ouvert
-                                  ? null
-                                  : groupe.label,
+                              setMenuParametresOuvert(
+                                (value) =>
+                                  !value,
                               );
                             }}
-                            title="Paramètres"
                             aria-label="Paramètres"
                             aria-expanded={
-                              ouvert
+                              menuParametresOuvert
                             }
                             aria-haspopup="menu"
-                            className={clsx(
-                              `
-                                flex h-9 w-9
-                                items-center
-                                justify-center
-                                rounded-lg
-                                transition-all
-                              `,
-                              ouvert ||
-                                actif
-                                ? `
-                                  bg-ocre/10
-                                  text-ocre-dark
-                                `
-                                : `
-                                  text-ink-soft
-                                  hover:bg-ink/5
-                                  hover:text-ink
-                                `,
-                            )}
-                          >
-                            <Icon
-                              size={18}
-                              strokeWidth={
-                                actif
-                                  ? 2.3
-                                  : 2
+                            title="Paramètres"
+                            className={`
+                              flex
+                              h-9
+                              w-9
+                              items-center
+                              justify-center
+                              rounded-lg
+                              transition-colors
+
+                              ${
+                                menuParametresOuvert
+                                  ? "bg-ink/10 text-ink"
+                                  : "text-ink-soft hover:bg-ink/5 hover:text-ink"
                               }
-                            />
+                            `}
+                          >
+                            {item.icon && (
+                              <item.icon
+                                size={18}
+                              />
+                            )}
                           </button>
 
                           {/* MENU PARAMÈTRES */}
 
-                          {ouvert && (
+                          {menuParametresOuvert && (
                             <div
                               role="menu"
                               className="
-                                absolute right-0
-                                top-full z-50
-                                mt-2 w-64
+                                absolute
+                                right-0
+                                top-full
+                                z-[100]
+                                mt-2
+                                w-64
                                 overflow-hidden
                                 rounded-xl
-                                border border-ink/10
+                                border
+                                border-ink/10
                                 bg-paper
                                 shadow-xl
-                                animate-in
-                                fade-in
-                                slide-in-from-top-1
-                                duration-150
                               "
                             >
-                              {/* EN-TÊTE */}
-
                               <div
                                 className="
                                   border-b
                                   border-ink/10
-                                  px-4 py-3
+                                  px-4
+                                  py-3
                                 "
                               >
                                 <p
@@ -765,59 +478,46 @@ export function Navbar() {
                                   "
                                 >
                                   Personnalisez
-                                  votre expérience
+                                  votre
+                                  expérience
                                 </p>
                               </div>
 
                               {/* LIENS */}
 
-                              {groupe.liens?.map(
-                                (lien) => {
-                                  const lienActif =
-                                    estActif(
-                                      lien.href,
-                                    );
+                              {item.liens?.map(
+                                (link) => {
+                                  if (
+                                    !link.href
+                                  ) {
+                                    return null;
+                                  }
 
                                   return (
                                     <Link
                                       key={
-                                        lien.href
+                                        link.href
                                       }
                                       href={
-                                        lien.href
-                                      }
-                                      role="menuitem"
-                                      aria-current={
-                                        lienActif
-                                          ? "page"
-                                          : undefined
+                                        link.href
                                       }
                                       onClick={
-                                        fermerMenus
+                                        closeMenus
                                       }
-                                      className={clsx(
-                                        `
-                                          flex
-                                          items-center
-                                          px-4 py-2.5
-                                          text-sm
-                                          transition-colors
-                                        `,
-                                        lienActif
-                                          ? `
-                                            bg-ocre/10
-                                            font-medium
-                                            text-ocre-dark
-                                          `
-                                          : `
-                                            text-ink-soft
-                                            hover:bg-ink/5
-                                            hover:text-ink
-                                          `,
-                                      )}
+                                      role="menuitem"
+                                      className="
+                                        block
+                                        px-4
+                                        py-2.5
+                                        text-sm
+                                        text-ink-soft
+                                        transition-colors
+                                        hover:bg-ink/5
+                                        hover:text-ink
+                                      "
                                     >
                                       {
-                                        lien.label
+                                        link.label
                                       }
                                     </Link>
                                   );
@@ -830,7 +530,8 @@ export function Navbar() {
                                 className="
                                   border-t
                                   border-ink/10
-                                  px-4 py-3
+                                  px-4
+                                  py-3
                                 "
                               >
                                 <div
@@ -859,7 +560,7 @@ export function Navbar() {
                                         text-ink-soft
                                       "
                                     >
-                                      Changer le thème
+                                      Thème
                                     </p>
                                   </div>
 
@@ -872,81 +573,35 @@ export function Navbar() {
                       );
                     }
 
-                    // ==================================================
-                    // MESSAGES / NOTIFICATIONS
-                    // ==================================================
-
-                    if (groupe.href) {
-                      return (
-                        <Link
-                          key={
-                            groupe.href
-                          }
-                          href={
-                            groupe.href
-                          }
-                          title={
-                            groupe.label
-                          }
-                          aria-label={
-                            groupe.label
-                          }
-                          aria-current={
-                            actif
-                              ? "page"
-                              : undefined
-                          }
-                          onClick={
-                            fermerMenus
-                          }
-                          className={clsx(
-                            `
-                              flex h-9 w-9
-                              items-center
-                              justify-center
-                              rounded-lg
-                              transition-all
-                            `,
-                            actif
-                              ? `
-                                bg-ocre/10
-                                text-ocre-dark
-                              `
-                              : `
-                                text-ink-soft
-                                hover:bg-ink/5
-                                hover:text-ink
-                              `,
-                          )}
-                        >
-                          <Icon
-                            size={18}
-                            strokeWidth={
-                              actif
-                                ? 2.3
-                                : 2
-                            }
-                          />
-                        </Link>
-                      );
-                    }
-
                     return null;
                   },
                 )}
-              </div>
+
+                {/* ==================================================
+                    MESSAGES
+                ================================================== */}
+
+                <MessagesLink />
+
+                {/* ==================================================
+                    NOTIFICATIONS
+                ================================================== */}
+
+                <NotificationBell />
+              </>
             )}
 
-          {/* ==================================================
+          {/* ====================================================
               SÉPARATEUR
-              ================================================== */}
+          ==================================================== */}
 
           {utilisateur && (
             <div
               className="
-                mx-1.5 h-6 w-px
-                bg-ink/15
-                sm:mx-2
+                mx-2
+                h-6
+                w-px
+                bg-ink/10
               "
               aria-hidden="true"
             />
@@ -954,40 +609,46 @@ export function Navbar() {
 
           {/* ====================================================
               PROFIL
-              ==================================================== */}
+          ==================================================== */}
 
           {chargement ? null : utilisateur ? (
             <div className="relative">
               <button
                 type="button"
                 onClick={() => {
-                  setMenuOuvert(null);
+                  setMenuParametresOuvert(
+                    false,
+                  );
 
                   setMenuProfilOuvert(
-                    (ouvert) =>
-                      !ouvert,
+                    (value) =>
+                      !value,
                   );
                 }}
-                className="
-                  flex items-center
-                  gap-1.5
-                  rounded-lg
-                  px-1.5 py-1
-                  transition-all
-                  hover:bg-ink/5
-                "
+                aria-label="Menu du profil"
                 aria-expanded={
                   menuProfilOuvert
                 }
                 aria-haspopup="menu"
-                aria-label="Ouvrir le menu du profil"
-                title="Mon profil"
+                title="Profil"
+                className="
+                  flex
+                  items-center
+                  gap-1.5
+                  rounded-lg
+                  px-1.5
+                  py-1
+                  transition-colors
+                  hover:bg-ink/5
+                "
               >
-                {/* AVATAR */}
+                {/* Avatar */}
 
                 <div
                   className="
-                    flex h-8 w-8
+                    flex
+                    h-8
+                    w-8
                     shrink-0
                     items-center
                     justify-center
@@ -1005,96 +666,99 @@ export function Navbar() {
                       src={
                         getFileUrl(
                           utilisateur.photoUrl,
-                        ) ?? undefined
+                        ) ??
+                        undefined
                       }
-                      alt={`Photo de ${utilisateur.nom}`}
+                      alt={
+                        utilisateur.nom
+                      }
                       className="
-                        h-full w-full
+                        h-full
+                        w-full
                         object-cover
                       "
                     />
                   ) : (
-                    <User
-                      size={15}
-                      aria-hidden="true"
-                    />
+                    <User size={15} />
                   )}
                 </div>
 
-                {/* NOM + RÔLE */}
+                {/* NOM */}
 
                 <div
                   className="
                     hidden
-                    max-w-28
-                    flex-col
+                    max-w-32
                     text-left
                     leading-tight
-                    sm:flex
+                    sm:block
                   "
                 >
-                  <span
+                  <p
                     className="
                       truncate
                       text-xs
+                      font-medium
                       text-ink
                     "
                   >
-                    {utilisateur.nom}
-                  </span>
+                    {
+                      utilisateur.nom
+                    }
+                  </p>
 
-                  <span
+                  <p
                     className="
                       truncate
-                      text-[9px]
                       font-mono
+                      text-[9px]
                       uppercase
                       tracking-wider
-                      text-ink-soft/70
+                      text-ink-soft/60
                     "
                   >
                     {roleLabel(
                       utilisateur.role,
                     )}
-                  </span>
+                  </p>
                 </div>
 
                 <ChevronDown
                   size={13}
-                  className={clsx(
-                    `
-                      hidden
-                      transition-transform
-                      duration-200
-                      sm:block
-                    `,
-                    menuProfilOuvert &&
-                      "rotate-180",
-                  )}
-                  aria-hidden="true"
+                  className={`
+                    hidden
+                    transition-transform
+                    sm:block
+
+                    ${
+                      menuProfilOuvert
+                        ? "rotate-180"
+                        : ""
+                    }
+                  `}
                 />
               </button>
 
               {/* ==================================================
                   MENU PROFIL
-                  ================================================== */}
+              ================================================== */}
 
               {menuProfilOuvert && (
                 <div
                   role="menu"
                   className="
-                    absolute right-0
-                    top-full z-50
-                    mt-2 w-56
+                    absolute
+                    right-0
+                    top-full
+                    z-[100]
+                    mt-2
+                    w-56
                     overflow-hidden
                     rounded-xl
-                    border border-ink/10
+                    border
+                    border-ink/10
                     bg-paper
                     shadow-xl
-                    animate-in
-                    fade-in
-                    slide-in-from-top-1
-                    duration-150
                   "
                 >
                   {/* INFORMATIONS */}
@@ -1103,7 +767,8 @@ export function Navbar() {
                     className="
                       border-b
                       border-ink/10
-                      px-4 py-3
+                      px-4
+                      py-3
                     "
                   >
                     <p
@@ -1114,7 +779,9 @@ export function Navbar() {
                         text-ink
                       "
                     >
-                      {utilisateur.nom}
+                      {
+                        utilisateur.nom
+                      }
                     </p>
 
                     <p
@@ -1124,14 +791,16 @@ export function Navbar() {
                         text-ink-soft
                       "
                     >
-                      {utilisateur.email}
+                      {
+                        utilisateur.email
+                      }
                     </p>
 
                     <p
                       className="
                         mt-1
-                        text-[10px]
                         font-mono
+                        text-[9px]
                         uppercase
                         tracking-wider
                         text-ink-soft/60
@@ -1147,43 +816,25 @@ export function Navbar() {
 
                   <Link
                     href="/tableau-de-bord/profil"
-                    role="menuitem"
-                    aria-current={
-                      estActif(
-                        "/tableau-de-bord/profil",
-                      )
-                        ? "page"
-                        : undefined
-                    }
                     onClick={
-                      fermerMenus
+                      closeMenus
                     }
-                    className={clsx(
-                      `
-                        flex items-center
-                        gap-3
-                        px-4 py-2.5
-                        text-sm
-                        transition-colors
-                      `,
-                      estActif(
-                        "/tableau-de-bord/profil",
-                      )
-                        ? `
-                          bg-ocre/10
-                          font-medium
-                          text-ocre-dark
-                        `
-                        : `
-                          text-ink-soft
-                          hover:bg-ink/5
-                          hover:text-ink
-                        `,
-                    )}
+                    role="menuitem"
+                    className="
+                      flex
+                      items-center
+                      gap-3
+                      px-4
+                      py-2.5
+                      text-sm
+                      text-ink-soft
+                      transition-colors
+                      hover:bg-ink/5
+                      hover:text-ink
+                    "
                   >
                     <User
                       size={15}
-                      aria-hidden="true"
                     />
 
                     <span>
@@ -1195,17 +846,17 @@ export function Navbar() {
 
                   <button
                     type="button"
+                    onClick={logout}
                     role="menuitem"
-                    onClick={
-                      handleDeconnexion
-                    }
                     className="
-                      flex w-full
+                      flex
+                      w-full
                       items-center
                       gap-3
                       border-t
                       border-ink/10
-                      px-4 py-2.5
+                      px-4
+                      py-2.5
                       text-left
                       text-sm
                       text-brique
@@ -1215,7 +866,6 @@ export function Navbar() {
                   >
                     <LogOut
                       size={15}
-                      aria-hidden="true"
                     />
 
                     <span>
@@ -1228,29 +878,19 @@ export function Navbar() {
           ) : (
             /* ==================================================
                UTILISATEUR NON CONNECTÉ
-               ================================================== */
+            ================================================== */
 
             <div
               className="
-                flex items-center
-                gap-1.5
-                border-l
-                border-ink/15
-                pl-2
-                sm:gap-2
-                sm:pl-3
+                flex
+                items-center
+                gap-2
               "
             >
               <Link href="/connexion">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="
-                    h-8 px-2
-                    text-[11px]
-                    sm:px-2.5
-                    sm:text-xs
-                  "
                 >
                   Se connecter
                 </Button>
@@ -1260,12 +900,6 @@ export function Navbar() {
                 <Button
                   variant="primary"
                   size="sm"
-                  className="
-                    h-8 px-2
-                    text-[11px]
-                    sm:px-2.5
-                    sm:text-xs
-                  "
                 >
                   S&apos;inscrire
                 </Button>

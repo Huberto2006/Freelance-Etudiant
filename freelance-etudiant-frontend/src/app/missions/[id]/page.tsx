@@ -7,10 +7,13 @@ import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import type { Mission } from "@/lib/types";
 import { formatArgent, formatDate, statutMissionLabel } from "@/lib/format";
+import { getFileUrl } from "@/lib/api";
 import { NoticeCard, Tag } from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
+import { BoutonsReaction } from "@/components/ui/BoutonsReaction";
+import { SectionCommentaires } from "@/components/ui/SectionCommentaires";
 
 export default function MissionDetailPage({
   params,
@@ -76,6 +79,17 @@ export default function MissionDetailPage({
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-14">
+      {mission.imageUrl && (
+        <div className="mb-6 overflow-hidden rounded-2xl border border-ink/10">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={getFileUrl(mission.imageUrl) ?? undefined}
+            alt=""
+            className="max-h-96 w-full object-cover"
+          />
+        </div>
+      )}
+
       <div className="flex items-center gap-3 mb-4">
         <Tag tone="rice">{mission.categorie}</Tag>
         <Tag tone="ink">{statutMissionLabel[mission.statut]}</Tag>
@@ -234,6 +248,14 @@ export default function MissionDetailPage({
           </p>
         </NoticeCard>
       ) : null}
+
+      <div className="mt-6 mb-10">
+        <BoutonsReaction cibleType="mission" cibleId={mission.id} />
+      </div>
+
+      <div className="border-t border-ink/10 pt-8">
+        <SectionCommentaires cibleType="mission" cibleId={mission.id} />
+      </div>
     </div>
   );
 }

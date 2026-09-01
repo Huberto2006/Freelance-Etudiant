@@ -48,6 +48,15 @@ export class Mission {
   @Column({ type: 'boolean', name: 'est_modere', default: true })
   estModere: boolean;
 
+  /**
+   * Image principale illustrant la mission (URL relative renvoyee par
+   * POST /uploads/document, ex. "/uploads/documents/xxx.jpg"). Nullable :
+   * une mission peut ne pas avoir d'image, un repli visuel par categorie
+   * est alors utilise cote frontend.
+   */
+  @Column({ name: 'image_url', type: 'varchar', length: 300, nullable: true })
+  imageUrl?: string | null;
+
   @ManyToOne(() => ClientProfile, (client) => client.missions, {
     onDelete: 'CASCADE',
   })

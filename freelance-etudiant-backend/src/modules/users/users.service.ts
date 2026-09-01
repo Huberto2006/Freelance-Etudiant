@@ -1,6 +1,6 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { Utilisateur } from './entities/utilisateur.entity';
 import { Role } from '../../common/enums/role.enum';
 
@@ -78,8 +78,26 @@ export class UsersService {
     return this.utilisateurRepo.save(user);
   }
 
+  /**
+   * Suppression definitive d'un compte. Bloquee (409) si l'utilisateur a
+   * un historique financier ou des evaluations (RG7/RGp2, contraintes
+   * RESTRICT en base) : dans ce cas, utiliser la suspension de compte
+   * (`setActif`) plutot qu'une suppression irreversible.
+   */
   async remove(id: string): Promise<void> {
     const user = await this.findByIdOrFail(id);
-    await this.utilisateurRepo.remove(user);
+    try {
+      await this.utilisateurRepo.remove(user);
+    } catch (error) {
+      if (
+        error instanceof QueryFailedError &&
+        (error as unknown as { code?: string }).code === '23503'
+      ) {
+        throw new ConflictException(
+          "Ce compte ne peut pas être supprimé définitivement : il a un historique de paiements et/ou d'évaluations. Utilisez la désactivation du compte à la place.",
+        );
+      }
+      throw error;
+    }
   }
 }

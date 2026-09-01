@@ -5,9 +5,9 @@ import { Message } from './entities/message.entity';
 import { MessagesService } from './messages.service';
 import { MessagesController } from './messages.controller';
 
-import { NotificationsModule } from '../notifications/notifications.module';
 import { CandidaturesModule } from '../candidatures/candidatures.module';
 import { UsersModule } from '../users/users.module';
+import { RealtimeModule } from '../realtime/realtime.module';
 
 @Module({
   imports: [
@@ -15,11 +15,11 @@ import { UsersModule } from '../users/users.module';
       Message,
     ]),
 
-    NotificationsModule,
-
     CandidaturesModule,
 
     UsersModule,
+
+    RealtimeModule,
   ],
 
   providers: [
