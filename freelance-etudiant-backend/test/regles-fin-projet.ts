@@ -120,7 +120,7 @@ class DepotMemoire<T extends EntiteAvecId> {
     this.resolveurs.push(resolveur);
   }
 
-  private hydrater(item: T): T {
+  hydrater(item: T): T {
     for (const resolveur of this.resolveurs) {
       resolveur(item);
     }
@@ -203,7 +203,7 @@ depotCandidatures.ajouterResolveur((candidature) => {
   candidature.livraison =
     depotLivraisons.items.find(
       (l) => l.candidatureId === candidature.id,
-    ) ?? null;
+    ) ?? undefined;
   candidature.etudiant = {
     utilisateurId: candidature.etudiantId,
     utilisateur: {
@@ -214,18 +214,25 @@ depotCandidatures.ajouterResolveur((candidature) => {
   } as unknown as Candidature['etudiant'];
 });
 depotLivraisons.ajouterResolveur((livraison) => {
-  livraison.candidature =
-    depotCandidatures.items.find(
-      (c) => c.id === livraison.candidatureId,
-    ) ?? (null as unknown as Candidature);
+  const candidatureTrouvee = depotCandidatures.items.find(
+    (c) => c.id === livraison.candidatureId,
+  );
+  livraison.candidature = candidatureTrouvee
+    ? depotCandidatures.hydrater(candidatureTrouvee)
+    : (null as unknown as Candidature);
   livraison.evaluations = depotEvaluations.items.filter(
     (e) => e.livraisonId === livraison.id,
   );
 });
 depotTransactions.ajouterResolveur((transaction) => {
-  transaction.candidature = depotCandidatures.items.find(
+  const candidatureTrouvee = depotCandidatures.items.find(
     (c) => c.id === transaction.candidatureId,
   );
+  transaction.candidature = (
+    candidatureTrouvee
+      ? depotCandidatures.hydrater(candidatureTrouvee)
+      : candidatureTrouvee
+  ) as Candidature;
   transaction.client = {
     id: transaction.clientId,
     nom: 'Client Test',
