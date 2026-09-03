@@ -10,8 +10,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
 import { Repository } from 'typeorm';
 import { Transaction } from './entities/transaction.entity';
+import { Livraison } from '../livraisons/entities/livraison.entity';
 import { CreerPaiementDto } from './dto/creer-paiement.dto';
 import { MethodePaiement, StatutTransaction } from '../../common/enums/statut-transaction.enum';
+import { StatutLivraison } from '../../common/enums/statut-livraison.enum';
 import { CandidaturesService } from '../candidatures/candidatures.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TypeNotification } from '../../common/enums/type-notification.enum';
@@ -35,6 +37,8 @@ export class PaiementsService {
   constructor(
     @InjectRepository(Transaction)
     private readonly repo: Repository<Transaction>,
+    @InjectRepository(Livraison)
+    private readonly livraisonsRepo: Repository<Livraison>,
     private readonly candidaturesService: CandidaturesService,
     private readonly notificationsService: NotificationsService,
     private readonly mvolaService: MvolaService,
@@ -43,7 +47,8 @@ export class PaiementsService {
   ) {}
 
   /**
-   * Deux voies de paiement pour une candidature acceptee :
+   * Deux voies de paiement pour une candidature acceptee DONT LA LIVRAISON
+   * A ETE VALIDEE par le client (regle metier de fin de projet) :
    * - MVola (methode 'mvola') : paiement EN LIGNE REEL via l'API MVola.
    *   Le backend genere la reference, demande le debit du numero payeur
    *   au fournisseur, puis la confirmation se fait uniquement par
@@ -76,6 +81,21 @@ export class PaiementsService {
       );
     }
     this.candidaturesService.assertCandidatureAcceptee(candidature);
+
+    // ============================================================
+    // RG (fin de projet) : le client ne peut payer QU'APRES avoir
+    // valide la livraison de cette candidature. Verification faite
+    // cote backend : un appel direct a l'API de paiement est bloque
+    // si la livraison n'existe pas ou n'est pas validee.
+    // ============================================================
+    const livraison = await this.livraisonsRepo.findOne({
+      where: { candidatureId },
+    });
+    if (!livraison || livraison.statut !== StatutLivraison.VALIDEE) {
+      throw new BadRequestException(
+        "Vous devez d'abord valider la livraison avant d'effectuer le paiement.",
+      );
+    }
 
     const existante = await this.repo.findOne({ where: { candidatureId } });
     if (existante && existante.statut !== StatutTransaction.ANNULEE) {
@@ -393,6 +413,10 @@ export class PaiementsService {
    * Passage EN_ATTENTE -> CONFIRMEE (source de verite : fournisseur ou
    * admin pour un virement). Une seule operation metier : notification
    * + email client et etudiant.
+   * Regle metier de fin de projet : la confirmation d'un paiement ne
+   * devient possible qu'apres validation de la livraison ; les fonds
+   * sont donc liberer automatiquement ici si la livraison correspondante
+   * est deja validee (flux : validation -> paiement -> liberation).
    */
   private async marquerConfirmee(transaction: Transaction): Promise<Transaction> {
     transaction.statut = StatutTransaction.CONFIRMEE;
@@ -402,6 +426,21 @@ export class PaiementsService {
     const titreMission =
       transaction.candidature?.mission?.titre ?? 'Mission';
     const montant = Number(transaction.montant);
+
+    // Livraison deja validee ? Dans le flux obligatoire
+    // (validation -> paiement -> evaluation), le paiement est confirme
+    // APRES la validation : on libere donc immediatement les fonds.
+    let livraisonValidee = false;
+    try {
+      const livraison = await this.livraisonsRepo.findOne({
+        where: { candidatureId: transaction.candidatureId },
+      });
+      livraisonValidee = livraison?.statut === StatutLivraison.VALIDEE;
+    } catch (error) {
+      this.logger.warn(
+        `Impossible de verifier la livraison pour la candidature ${transaction.candidatureId} : ${error}`,
+      );
+    }
 
     await this.notificationsService.creer({
       destinataireId: transaction.clientId,
@@ -414,7 +453,9 @@ export class PaiementsService {
       destinataireId: transaction.etudiantId,
       type: TypeNotification.PAIEMENT_CONFIRME,
       titre: 'Paiement confirmé',
-      message: `Le paiement pour "${titreMission}" a été confirmé et sera libéré à la validation de la livraison.`,
+      message: livraisonValidee
+        ? `Le paiement pour "${titreMission}" a été confirmé et les fonds vous sont libérés.`
+        : `Le paiement pour "${titreMission}" a été confirmé et sera libéré à la validation de la livraison.`,
       lienUrl: '/tableau-de-bord/paiements',
     });
 
@@ -439,6 +480,19 @@ export class PaiementsService {
           reference: transaction.reference,
         },
       );
+    }
+
+    // Liberation automatique des fonds si la livraison est deja validee
+    // (le client a paye apres avoir valide la livraison). Non bloquant :
+    // un echec ici ne doit jamais invalider la confirmation du paiement.
+    if (livraisonValidee) {
+      try {
+        await this.libererSiConfirmee(transaction.candidatureId);
+      } catch (error) {
+        this.logger.error(
+          `Liberation automatique impossible pour la candidature ${transaction.candidatureId} : ${error}`,
+        );
+      }
     }
 
     return saved;

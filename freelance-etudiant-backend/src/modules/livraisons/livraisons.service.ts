@@ -16,10 +16,8 @@ import {
 } from "./dto/livraison.dto";
 
 import { StatutLivraison } from "../../common/enums/statut-livraison.enum";
-import { StatutMission } from "../../common/enums/statut-mission.enum";
 
 import { CandidaturesService } from "../candidatures/candidatures.service";
-import { MissionsService } from "../missions/missions.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { TypeNotification } from "../../common/enums/type-notification.enum";
 import { PaiementsService } from "../paiements/paiements.service";
@@ -31,8 +29,6 @@ export class LivraisonsService {
     private readonly repo: Repository<Livraison>,
 
     private readonly candidaturesService: CandidaturesService,
-
-    private readonly missionsService: MissionsService,
 
     private readonly notificationsService: NotificationsService,
 
@@ -174,6 +170,9 @@ export class LivraisonsService {
         "candidature.mission.client.utilisateur",
         "candidature.etudiant",
         "candidature.etudiant.utilisateur",
+        // Evaluations liees a cette livraison : permet au frontend de
+        // savoir si l'evaluation obligatoire a deja ete effectuee.
+        "evaluations",
       ],
     });
 
@@ -239,6 +238,7 @@ export class LivraisonsService {
         "candidature.mission.client.utilisateur",
         "candidature.etudiant",
         "candidature.etudiant.utilisateur",
+        "evaluations",
       ],
     });
   }
@@ -281,6 +281,13 @@ export class LivraisonsService {
       .leftJoinAndSelect(
         "etudiant.utilisateur",
         "etudiantUtilisateur",
+      )
+
+      // Evaluations : permet au frontend d'afficher l'etat
+      // "evaluation effectuee" du workflow de fin de projet.
+      .leftJoinAndSelect(
+        "livraison.evaluations",
+        "evaluation",
       )
 
       .where(
@@ -338,6 +345,13 @@ export class LivraisonsService {
         "etudiantUtilisateur",
       )
 
+      // Evaluations : permet au frontend d'afficher l'etat
+      // "evaluation effectuee" du workflow de fin de projet.
+      .leftJoinAndSelect(
+        "livraison.evaluations",
+        "evaluationClient",
+      )
+
       .where(
         "mission.clientId = :clientId",
         {
@@ -387,11 +401,14 @@ export class LivraisonsService {
 
     const saved = await this.repo.save(livraison);
 
-    // La mission est terminée
-    await this.missionsService.setStatut(
-      livraison.candidature.missionId,
-      StatutMission.TERMINEE,
-    );
+    // ============================================================
+    // RG (fin de projet) : la validation de la livraison rend le
+    // PAIEMENT obligatoire, puis l'EVALUATION obligatoire. La mission
+    // n'est PAS marquee TERMINEE ici : elle le sera uniquement apres
+    // l'evaluation (voir EvaluationsService.create), une fois les trois
+    // conditions reunies : livraison validee + paiement confirme +
+    // evaluation effectuee.
+    // ============================================================
 
     // Notification à l'étudiant
     await this.notificationsService.creer({
@@ -403,7 +420,7 @@ export class LivraisonsService {
 
       titre: "Livraison validée",
 
-      message: `Votre livraison pour "${livraison.candidature.mission.titre}" a été validée.`,
+      message: `Votre livraison pour "${livraison.candidature.mission.titre}" a été validée. Le client va procéder au paiement.`,
 
       lienUrl: `/tableau-de-bord/livraisons?candidature=${encodeURIComponent(livraison.candidatureId)}`,
     });

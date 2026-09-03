@@ -31,7 +31,11 @@ export default function AdminSignalementsPage() {
   }, []);
 
   useEffect(() => {
-    charger();
+    // Differre l'appel hors du corps synchrone de l'effet (react-hooks/
+    // set-state-in-effect) : charger() met a jour l'etat des son entree.
+    void Promise.resolve().then(() => {
+      charger();
+    });
   }, [charger]);
 
   async function traiter(id: string) {

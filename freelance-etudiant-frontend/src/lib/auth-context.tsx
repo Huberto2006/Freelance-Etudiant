@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiError, getToken, setToken, setRefreshToken, clearTokens, setOnSessionExpired } from "./api";
-import type { AuthResponse, Role, Utilisateur } from "./types";
+import type { AuthResponse, ReponseInscription, Role, Utilisateur } from "./types";
 
 interface RegisterPayload {
   nom: string;
@@ -27,7 +27,7 @@ interface AuthContextValue {
   utilisateur: Utilisateur | null;
   chargement: boolean;
   connecter: (email: string, motDePasse: string) => Promise<void>;
-  inscrire: (payload: RegisterPayload) => Promise<void>;
+  inscrire: (payload: RegisterPayload) => Promise<ReponseInscription>;
   deconnecter: () => void;
   rafraichirProfil: () => Promise<void>;
 }
@@ -62,8 +62,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    rafraichirProfil();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Differre l'appel hors du corps synchrone de l'effet (react-hooks/
+    // set-state-in-effect) : sans jeton, rafraichirProfil() met a jour
+    // l'etat immediatement.
+    void Promise.resolve().then(() => {
+      rafraichirProfil();
+    });
   }, []);
 
   // Synchronise immédiatement l'état React quand api.ts détecte qu'un
@@ -88,15 +92,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const inscrire = useCallback(
-    async (payload: RegisterPayload) => {
-      const res = await api.post<AuthResponse>("/auth/register", payload, {
+    async (payload: RegisterPayload): Promise<ReponseInscription> => {
+      /*
+       * Verification d'email : le backend cree le compte mais ne delivre
+       * AUCUN jeton tant que l'adresse n'est pas confirmee. On retourne la
+       * reponse (email concerne) pour que la page d'inscription affiche
+       * l'ecran "Un email de verification a ete envoye".
+       */
+      return api.post<ReponseInscription>("/auth/register", payload, {
         auth: false,
       });
-      setToken(res.accessToken);
-      setRefreshToken(res.refreshToken);
-      await rafraichirProfil();
     },
-    [rafraichirProfil],
+    [],
   );
 
   const deconnecter = useCallback(() => {

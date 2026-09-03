@@ -16,7 +16,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { SocketProvider } from "@/lib/socket-context";
 import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+import { FooterConditionnel } from "@/components/layout/FooterConditionnel";
 
 export const metadata: Metadata = {
   title: "Kianja — Freelances etudiants x Clients | EMIT Fianarantsoa",
@@ -46,7 +46,7 @@ export default function RootLayout({
               {children}
             </main>
 
-            <Footer />
+            <FooterConditionnel />
           </SocketProvider>
         </AuthProvider>
       </body>

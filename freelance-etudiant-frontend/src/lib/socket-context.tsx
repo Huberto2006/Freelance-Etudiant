@@ -49,7 +49,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     nouveauSocket.on("connect", () => setConnecte(true));
     nouveauSocket.on("disconnect", () => setConnecte(false));
 
-    setSocket(nouveauSocket);
+    // Differre la mise a jour d'etat hors du corps synchrone de l'effet
+    // (react-hooks/set-state-in-effect) : la connexion socket.io, elle,
+    // est creee et nettoyee de facon synchrone dans l'effet.
+    void Promise.resolve().then(() => {
+      setSocket(nouveauSocket);
+    });
 
     return () => {
       nouveauSocket.disconnect();

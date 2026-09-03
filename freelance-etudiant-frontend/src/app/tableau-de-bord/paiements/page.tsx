@@ -391,20 +391,39 @@ export default function PaiementsPage() {
             .catch(() => [] as Candidature[]),
         ]);
 
-        const idsAvecPaiement = new Set(
-          mesTransactions.map(
-            (transaction) =>
-              transaction.candidatureId,
-          ),
+        // Un paiement existe encore ET n'a pas été annulé : la
+        // candidature n'est plus à payer. Le backend refuse en effet
+        // la création d'un second paiement tant que l'ancien n'est
+        // pas annulé ("Un paiement existe deja pour cette
+        // candidature") — on évite donc d'exposer un bouton voué à
+        // l'échec. Un paiement annulé permet une nouvelle tentative.
+        const idsAvecPaiementActif = new Set(
+          mesTransactions
+            .filter(
+              (transaction) =>
+                transaction.statut !== "annulee",
+            )
+            .map(
+              (transaction) =>
+                transaction.candidatureId,
+            ),
         );
 
         setTransactions(mesTransactions);
 
+        // Règle métier de fin de projet : une candidature est payable
+        // uniquement si la livraison correspondante a été VALIDÉE par
+        // le client (contrôle déjà effectué côté backend dans
+        // PaiementsService.creer ; ici le frontend reflète la même
+        // règle pour n'exposer le formulaire qu'au bon moment).
+        // La relation "livraison" est fournie par GET /candidatures/client.
         setCandidaturesAPayer(
           mesCandidatures.filter(
             (candidature) =>
               candidature.statut === "acceptee" &&
-              !idsAvecPaiement.has(
+              candidature.livraison?.statut ===
+                "validee" &&
+              !idsAvecPaiementActif.has(
                 candidature.id,
               ),
           ),

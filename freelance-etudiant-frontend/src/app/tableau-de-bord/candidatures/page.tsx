@@ -127,8 +127,6 @@ export default function CandidaturesPage() {
 
             const missionId = candidature.mission?.id ?? candidature.missionId;
 
-            const livraisonExiste = candidature.livraison != null;
-
             return (
               <NoticeCard key={candidature.id}>
                 {/* =================================================

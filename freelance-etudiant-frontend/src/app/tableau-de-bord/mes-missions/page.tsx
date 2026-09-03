@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { BriefcaseBusiness, Pencil, Plus, X, PackageCheck } from "lucide-react";
+import { BriefcaseBusiness, Pencil, Plus, X } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
 import type { Candidature, Mission } from "@/lib/types";

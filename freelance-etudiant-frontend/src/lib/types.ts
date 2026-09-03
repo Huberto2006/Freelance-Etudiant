@@ -35,6 +35,12 @@
 
     estSuspendu: boolean;
 
+    /**
+     * Adresse email confirmee via le lien de verification envoye a
+     * l'inscription ; un compte non verifie ne peut pas se connecter.
+     */
+    emailVerifie: boolean;
+
     dateInscription: string;
 
     profilEtudiant?: EtudiantProfile | null;
@@ -180,6 +186,14 @@
     commentaireCorrection?: string | null;
 
     candidature?: Candidature;
+
+    /**
+     * Evaluations liées à cette livraison. Le backend charge cette
+     * relation sur GET /livraisons/client/toutes et /livraisons/me :
+     * elle permet au client de savoir si l'évaluation obligatoire
+     * (fin de projet) a déjà été effectuée.
+     */
+    evaluations?: Evaluation[];
 
     dateLivraison: string;
   }
@@ -416,6 +430,17 @@
       email: string;
       role: Role;
     };
+  }
+
+  /**
+   * Reponse de POST /auth/register : le compte est cree mais pas encore
+   * utilisable, l'utilisateur doit d'abord confirmer son adresse email
+   * (aucun jeton de session n'est delivre a cette etape).
+   */
+  export interface ReponseInscription {
+    message: string;
+
+    email: string;
   }
 
   export interface ResultatMatching {

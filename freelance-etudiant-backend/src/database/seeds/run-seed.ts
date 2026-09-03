@@ -34,6 +34,7 @@ async function runSeed() {
       email: 'admin@emit.mg',
       motDePasse: motDePasseHache,
       role: Role.ADMIN,
+      emailVerifie: true,
     });
     console.log('Admin cree : admin@emit.mg / MotDePasse123!');
   }
@@ -46,6 +47,7 @@ async function runSeed() {
       email: 'lanja@emit.mg',
       motDePasse: motDePasseHache,
       role: Role.ETUDIANT,
+      emailVerifie: true,
     });
     const profil = etudiantRepo.create({
       utilisateurId: lanja.id,
@@ -82,6 +84,7 @@ async function runSeed() {
       email: 'client@exemple.mg',
       motDePasse: motDePasseHache,
       role: Role.CLIENT,
+      emailVerifie: true,
     });
     const profilClient = clientRepo.create({
       utilisateurId: client.id,

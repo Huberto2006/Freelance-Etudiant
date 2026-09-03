@@ -43,7 +43,7 @@ export function MessagesLink() {
     return () => {
       annule = true;
     };
-  }, [utilisateur?.id, pathname]);
+  }, [utilisateur, pathname]);
 
   // 2. Synchronisation en temps réel via Socket.IO (événement message:compteur)
   useEffect(() => {

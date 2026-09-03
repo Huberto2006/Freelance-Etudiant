@@ -2,6 +2,8 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  HttpException,
+  HttpStatus,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
@@ -11,9 +13,14 @@ import { UsersService } from "../users/users.service";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
 import { ForgotPasswordDto, ResetPasswordDto } from "./dto/reset-password.dto";
+import {
+  VerificationEmailDto,
+  RenvoyerVerificationEmailDto,
+} from "./dto/verification-email.dto";
 import { Role } from "../../common/enums/role.enum";
 import { EtudiantProfile } from "../etudiants/entities/etudiant-profile.entity";
 import { ClientProfile } from "../clients/entities/client-profile.entity";
+import { Utilisateur } from "../users/entities/utilisateur.entity";
 import { TypeClient } from "../../common/enums/type-client.enum";
 import { JwtPayload } from "./interfaces/authenticated-user.interface";
 import { EmailService } from "../email/email.service";
@@ -21,6 +28,13 @@ import type { StringValue } from "ms";
 
 const SALT_ROUNDS = 12;
 const RESET_PASSWORD_EXPIRE_MINUTES = 60;
+/**
+ * Verification de l'adresse email : duree de validite du jeton envoye par
+ * email (le lien ne fonctionne plus au-dela) et delai minimal entre deux
+ * renvois (anti-abus).
+ */
+const VERIFICATION_EMAIL_EXPIRE_HEURES = 24;
+const RENVOI_VERIFICATION_DELAI_MS = 60_000;
 
 @Injectable()
 export class AuthService {
@@ -52,6 +66,9 @@ export class AuthService {
       email: dto.email,
       motDePasse: motDePasseHache,
       role: dto.role,
+      // Le compte est cree mais inactif tant que l'adresse email n'est
+      // pas confirmee via le lien recu (cf. verifierEmail).
+      emailVerifie: false,
     });
 
     if (dto.role === Role.ETUDIANT) {
@@ -75,7 +92,19 @@ export class AuthService {
     }
 
     const saved = await this.usersService.save(utilisateur);
-    return this.buildAuthResponse(saved.id, saved.email, saved.role);
+
+    /*
+     * Verification d'email : aucun JWT n'est delivre a l'inscription. La
+     * session ne sera ouverte qu'apres confirmation de l'adresse (lien
+     * recu par email) puis connexion classique.
+     */
+    await this.genererEtEnvoyerVerificationEmail(saved);
+
+    return {
+      message:
+        "Inscription reussie. Un email de verification a ete envoye a votre adresse pour activer votre compte.",
+      email: saved.email,
+    };
   }
 
   async login(dto: LoginDto) {
@@ -85,6 +114,11 @@ export class AuthService {
     }
     if (utilisateur.estSuspendu || !utilisateur.estActif) {
       throw new UnauthorizedException("Ce compte est suspendu ou desactive");
+    }
+    if (!utilisateur.emailVerifie) {
+      throw new UnauthorizedException(
+        "Votre adresse email n'a pas encore ete verifiee. Consultez votre boite de reception et cliquez sur le lien de verification recu a l'inscription.",
+      );
     }
     const motDePasseValide = await bcrypt.compare(
       dto.motDePasse,
@@ -189,6 +223,133 @@ export class AuthService {
     await this.usersService.save(utilisateur);
 
     return { message: "Mot de passe reinitialise avec succes" };
+  }
+
+  /**
+   * Verification de l'adresse email (etape 2 du flux d'inscription) : le
+   * frontend transmet le jeton recu dans le lien ; c'est ICI, cote
+   * backend, que la validation definitive est faite. Arriver sur la page
+   * frontend ne prouve rien et ne marque jamais l'email comme verifie.
+   *
+   * Le jeton est stocke uniquement sous forme d'empreinte SHA-256, il
+   * expire (VERIFICATION_EMAIL_EXPIRE_HEURES) et est invalide (supprime)
+   * apres utilisation.
+   */
+  async verifierEmail(
+    dto: VerificationEmailDto,
+  ): Promise<{ message: string }> {
+    const jetonHache = crypto
+      .createHash("sha256")
+      .update(dto.token)
+      .digest("hex");
+
+    const utilisateur = await this.usersService.findByEmailVerificationToken(
+      jetonHache,
+    );
+    if (!utilisateur) {
+      // Jeton inconnu : lien invalide, expire nettoye ou deja utilise
+      // (le jeton est supprime de la base apres usage).
+      throw new BadRequestException(
+        "Lien de verification invalide, expire ou deja utilise",
+      );
+    }
+
+    if (
+      !utilisateur.emailVerificationExpire ||
+      utilisateur.emailVerificationExpire.getTime() < Date.now()
+    ) {
+      // Nettoyage du jeton expire pour eviter les tentatives repetees.
+      utilisateur.emailVerificationTokenHash = null;
+      utilisateur.emailVerificationExpire = null;
+      await this.usersService.save(utilisateur);
+      throw new BadRequestException(
+        "Lien de verification expire. Demandez un nouvel email de verification depuis la page de connexion.",
+      );
+    }
+
+    utilisateur.emailVerifie = true;
+    utilisateur.emailVerificationTokenHash = null;
+    utilisateur.emailVerificationExpire = null;
+    await this.usersService.save(utilisateur);
+
+    return {
+      message:
+        "Votre adresse email a ete verifiee avec succes. Vous pouvez maintenant vous connecter.",
+    };
+  }
+
+  /**
+   * Renvoi de l'email de verification : genere un NOUVEAU jeton (l'ancien
+   * est ecrase, donc invalide) et renvoie un VRAI email via le service
+   * SMTP existant. Reponse volontairement neutre que le compte existe ou
+   * soit deja verifie (anti-enumeration, meme approche que forgotPassword).
+   * Un delai minimal entre deux envois limite les abus.
+   */
+  async renvoyerVerificationEmail(
+    dto: RenvoyerVerificationEmailDto,
+  ): Promise<{ message: string }> {
+    const utilisateur = await this.usersService.findByEmail(dto.email);
+
+    if (utilisateur && !utilisateur.emailVerifie) {
+      // Anti-abus : l'instant de generation du dernier jeton se deduit de
+      // son expiration ; on refuse un renvoi trop rapproche.
+      if (utilisateur.emailVerificationExpire) {
+        const genereLe =
+          utilisateur.emailVerificationExpire.getTime() -
+          VERIFICATION_EMAIL_EXPIRE_HEURES * 60 * 60 * 1000;
+        if (Date.now() - genereLe < RENVOI_VERIFICATION_DELAI_MS) {
+          throw new HttpException(
+            "Un email de verification a deja ete envoye recemment. Patientez une minute avant de reessayer.",
+            HttpStatus.TOO_MANY_REQUESTS,
+          );
+        }
+      }
+
+      await this.genererEtEnvoyerVerificationEmail(utilisateur);
+    }
+
+    return {
+      message:
+        "Si un compte non verifie existe avec cette adresse, un nouvel email de verification vient d'etre envoye.",
+    };
+  }
+
+  /**
+   * Genere un jeton de verification aleatoire et temporaire (256 bits
+   * d'entropie), ne stocke en base que son empreinte SHA-256 (jamais le
+   * jeton en clair), puis envoie l'email de verification. Le lien est
+   * construit a partir de FRONTEND_URL (aucune URL frontend en dur).
+   * L'echec d'envoi ne bloque jamais l'inscription : l'email est
+   * secondaire (convention EmailService).
+   */
+  private async genererEtEnvoyerVerificationEmail(
+    utilisateur: Utilisateur,
+  ): Promise<void> {
+    const jeton = crypto.randomBytes(32).toString("hex");
+    const jetonHache = crypto
+      .createHash("sha256")
+      .update(jeton)
+      .digest("hex");
+
+    utilisateur.emailVerificationTokenHash = jetonHache;
+    utilisateur.emailVerificationExpire = new Date(
+      Date.now() + VERIFICATION_EMAIL_EXPIRE_HEURES * 60 * 60 * 1000,
+    );
+    await this.usersService.save(utilisateur);
+
+    const frontendUrl =
+      this.configService.get<string>("app.frontendUrl") ??
+      "http://localhost:3001";
+    const lien = `${frontendUrl}/verification-email?token=${jeton}`;
+
+    // Envoi du VRAI email via le transport SMTP/Nodemailer existant
+    // (EmailService). En dev sans SMTP configure, le contenu est
+    // journalise en console de facon explicite.
+    await this.emailService.envoyerVerificationEmail(utilisateur.email, {
+      nom: utilisateur.nom,
+      lien,
+      dureeHeures: VERIFICATION_EMAIL_EXPIRE_HEURES,
+    });
   }
 
   private buildAuthResponse(id: string, email: string, role: Role) {

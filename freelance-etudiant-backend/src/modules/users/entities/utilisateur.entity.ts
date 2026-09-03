@@ -64,6 +64,34 @@ export class Utilisateur {
     default: false,
   })
   estSuspendu!: boolean;
+  /*
+   * Verification de l'adresse email : un compte n'est utilisable (connexion)
+   * qu'une fois son adresse confirmee via le lien envoye a l'inscription.
+   * Seule l'empreinte SHA-256 du jeton est stockee (jamais le jeton en clair).
+   */
+  @Column({
+    name: 'email_verifie',
+    type: 'boolean',
+    default: false,
+  })
+  emailVerifie!: boolean;
+
+  @Exclude({ toPlainOnly: true })
+  @Column({
+    name: 'email_verification_token_hash',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  emailVerificationTokenHash!: string | null;
+
+  @Exclude({ toPlainOnly: true })
+  @Column({
+    name: 'email_verification_expire',
+    type: 'timestamptz',
+    nullable: true,
+  })
+  emailVerificationExpire!: Date | null;
 
   @Exclude({ toPlainOnly: true })
   @Column({

@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   ChevronDown,
+  Globe,
   LogOut,
+  Menu,
   Search,
+  Settings,
   User,
 } from "lucide-react";
 import {
@@ -19,7 +21,10 @@ import {
   roleLabel,
 } from "@/lib/auth-context";
 
-import { navigationParRole } from "@/lib/nav-links";
+import {
+  navigationParRole,
+} from "@/lib/nav-links";
+
 import { getFileUrl } from "@/lib/api";
 
 import { Button } from "@/components/ui/Button";
@@ -27,23 +32,42 @@ import { BasculeTheme } from "@/components/ui/BasculeTheme";
 import { MessagesLink } from "@/components/ui/MessagesLink";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 
-export function Navbar() {
+type NavbarProps = {
+  /**
+   * true lorsque le Navbar est utilisé
+   * avec la Sidebar du dashboard.
+   *
+   * false pour les pages sans Sidebar.
+   *
+   * C'est le LAYOUT qui décide de cette
+   * valeur, jamais le Navbar lui-même.
+   */
+  hasSidebar?: boolean;
+
+  /**
+   * Callback déclenché par le bouton
+   * hamburger (mobile) lorsque hasSidebar
+   * est true, pour ouvrir le drawer mobile
+   * de la Sidebar.
+   *
+   * Ignoré si hasSidebar est false.
+   */
+  onMenuClick?: () => void;
+};
+
+export function Navbar({
+  hasSidebar = false,
+  onMenuClick,
+}: NavbarProps) {
   const {
     utilisateur,
     deconnecter,
     chargement,
   } = useAuth();
 
-  const pathname = usePathname();
-
   const [
     menuProfilOuvert,
     setMenuProfilOuvert,
-  ] = useState(false);
-
-  const [
-    menuParametresOuvert,
-    setMenuParametresOuvert,
   ] = useState(false);
 
   const navbarRef =
@@ -51,7 +75,7 @@ export function Navbar() {
 
   /*
    * ==========================================================
-   * NAVIGATION TOPBAR
+   * NAVIGATION
    * ==========================================================
    */
 
@@ -62,56 +86,45 @@ export function Navbar() {
     : [];
 
   /*
-   * La Navbar conserve uniquement :
-   *
-   * - Messages
-   * - Paramètres
-   *
-   * Les autres liens sont affichés
-   * dans la Sidebar.
-   */
-
-  const liensTopbar = groupes.filter(
-    (item) => item.label === "Paramètres",
-  );
-
-  /*
    * ==========================================================
-   * LIEN ACTIF
+   * PARAMÈTRES
+   *
+   * On récupère l'entrée existante dans
+   * navigationParRole afin de ne pas
+   * inventer une nouvelle route.
    * ==========================================================
    */
 
-  function isActive(href: string): boolean {
-    if (pathname === href) {
-      return true;
-    }
-
-    /*
-     * Le dashboard principal ne doit pas
-     * être actif sur ses sous-pages.
-     */
-
-    if (
-      href ===
-      "/tableau-de-bord"
-    ) {
-      return false;
-    }
-
-    return pathname.startsWith(
-      `${href}/`,
+  const itemParametres =
+    groupes.find(
+      (item) =>
+        item.label === "Paramètres",
     );
-  }
+
+  /*
+   * Les liens du menu Paramètres.
+   *
+   * La structure actuelle utilise "liens"
+   * pour les éléments du groupe Paramètres.
+   */
+  const liensParametres =
+    itemParametres?.liens ?? [];
+
+  /*
+   * Si Paramètres possède directement
+   * un href sans sous-liens.
+   */
+  const hrefParametres =
+    itemParametres?.href;
 
   /*
    * ==========================================================
-   * FERMER LES MENUS
+   * FERMER LE MENU
    * ==========================================================
    */
 
   function closeMenus() {
     setMenuProfilOuvert(false);
-    setMenuParametresOuvert(false);
   }
 
   /*
@@ -185,9 +198,8 @@ export function Navbar() {
   return (
     <header
       ref={navbarRef}
-      className="
+      className={`
         fixed
-        left-0
         right-0
         top-0
         z-50
@@ -196,8 +208,16 @@ export function Navbar() {
         border-ink/10
         bg-paper/95
         backdrop-blur-md
-        lg:left-[var(--sidebar-width)]
-      "
+        transition-[left]
+        duration-200
+        ease-in-out
+
+        ${
+          hasSidebar
+            ? "left-0 lg:left-[var(--sidebar-width)]"
+            : "left-0"
+        }
+      `}
     >
       <div
         className="
@@ -209,55 +229,93 @@ export function Navbar() {
         "
       >
         {/* ====================================================
-            LOGO MOBILE
+            SIDEBAR PRÉSENTE
+            → bouton hamburger (mobile uniquement),
+              la Sidebar reste responsable de l'identité.
         ==================================================== */}
 
-        <Link
-          href={
-            utilisateur
-              ? "/tableau-de-bord"
-              : "/"
-          }
-          className="
-            flex
-            items-center
-            gap-2
-            lg:hidden
-          "
-          aria-label="Kianja"
-        >
-          <span
+        {hasSidebar && (
+          <button
+            type="button"
+            onClick={onMenuClick}
+            aria-label="Ouvrir le menu"
+            title="Menu"
             className="
               flex
-              h-8
-              w-8
+              h-9
+              w-9
               items-center
               justify-center
-              rounded-full
-              border-2
-              border-rice
-              bg-ink
-              font-mono
-              text-[10px]
-              font-bold
-              text-rice
+              rounded-lg
+              text-ink-soft
+              transition-colors
+              hover:bg-ink/5
+              hover:text-ink
+              lg:hidden
             "
           >
-            K
-          </span>
+            <Menu size={20} />
+          </button>
+        )}
 
-          <span
+        {/* ====================================================
+            SIDEBAR ABSENTE
+            → LOGO KIANJA, visible à toutes les tailles d'écran.
+            → réutilise le motif déjà utilisé par le projet
+              (badge "K" + wordmark), tel que défini dans
+              Sidebar.tsx, pour ne pas dupliquer l'identité
+              visuelle.
+        ==================================================== */}
+
+        {!hasSidebar && (
+          <Link
+            href="/"
             className="
-              hidden
-              font-display
-              text-lg
-              font-semibold
-              sm:block
+              flex
+              items-center
+              gap-2
+              sm:gap-3
             "
+            aria-label="Kianja"
           >
-            Kianja
-          </span>
-        </Link>
+            <span
+              className="
+                flex
+                h-8
+                w-8
+                shrink-0
+                items-center
+                justify-center
+                rounded-full
+                border-2
+                border-rice
+                bg-ink
+                font-mono
+                text-[10px]
+                font-bold
+                text-rice
+                sm:h-9
+                sm:w-9
+                sm:text-xs
+              "
+            >
+              K
+            </span>
+
+            <span
+              className="
+                hidden
+                font-display
+                text-lg
+                font-semibold
+                text-ink
+                sm:block
+              "
+            >
+              Kianja
+            </span>
+          </Link>
+        )}
 
         {/* ====================================================
             ESPACE
@@ -369,223 +427,41 @@ export function Navbar() {
             utilisateur && (
               <>
                 {/* ==============================================
-                    MESSAGES / PARAMÈTRES
+                    SITE / ACCUEIL
                 ============================================== */}
 
-                {liensTopbar.map(
-                  (item) => {
-                    /*
-                     * ==========================================
-                     * PARAMÈTRES
-                     * ==========================================
-                     */
+                <Link
+                  href="/"
+                  aria-label="Accueil"
+                  title="Kianja"
+                  className="
+                    flex
+                    h-9
+                    w-9
+                    items-center
+                    justify-center
+                    rounded-lg
+                    text-ink-soft
+                    transition-colors
+                    hover:bg-ink/5
+                    hover:text-ink
+                  "
+                >
+                  <Globe
+                    size={19}
+                    strokeWidth={2}
+                  />
+                </Link>
 
-                    if (
-                      item.label ===
-                      "Paramètres"
-                    ) {
-                      return (
-                        <div
-                          key={
-                            item.label
-                          }
-                          className="relative"
-                        >
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setMenuProfilOuvert(
-                                false,
-                              );
-
-                              setMenuParametresOuvert(
-                                (value) =>
-                                  !value,
-                              );
-                            }}
-                            aria-label="Paramètres"
-                            aria-expanded={
-                              menuParametresOuvert
-                            }
-                            aria-haspopup="menu"
-                            title="Paramètres"
-                            className={`
-                              flex
-                              h-9
-                              w-9
-                              items-center
-                              justify-center
-                              rounded-lg
-                              transition-colors
-
-                              ${
-                                menuParametresOuvert
-                                  ? "bg-ink/10 text-ink"
-                                  : "text-ink-soft hover:bg-ink/5 hover:text-ink"
-                              }
-                            `}
-                          >
-                            {item.icon && (
-                              <item.icon
-                                size={18}
-                              />
-                            )}
-                          </button>
-
-                          {/* MENU PARAMÈTRES */}
-
-                          {menuParametresOuvert && (
-                            <div
-                              role="menu"
-                              className="
-                                absolute
-                                right-0
-                                top-full
-                                z-[100]
-                                mt-2
-                                w-64
-                                overflow-hidden
-                                rounded-xl
-                                border
-                                border-ink/10
-                                bg-paper
-                                shadow-xl
-                              "
-                            >
-                              <div
-                                className="
-                                  border-b
-                                  border-ink/10
-                                  px-4
-                                  py-3
-                                "
-                              >
-                                <p
-                                  className="
-                                    text-sm
-                                    font-medium
-                                    text-ink
-                                  "
-                                >
-                                  Paramètres
-                                </p>
-
-                                <p
-                                  className="
-                                    mt-0.5
-                                    text-xs
-                                    text-ink-soft
-                                  "
-                                >
-                                  Personnalisez
-                                  votre
-                                  expérience
-                                </p>
-                              </div>
-
-                              {/* LIENS */}
-
-                              {item.liens?.map(
-                                (link) => {
-                                  if (
-                                    !link.href
-                                  ) {
-                                    return null;
-                                  }
-
-                                  return (
-                                    <Link
-                                      key={
-                                        link.href
-                                      }
-                                      href={
-                                        link.href
-                                      }
-                                      onClick={
-                                        closeMenus
-                                      }
-                                      role="menuitem"
-                                      className="
-                                        block
-                                        px-4
-                                        py-2.5
-                                        text-sm
-                                        text-ink-soft
-                                        transition-colors
-                                        hover:bg-ink/5
-                                        hover:text-ink
-                                      "
-                                    >
-                                      {
-                                        link.label
-                                      }
-                                    </Link>
-                                  );
-                                },
-                              )}
-
-                              {/* APPARENCE */}
-
-                              <div
-                                className="
-                                  border-t
-                                  border-ink/10
-                                  px-4
-                                  py-3
-                                "
-                              >
-                                <div
-                                  className="
-                                    flex
-                                    items-center
-                                    justify-between
-                                    gap-3
-                                  "
-                                >
-                                  <div>
-                                    <p
-                                      className="
-                                        text-sm
-                                        font-medium
-                                        text-ink
-                                      "
-                                    >
-                                      Apparence
-                                    </p>
-
-                                    <p
-                                      className="
-                                        mt-0.5
-                                        text-[11px]
-                                        text-ink-soft
-                                      "
-                                    >
-                                      Thème
-                                    </p>
-                                  </div>
-
-                                  <BasculeTheme />
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-
-                    return null;
-                  },
-                )}
-
-                {/* ==================================================
+                {/* ==============================================
                     MESSAGES
-                ================================================== */}
+                ============================================== */}
 
                 <MessagesLink />
 
-                {/* ==================================================
+                {/* ==============================================
                     NOTIFICATIONS
-                ================================================== */}
+                ============================================== */}
 
                 <NotificationBell />
               </>
@@ -616,10 +492,6 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => {
-                  setMenuParametresOuvert(
-                    false,
-                  );
-
                   setMenuProfilOuvert(
                     (value) =>
                       !value,
@@ -642,7 +514,9 @@ export function Navbar() {
                   hover:bg-ink/5
                 "
               >
-                {/* Avatar */}
+                {/* ==================================================
+                    AVATAR
+                ================================================== */}
 
                 <div
                   className="
@@ -666,8 +540,7 @@ export function Navbar() {
                       src={
                         getFileUrl(
                           utilisateur.photoUrl,
-                        ) ??
-                        undefined
+                        ) ?? undefined
                       }
                       alt={
                         utilisateur.nom
@@ -683,7 +556,9 @@ export function Navbar() {
                   )}
                 </div>
 
-                {/* NOM */}
+                {/* ==================================================
+                    NOM
+                ================================================== */}
 
                 <div
                   className="
@@ -702,9 +577,7 @@ export function Navbar() {
                       text-ink
                     "
                   >
-                    {
-                      utilisateur.nom
-                    }
+                    {utilisateur.nom}
                   </p>
 
                   <p
@@ -752,7 +625,7 @@ export function Navbar() {
                     top-full
                     z-[100]
                     mt-2
-                    w-56
+                    w-64
                     overflow-hidden
                     rounded-xl
                     border
@@ -761,7 +634,9 @@ export function Navbar() {
                     shadow-xl
                   "
                 >
-                  {/* INFORMATIONS */}
+                  {/* ==============================================
+                      INFORMATIONS UTILISATEUR
+                  ============================================== */}
 
                   <div
                     className="
@@ -779,9 +654,7 @@ export function Navbar() {
                         text-ink
                       "
                     >
-                      {
-                        utilisateur.nom
-                      }
+                      {utilisateur.nom}
                     </p>
 
                     <p
@@ -791,9 +664,7 @@ export function Navbar() {
                         text-ink-soft
                       "
                     >
-                      {
-                        utilisateur.email
-                      }
+                      {utilisateur.email}
                     </p>
 
                     <p
@@ -812,13 +683,13 @@ export function Navbar() {
                     </p>
                   </div>
 
-                  {/* MON PROFIL */}
+                  {/* ==============================================
+                      MON PROFIL
+                  ============================================== */}
 
                   <Link
                     href="/tableau-de-bord/profil"
-                    onClick={
-                      closeMenus
-                    }
+                    onClick={closeMenus}
                     role="menuitem"
                     className="
                       flex
@@ -833,16 +704,146 @@ export function Navbar() {
                       hover:text-ink
                     "
                   >
-                    <User
-                      size={15}
-                    />
+                    <User size={15} />
 
                     <span>
                       Mon profil
                     </span>
                   </Link>
 
-                  {/* DÉCONNEXION */}
+                  {/* ==============================================
+                      PARAMÈTRES
+                  ============================================== */}
+
+                  {liensParametres.length >
+                    0 ? (
+                    liensParametres.map(
+                      (link) => {
+                        if (!link.href) {
+                          return null;
+                        }
+
+                        return (
+                          <Link
+                            key={
+                              link.href
+                            }
+                            href={
+                              link.href
+                            }
+                            onClick={
+                              closeMenus
+                            }
+                            role="menuitem"
+                            className="
+                              flex
+                              items-center
+                              gap-3
+                              border-t
+                              border-ink/10
+                              px-4
+                              py-2.5
+                              text-sm
+                              text-ink-soft
+                              transition-colors
+                              hover:bg-ink/5
+                              hover:text-ink
+                            "
+                          >
+                            <Settings
+                              size={15}
+                            />
+
+                            <span>
+                              {link.label}
+                            </span>
+                          </Link>
+                        );
+                      },
+                    )
+                  ) : hrefParametres ? (
+                    <Link
+                      href={
+                        hrefParametres
+                      }
+                      onClick={
+                        closeMenus
+                      }
+                      role="menuitem"
+                      className="
+                        flex
+                        items-center
+                        gap-3
+                        border-t
+                        border-ink/10
+                        px-4
+                        py-2.5
+                        text-sm
+                        text-ink-soft
+                        transition-colors
+                        hover:bg-ink/5
+                        hover:text-ink
+                      "
+                    >
+                      <Settings
+                        size={15}
+                      />
+
+                      <span>
+                        Paramètres
+                      </span>
+                    </Link>
+                  ) : null}
+
+                  {/* ==============================================
+                      APPARENCE
+                  ============================================== */}
+
+                  <div
+                    className="
+                      border-t
+                      border-ink/10
+                      px-4
+                      py-3
+                    "
+                  >
+                    <div
+                      className="
+                        flex
+                        items-center
+                        justify-between
+                        gap-3
+                      "
+                    >
+                      <div>
+                        <p
+                          className="
+                            text-sm
+                            font-medium
+                            text-ink
+                          "
+                        >
+                          Apparence
+                        </p>
+
+                        <p
+                          className="
+                            mt-0.5
+                            text-[11px]
+                            text-ink-soft
+                          "
+                        >
+                          Thème
+                        </p>
+                      </div>
+
+                      <BasculeTheme />
+                    </div>
+                  </div>
+
+                  {/* ==============================================
+                      DÉCONNEXION
+                  ============================================== */}
 
                   <button
                     type="button"

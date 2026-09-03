@@ -140,13 +140,6 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
     } finally {
       setEnvoi(false);
     }
-    function afficherMessage(message: string) {
-      setMessage(message);
-
-      setTimeout(() => {
-        setMessage(null);
-      }, 3000);
-    }
   }
 
   function annulerModification() {

@@ -1,18 +1,24 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { clsx } from "clsx";
 import { useAuth } from "@/lib/auth-context";
-import { ApiError } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
+import type { ReponseInscription } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { NoticeCard } from "@/components/ui/Notice";
 
+/**
+ * Delai anti-abus applique cote backend : on aligne le compte a rebours
+ * du bouton "Renvoyer l'email" sur ce delai.
+ */
+const DELAI_RENVOI_SECONDES = 60;
+
 function FormulaireInscription() {
   const { inscrire } = useAuth();
-  const router = useRouter();
   const params = useSearchParams();
   const roleInitial = params.get("role") === "client" ? "client" : "etudiant";
 
@@ -25,12 +31,37 @@ function FormulaireInscription() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
 
+  /*
+   * Verification d'email : apres une inscription reussie, le compte n'est
+   * PAS utilisable directement. On affiche un ecran dedie indiquant qu'un
+   * email de verification a ete envoye, avec l'adresse concernee et un
+   * bouton "Renvoyer l'email".
+   */
+  const [reponseInscription, setReponseInscription] =
+    useState<ReponseInscription | null>(null);
+  const [renvoiEnCours, setRenvoiEnCours] = useState(false);
+  const [renvoiFeedback, setRenvoiFeedback] = useState<{
+    type: "succes" | "erreur";
+    message: string;
+  } | null>(null);
+  const [secondesAvantRenvoi, setSecondesAvantRenvoi] = useState(0);
+
+  useEffect(() => {
+    if (secondesAvantRenvoi <= 0) return;
+
+    const minuteur = setInterval(() => {
+      setSecondesAvantRenvoi((s) => (s > 0 ? s - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(minuteur);
+  }, [secondesAvantRenvoi]);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErreur(null);
     setEnvoi(true);
     try {
-      await inscrire({
+      const reponse = await inscrire({
         nom,
         email,
         motDePasse,
@@ -39,7 +70,10 @@ function FormulaireInscription() {
         nomEntreprise: role === "client" ? nomEntreprise || undefined : undefined,
         typeClient: role === "client" ? (nomEntreprise ? "entreprise" : "particulier") : undefined,
       });
-      router.push("/tableau-de-bord");
+      // Pas de redirection vers le tableau de bord : le compte doit
+      // d'abord etre active via le lien recu par email.
+      setReponseInscription(reponse);
+      setSecondesAvantRenvoi(DELAI_RENVOI_SECONDES);
     } catch (err) {
       setErreur(
         err instanceof ApiError ? err.message : "Impossible de créer le compte",
@@ -47,6 +81,90 @@ function FormulaireInscription() {
     } finally {
       setEnvoi(false);
     }
+  }
+
+  async function renvoyerEmail() {
+    if (!reponseInscription) return;
+    setRenvoiEnCours(true);
+    setRenvoiFeedback(null);
+    try {
+      const reponse = await api.post<{ message: string }>(
+        "/auth/resend-verification",
+        { email: reponseInscription.email },
+        { auth: false },
+      );
+      setRenvoiFeedback({ type: "succes", message: reponse.message });
+      setSecondesAvantRenvoi(DELAI_RENVOI_SECONDES);
+    } catch (err) {
+      setRenvoiFeedback({
+        type: "erreur",
+        message:
+          err instanceof ApiError
+            ? err.message
+            : "Impossible de renvoyer l'email",
+      });
+    } finally {
+      setRenvoiEnCours(false);
+    }
+  }
+
+  if (reponseInscription) {
+    return (
+      <div className="mx-auto max-w-md px-5 py-16">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark mb-3">
+          Vérification de l&apos;email
+        </p>
+        <h1 className="font-display text-3xl font-semibold mb-8">
+          Confirmez votre adresse email
+        </h1>
+
+        <NoticeCard>
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-ink-soft">
+              Un email de vérification a été envoyé à{" "}
+              <strong className="text-ink">{reponseInscription.email}</strong>.
+            </p>
+            <p className="text-sm text-ink-soft">
+              Ouvrez le lien qu&apos;il contient pour activer votre compte.
+              Pensez à vérifier votre dossier de courriers indésirables si le
+              message n&apos;arrive pas sous quelques minutes.
+            </p>
+
+            {renvoiFeedback && (
+              <p
+                className={
+                  renvoiFeedback.type === "erreur"
+                    ? "text-sm text-brique"
+                    : "text-sm text-ink-soft"
+                }
+              >
+                {renvoiFeedback.message}
+              </p>
+            )}
+
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={renvoyerEmail}
+              disabled={renvoiEnCours || secondesAvantRenvoi > 0}
+            >
+              {renvoiEnCours
+                ? "Envoi en cours…"
+                : secondesAvantRenvoi > 0
+                  ? `Renvoyer l'email (${secondesAvantRenvoi}s)`
+                  : "Renvoyer l'email"}
+            </Button>
+          </div>
+        </NoticeCard>
+
+        <p className="mt-6 text-sm text-ink-soft text-center">
+          Vous avez déjà vérifié votre adresse ?{" "}
+          <Link href="/connexion" className="text-ocre-dark hover:underline">
+            Se connecter
+          </Link>
+        </p>
+      </div>
+    );
   }
 
   return (
