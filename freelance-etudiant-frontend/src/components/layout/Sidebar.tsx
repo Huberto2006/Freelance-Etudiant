@@ -145,8 +145,14 @@ export function Sidebar({
    * ==========================================================
    * SYNCHRONISATION DE LA LARGEUR
    * ==========================================================
+   *
+   * La Sidebar est la source de vérité pour --sidebar-width.
+   *
+   * Ouverte  : 260px
+   * Réduite  : 76px
+   *
+   * Le layout et le Navbar utilisent ensuite cette variable.
    */
-
   useEffect(() => {
     const width = collapsed
       ? SIDEBAR_CLOSED_WIDTH
@@ -164,6 +170,40 @@ export function Sidebar({
       );
     };
   }, [collapsed]);
+
+  /*
+   * ==========================================================
+   * DRAWER MOBILE — FERMETURE AU CLAVIER (Escape)
+   * ==========================================================
+   *
+   * Comportement ajouté pour cohérence avec le menu profil
+   * du Navbar, qui se ferme déjà avec Escape.
+   */
+  useEffect(() => {
+    if (!mobileOpen) {
+      return;
+    }
+
+    function handleKeyboard(
+      event: KeyboardEvent,
+    ) {
+      if (event.key === "Escape") {
+        onMobileClose?.();
+      }
+    }
+
+    document.addEventListener(
+      "keydown",
+      handleKeyboard,
+    );
+
+    return () => {
+      document.removeEventListener(
+        "keydown",
+        handleKeyboard,
+      );
+    };
+  }, [mobileOpen, onMobileClose]);
 
   /*
    * ==========================================================
@@ -190,10 +230,9 @@ export function Sidebar({
     ] ?? [];
 
   /*
-   * Les éléments suivants sont
-   * gérés par la Navbar.
+   * Ces éléments sont gérés
+   * par le Navbar.
    */
-
   const navigationSidebar =
     navigation.filter(
       (item) =>
@@ -236,7 +275,6 @@ export function Sidebar({
    * Le profil est placé
    * en bas de la Sidebar.
    */
-
   const items =
     autresItems.filter(
       (item) =>
@@ -273,8 +311,7 @@ export function Sidebar({
       (item) =>
         getSection(
           item.label,
-        ) ===
-        "MON ACTIVITÉ",
+        ) === "MON ACTIVITÉ",
     );
 
   const communaute =
@@ -315,7 +352,6 @@ export function Sidebar({
     /*
      * Groupe contenant plusieurs liens
      */
-
     if (
       item.liens &&
       item.liens.length > 0
@@ -638,7 +674,7 @@ export function Sidebar({
           )}
         </Link>
 
-        {/* Bouton fermer */}
+        {/* Bouton réduire */}
 
         {!collapsed && (
           <button
@@ -648,8 +684,8 @@ export function Sidebar({
                 true,
               )
             }
-            aria-label="Fermer la barre latérale"
-            title="Fermer le menu"
+            aria-label="Réduire la barre latérale"
+            title="Réduire le menu"
             className="
               hidden
               h-8
@@ -722,6 +758,7 @@ export function Sidebar({
         aria-label="Navigation principale"
         className="
           flex-1
+          min-h-0
           overflow-y-auto
           px-3
           py-5
@@ -787,6 +824,7 @@ export function Sidebar({
           shrink-0
           border-t
           border-ink/10
+          bg-paper
           p-3
         "
       >
@@ -905,11 +943,15 @@ export function Sidebar({
           fixed
           left-0
           top-0
-          z-40
+          z-[60]
           hidden
           h-screen
           lg:block
         "
+        style={{
+          width:
+            "var(--sidebar-width)",
+        }}
       >
         {sidebarContent}
 
@@ -966,7 +1008,7 @@ export function Sidebar({
           className="
             fixed
             inset-0
-            z-[60]
+            z-[70]
             lg:hidden
           "
         >
@@ -991,6 +1033,7 @@ export function Sidebar({
           <div
             className="
               relative
+              z-[71]
               h-full
               w-[260px]
             "

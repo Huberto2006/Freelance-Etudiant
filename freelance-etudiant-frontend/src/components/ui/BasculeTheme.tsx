@@ -65,9 +65,16 @@ export function BasculeTheme() {
   useEffect(() => {
     const themeInitial = lireTheme();
 
-    setTheme(themeInitial);
+    // appliquerTheme synchronise un systeme externe (le DOM) : c'est le
+    // role legitime d'un effet. Les mises a jour d'etat React sont
+    // differees hors du corps synchrone de l'effet (react-hooks/
+    // set-state-in-effect).
     appliquerTheme(themeInitial);
-    setEstInitialise(true);
+
+    void Promise.resolve().then(() => {
+      setTheme(themeInitial);
+      setEstInitialise(true);
+    });
   }, []);
 
   /**

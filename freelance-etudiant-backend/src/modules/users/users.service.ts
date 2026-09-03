@@ -21,6 +21,18 @@ export class UsersService {
     });
   }
 
+  /**
+   * Verification d'email : retrouve le compte a partir de l'empreinte du
+   * jeton de verification recu dans le lien email.
+   */
+  async findByEmailVerificationToken(
+    hashedToken: string,
+  ): Promise<Utilisateur | null> {
+    return this.utilisateurRepo.findOne({
+      where: { emailVerificationTokenHash: hashedToken },
+    });
+  }
+
   async findById(id: string): Promise<Utilisateur | null> {
     return this.utilisateurRepo.findOne({
       where: { id },

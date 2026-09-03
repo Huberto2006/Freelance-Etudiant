@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { ApiError } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { NoticeCard } from "@/components/ui/Notice";
@@ -17,19 +17,63 @@ export default function ConnexionPage() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
 
+  /*
+   * Cas specifique "email non verifie" : le backend refuse la connexion
+   * (401) avec un message clair. On affiche ce message et on propose de
+   * renvoyer l'email de verification avec l'adresse saisie.
+   */
+  const [erreurVerification, setErreurVerification] = useState<string | null>(
+    null,
+  );
+  const [renvoiEnCours, setRenvoiEnCours] = useState(false);
+  const [renvoiMessage, setRenvoiMessage] = useState<string | null>(null);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErreur(null);
+    setErreurVerification(null);
+    setRenvoiMessage(null);
     setEnvoi(true);
     try {
       await connecter(email, motDePasse);
       router.push("/tableau-de-bord");
     } catch (err) {
-      setErreur(
-        err instanceof ApiError ? err.message : "Impossible de se connecter",
-      );
+      if (
+        err instanceof ApiError &&
+        err.status === 401 &&
+        /verifi/i.test(err.message)
+      ) {
+        setErreurVerification(err.message);
+      } else {
+        setErreur(
+          err instanceof ApiError
+            ? err.message
+            : "Impossible de se connecter",
+        );
+      }
     } finally {
       setEnvoi(false);
+    }
+  }
+
+  async function renvoyerEmailVerification() {
+    setRenvoiEnCours(true);
+    setRenvoiMessage(null);
+    try {
+      const reponse = await api.post<{ message: string }>(
+        "/auth/resend-verification",
+        { email },
+        { auth: false },
+      );
+      setRenvoiMessage(reponse.message);
+    } catch (err) {
+      setRenvoiMessage(
+        err instanceof ApiError
+          ? err.message
+          : "Impossible de renvoyer l'email",
+      );
+    } finally {
+      setRenvoiEnCours(false);
     }
   }
 
@@ -75,6 +119,26 @@ export default function ConnexionPage() {
           </Link>
 
           {erreur && <p className="text-sm text-brique">{erreur}</p>}
+
+          {erreurVerification && (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-brique">{erreurVerification}</p>
+              {renvoiMessage && (
+                <p className="text-xs text-ink-soft">{renvoiMessage}</p>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={renvoyerEmailVerification}
+                disabled={renvoiEnCours}
+              >
+                {renvoiEnCours
+                  ? "Envoi en cours…"
+                  : "Renvoyer l'email de vérification"}
+              </Button>
+            </div>
+          )}
 
           <Button type="submit" disabled={envoi} className="mt-2">
             {envoi ? "Connexion…" : "Se connecter"}

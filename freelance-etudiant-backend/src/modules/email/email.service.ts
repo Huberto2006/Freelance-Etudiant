@@ -8,6 +8,10 @@ import {
   templateResetPassword,
 } from './templates/reset-password.template';
 import {
+  EmailVerification,
+  templateVerificationEmail,
+} from './templates/verification-email.template';
+import {
   EmailPaiement,
   templatePaiementConfirme,
   templatePaiementInitie,
@@ -123,6 +127,11 @@ export class EmailService {
 
   async envoyerResetPassword(destinataire: string, data: EmailResetPassword): Promise<boolean> {
     const { subject, html, text } = templateResetPassword(data);
+    return this.envoyerMail(destinataire, subject, html, text);
+  }
+
+  async envoyerVerificationEmail(destinataire: string, data: EmailVerification): Promise<boolean> {
+    const { subject, html, text } = templateVerificationEmail(data);
     return this.envoyerMail(destinataire, subject, html, text);
   }
 

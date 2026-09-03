@@ -16,7 +16,6 @@ export interface Filtres {
 export function BarreRecherche({
   onFiltrer,
   placeholder = "Rechercher par mots-clés…",
-  avecBudget,
   filtresInitiaux,
 }: {
   onFiltrer: (filtres: Filtres) => void;

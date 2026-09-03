@@ -4,6 +4,10 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/reset-password.dto';
+import {
+  VerificationEmailDto,
+  RenvoyerVerificationEmailDto,
+} from './dto/verification-email.dto';
 import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Authentification')
@@ -48,5 +52,25 @@ export class AuthController {
   @ApiOperation({ summary: 'Reinitialiser le mot de passe a partir du jeton recu' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @Public()
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Verifier l'adresse email a partir du jeton recu dans l'email",
+  })
+  async verifierEmail(@Body() dto: VerificationEmailDto) {
+    return this.authService.verifierEmail(dto);
+  }
+
+  @Public()
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Renvoyer un email de verification" })
+  async renvoyerVerificationEmail(
+    @Body() dto: RenvoyerVerificationEmailDto,
+  ) {
+    return this.authService.renvoyerVerificationEmail(dto);
   }
 }

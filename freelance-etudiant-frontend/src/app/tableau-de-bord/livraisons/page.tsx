@@ -3,6 +3,7 @@
 import {
   Suspense,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import Link from "next/link";
@@ -13,6 +14,8 @@ import {
   Users,
   CheckCircle,
   XCircle,
+  Clock,
+  Star,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
@@ -21,7 +24,9 @@ import { useAuth } from "@/lib/auth-context";
 
 import type {
   Candidature,
+  Evaluation,
   Livraison,
+  Transaction,
 } from "@/lib/types";
 
 import { statutLivraisonLabel } from "@/lib/format";
@@ -86,6 +91,31 @@ function LivraisonsContent() {
     setLivraisons,
   ] = useState<Livraison[]>([]);
 
+  // Paiements du client connecté (GET /paiements/me) : ils permettent
+  // de connaître l'état réel du paiement de chaque candidature
+  // (en attente / confirmé / libéré / annulé) et d'afficher le
+  // workflow de fin de projet dans LivraisonClient. Source de
+  // vérité : le backend (le frontend n'évalue jamais un paiement).
+  const [
+    paiements,
+    setPaiements,
+  ] = useState<Transaction[]>([]);
+
+  // Chargeur exposé via une ref : permet à LivraisonClient de
+  // provoquer un rafraîchissement silencieux des données (sans
+  // recharger toute la page) après une évaluation réussie.
+  const rafraichirRef =
+    useRef<
+      | ((
+          silencieux?: boolean,
+        ) => Promise<void>)
+      | null
+    >(null);
+
+  async function rafraichirDonnees() {
+    await rafraichirRef.current?.(true);
+  }
+
   const [
     chargement,
     setChargement,
@@ -124,8 +154,12 @@ function LivraisonsContent() {
 
     let cancelled = false;
 
-    async function chargerInitial() {
-      setChargement(true);
+    async function chargerInitial(
+      silencieux = false,
+    ) {
+      if (!silencieux) {
+        setChargement(true);
+      }
       setErreur(null);
 
       try {
@@ -134,16 +168,32 @@ function LivraisonsContent() {
         // ======================================================
 
         if (role === "client") {
-          const livraisonsData =
-            await api.get<Livraison[]>(
+          const [
+            livraisonsData,
+            paiementsData,
+          ] = await Promise.all([
+            api.get<Livraison[]>(
               "/livraisons/client/toutes",
-            );
+            ),
+
+            // Un échec du chargement des paiements (ex. erreur
+            // réseau ponctuelle) ne doit pas masquer les
+            // livraisons : on continue avec une liste vide.
+            api
+              .get<Transaction[]>(
+                "/paiements/me",
+              )
+              .catch(
+                () => [] as Transaction[],
+              ),
+          ]);
 
           if (cancelled) {
             return;
           }
 
           setLivraisons(livraisonsData);
+          setPaiements(paiementsData);
 
           /*
            * Les candidatures sont déjà présentes
@@ -211,11 +261,16 @@ function LivraisonsContent() {
           );
         }
       } finally {
-        if (!cancelled) {
+        if (!cancelled && !silencieux) {
           setChargement(false);
         }
       }
     }
+
+    // Le rafraîchissement silencieux réutilise le même chargeur ;
+    // le garde "cancelled" du rendu d'effet courant neutralise les
+    // mises à jour d'état après démontage ou changement de session.
+    rafraichirRef.current = chargerInitial;
 
     void chargerInitial();
 
@@ -476,6 +531,10 @@ function LivraisonsContent() {
                   }
                   livraison={
                     livraisonSelectionnee
+                  }
+                  paiements={paiements}
+                  onRafraichir={
+                    rafraichirDonnees
                   }
                 />
               ) : (
@@ -808,9 +867,13 @@ function LivraisonEtudiant({
 function LivraisonClient({
   candidature,
   livraison,
+  paiements,
+  onRafraichir,
 }: {
   candidature: Candidature;
   livraison: Livraison;
+  paiements: Transaction[];
+  onRafraichir: () => Promise<void>;
 }) {
   const etudiantId =
     candidature.etudiant
@@ -843,6 +906,172 @@ function LivraisonClient({
     useState<
       "valider" | "corriger" | null
     >(null);
+
+  // ==========================================================
+  // ÉVALUATION OBLIGATOIRE (fin de projet)
+  //
+  // Règle métier backend (EvaluationsService.create) :
+  //   livraison validée + paiement CONFIRMEE/LIBEREE
+  //   + une seule évaluation par livraison.
+  // Le formulaire n'est affiché que lorsque ces conditions
+  // sont réunies côté frontend ; le backend reste la
+  // protection principale en cas d'appel direct à l'API.
+  // ==========================================================
+
+  // Note choisie : 0 = aucune, 1 à 5 sinon.
+  const [note, setNote] =
+    useState(0);
+
+  const [
+    commentaireEvaluation,
+    setCommentaireEvaluation,
+  ] = useState("");
+
+  const [
+    evaluationEnvoi,
+    setEvaluationEnvoi,
+  ] = useState(false);
+
+  const [
+    evaluationErreur,
+    setEvaluationErreur,
+  ] = useState<string | null>(null);
+
+  // Réussite locale de l'évaluation : empêche une deuxième
+  // soumission dès la première réussite, même avant le
+  // rafraîchissement des données (le backend rejette de
+  // toute façon un second appel avec 409).
+  const [
+    evaluationEnvoyee,
+    setEvaluationEnvoyee,
+  ] = useState(false);
+
+  // ==========================================================
+  // ÉTAT DU WORKFLOW DE FIN DE PROJET
+  // Dérivé des statuts renvoyés par le backend :
+  //   livraison validee + paiement confirmee/liberee
+  //   + evaluation effectuee -> projet termine.
+  // ==========================================================
+
+  const paiementsCandidature =
+    paiements.filter(
+      (transaction) =>
+        transaction.candidatureId ===
+        candidature.id,
+    );
+
+  const paiementConfirme =
+    paiementsCandidature.some(
+      (transaction) =>
+        transaction.statut ===
+          "confirmee" ||
+        transaction.statut === "liberee",
+    );
+
+  const paiementEnAttente =
+    !paiementConfirme &&
+    paiementsCandidature.some(
+      (transaction) =>
+        transaction.statut === "en_attente",
+    );
+
+  const paiementAnnule =
+    !paiementConfirme &&
+    !paiementEnAttente &&
+    paiementsCandidature.length > 0;
+
+  // Les évaluations sont chargées par le backend avec la
+  // livraison (relation "evaluations").
+  const evaluationExistante =
+    (livraison.evaluations?.length ?? 0) > 0;
+
+  const evaluationEffectuee =
+    evaluationExistante || evaluationEnvoyee;
+
+  const livraisonValidee =
+    statut === "validee";
+
+  const projetTermine =
+    livraisonValidee &&
+    paiementConfirme &&
+    evaluationEffectuee;
+
+  // ==========================================================
+  // ENVOI DE L'ÉVALUATION
+  // POST /livraisons/:livraisonId/evaluation
+  // Corps attendu par CreateEvaluationDto : { note, commentaire? }
+  // ==========================================================
+
+  async function envoyerEvaluation(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    if (
+      evaluationEnvoi ||
+      evaluationEnvoyee ||
+      evaluationExistante
+    ) {
+      return;
+    }
+
+    if (note < 1) {
+      setEvaluationErreur(
+        "Veuillez choisir une note entre 1 et 5.",
+      );
+      return;
+    }
+
+    setEvaluationErreur(null);
+    setEvaluationEnvoi(true);
+
+    try {
+      await api.post<Evaluation>(
+        `/livraisons/${livraison.id}/evaluation`,
+        {
+          note,
+
+          // commentaire facultatif : JSON.stringify retire
+          // automatiquement la clé si elle vaut undefined.
+          commentaire:
+            commentaireEvaluation.trim() ||
+            undefined,
+        },
+      );
+
+      // Succès : on ferme le formulaire (via evaluationEnvoyee),
+      // on affiche la confirmation, puis on rafraîchit les
+      // données (livraison + évaluations + statut mission)
+      // sans recharger toute la page.
+      setEvaluationEnvoyee(true);
+
+      await onRafraichir();
+    } catch (error) {
+      console.error(
+        "Erreur lors de l'envoi de l'évaluation :",
+        error,
+      );
+
+      if (
+        error instanceof ApiError
+      ) {
+        // 400 : paiement non confirmé / livraison non validée ;
+        // 403 : mission n'appartenant pas au client ;
+        // 409 : évaluation déjà effectuée ; autre : erreur serveur.
+        // On affiche le message métier du backend.
+        setEvaluationErreur(
+          error.message ||
+            "Impossible d'envoyer l'évaluation.",
+        );
+      } else {
+        setEvaluationErreur(
+          "Erreur réseau : impossible d'envoyer l'évaluation. Vérifiez votre connexion.",
+        );
+      }
+    } finally {
+      setEvaluationEnvoi(false);
+    }
+  }
 
   // ==========================================================
   // ACTION CLIENT
@@ -1110,13 +1339,245 @@ function LivraisonClient({
         </div>
       )}
 
-      {/* VALIDÉE */}
+{/* =========================================================
+          WORKFLOW DE FIN DE PROJET
+          Livraison validée -> Paiement -> Évaluation -> Terminé
+          ==================================================== */}
 
       {statut === "validee" && (
+        <div className="mt-5 border-t border-ink/15 pt-5">
+          <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+            État du projet
+          </p>
+
+          <ul className="mt-3 space-y-2 text-sm">
+            <li className="flex items-center gap-2 text-rice">
+              <CheckCircle
+                size={16}
+                aria-hidden="true"
+              />
+              Livraison validée
+            </li>
+
+            {!paiementConfirme &&
+              (paiementEnAttente ? (
+                <li className="flex flex-wrap items-center gap-2 text-ocre">
+                  <Clock
+                    size={16}
+                    aria-hidden="true"
+                  />
+                  Paiement déclaré — en attente de confirmation
+                  <Link href="/tableau-de-bord/paiements">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="border border-ocre/30 text-ocre hover:bg-ocre/10"
+                    >
+                      Suivre le paiement
+                    </Button>
+                  </Link>
+                </li>
+              ) : paiementAnnule ? (
+                <li className="flex flex-wrap items-center gap-2 text-brique">
+                  <XCircle
+                    size={16}
+                    aria-hidden="true"
+                  />
+                  Paiement annulé — une nouvelle tentative est possible
+                  <Link href="/tableau-de-bord/paiements">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="border border-brique/30 text-brique hover:bg-brique/10"
+                    >
+                      Refaire le paiement
+                    </Button>
+                  </Link>
+                </li>
+              ) : (
+                <li className="flex flex-wrap items-center gap-2 text-ocre">
+                  <Clock
+                    size={16}
+                    aria-hidden="true"
+                  />
+                  Paiement obligatoire
+                  <Link href="/tableau-de-bord/paiements">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="border border-ocre/30 text-ocre hover:bg-ocre/10"
+                    >
+                      Payer maintenant
+                    </Button>
+                  </Link>
+                </li>
+              ))}
+
+            {paiementConfirme && (
+              <li className="flex items-center gap-2 text-rice">
+                <CheckCircle
+                  size={16}
+                  aria-hidden="true"
+                />
+                Paiement confirmé
+              </li>
+            )}
+
+            {paiementConfirme &&
+              (evaluationEffectuee ? (
+                <li className="flex items-center gap-2 text-rice">
+                  <CheckCircle
+                    size={16}
+                    aria-hidden="true"
+                  />
+                  Évaluation effectuée
+                </li>
+              ) : (
+                <li className="flex items-center gap-2 text-ocre">
+                  <Star
+                    size={16}
+                    aria-hidden="true"
+                  />
+                  Évaluation obligatoire
+                </li>
+              ))}
+          </ul>
+
+          {projetTermine && (
+            <p className="mt-3 inline-flex items-center gap-2 rounded-lg border border-rice/20 bg-rice/5 px-3 py-2 text-sm font-medium text-rice">
+              <CheckCircle
+                size={16}
+                aria-hidden="true"
+              />
+              Projet terminé
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* =========================================================
+          ÉVALUATION OBLIGATOIRE
+          Affichée uniquement si :
+            - la livraison est validée ;
+            - le paiement correspondant est confirmé ou libéré ;
+            - aucune évaluation n'existe encore.
+          Le backend (EvaluationsService.create) reste la
+          protection principale : il refuse 400/403/409 sinon.
+          ==================================================== */}
+
+      {statut === "validee" &&
+        paiementConfirme &&
+        !evaluationEffectuee && (
+          <form
+            onSubmit={
+              envoyerEvaluation
+            }
+            className="mt-5 border-t border-ink/15 pt-5"
+          >
+            <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+              Évaluer la livraison
+            </p>
+
+            <p className="mt-1 text-sm text-ink-soft">
+              Votre évaluation est obligatoire pour
+              marquer le projet comme terminé.
+            </p>
+
+            <div
+              className="mt-4 flex items-center gap-1"
+              role="radiogroup"
+              aria-label="Note de 1 à 5"
+            >
+              {[1, 2, 3, 4, 5].map(
+                (valeur) => (
+                  <button
+                    key={valeur}
+                    type="button"
+                    role="radio"
+                    aria-checked={
+                      note === valeur
+                    }
+                    aria-label={`Note ${valeur} sur 5`}
+                    disabled={
+                      evaluationEnvoi
+                    }
+                    onClick={() =>
+                      setNote(valeur)
+                    }
+                    className="rounded p-1 transition-colors hover:bg-ocre/10 disabled:opacity-50"
+                  >
+                    <Star
+                      size={22}
+                      aria-hidden="true"
+                      className={
+                        valeur <= note
+                          ? "fill-ocre-dark text-ocre-dark"
+                          : "text-ink/30"
+                      }
+                    />
+                  </button>
+                ),
+              )}
+
+              {note > 0 && (
+                <span className="ml-2 font-mono text-sm text-ocre-dark">
+                  {note}/5
+                </span>
+              )}
+            </div>
+
+            <div className="mt-4 max-w-xl">
+              <Field
+                label="Commentaire (facultatif)"
+                htmlFor={`evaluation-${candidature.id}`}
+              >
+                <Textarea
+                  id={`evaluation-${candidature.id}`}
+                  rows={3}
+                  value={
+                    commentaireEvaluation
+                  }
+                  onChange={(event) =>
+                    setCommentaireEvaluation(
+                      event.target.value,
+                    )
+                  }
+                  placeholder="Partagez votre retour sur le travail réalisé…"
+                  disabled={
+                    evaluationEnvoi
+                  }
+                />
+              </Field>
+            </div>
+
+            {evaluationErreur && (
+              <p className="mt-3 text-xs text-brique">
+                {evaluationErreur}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              size="sm"
+              className="mt-4"
+              disabled={
+                evaluationEnvoi || note < 1
+              }
+            >
+              {evaluationEnvoi
+                ? "Envoi…"
+                : "Envoyer l'évaluation"}
+            </Button>
+          </form>
+        )}
+
+      {/* ÉVALUATION ENVOYÉE */}
+
+      {evaluationEnvoyee && (
         <div className="mt-5 rounded-lg border border-rice/20 bg-rice/5 p-4">
           <p className="text-sm text-rice">
-            Vous avez validé cette
-            livraison.
+            Évaluation envoyée. Merci pour
+            votre retour !
           </p>
         </div>
       )}
