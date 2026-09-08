@@ -66,7 +66,7 @@ export function BoutonsReaction({
         className={clsx(
           "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60",
           info.maReaction === "jaime"
-            ? "border-rice bg-rice/10 text-rice"
+            ? "border-ocre-dark/50 bg-ocre/10 text-ocre-dark"
             : "border-ink/25 text-ink-soft hover:bg-ink/5",
         )}
       >

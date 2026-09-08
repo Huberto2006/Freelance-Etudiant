@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessagesService } from './messages.service';
 import { EnvoyerMessageDto } from './dto/envoyer-message.dto';
@@ -47,5 +55,17 @@ export class MessagesController {
   async marquerLu(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     await this.messagesService.marquerCommeLu(id, user.id);
     return { message: 'Message marque comme lu' };
+  }
+
+  /**
+   * Suppression LOGIQUE d'un message : seuls l'expediteur du message peut
+   * le supprimer (verification cote backend). Le contenu est masque pour
+   * tous, l'historique de la conversation est conserve.
+   */
+  @Delete(':id')
+  @ApiOperation({ summary: "Supprimer un de mes messages (l'expediteur uniquement)" })
+  async supprimer(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    await this.messagesService.supprimer(id, user.id);
+    return { message: 'Message supprime' };
   }
 }

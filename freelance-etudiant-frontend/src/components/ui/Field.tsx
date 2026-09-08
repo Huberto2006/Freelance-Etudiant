@@ -34,7 +34,7 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={clsx(
-        "rounded-lg border border-ink/30 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 focus:border-rice transition-colors",
+        "rounded-lg border border-ink/30 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 focus:border-ocre transition-colors",
         props.className,
       )}
     />
@@ -46,7 +46,7 @@ export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
     <textarea
       {...props}
       className={clsx(
-        "rounded-lg border border-ink/30 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 focus:border-rice transition-colors resize-y",
+        "rounded-lg border border-ink/30 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 focus:border-ocre transition-colors resize-y",
         props.className,
       )}
     />
@@ -61,7 +61,7 @@ export function Select({
     <select
       {...props}
       className={clsx(
-        "rounded-lg border border-ink/30 bg-paper-light px-3 py-2.5 text-sm text-ink focus:border-rice transition-colors",
+        "rounded-lg border border-ink/30 bg-paper-light px-3 py-2.5 text-sm text-ink focus:border-ocre transition-colors",
         className,
       )}
     />

@@ -261,6 +261,13 @@ export default function TableauDeBordVueEnsemble() {
 
   return (
     <div>
+      {/*
+        Flèche « ← Retour » : sur le tableau de bord, elle permet de
+        revenir à la page consultée juste avant (accueil public, missions,
+        services…) via l'historique navigateur — jamais une redirection
+        fixe.
+      */}
+      
       {role === "etudiant" && donneesEtudiant && (
         <VueEtudiant
           utilisateur={utilisateur}
@@ -396,6 +403,78 @@ function VueEtudiant({
 
   const profil = utilisateur.profilEtudiant;
 
+  // ============================================================
+  // SUPPRESSION D'ACTIVITÉ (notifications de l'utilisateur)
+  // L'activité récente est dérivée des notifications réelles :
+  // supprimer une activité = supprimer la notification correspondante
+  // (endpoint DELETE /notifications/:id, permissions vérifiées côté
+  // backend). Suppression optimiste avec annulation en cas d'échec.
+  // ============================================================
+  const [idsActiviteSupprimes, setIdsActiviteSupprimes] = useState<
+    Set<string>
+  >(new Set());
+  const [suppressionEnCoursId, setSuppressionEnCoursId] = useState<
+    string | null
+  >(null);
+  const [effacementEnCours, setEffacementEnCours] = useState(false);
+
+  const activiteFiltree = activite.filter(
+    (evenement) => !idsActiviteSupprimes.has(evenement.id),
+  );
+
+  async function supprimerActivite(idEvenement: string) {
+    setSuppressionEnCoursId(idEvenement);
+
+    // Optimiste : on retire immédiatement l'activité de la timeline.
+    setIdsActiviteSupprimes((prev) => new Set(prev).add(idEvenement));
+
+    try {
+      await api.delete(`/notifications/${idEvenement}`);
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'activité :", error);
+      // Échec : on restaure l'activité dans la timeline.
+      setIdsActiviteSupprimes((prev) => {
+        const suivant = new Set(prev);
+        suivant.delete(idEvenement);
+        return suivant;
+      });
+    } finally {
+      setSuppressionEnCoursId(null);
+    }
+  }
+
+  async function toutEffacerActivite() {
+    if (activiteFiltree.length === 0) return;
+
+    if (!window.confirm("Effacer toute votre activité récente ?")) {
+      return;
+    }
+
+    setEffacementEnCours(true);
+    const idsAffiches = activiteFiltree.map((e) => e.id);
+
+    // Optimiste : toutes les activités affichées disparaissent.
+    setIdsActiviteSupprimes((prev) => {
+      const suivant = new Set(prev);
+      for (const id of idsAffiches) suivant.add(id);
+      return suivant;
+    });
+
+    try {
+      await api.delete("/notifications/tout-supprimer");
+    } catch (error) {
+      console.error("Erreur lors de l'effacement de l'activité :", error);
+      // Échec : on restaure l'état initial.
+      setIdsActiviteSupprimes((prev) => {
+        const suivant = new Set(prev);
+        for (const id of idsAffiches) suivant.delete(id);
+        return suivant;
+      });
+    } finally {
+      setEffacementEnCours(false);
+    }
+  }
+
   return (
     <div>
       <DashboardHeader
@@ -425,7 +504,7 @@ function VueEtudiant({
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               icon={Send}
-              tone="brique"
+              tone="ocre"
               label="Candidatures"
               value={stats.totalCandidatures}
               sublabel={`Taux d'acceptation : ${stats.tauxAcceptationCandidatures} %`}
@@ -449,7 +528,7 @@ function VueEtudiant({
 
             <StatCard
               icon={Wallet}
-              tone="rice"
+              tone="ocre"
               label="Revenus libérés"
               value={
                 totalRevenusLiberes !== null
@@ -570,7 +649,13 @@ function VueEtudiant({
             className="h-full"
           >
             {notifications !== null ? (
-              <ActiviteRecente evenements={activite} />
+              <ActiviteRecente
+                evenements={activiteFiltree}
+                onSupprimer={supprimerActivite}
+                suppressionEnCoursId={suppressionEnCoursId}
+                onToutEffacer={toutEffacerActivite}
+                effacementEnCours={effacementEnCours}
+              />
             ) : donnees.notifications.statut === "erreur" ? (
               <ErreurSection
                 message="Impossible de charger votre activité récente."
@@ -668,6 +753,73 @@ function VueClient({
 
   const derniersPaiements = paiements ? paiements.slice(0, 3) : null;
 
+  // ============================================================
+  // SUPPRESSION D'ACTIVITÉ (notifications de l'utilisateur) —
+  // même mécanisme que la vue étudiant : supprimer une activité
+  // supprime la notification sous-jacente (permissions vérifiées
+  // côté backend). Suppression optimiste avec annulation en cas
+  // d'échec.
+  // ============================================================
+  const [idsActiviteSupprimes, setIdsActiviteSupprimes] = useState<
+    Set<string>
+  >(new Set());
+  const [suppressionEnCoursId, setSuppressionEnCoursId] = useState<
+    string | null
+  >(null);
+  const [effacementEnCours, setEffacementEnCours] = useState(false);
+
+  const activiteFiltree = activite.filter(
+    (evenement) => !idsActiviteSupprimes.has(evenement.id),
+  );
+
+  async function supprimerActivite(idEvenement: string) {
+    setSuppressionEnCoursId(idEvenement);
+    setIdsActiviteSupprimes((prev) => new Set(prev).add(idEvenement));
+
+    try {
+      await api.delete(`/notifications/${idEvenement}`);
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'activité :", error);
+      setIdsActiviteSupprimes((prev) => {
+        const suivant = new Set(prev);
+        suivant.delete(idEvenement);
+        return suivant;
+      });
+    } finally {
+      setSuppressionEnCoursId(null);
+    }
+  }
+
+  async function toutEffacerActivite() {
+    if (activiteFiltree.length === 0) return;
+
+    if (!window.confirm("Effacer toute votre activité récente ?")) {
+      return;
+    }
+
+    setEffacementEnCours(true);
+    const idsAffiches = activiteFiltree.map((e) => e.id);
+
+    setIdsActiviteSupprimes((prev) => {
+      const suivant = new Set(prev);
+      for (const id of idsAffiches) suivant.add(id);
+      return suivant;
+    });
+
+    try {
+      await api.delete("/notifications/tout-supprimer");
+    } catch (error) {
+      console.error("Erreur lors de l'effacement de l'activité :", error);
+      setIdsActiviteSupprimes((prev) => {
+        const suivant = new Set(prev);
+        for (const id of idsAffiches) suivant.delete(id);
+        return suivant;
+      });
+    } finally {
+      setEffacementEnCours(false);
+    }
+  }
+
   return (
     <div>
       <DashboardHeader
@@ -708,7 +860,7 @@ function VueClient({
 
             <StatCard
               icon={ClipboardList}
-              tone="rice"
+              tone="ocre"
               label="Candidatures reçues"
               value={candidatures.length}
               sublabel={`${candidaturesEnAttente.length} en attente d'examen`}
@@ -724,7 +876,7 @@ function VueClient({
 
             <StatCard
               icon={Wallet}
-              tone="brique"
+              tone="ocre"
               label="Dépenses engagées"
               value={
                 depensesEngagees !== null
@@ -887,9 +1039,13 @@ function VueClient({
       >
         {notifications !== null ? (
           <ActiviteRecente
-            evenements={activite}
+            evenements={activiteFiltree}
             videTitre="Aucune activité pour le moment."
             videDescription="Candidatures reçues, livraisons déposées et messages apparaîtront ici."
+            onSupprimer={supprimerActivite}
+            suppressionEnCoursId={suppressionEnCoursId}
+            onToutEffacer={toutEffacerActivite}
+            effacementEnCours={effacementEnCours}
           />
         ) : donnees.notifications.statut === "erreur" ? (
           <ErreurSection
@@ -1036,7 +1192,7 @@ function VueAdmin({
 
             <StatCard
               icon={BriefcaseBusiness}
-              tone="rice"
+              tone="ocre"
               label="Missions publiées"
               value={stats.missions.total}
               sublabel={`${stats.missions.terminees} livraison(s) validée(s)`}
@@ -1044,7 +1200,7 @@ function VueAdmin({
 
             <StatCard
               icon={Banknote}
-              tone="brique"
+              tone="ocre"
               label="Volume d'affaires"
               value={formatArgent(stats.volumeAffairesGlobal)}
               sublabel="Livraisons validées"
@@ -1120,7 +1276,7 @@ function VueAdmin({
                     et validées
                   </>
                 }
-                couleur="var(--color-brique)"
+                couleur="var(--color-ocre-dark)"
               />
 
               <p className="text-center text-sm text-ink-soft">

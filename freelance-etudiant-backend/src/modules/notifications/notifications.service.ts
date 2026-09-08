@@ -77,4 +77,29 @@ export class NotificationsService {
     await this.repo.update({ destinataireId: userId, estLue: false }, { estLue: true });
     this.realtimeGateway.emitToUser(userId, 'notification:compteur', { total: 0 });
   }
+
+  /**
+   * Supprime UNE notification de l'utilisateur connecte.
+   *
+   * Permission : la clause WHERE inclut toujours destinataireId — un
+   * utilisateur ne peut donc jamais supprimer la notification d'un autre
+   * utilisateur, meme en devinant son identifiant. La suppression d'une
+   * notification inexistante ou etrangere est silencieuse (meme reponse),
+   * ce qui evite toute fuite d'information sur l'existence des ids.
+   */
+  async supprimer(id: string, userId: string): Promise<void> {
+    await this.repo.delete({ id, destinataireId: userId });
+    const total = await this.compterNonLues(userId);
+    this.realtimeGateway.emitToUser(userId, 'notification:compteur', { total });
+  }
+
+  /**
+   * Supprime TOUTES les notifications de l'utilisateur connecte (jamais
+   * celles des autres utilisateurs : la clause WHERE est toujours
+   * restreinte au destinataire connecte).
+   */
+  async supprimerToutes(userId: string): Promise<void> {
+    await this.repo.delete({ destinataireId: userId });
+    this.realtimeGateway.emitToUser(userId, 'notification:compteur', { total: 0 });
+  }
 }

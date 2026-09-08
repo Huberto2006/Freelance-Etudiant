@@ -78,7 +78,7 @@ export default function ConnexionPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-5 py-16">
+    <div className="mx-auto max-w-md px-5 pb-16">
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark mb-3">
         Bon retour
       </p>

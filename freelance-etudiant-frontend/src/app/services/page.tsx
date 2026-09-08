@@ -9,6 +9,8 @@ import type { ServiceOffert } from "@/lib/types";
 import { BarreRecherche, type Filtres } from "@/components/ui/BarreRecherche";
 import { CarteService } from "@/components/ui/CarteService";
 import { NoticeCard } from "@/components/ui/Notice";
+import { BoutonRetour } from "@/components/ui/BoutonRetour";
+import { useAuth } from "@/lib/auth-context";
 
 export default function ServicesPage() {
   return (
@@ -25,6 +27,7 @@ export default function ServicesPage() {
 }
 
 function ServicesContent() {
+  const {utilisateur} = useAuth();
   const searchParams = useSearchParams();
   const cleParams = searchParams.toString();
 
@@ -87,8 +90,14 @@ function ServicesContent() {
   };
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-10">
+    <div className="container mx-auto max-w-5xl px-4 pb-10 pt-8">
       {/* ---------------------------------------- EN-TETE */}
+      <div className="mb-4">
+        <BoutonRetour
+          repli={utilisateur ? "/tableau-de-bord" : "/"}
+          forcer
+        />
+      </div>
       <div className="mb-8">
         <p className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
           Étals du kianja

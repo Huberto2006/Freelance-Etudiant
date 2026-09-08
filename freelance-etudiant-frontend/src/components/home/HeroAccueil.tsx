@@ -47,13 +47,9 @@ export function HeroAccueil({
 
   return (
     <section className="relative overflow-hidden rounded-xl border border-ink/15 bg-paper-light px-5 py-12 sm:px-10 sm:py-16">
-      {/* Halos decoratifs discrets, dans la palette existante */}
+      {/* Halo decoratif discret, dans la palette existante */}
       <div
         className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-ocre/10 blur-3xl"
-        aria-hidden="true"
-      />
-      <div
-        className="pointer-events-none absolute -bottom-32 -left-20 h-72 w-72 rounded-full bg-rice/10 blur-3xl"
         aria-hidden="true"
       />
 
@@ -94,7 +90,7 @@ export function HeroAccueil({
               onChange={(e) => setRecherche(e.target.value)}
               placeholder="Design, site web, rédaction, traduction…"
               aria-label="Rechercher un service étudiant"
-              className="w-full rounded-lg border border-ink/30 bg-paper px-4 py-3 pl-11 text-sm text-ink placeholder:text-ink-soft/50 transition-colors focus:border-rice"
+              className="w-full rounded-lg border border-ink/30 bg-paper px-4 py-3 pl-11 text-sm text-ink placeholder:text-ink-soft/50 transition-colors focus:border-ocre"
             />
           </div>
 

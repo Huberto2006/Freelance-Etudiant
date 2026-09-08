@@ -81,8 +81,7 @@ function isActive(
   }
 
   if (
-    href ===
-    "/tableau-de-bord"
+    href === "/tableau-de-bord"
   ) {
     return false;
   }
@@ -146,13 +145,17 @@ export function Sidebar({
    * SYNCHRONISATION DE LA LARGEUR
    * ==========================================================
    *
-   * La Sidebar est la source de vérité pour --sidebar-width.
+   * La Sidebar reste la source de vérité pour la largeur.
    *
-   * Ouverte  : 260px
-   * Réduite  : 76px
+   * Ouverte :
+   * 260px
    *
-   * Le layout et le Navbar utilisent ensuite cette variable.
+   * Réduite :
+   * 76px
+   *
+   * Le Layout et le Navbar utilisent la même variable CSS.
    */
+
   useEffect(() => {
     const width = collapsed
       ? SIDEBAR_CLOSED_WIDTH
@@ -162,23 +165,14 @@ export function Sidebar({
       "--sidebar-width",
       width,
     );
-
-    return () => {
-      document.documentElement.style.setProperty(
-        "--sidebar-width",
-        SIDEBAR_OPEN_WIDTH,
-      );
-    };
   }, [collapsed]);
 
   /*
    * ==========================================================
-   * DRAWER MOBILE — FERMETURE AU CLAVIER (Escape)
+   * DRAWER MOBILE — ESCAPE
    * ==========================================================
-   *
-   * Comportement ajouté pour cohérence avec le menu profil
-   * du Navbar, qui se ferme déjà avec Escape.
    */
+
   useEffect(() => {
     if (!mobileOpen) {
       return;
@@ -203,7 +197,10 @@ export function Sidebar({
         handleKeyboard,
       );
     };
-  }, [mobileOpen, onMobileClose]);
+  }, [
+    mobileOpen,
+    onMobileClose,
+  ]);
 
   /*
    * ==========================================================
@@ -230,9 +227,9 @@ export function Sidebar({
     ] ?? [];
 
   /*
-   * Ces éléments sont gérés
-   * par le Navbar.
+   * Ces éléments sont gérés par le Navbar.
    */
+
   const navigationSidebar =
     navigation.filter(
       (item) =>
@@ -256,7 +253,8 @@ export function Sidebar({
           "/tableau-de-bord" ||
         item.label ===
           "Tableau de bord" ||
-        item.label === "Dashboard",
+        item.label ===
+          "Dashboard",
     );
 
   /*
@@ -272,16 +270,14 @@ export function Sidebar({
     );
 
   /*
-   * Le profil est placé
-   * en bas de la Sidebar.
+   * Le profil est placé en bas.
    */
+
   const items =
     autresItems.filter(
       (item) =>
-        item.label !==
-          "Profil" &&
-        item.label !==
-          "Mon profil",
+        item.label !== "Profil" &&
+        item.label !== "Mon profil",
     );
 
   /*
@@ -352,6 +348,7 @@ export function Sidebar({
     /*
      * Groupe contenant plusieurs liens
      */
+
     if (
       item.liens &&
       item.liens.length > 0
@@ -429,7 +426,7 @@ export function Sidebar({
 
                     ${
                       active
-                        ? "bg-ink text-rice shadow-sm"
+                        ? "bg-ink text-paper-light shadow-sm"
                         : "text-ink-soft hover:bg-ink/5 hover:text-ink"
                     }
                   `}
@@ -511,7 +508,7 @@ export function Sidebar({
 
           ${
             active
-              ? "bg-ink text-rice shadow-sm"
+              ? "bg-ink text-paper-light shadow-sm"
               : "text-ink-soft hover:bg-ink/5 hover:text-ink"
           }
         `}
@@ -547,8 +544,7 @@ export function Sidebar({
       typeof navigationSidebar,
   ) {
     if (
-      sectionItems.length ===
-      0
+      sectionItems.length === 0
     ) {
       return null;
     }
@@ -628,9 +624,7 @@ export function Sidebar({
       >
         <Link
           href="/tableau-de-bord"
-          onClick={
-            closeMobile
-          }
+          onClick={closeMobile}
           className="
             flex
             items-center
@@ -647,13 +641,11 @@ export function Sidebar({
               items-center
               justify-center
               rounded-full
-              border-2
-              border-rice
               bg-ink
               font-mono
               text-xs
               font-bold
-              text-rice
+              text-paper-light
             "
           >
             K
@@ -680,9 +672,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={() =>
-              setCollapsed(
-                true,
-              )
+              setCollapsed(true)
             }
             aria-label="Réduire la barre latérale"
             title="Réduire le menu"
@@ -832,9 +822,7 @@ export function Sidebar({
 
         <Link
           href="/tableau-de-bord/profil"
-          onClick={
-            closeMobile
-          }
+          onClick={closeMobile}
           title={
             collapsed
               ? "Mon profil"
@@ -863,7 +851,7 @@ export function Sidebar({
                 pathname,
                 "/tableau-de-bord/profil",
               )
-                ? "bg-ink text-rice"
+                ? "bg-ink text-paper-light"
                 : "text-ink-soft hover:bg-ink/5 hover:text-ink"
             }
           `}
@@ -963,9 +951,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={() =>
-              setCollapsed(
-                false,
-              )
+              setCollapsed(false)
             }
             aria-label="Ouvrir la barre latérale"
             title="Ouvrir le menu"
@@ -989,7 +975,7 @@ export function Sidebar({
               duration-150
               hover:scale-105
               hover:bg-ink
-              hover:text-rice
+              hover:text-paper-light
             "
           >
             <ChevronRight
@@ -1017,9 +1003,7 @@ export function Sidebar({
           <button
             type="button"
             aria-label="Fermer le menu"
-            onClick={
-              closeMobile
-            }
+            onClick={closeMobile}
             className="
               absolute
               inset-0

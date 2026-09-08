@@ -15,7 +15,7 @@ import "./globals.css";
 
 import { AuthProvider } from "@/lib/auth-context";
 import { SocketProvider } from "@/lib/socket-context";
-import { Navbar } from "@/components/layout/Navbar";
+import { NavbarConditionnelle } from "@/components/layout/NavbarConditionnelle";
 import { FooterConditionnel } from "@/components/layout/FooterConditionnel";
 
 export const metadata: Metadata = {
@@ -40,9 +40,19 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <AuthProvider>
           <SocketProvider>
-            <Navbar />
+            {/* Navbar publique — masquée sur /tableau-de-bord, où le
+                layout du dashboard rend sa propre variante hasSidebar. */}
+            <NavbarConditionnelle />
 
-            <main className="flex-1">
+            {/*
+                Espace supérieur global = hauteur de la Navbar (h-16 = 4rem).
+                Les pages publiques n'ont plus à compenser individuellement
+                avec pt-20 / pt-24 : la Navbar étant fixed, ce padding garantit
+                qu'aucun contenu ne passe jamais dessous. Le tableau de bord
+                en profite aussi : sa Navbar hasSidebar est fixed au même
+                endroit, il n'ajoute donc aucun padding supplémentaire.
+            */}
+            <main className="flex-1 pt-16">
               {children}
             </main>
 

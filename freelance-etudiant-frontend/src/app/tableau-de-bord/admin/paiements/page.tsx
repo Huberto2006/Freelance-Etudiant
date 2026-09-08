@@ -12,6 +12,7 @@ import {
 } from "@/lib/format";
 import { Button } from "@/components/ui/Button";
 import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
+import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 const toneParStatut: Record<string, "ocre" | "rice" | "brique" | "ink"> = {
   en_attente: "ocre",
@@ -73,6 +74,10 @@ export default function AdminPaiementsPage() {
 
   return (
     <div>
+      <div className="mb-4">
+        <BoutonRetour repli="/tableau-de-bord/admin" forcer />
+      </div>
+
       <PageHeader icon={Wallet} eyebrow="Administration" title="Paiements" />
       {erreur && <p className="text-sm text-brique mb-4">{erreur}</p>}
 

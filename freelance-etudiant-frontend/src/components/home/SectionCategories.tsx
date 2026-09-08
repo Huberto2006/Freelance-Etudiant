@@ -46,7 +46,7 @@ export function SectionCategories({
               className="notice-card group flex items-center gap-3 p-4"
             >
               <span
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rice/10 text-rice transition-colors group-hover:bg-ocre/15 group-hover:text-ocre-dark"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-ink-soft transition-colors group-hover:bg-ocre/15 group-hover:text-ocre-dark"
                 aria-hidden="true"
               >
                 <Icone size={18} />

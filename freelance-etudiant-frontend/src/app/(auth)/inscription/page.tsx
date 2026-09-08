@@ -110,7 +110,7 @@ function FormulaireInscription() {
 
   if (reponseInscription) {
     return (
-      <div className="mx-auto max-w-md px-5 py-16">
+      <div className="mx-auto max-w-md px-5 pb-16">
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark mb-3">
           Vérification de l&apos;email
         </p>
@@ -168,7 +168,7 @@ function FormulaireInscription() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-5 py-16">
+    <div className="mx-auto max-w-md px-5 pb-16">
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark mb-3">
         Bienvenue sur Kianja
       </p>

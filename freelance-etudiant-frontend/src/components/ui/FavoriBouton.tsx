@@ -64,7 +64,7 @@ export function FavoriBouton({
       className={clsx(
         "inline-flex h-8 w-8 items-center justify-center rounded-full border transition-colors disabled:opacity-60",
         enFavori
-          ? "border-brique bg-brique/10 text-brique"
+          ? "border-ocre-dark/50 bg-ocre/10 text-ocre-dark"
           : "border-ink/25 text-ink-soft hover:bg-ink/5",
         className,
       )}

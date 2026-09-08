@@ -22,6 +22,7 @@ import { formatDateCourte } from "@/lib/format";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Field";
 import { NoticeCard } from "@/components/ui/Notice";
+import { SousNavigation } from "@/components/ui/SousNavigation";
 import {
   PieceJointeAffichage,
   SelecteurPieceJointe,
@@ -159,6 +160,14 @@ function MessagesContent() {
     envoi,
     setEnvoi,
   ] = useState(false);
+
+  // Sous-menu actif : Conversations / Non lus.
+  const [ongletMessages, setOngletMessages] = useState("toutes");
+
+  const [
+    messageEnSuppression,
+    setMessageEnSuppression,
+  ] = useState<string | null>(null);
 
   /* =========================================================
      CONTACT ACTIF
@@ -317,6 +326,8 @@ function MessagesContent() {
       contactDepuisUrl,
     ]);
 
+  // Sous-menu : contacts filtrés par onglet (Conversations / Non lus).
+
   /* =========================================================
      MESSAGES NON LUS PAR CONTACT (source : table messages)
      ========================================================= */
@@ -356,6 +367,19 @@ function MessagesContent() {
 
     return compteurs;
   }, [conversations, utilisateur]);
+
+  // Sous-menu : contacts filtrés par onglet (Conversations / Non lus).
+  const contactsAffiches =
+    ongletMessages === "non_lus"
+      ? contacts.filter(
+          (contact) =>
+            (nonLusParContact.get(contact.id) ?? 0) > 0,
+        )
+      : contacts;
+
+  const compteNonLus = contacts.filter(
+    (contact) => (nonLusParContact.get(contact.id) ?? 0) > 0,
+  ).length;
 
   /* =========================================================
      CHARGER UNE CONVERSATION
@@ -734,6 +758,45 @@ function MessagesContent() {
     }
   }
 
+  /**
+   * Suppression logique d'un message (RG : seul l'expéditeur peut
+   * supprimer son propre message ; le backend transforme le contenu
+   * en tombstone « Message supprimé », jamais de suppression physique).
+   */
+  async function supprimerMessage(messageId: string) {
+    if (messageEnSuppression) return;
+
+    setMessageEnSuppression(messageId);
+    setErreur(null);
+
+    try {
+      await api.delete(`/messages/${messageId}`);
+
+      setFil((precedent) =>
+        precedent.map((m) =>
+          m.id === messageId
+            ? { ...m, estSupprime: true, contenu: "Message supprimé" }
+            : m,
+        ),
+      );
+
+      await chargerConversations();
+    } catch (error) {
+      console.error(
+        "Erreur lors de la suppression du message :",
+        error,
+      );
+
+      setErreur(
+        error instanceof ApiError
+          ? error.message
+          : "Impossible de supprimer ce message.",
+      );
+    } finally {
+      setMessageEnSuppression(null);
+    }
+  }
+
   /* =========================================================
      AFFICHAGE
      ========================================================= */
@@ -756,6 +819,29 @@ function MessagesContent() {
           Messages
         </h1>
       </div>
+
+      {/* =====================================================
+          SOUS-MENU
+          ===================================================== */}
+
+      {contacts.length > 0 && (
+        <SousNavigation
+          onglets={[
+            {
+              valeur: "toutes",
+              label: "Conversations",
+              compte: contacts.length,
+            },
+            {
+              valeur: "non_lus",
+              label: "Non lus",
+              compte: compteNonLus,
+            },
+          ]}
+          actif={ongletMessages}
+          onChanger={setOngletMessages}
+        />
+      )}
 
       {/* =====================================================
           ERREUR
@@ -798,6 +884,12 @@ function MessagesContent() {
             encore été envoyé.
           </p>
         </NoticeCard>
+      ) : contactsAffiches.length === 0 ? (
+        <NoticeCard>
+          <p className="text-sm text-ink-soft">
+            Aucun message non lu.
+          </p>
+        </NoticeCard>
       ) : (
         <div className="grid gap-5 sm:grid-cols-[220px_1fr]">
           {/* =================================================
@@ -805,7 +897,7 @@ function MessagesContent() {
               ================================================= */}
 
           <div className="flex flex-row gap-2 overflow-x-auto sm:flex-col sm:overflow-visible">
-            {contacts.map(
+            {contactsAffiches.map(
               (contact) => (
                 <button
                   key={contact.id}
@@ -910,26 +1002,33 @@ function MessagesContent() {
                             key={
                               message.id
                             }
-                            className={`max-w-[75%] px-3 py-2 text-sm ${
+                            className={`group relative max-w-[75%] px-3 py-2 text-sm ${
                               estMoi
-                                ? "self-end bg-rice text-paper-light"
+                                ? "self-end bg-ink text-paper-light"
                                 : "self-start bg-ink/5 text-ink"
                             }`}
                           >
-                            <p>
-                              {
-                                message.contenu
+                            <p
+                              className={
+                                message.estSupprime
+                                  ? "italic opacity-70"
+                                  : ""
                               }
+                            >
+                              {message.estSupprime
+                                ? "Message supprimé"
+                                : message.contenu}
                             </p>
 
-                            {message.pieceJointeUrl && (
-                              <div className="mt-2">
-                                <PieceJointeAffichage
-                                  url={message.pieceJointeUrl}
-                                  nom={message.pieceJointeNom}
-                                />
-                              </div>
-                            )}
+                            {!message.estSupprime &&
+                              message.pieceJointeUrl && (
+                                <div className="mt-2">
+                                  <PieceJointeAffichage
+                                    url={message.pieceJointeUrl}
+                                    nom={message.pieceJointeNom}
+                                  />
+                                </div>
+                              )}
 
                             <p
                               className={`mt-1 text-[10px] font-mono ${
@@ -942,6 +1041,26 @@ function MessagesContent() {
                                 message.dateEnvoi,
                               )}
                             </p>
+
+                            {estMoi &&
+                              !message.estSupprime && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    supprimerMessage(
+                                      message.id,
+                                    )
+                                  }
+                                  disabled={
+                                    messageEnSuppression ===
+                                    message.id
+                                  }
+                                  aria-label="Supprimer ce message"
+                                  className="absolute -top-2 -right-2 hidden h-5 w-5 items-center justify-center rounded-full border border-ink/15 bg-paper text-[10px] text-ink-soft opacity-0 transition-opacity hover:border-brique/50 hover:text-brique group-hover:flex group-hover:opacity-100"
+                                >
+                                  ×
+                                </button>
+                              )}
                           </div>
                         );
                       },

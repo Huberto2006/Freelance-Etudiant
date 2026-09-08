@@ -17,11 +17,11 @@ import { NoticeCard } from "@/components/ui/Notice";
 
 const PALETTE = [
   "var(--color-ocre)",
-  "var(--color-rice)",
-  "var(--color-brique)",
   "var(--color-ocre-dark)",
-  "var(--color-rice-light)",
-  "var(--color-brique-light)",
+  "var(--color-ink-soft)",
+  "color-mix(in srgb, var(--color-ocre) 55%, transparent)",
+  "color-mix(in srgb, var(--color-ink) 45%, transparent)",
+  "color-mix(in srgb, var(--color-ink) 25%, transparent)",
 ];
 
 function InfoBulle({
@@ -208,7 +208,7 @@ export function AnneauRepartition({
 export function JaugeCirculaire({
   valeur,
   label,
-  couleur = "var(--color-rice)",
+  couleur = "var(--color-ocre)",
   size = 96,
 }: {
   valeur: number;

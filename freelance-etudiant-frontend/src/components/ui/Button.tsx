@@ -1,9 +1,17 @@
 import { clsx } from "clsx";
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, ComponentPropsWithoutRef } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "sm" | "md" | "lg";
+  /**
+   * Fourni : le composant rend un lien <a> (mêmes variantes et tailles)
+   * au lieu d'un <button>. Utile pour les actions de navigation
+   * (« Voir le projet »…) afin de garder une apparence de bouton homogène.
+   */
+  href?: string;
+  target?: string;
+  rel?: string;
 }
 
 const variants: Record<string, string> = {
@@ -27,16 +35,41 @@ export function Button({
   variant = "primary",
   size = "md",
   className,
+  href,
+  target,
+  rel,
+  type,
+  disabled,
   ...props
 }: ButtonProps) {
+  const classes = clsx(
+    "rounded-lg font-body font-medium tracking-wide transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed",
+    variants[variant],
+    sizes[size],
+    className,
+  );
+
+  if (href) {
+    // Un lien ne gère ni `type` ni `disabled` ; pour target="_blank" on
+    // garantit les protections standard si `rel` n'est pas fourni.
+    // Les handlers communs (onClick, onMouseEnter…) restent transmis.
+    const propsLien = props as unknown as ComponentPropsWithoutRef<"a">;
+    return (
+      <a
+        href={href}
+        target={target}
+        rel={target === "_blank" ? (rel ?? "noopener noreferrer") : rel}
+        className={classes}
+        {...propsLien}
+      />
+    );
+  }
+
   return (
     <button
-      className={clsx(
-        "rounded-lg font-body font-medium tracking-wide transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed",
-        variants[variant],
-        sizes[size],
-        className,
-      )}
+      type={type}
+      disabled={disabled}
+      className={classes}
       {...props}
     />
   );

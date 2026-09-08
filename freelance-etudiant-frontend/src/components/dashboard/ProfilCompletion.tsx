@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { clsx } from "clsx";
 
 import type { CompletionProfil } from "@/lib/dashboard";
 import { Button } from "@/components/ui/Button";
@@ -25,7 +24,7 @@ export function ProfilCompletion({
       <div className="flex items-center justify-between gap-3">
         <p className="font-display text-lg font-semibold">Votre profil</p>
 
-        <p className="font-mono text-sm font-semibold text-rice">
+        <p className="font-mono text-sm font-semibold text-ink">
           {completion.pourcentage} %
         </p>
       </div>
@@ -39,10 +38,7 @@ export function ProfilCompletion({
         aria-label="Complétion de votre profil"
       >
         <div
-          className={clsx(
-            "h-full rounded-full",
-            complet ? "bg-rice" : "bg-ocre",
-          )}
+          className="h-full rounded-full bg-ocre"
           style={{ width: `${completion.pourcentage}%` }}
         />
       </div>

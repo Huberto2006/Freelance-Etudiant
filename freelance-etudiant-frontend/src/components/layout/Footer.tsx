@@ -16,7 +16,7 @@ export function Footer() {
         <div>
           <div className="flex items-center gap-2">
             <span
-              className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-rice font-mono text-[10px] font-bold text-rice"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-ink font-mono text-[10px] font-bold text-paper-light"
               aria-hidden="true"
             >
               K

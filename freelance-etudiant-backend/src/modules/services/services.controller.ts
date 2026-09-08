@@ -76,8 +76,29 @@ export class ServicesController {
   @UseGuards(RolesGuard)
   @Roles(Role.ETUDIANT)
   @ApiBearerAuth()
+  @Patch(':id/archiver')
+  @ApiOperation({ summary: 'Archiver un de mes services (suppression logique reversible)' })
+  async archiver(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.servicesService.archiver(id, user.id);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ETUDIANT)
+  @ApiBearerAuth()
+  @Patch(':id/restaurer')
+  @ApiOperation({ summary: 'Restaurer un service archive' })
+  async restaurer(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.servicesService.restaurer(id, user.id);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ETUDIANT)
+  @ApiBearerAuth()
   @Delete(':id')
-  @ApiOperation({ summary: 'Supprimer un de mes services' })
+  @ApiOperation({
+    summary:
+      'Supprimer un de mes services (refuse si le service a des commandes : archivez-le)',
+  })
   async remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     await this.servicesService.remove(id, user.id);
     return { message: 'Service supprime' };

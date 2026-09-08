@@ -15,4 +15,6 @@ export enum TypeNotification {
   PAIEMENT_CONFIRME = 'paiement_confirme',
   PAIEMENT_LIBERE = 'paiement_libere',
   NOUVELLE_REACTION = 'nouvelle_reaction',
+  /** La mission d'un client est arrivee a echeance (date limite depassee). */
+  MISSION_EXPIREE = 'mission_expiree',
 }

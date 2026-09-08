@@ -8,6 +8,7 @@ import type { Favori, Mission, ServiceOffert, EtudiantProfile } from "@/lib/type
 import { formatArgent } from "@/lib/format";
 import { NoticeCard, PageHeader } from "@/components/ui/Notice";
 import { FavoriBouton } from "@/components/ui/FavoriBouton";
+import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 export default function FavorisPage() {
   const [favoris, setFavoris] = useState<Favori[]>([]);
@@ -47,6 +48,10 @@ export default function FavorisPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-14">
+      <div className="mb-4">
+        <BoutonRetour repli="/tableau-de-bord" forcer />
+      </div>
+
       <PageHeader icon={Heart} eyebrow="Mes sauvegardes" title="Favoris" />
 
       {favoris.length === 0 ? (

@@ -8,6 +8,7 @@ import { formatDate } from "@/lib/format";
 import { roleLabel } from "@/lib/auth-context";
 import { Button } from "@/components/ui/Button";
 import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
+import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 export default function AdminPage() {
   const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
@@ -132,6 +133,10 @@ export default function AdminPage() {
 
   return (
     <div>
+      <div className="mb-4">
+        <BoutonRetour repli="/tableau-de-bord" forcer />
+      </div>
+
       {/* Titre */}
       <PageHeader icon={ShieldCheck} eyebrow="Administration" title="Utilisateurs" />
 

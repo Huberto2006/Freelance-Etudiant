@@ -17,6 +17,7 @@ import {
   SelecteurPieceJointe,
   type PieceJointeValeur,
 } from "@/components/ui/PieceJointe";
+import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 export default function ServiceDetailPage({
   params,
@@ -87,7 +88,11 @@ export default function ServiceDetailPage({
   const estProprietaire = utilisateur?.id === etudiant?.utilisateurId;
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-14">
+    <div className="mx-auto max-w-3xl px-5 pt-8 pb-14">
+      <div className="mb-4">
+        <BoutonRetour repli="/services" />
+      </div>
+
       {service.imagesUrls?.[0] && (
         <div className="mb-6 overflow-hidden rounded-2xl border border-ink/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -140,7 +145,7 @@ export default function ServiceDetailPage({
           </h2>
           <div className="flex flex-wrap gap-2">
             {service.competences.map((c) => (
-              <Tag key={c} tone="rice">
+              <Tag key={c}>
                 {c}
               </Tag>
             ))}

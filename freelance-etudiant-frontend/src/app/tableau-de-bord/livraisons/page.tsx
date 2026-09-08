@@ -43,6 +43,7 @@ import {
   PageHeader,
   Tag,
 } from "@/components/ui/Notice";
+import { SousNavigation } from "@/components/ui/SousNavigation";
 
 // ============================================================
 // PAGE PRINCIPALE
@@ -125,6 +126,13 @@ function LivraisonsContent() {
     erreur,
     setErreur,
   ] = useState<string | null>(null);
+
+  // Sous-menu actif : À traiter / Corrections demandées /
+  // En attente de validation / Validées.
+  const [
+    ongletLivraisons,
+    setOngletLivraisons,
+  ] = useState("toutes");
 
   // ==========================================================
   // RÔLE RÉEL DE L'UTILISATEUR
@@ -297,6 +305,46 @@ function LivraisonsContent() {
             "acceptee",
         );
 
+  // Catégorie de sous-menu correspondant à la livraison (ou son
+  // absence) d'une candidature. Sert uniquement à filtrer la liste
+  // affichée : la sélection (candidatureSelectionnee) reste calculée
+  // sur l'ensemble complet pour ne pas casser les liens venant des
+  // notifications.
+  function categorieLivraison(
+    candidature: Candidature,
+  ): "a_traiter" | "corrections" | "attente_validation" | "validees" {
+    const livraison = livraisons.find(
+      (item) => item.candidatureId === candidature.id,
+    );
+
+    if (!livraison) return "a_traiter";
+    if (livraison.statut === "correction_demandee") return "corrections";
+    if (livraison.statut === "validee") return "validees";
+    return "attente_validation";
+  }
+
+  const compteLivraisons = {
+    a_traiter: candidaturesFiltrees.filter(
+      (c) => categorieLivraison(c) === "a_traiter",
+    ).length,
+    corrections: candidaturesFiltrees.filter(
+      (c) => categorieLivraison(c) === "corrections",
+    ).length,
+    attente_validation: candidaturesFiltrees.filter(
+      (c) => categorieLivraison(c) === "attente_validation",
+    ).length,
+    validees: candidaturesFiltrees.filter(
+      (c) => categorieLivraison(c) === "validees",
+    ).length,
+  };
+
+  const candidaturesAffichees =
+    ongletLivraisons === "toutes"
+      ? candidaturesFiltrees
+      : candidaturesFiltrees.filter(
+          (c) => categorieLivraison(c) === ongletLivraisons,
+        );
+
   const candidatureSelectionnee =
     candidatureParam
       ? candidaturesFiltrees.find(
@@ -384,6 +432,7 @@ function LivraisonsContent() {
 
   return (
     <div>
+
       <PageHeader
         icon={
           role === "client"
@@ -450,13 +499,52 @@ function LivraisonsContent() {
           </Link>
         </NoticeCard>
       ) : (
+        <>
+          <SousNavigation
+            onglets={[
+              {
+                valeur: "toutes",
+                label: "Toutes",
+                compte: candidaturesFiltrees.length,
+              },
+              {
+                valeur: "a_traiter",
+                label: "À traiter",
+                compte: compteLivraisons.a_traiter,
+              },
+              {
+                valeur: "corrections",
+                label: "Corrections demandées",
+                compte: compteLivraisons.corrections,
+              },
+              {
+                valeur: "attente_validation",
+                label: "En attente de validation",
+                compte: compteLivraisons.attente_validation,
+              },
+              {
+                valeur: "validees",
+                label: "Validées",
+                compte: compteLivraisons.validees,
+              },
+            ]}
+            actif={ongletLivraisons}
+            onChanger={setOngletLivraisons}
+          />
+
         <div className="grid gap-5 md:grid-cols-[240px_1fr]">
           {/* ====================================================
               LISTE
               ==================================================== */}
 
           <div className="flex flex-row gap-2 overflow-x-auto md:flex-col md:overflow-visible">
-            {candidaturesFiltrees.map(
+            {candidaturesAffichees.length === 0 && (
+              <p className="text-sm text-ink-soft">
+                Aucune livraison dans cette catégorie.
+              </p>
+            )}
+
+            {candidaturesAffichees.map(
               (candidature) => {
                 const active =
                   candidature.id ===
@@ -560,6 +648,7 @@ function LivraisonsContent() {
             )}
           </div>
         </div>
+        </>
       )}
     </div>
   );

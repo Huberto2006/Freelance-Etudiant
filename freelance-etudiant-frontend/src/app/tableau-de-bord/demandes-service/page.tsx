@@ -10,6 +10,7 @@ import { formatArgent, formatDateCourte, statutDemandeServiceLabel } from "@/lib
 import { Button } from "@/components/ui/Button";
 import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
 import { PieceJointeAffichage } from "@/components/ui/PieceJointe";
+import { SousNavigation } from "@/components/ui/SousNavigation";
 
 const toneParStatut: Record<string, "ocre" | "rice" | "brique" | "ink"> = {
   en_attente: "ocre",
@@ -24,6 +25,7 @@ const toneParStatut: Record<string, "ocre" | "rice" | "brique" | "ink"> = {
 function VueClient() {
   const [demandes, setDemandes] = useState<DemandeService[]>([]);
   const [chargement, setChargement] = useState(true);
+  const [onglet, setOnglet] = useState("toutes");
 
   useEffect(() => {
     api
@@ -46,9 +48,35 @@ function VueClient() {
     );
   }
 
+  const enAttente = demandes.filter((d) => d.statut === "en_attente").length;
+  const acceptees = demandes.filter((d) => d.statut === "acceptee").length;
+  const refusees = demandes.filter((d) => d.statut === "refusee").length;
+
+  const demandesAffichees =
+    onglet === "toutes" ? demandes : demandes.filter((d) => d.statut === onglet);
+
   return (
-    <div className="flex flex-col gap-4">
-      {demandes.map((d) => (
+    <div>
+      <SousNavigation
+        onglets={[
+          { valeur: "toutes", label: "Toutes", compte: demandes.length },
+          { valeur: "en_attente", label: "En attente", compte: enAttente },
+          { valeur: "acceptee", label: "Acceptées", compte: acceptees },
+          { valeur: "refusee", label: "Refusées", compte: refusees },
+        ]}
+        actif={onglet}
+        onChanger={setOnglet}
+      />
+
+      {demandesAffichees.length === 0 ? (
+        <NoticeCard>
+          <p className="text-sm text-ink-soft/70">
+            Aucune demande dans cette catégorie.
+          </p>
+        </NoticeCard>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {demandesAffichees.map((d) => (
         <NoticeCard key={d.id} className="flex flex-col gap-3">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -89,6 +117,8 @@ function VueClient() {
           )}
         </NoticeCard>
       ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -102,6 +132,7 @@ function VueEtudiant() {
   const [chargement, setChargement] = useState(true);
   const [enCours, setEnCours] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [onglet, setOnglet] = useState("toutes");
 
   const charger = useCallback(() => {
     setChargement(true);
@@ -157,10 +188,37 @@ function VueEtudiant() {
     );
   }
 
+  const enAttente = demandes.filter((d) => d.statut === "en_attente").length;
+  const acceptees = demandes.filter((d) => d.statut === "acceptee").length;
+  const refusees = demandes.filter((d) => d.statut === "refusee").length;
+
+  const demandesAffichees =
+    onglet === "toutes" ? demandes : demandes.filter((d) => d.statut === onglet);
+
   return (
-    <div className="flex flex-col gap-4">
-      {erreur && <p className="text-sm text-brique">{erreur}</p>}
-      {demandes.map((d) => (
+    <div>
+      <SousNavigation
+        onglets={[
+          { valeur: "toutes", label: "Toutes", compte: demandes.length },
+          { valeur: "en_attente", label: "En attente", compte: enAttente },
+          { valeur: "acceptee", label: "Acceptées", compte: acceptees },
+          { valeur: "refusee", label: "Refusées", compte: refusees },
+        ]}
+        actif={onglet}
+        onChanger={setOnglet}
+      />
+
+      {erreur && <p className="mb-3 text-sm text-brique">{erreur}</p>}
+
+      {demandesAffichees.length === 0 ? (
+        <NoticeCard>
+          <p className="text-sm text-ink-soft/70">
+            Aucune demande dans cette catégorie.
+          </p>
+        </NoticeCard>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {demandesAffichees.map((d) => (
         <NoticeCard key={d.id} className="flex flex-col gap-3">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -224,6 +282,8 @@ function VueEtudiant() {
           )}
         </NoticeCard>
       ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -239,6 +299,7 @@ export default function DemandesServicePage() {
 
   return (
     <div>
+
       <PageHeader
         icon={FileText}
         eyebrow="Commandes de service"

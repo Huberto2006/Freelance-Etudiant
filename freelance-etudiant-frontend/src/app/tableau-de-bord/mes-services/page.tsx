@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Pencil, Wrench, X } from "lucide-react";
+import { Archive, ArchiveRestore, Plus, Pencil, Wrench, X } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import type { ServiceOffert } from "@/lib/types";
 import { formatArgent } from "@/lib/format";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { NoticeCard, Tag } from "@/components/ui/Notice";
 import { SelecteurImage } from "@/components/ui/SelecteurImage";
+import { SousNavigation } from "@/components/ui/SousNavigation";
 
 export default function MesServicesPage() {
   const [services, setServices] = useState<ServiceOffert[]>([]);
@@ -21,6 +22,9 @@ export default function MesServicesPage() {
   const [actionEnCours, setActionEnCours] = useState<string | null>(
     null,
   );
+
+  // Sous-menu actif : Actifs / Archivés
+  const [ongletServices, setOngletServices] = useState("actifs");
 
   /**
    * Recharge la liste des services.
@@ -130,7 +134,67 @@ export default function MesServicesPage() {
   }
 
   /**
+   * Archiver un service (suppression logique reversible) :
+   * il quitte le catalogue public et n'accepte plus de commande, tout en
+   * conservant l'historique des demandes de service. Confirmation
+   * demandée avant l'opération.
+   */
+  async function archiver(service: ServiceOffert) {
+    if (
+      !window.confirm(
+        `Archiver « ${service.titre} » ? Il sera retiré du catalogue et ne recevra plus de commande (réversible).`,
+      )
+    ) {
+      return;
+    }
+
+    setActionEnCours(service.id);
+    setErreur(null);
+
+    try {
+      await api.patch(`/services/${service.id}/archiver`);
+      await charger();
+    } catch (error) {
+      console.error("Erreur lors de l'archivage :", error);
+      setErreur(
+        error instanceof ApiError
+          ? error.message
+          : "Impossible d'archiver ce service.",
+      );
+    } finally {
+      setActionEnCours(null);
+    }
+  }
+
+  /**
+   * Restaurer un service archivé (redevient éditable ; la republication
+   * publique reste à la charge du propriétaire via « Republier »).
+   */
+  async function restaurer(service: ServiceOffert) {
+    setActionEnCours(service.id);
+    setErreur(null);
+
+    try {
+      await api.patch(`/services/${service.id}/restaurer`);
+      await charger();
+    } catch (error) {
+      console.error("Erreur lors de la restauration :", error);
+      setErreur(
+        error instanceof ApiError
+          ? error.message
+          : "Impossible de restaurer ce service.",
+      );
+    } finally {
+      setActionEnCours(null);
+    }
+  }
+
+  /**
    * Supprimer un service.
+   *
+   * Le backend refuse la suppression (409) si le service est lié à des
+   * demandes de service (historique à conserver) : le message d'erreur
+   * invite alors à l'archiver.
    */
   async function supprimer(service: ServiceOffert) {
     if (
@@ -250,102 +314,175 @@ export default function MesServicesPage() {
           </p>
         </NoticeCard>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {services.map((service) => {
-            const action =
-              actionEnCours === service.id;
+        <>
+          {/* Sous-menus : Actifs / Archivés */}
+          {(() => {
+            const actifs = services.filter((s) => !s.estArchive).length;
+            const archives = services.filter((s) => s.estArchive).length;
+
+            const servicesAffiches = services.filter((service) =>
+              ongletServices === "archives"
+                ? service.estArchive
+                : !service.estArchive,
+            );
 
             return (
-              <NoticeCard key={service.id}>
-                {/* Statut + prix */}
-                <div className="flex items-start justify-between gap-3">
-                  <Tag
-                    tone={
-                      service.disponible
-                        ? "rice"
-                        : "ink"
-                    }
-                  >
-                    {service.disponible
-                      ? "Disponible"
-                      : "Masqué"}
-                  </Tag>
+              <>
+                <SousNavigation
+                  onglets={[
+                    { valeur: "actifs", label: "Actifs", compte: actifs },
+                    { valeur: "archives", label: "Archivés", compte: archives },
+                  ]}
+                  actif={ongletServices}
+                  onChanger={setOngletServices}
+                />
 
-                  <span className="font-mono text-sm text-ocre-dark">
-                    {formatArgent(service.prix)}
-                  </span>
-                </div>
+                {servicesAffiches.length === 0 ? (
+                  <NoticeCard>
+                    <p className="text-sm text-ink-soft">
+                      {ongletServices === "archives"
+                        ? "Aucun service archivé."
+                        : "Aucun service actif."}
+                    </p>
+                  </NoticeCard>
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {servicesAffiches.map((service) => {
+                      const action =
+                        actionEnCours === service.id;
 
-                {/* Titre */}
-                <p className="mt-3 font-display text-lg font-medium">
-                  {service.titre}
-                </p>
+                      return (
+                        <NoticeCard key={service.id}>
+                          {/* Statut + prix */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex flex-wrap gap-1.5">
+                              <Tag
+                                tone={
+                                  service.estArchive
+                                    ? "ink"
+                                    : service.disponible
+                                      ? "rice"
+                                      : "ink"
+                                }
+                              >
+                                {service.estArchive
+                                  ? "Archivé"
+                                  : service.disponible
+                                    ? "Disponible"
+                                    : "Masqué"}
+                              </Tag>
+                            </div>
 
-                {/* Description */}
-                <p className="mt-2 text-sm text-ink-soft line-clamp-2">
-                  {service.description}
-                </p>
+                            <span className="font-mono text-sm text-ocre-dark">
+                              {formatArgent(service.prix)}
+                            </span>
+                          </div>
 
-                {/* Catégorie / délai */}
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Tag tone="ink">
-                    {service.categorie}
-                  </Tag>
+                          {/* Titre */}
+                          <p className="mt-3 font-display text-lg font-medium">
+                            {service.titre}
+                          </p>
 
-                  <span className="text-xs text-ink-soft">
-                    livré en {service.delai} jour
-                    {service.delai > 1 ? "s" : ""}
-                  </span>
-                </div>
+                          {/* Description */}
+                          <p className="mt-2 text-sm text-ink-soft line-clamp-2">
+                            {service.description}
+                          </p>
 
-                {/* Actions */}
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="gap-1.5"
-                    disabled={action}
-                    onClick={() => {
-                      setAfficherFormulaire(false);
-                      setServiceEnEdition(service);
-                    }}
-                  >
-                    <Pencil size={13} />
-                    Modifier
-                  </Button>
+                          {/* Catégorie / délai */}
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <Tag tone="ink">
+                              {service.categorie}
+                            </Tag>
 
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={action}
-                    onClick={() =>
-                      basculerDisponibilite(service)
-                    }
-                  >
-                    {action
-                      ? "..."
-                      : service.disponible
-                        ? "Masquer"
-                        : "Republier"}
-                  </Button>
+                            <span className="text-xs text-ink-soft">
+                              livré en {service.delai} jour
+                              {service.delai > 1 ? "s" : ""}
+                            </span>
+                          </div>
 
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    disabled={action}
-                    onClick={() =>
-                      supprimer(service)
-                    }
-                  >
-                    {action
-                      ? "..."
-                      : "Supprimer"}
-                  </Button>
-                </div>
-              </NoticeCard>
+                          {/* Actions */}
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {!service.estArchive && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="gap-1.5"
+                                  disabled={action}
+                                  onClick={() => {
+                                    setAfficherFormulaire(false);
+                                    setServiceEnEdition(service);
+                                  }}
+                                >
+                                  <Pencil size={13} />
+                                  Modifier
+                                </Button>
+
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  disabled={action}
+                                  onClick={() =>
+                                    basculerDisponibilite(service)
+                                  }
+                                >
+                                  {action
+                                    ? "..."
+                                    : service.disponible
+                                      ? "Masquer"
+                                      : "Republier"}
+                                </Button>
+                              </>
+                            )}
+
+                            {service.estArchive ? (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="gap-1.5"
+                                disabled={action}
+                                onClick={() => restaurer(service)}
+                              >
+                                <ArchiveRestore size={13} />
+                                Restaurer
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="gap-1.5"
+                                disabled={action}
+                                onClick={() => archiver(service)}
+                              >
+                                <Archive size={13} />
+                                Archiver
+                              </Button>
+                            )}
+
+                            {!service.estArchive && (
+                              <Button
+                                size="sm"
+                                variant="danger"
+                                disabled={action}
+                                onClick={() =>
+                                  supprimer(service)
+                                }
+                              >
+                                {action
+                                  ? "..."
+                                  : "Supprimer"}
+                              </Button>
+                            )}
+                          </div>
+                        </NoticeCard>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             );
-          })}
-        </div>
+          })()}
+        </>
       )}
     </div>
   );
