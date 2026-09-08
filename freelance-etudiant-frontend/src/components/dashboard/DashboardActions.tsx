@@ -10,7 +10,7 @@ import { NoticeCard } from "@/components/ui/Notice";
 
 const MEDEAILLONS: Record<Ton, string> = {
   ocre: "bg-ocre/10 text-ocre-dark",
-  rice: "bg-rice/10 text-rice",
+  rice: "bg-ink/[0.06] text-ink",
   brique: "bg-brique/10 text-brique",
   ink: "bg-ink/10 text-ink",
 };
@@ -54,7 +54,7 @@ export function DashboardActions({
     return (
       <NoticeCard className="flex items-center gap-3">
         <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rice/10 text-rice"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-ink"
           aria-hidden="true"
         >
           <CheckCircle2 size={18} />

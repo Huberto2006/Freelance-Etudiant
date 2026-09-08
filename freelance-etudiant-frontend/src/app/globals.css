@@ -67,7 +67,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-rice);
+  outline: 2px solid var(--color-ocre);
   outline-offset: 2px;
 }
 
@@ -121,8 +121,8 @@ body {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  border: 2px solid var(--color-rice);
-  color: var(--color-rice);
+  border: 2px solid var(--color-ocre-dark);
+  color: var(--color-ocre-dark);
   border-radius: 9999px;
   transform: rotate(-8deg);
   font-family: var(--font-mono);
@@ -133,7 +133,7 @@ body {
   content: "";
   position: absolute;
   inset: 3px;
-  border: 1px dashed var(--color-rice);
+  border: 1px dashed var(--color-ocre-dark);
   border-radius: 9999px;
   opacity: 0.55;
 }

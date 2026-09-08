@@ -9,5 +9,11 @@ export interface MessageAvecUtilisateurs {
   pieceJointeUrl?: string | null;
   pieceJointeNom?: string | null;
   estLu: boolean;
+  /**
+   * Suppression logique : le message supprimé par son expéditeur reste
+   * dans le fil (tombstone) avec un contenu masqué côté backend.
+   */
+  estSupprime?: boolean;
+  supprimeParId?: string | null;
   dateEnvoi: string;
 }

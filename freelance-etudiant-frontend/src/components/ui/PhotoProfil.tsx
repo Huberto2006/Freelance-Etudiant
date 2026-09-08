@@ -89,7 +89,7 @@ export function PhotoProfil({
           disabled={envoi}
           title="Changer la photo de profil"
           aria-label="Changer la photo de profil"
-          className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 border-rice bg-ocre/10 text-ocre-dark transition-opacity disabled:cursor-wait"
+          className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border border-ink/15 bg-ocre/10 text-ocre-dark transition-opacity disabled:cursor-wait"
         >
           {photoActuelle ? (
             // eslint-disable-next-line @next/next/no-img-element

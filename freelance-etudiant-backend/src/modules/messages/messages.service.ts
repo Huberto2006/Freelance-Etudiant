@@ -1,6 +1,7 @@
 import {
   ForbiddenException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
@@ -195,7 +196,7 @@ export class MessagesService {
       autreUtilisateurId,
     );
 
-    return this.repo
+    const conversation = await this.repo
       .createQueryBuilder('message')
 
       .leftJoinAndSelect(
@@ -234,6 +235,9 @@ export class MessagesService {
       )
 
       .getMany();
+
+    // Les messages supprimes logiquement voyagent avec un contenu masque.
+    return conversation.map((message) => this.masquerSupprime(message));
   }
 
   /**
@@ -402,8 +406,13 @@ export class MessagesService {
      *
      * Les conversations sans historique sont
      * placées après les conversations existantes.
+     *
+     * Les messages supprimés logiquement sont d'abord masqués (contenu
+     * remplacé par un tombstone « Message supprimé »).
      */
-    return messages.sort(
+    return messages
+      .map((message) => this.masquerSupprime(message))
+      .sort(
       (a, b) => {
         const dateA =
           a.dateEnvoi instanceof Date
@@ -428,14 +437,105 @@ export class MessagesService {
    * ========================================================
    * COMPTER LES MESSAGES NON LUS
    * ========================================================
+   *
+   * Les messages supprimes logiquement ne comptent pas comme non lus :
+   * leur contenu n'est plus visible.
    */
   async compterNonLus(userId: string): Promise<number> {
     return this.repo.count({
       where: {
         destinataireId: userId,
         estLu: false,
+        estSupprime: false,
       },
     });
+  }
+
+  /**
+   * ========================================================
+   * SUPPRIMER UN MESSAGE (SUPPRESSION LOGIQUE)
+   * ========================================================
+   *
+   * Permission : seul l'EXPEDITEUR d'un message peut le supprimer —
+   * un utilisateur ne peut jamais supprimer le message d'un autre
+   * utilisateur, meme en modifiant l'identifiant envoye (verifie cote
+   * backend sur le message reellement stocke).
+   *
+   * Conservation de l'historique : le message est marque estSupprime
+   * (tombstone) au lieu d'etre efface physiquement ; son contenu est
+   * masque dans toutes les lectures (voir masquerSupprime) et les deux
+   * participants voient « Message supprime ». L'operation est
+   * idempotente.
+   */
+  async supprimer(messageId: string, userId: string): Promise<void> {
+    const message = await this.repo.findOne({
+      where: { id: messageId },
+    });
+
+    if (!message) {
+      throw new NotFoundException('Message introuvable');
+    }
+
+    if (message.expediteurId !== userId) {
+      throw new ForbiddenException(
+        'Vous ne pouvez supprimer que vos propres messages',
+      );
+    }
+
+    if (message.estSupprime) {
+      // Deja supprime : rien a faire (idempotent).
+      return;
+    }
+
+    message.estSupprime = true;
+    message.supprimeParId = userId;
+    await this.repo.save(message);
+
+    // Temps reel : les deux participants mettent a jour leur fil.
+    this.realtimeGateway.emitToUser(
+      message.expediteurId,
+      'message:supprime',
+      { id: message.id },
+    );
+    this.realtimeGateway.emitToUser(
+      message.destinataireId,
+      'message:supprime',
+      { id: message.id },
+    );
+
+    // Le contenu n'etant plus visible, il ne compte plus dans le compteur
+    // de non lus du destinataire s'il n'avait pas encore ete lu.
+    if (!message.estLu) {
+      const total = await this.compterNonLus(message.destinataireId);
+      this.realtimeGateway.emitToUser(
+        message.destinataireId,
+        'message:compteur',
+        { total },
+      );
+    }
+  }
+
+  /**
+   * Masque le contenu des messages supprimes logiquement avant envoi au
+   * frontend. Le tombstone est conserve (id, date, drapeau estSupprime)
+   * afin que l'interface affiche « Message supprime » a la bonne place
+   * dans la conversation sans reveler le contenu d'origine.
+   */
+  private masquerSupprime<T extends {
+    contenu: string;
+    pieceJointeUrl?: string | null;
+    pieceJointeNom?: string | null;
+    estSupprime?: boolean;
+  }>(message: T): T {
+    if (!message.estSupprime) {
+      return message;
+    }
+    return {
+      ...message,
+      contenu: '',
+      pieceJointeUrl: null,
+      pieceJointeNom: null,
+    };
   }
 
   /**

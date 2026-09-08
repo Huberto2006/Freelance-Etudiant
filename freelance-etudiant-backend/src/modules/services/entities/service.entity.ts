@@ -43,6 +43,17 @@ export class ServiceOffert {
   @Column({ type: 'boolean', default: true })
   disponible: boolean;
 
+  /**
+   * Archivage LOGIQUE par le proprietaire : un service archive
+   * n'apparait plus dans le catalogue public et n'accepte plus de
+   * commande, mais il reste rattache a l'historique des demandes de
+   * service (demandes_service.service_id est en CASCADE : une suppression
+   * physique detruirait cet historique). Reversible via l'endpoint
+   * de restauration.
+   */
+  @Column({ name: 'est_archive', type: 'boolean', default: false })
+  estArchive: boolean;
+
   @Column({ type: 'boolean', name: 'est_modere', default: true })
   estModere: boolean;
 

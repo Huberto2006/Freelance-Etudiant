@@ -6,6 +6,7 @@ import { ClipboardList, MessageCircle, Package } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
 import type { Candidature } from "@/lib/types";
+import { SousNavigation } from "@/components/ui/SousNavigation";
 
 import { formatArgent, statutCandidatureLabel } from "@/lib/format";
 
@@ -15,6 +16,9 @@ import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
 
 export default function CandidaturesPage() {
   const [candidatures, setCandidatures] = useState<Candidature[]>([]);
+
+  // Sous-menu actif : En attente / Acceptées / Refusées
+  const [ongletCandidatures, setOngletCandidatures] = useState("toutes");
 
   const [chargement, setChargement] = useState(true);
 
@@ -117,10 +121,70 @@ export default function CandidaturesPage() {
         </NoticeCard>
       ) : (
         /* ===================================================
-           LISTE DES CANDIDATURES
+           LISTE DES CANDIDATURES (avec sous-menus par statut)
            =================================================== */
-        <div className="flex flex-col gap-4">
-          {candidatures.map((candidature) => {
+        (() => {
+          const enAttente = candidatures.filter(
+            (c) => c.statut === "en_attente",
+          ).length;
+          const acceptees = candidatures.filter(
+            (c) => c.statut === "acceptee",
+          ).length;
+          const refusees = candidatures.filter(
+            (c) => c.statut === "refusee",
+          ).length;
+
+          const candidaturesAffichees = candidatures.filter((candidature) => {
+            switch (ongletCandidatures) {
+              case "en_attente":
+                return candidature.statut === "en_attente";
+              case "acceptees":
+                return candidature.statut === "acceptee";
+              case "refusees":
+                return candidature.statut === "refusee";
+              default:
+                return true;
+            }
+          });
+
+          return (
+            <>
+              <SousNavigation
+                onglets={[
+                  {
+                    valeur: "toutes",
+                    label: "Toutes",
+                    compte: candidatures.length,
+                  },
+                  {
+                    valeur: "en_attente",
+                    label: "En attente",
+                    compte: enAttente,
+                  },
+                  {
+                    valeur: "acceptees",
+                    label: "Acceptées",
+                    compte: acceptees,
+                  },
+                  {
+                    valeur: "refusees",
+                    label: "Refusées",
+                    compte: refusees,
+                  },
+                ]}
+                actif={ongletCandidatures}
+                onChanger={setOngletCandidatures}
+              />
+
+              {candidaturesAffichees.length === 0 ? (
+                <NoticeCard>
+                  <p className="text-sm text-ink-soft">
+                    Aucune candidature dans cette catégorie.
+                  </p>
+                </NoticeCard>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {candidaturesAffichees.map((candidature) => {
             const clientId = getClientId(candidature);
 
             const clientNom = getClientNom(candidature);
@@ -216,8 +280,12 @@ export default function CandidaturesPage() {
                 )}
               </NoticeCard>
             );
-          })}
-        </div>
+                  })}
+                </div>
+              )}
+            </>
+          );
+        })()
       )}
     </div>
   );

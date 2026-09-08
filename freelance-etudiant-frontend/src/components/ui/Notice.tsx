@@ -63,6 +63,42 @@ export function Tag({
 }
 
 /**
+ * Intertitre standard des pages publiques (profil étudiant, profil client…)
+ * : une seule source de vérité pour l'échelle de texte et la marge basse,
+ * évite les h2 aux tailles/espacements disparates.
+ *
+ * À ne pas confondre avec components/home/SectionTitre.tsx, qui est
+ * l'en-tête de bloc illustré de la page d'accueil (médaillon + eyebrow).
+ */
+export function SousTitreSection({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <h2 className={clsx("mb-4 font-display text-lg font-semibold", className)}>
+      {children}
+    </h2>
+  );
+}
+
+/**
+ * Message d'état vide standard (« Aucun avis pour le moment. », etc.),
+ * réutilisé par toutes les listes potentiellement vides.
+ */
+export function MessageVide({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <p className={clsx("text-sm text-ink-soft/70", className)}>{children}</p>;
+}
+
+/**
  * En-tete de page standard : medaillon-icone + eyebrow + titre.
  * Reprend le meme rythme visuel sur tout le tableau de bord.
  */

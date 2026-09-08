@@ -46,6 +46,19 @@ export class Message {
   @Column({ type: 'boolean', name: 'est_lu', default: false })
   estLu: boolean;
 
+  /**
+   * Suppression LOGIQUE (tombstone) : le contenu reste en base afin de
+   * conserver l'ordre et l'historique de la conversation, mais il est
+   * masque a l'affichage pour les deux participants ("Message supprime").
+   * Seul l'expediteur d'un message peut le supprimer.
+   */
+  @Column({ name: 'est_supprime', type: 'boolean', default: false })
+  estSupprime: boolean;
+
+  /** Utilisateur ayant supprime le message (toujours l'expediteur). */
+  @Column({ name: 'supprime_par_id', type: 'uuid', nullable: true })
+  supprimeParId?: string | null;
+
   @Column({ name: 'piece_jointe_url', type: 'varchar', length: 300, nullable: true })
   pieceJointeUrl?: string | null;
 

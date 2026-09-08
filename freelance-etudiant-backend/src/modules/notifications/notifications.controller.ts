@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Patch } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Patch } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -35,5 +35,23 @@ export class NotificationsController {
   async marquerToutesLues(@CurrentUser() user: AuthenticatedUser) {
     await this.notificationsService.marquerToutesLues(user.id);
     return { message: 'Toutes les notifications ont ete marquees comme lues' };
+  }
+
+  /**
+   * IMPORTANT : les routes DELETE sont declarees APRES les routes
+   * parametrees existantes pour eviter tout masquage de route.
+   */
+  @Delete('tout-supprimer')
+  @ApiOperation({ summary: 'Supprimer toutes mes notifications' })
+  async supprimerToutes(@CurrentUser() user: AuthenticatedUser) {
+    await this.notificationsService.supprimerToutes(user.id);
+    return { message: 'Toutes les notifications ont ete supprimees' };
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Supprimer une de mes notifications' })
+  async supprimer(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    await this.notificationsService.supprimer(id, user.id);
+    return { message: 'Notification supprimee' };
   }
 }

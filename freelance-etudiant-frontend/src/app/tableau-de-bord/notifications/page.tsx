@@ -6,6 +6,7 @@ import {
   Bell,
   BellOff,
   CheckCheck,
+  Trash2,
 } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
@@ -17,6 +18,8 @@ import {
   NoticeCard,
   PageHeader,
 } from "@/components/ui/Notice";
+import { BoutonRetour } from "@/components/ui/BoutonRetour";
+import { SousNavigation } from "@/components/ui/SousNavigation";
 
 import { clsx } from "clsx";
 
@@ -25,6 +28,11 @@ export default function NotificationsPage() {
     notifications,
     setNotifications,
   ] = useState<NotificationItem[]>([]);
+
+  // Sous-menu actif : Toutes / Non lues / Lues
+  const [ongletActif, setOngletActif] = useState(
+    "toutes",
+  );
 
   const [chargement, setChargement] =
     useState(true);
@@ -157,10 +165,74 @@ export default function NotificationsPage() {
     }
   }
 
+  // ==========================================================
+  // SUPPRIMER UNE NOTIFICATION
+  // Permission côté backend : la suppression est toujours
+  // restreinte au destinataire connecté (un utilisateur ne
+  // peut jamais supprimer la notification d'un autre).
+  // ==========================================================
+
+  async function supprimerNotification(id: string) {
+    const anciennesNotifications = notifications;
+
+    // Suppression optimiste
+    setNotifications((prev) =>
+      prev.filter((n) => n.id !== id),
+    );
+
+    try {
+      await api.delete(`/notifications/${id}`);
+    } catch (error) {
+      console.error(
+        "Erreur lors de la suppression de la notification :",
+        error,
+      );
+      setNotifications(anciennesNotifications);
+    }
+  }
+
+  // ==========================================================
+  // TOUT SUPPRIMER
+  // ==========================================================
+
+  async function toutSupprimer() {
+    if (
+      !window.confirm(
+        "Supprimer toutes vos notifications ? Cette action est définitive.",
+      )
+    ) {
+      return;
+    }
+
+    const anciennesNotifications = notifications;
+    setNotifications([]);
+
+    try {
+      await api.delete("/notifications/tout-supprimer");
+    } catch (error) {
+      console.error(
+        "Erreur lors de la suppression globale :",
+        error,
+      );
+      setNotifications(anciennesNotifications);
+    }
+  }
+
   const nonLues =
     notifications.filter(
       (n) => !n.estLue,
     ).length;
+
+  // ==========================================================
+  // FILTRAGE PAR ONGLET (Toutes / Non lues / Lues)
+  // ==========================================================
+
+  const notificationsFiltrees =
+    ongletActif === "non_lues"
+      ? notifications.filter((n) => !n.estLue)
+      : ongletActif === "lues"
+        ? notifications.filter((n) => n.estLue)
+        : notifications;
 
   // ==========================================================
   // AFFICHAGE
@@ -168,6 +240,10 @@ export default function NotificationsPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-14">
+      <div className="mb-4">
+        <BoutonRetour repli="/tableau-de-bord" forcer />
+      </div>
+
       <div className="mb-8 flex items-center justify-between gap-4">
         <PageHeader
           icon={Bell}
@@ -176,17 +252,46 @@ export default function NotificationsPage() {
           className="mb-0"
         />
 
-        {nonLues > 0 && (
-          <Button
-            variant="secondary"
-            className="shrink-0 gap-2"
-            onClick={toutMarquerLu}
-          >
-            <CheckCheck size={15} />
-            Tout marquer lu
-          </Button>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {nonLues > 0 && (
+            <Button
+              variant="secondary"
+              className="gap-2"
+              onClick={toutMarquerLu}
+            >
+              <CheckCheck size={15} />
+              Tout marquer lu
+            </Button>
+          )}
+
+          {notifications.length > 0 && (
+            <Button
+              variant="danger"
+              className="gap-2"
+              onClick={toutSupprimer}
+            >
+              <Trash2 size={15} />
+              Tout supprimer
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Sous-menus : Toutes / Non lues / Lues */}
+
+      <SousNavigation
+        onglets={[
+          { valeur: "toutes", label: "Toutes", compte: notifications.length },
+          { valeur: "non_lues", label: "Non lues", compte: nonLues },
+          {
+            valeur: "lues",
+            label: "Lues",
+            compte: notifications.length - nonLues,
+          },
+        ]}
+        actif={ongletActif}
+        onChanger={setOngletActif}
+      />
 
       {/* Erreur */}
 
@@ -204,7 +309,7 @@ export default function NotificationsPage() {
         <p className="text-sm text-ink-soft">
           Chargement…
         </p>
-      ) : notifications.length === 0 ? (
+      ) : notificationsFiltrees.length === 0 ? (
         <NoticeCard className="flex flex-col items-center gap-3 py-10 text-center">
           <BellOff
             size={28}
@@ -212,13 +317,16 @@ export default function NotificationsPage() {
           />
 
           <p className="text-sm text-ink-soft/70">
-            Vous n&apos;avez pas encore de
-            notification.
+            {ongletActif === "toutes"
+              ? "Vous n'avez pas encore de notification."
+              : ongletActif === "non_lues"
+                ? "Aucune notification non lue."
+                : "Aucune notification lue."}
           </p>
         </NoticeCard>
       ) : (
         <div className="flex flex-col gap-3">
-          {notifications.map(
+          {notificationsFiltrees.map(
             (notification) => {
               const contenu = (
                 <NoticeCard
@@ -253,6 +361,28 @@ export default function NotificationsPage() {
                       )}
                     </p>
                   </div>
+
+                  {/* Suppression individuelle (sa propre notification) */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      // Évite le marquage comme lu / navigation déclenchés
+                      // par le conteneur parent.
+                      e.stopPropagation();
+                      e.preventDefault();
+                      void supprimerNotification(
+                        notification.id,
+                      );
+                    }}
+                    aria-label={`Supprimer : ${notification.titre}`}
+                    className="
+                      shrink-0 cursor-pointer rounded-lg p-1.5
+                      text-ink-soft/40 transition-colors
+                      hover:bg-brique/10 hover:text-brique
+                    "
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </NoticeCard>
               );
 

@@ -6,10 +6,11 @@ import { BriefcaseBusiness } from "lucide-react";
 import { api } from "@/lib/api";
 import type { ClientProfile, Mission } from "@/lib/types";
 import { formatArgent } from "@/lib/format";
-import { NoticeCard, Tag } from "@/components/ui/Notice";
+import { MessageVide, NoticeCard, SousTitreSection, Tag } from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
 import { ReactionProfil } from "@/components/ui/ReactionProfil";
 import { SignalerBouton } from "@/components/ui/SignalerBouton";
+import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 export default function ProfilClientPage({
   params,
@@ -46,7 +47,11 @@ export default function ProfilClientPage({
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-14">
+    <div className="mx-auto max-w-3xl px-5 pt-8 pb-14">
+      <div className="mb-4">
+        <BoutonRetour repli="/" />
+      </div>
+
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
         <div className="flex items-start gap-5">
           <Avatar
@@ -73,14 +78,10 @@ export default function ProfilClientPage({
         </div>
       </div>
 
-      <div>
-        <h2 className="font-display text-lg font-semibold mb-4">
-          Missions publiées
-        </h2>
+      <section>
+        <SousTitreSection>Missions publiées</SousTitreSection>
         {missions.length === 0 ? (
-          <p className="text-sm text-ink-soft/70">
-            Aucune mission publiée pour le moment.
-          </p>
+          <MessageVide>Aucune mission publiée pour le moment.</MessageVide>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {missions.map((mission) => (
@@ -99,7 +100,7 @@ export default function ProfilClientPage({
             ))}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

@@ -126,7 +126,7 @@ export function CandidaturesAExaminer({
               >
                 {competences.slice(0, 3).map((competence) => (
                   <li key={competence}>
-                    <Tag tone="rice">#{competence}</Tag>
+                    <Tag>#{competence}</Tag>
                   </li>
                 ))}
 

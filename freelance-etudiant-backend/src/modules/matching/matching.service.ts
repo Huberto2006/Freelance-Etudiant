@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Mission } from '../missions/entities/mission.entity';
 import { EtudiantProfile } from '../etudiants/entities/etudiant-profile.entity';
+import { StatutMission } from '../../common/enums/statut-mission.enum';
 
 export interface ResultatMatching {
   etudiantId: string;
@@ -68,6 +69,11 @@ export class MatchingService {
   /**
    * Calcule, pour un etudiant donne, les missions ouvertes les plus
    * compatibles avec son profil (recommandation cote etudiant).
+   *
+   * Exclusion des missions expirees (RG3) : seules les missions
+   * moderees, encore OUVERTES et dont la date limite n'est pas passee
+   * participent a la recommandation. Une mission arrivee a echeance ne
+   * doit plus etre proposee aux etudiants.
    */
   async trouverMissionsCompatibles(
     etudiantId: string,
@@ -80,10 +86,15 @@ export class MatchingService {
     }
 
     const missions = await this.missionRepo.find({
-      where: { estModere: true },
+      where: { estModere: true, statut: StatutMission.OUVERTE },
     });
 
+    const maintenant = new Date();
     return missions
+      // Memantique RG3 : date limite strictement passee = expiree.
+      .filter(
+        (mission) => new Date(mission.dateLimite) >= maintenant,
+      )
       .map((mission) => ({
         mission,
         scoreCompatibilite: this.calculerCompatibilite(mission, etudiant).scoreCompatibilite,

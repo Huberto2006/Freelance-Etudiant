@@ -11,6 +11,9 @@ import {
   CircleCheck,
   CircleX,
   Star,
+  FolderOpen,
+  Globe,
+  Image as ImageIcon,
   FileText,
   Pencil,
   X,
@@ -20,8 +23,9 @@ import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
-import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
+import { MessageVide, NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
 import { PhotoProfil } from "@/components/ui/PhotoProfil";
+import { PortfolioGalerie, estImageUrl } from "@/components/ui/Portfolio";
 import type { ClientProfile, EtudiantProfile, Utilisateur } from "@/lib/types";
 
 export default function ProfilPage() {
@@ -94,6 +98,16 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
     profil?.disponibilite ?? true,
   );
 
+  const [portfolioUrls, setPortfolioUrls] = useState<string[]>(
+    profil?.portfolioUrls ?? [],
+  );
+
+  const [nouvelleUrlPortfolio, setNouvelleUrlPortfolio] = useState("");
+
+  const [erreurUrlPortfolio, setErreurUrlPortfolio] = useState<string | null>(
+    null,
+  );
+
   const [envoi, setEnvoi] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -124,6 +138,8 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
         tarifHoraire: tarifHoraire ? Number(tarifHoraire) : undefined,
 
         disponibilite,
+
+        portfolioUrls,
       });
 
       await rafraichirProfil();
@@ -157,9 +173,41 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
     setDisponibilite(profil?.disponibilite ?? true);
 
+    setPortfolioUrls(profil?.portfolioUrls ?? []);
+
+    setNouvelleUrlPortfolio("");
+    setErreurUrlPortfolio(null);
+
     setErreur(null);
     setMessage(null);
     setGestion(false);
+  }
+
+  /** Ajoute une URL au portfolio (lien externe ou chemin d'upload relatif). */
+  function ajouterUrlPortfolio() {
+    const url = nouvelleUrlPortfolio.trim();
+    if (!url) return;
+
+    if (!/^https?:\/\//i.test(url) && !url.startsWith("/")) {
+      setErreurUrlPortfolio(
+        "Utilisez un lien complet (https://…) ou un chemin d'upload (/uploads/…).",
+      );
+      return;
+    }
+
+    if (portfolioUrls.includes(url)) {
+      setErreurUrlPortfolio("Ce lien fait déjà partie du portfolio.");
+      return;
+    }
+
+    setErreurUrlPortfolio(null);
+    setPortfolioUrls([...portfolioUrls, url]);
+    setNouvelleUrlPortfolio("");
+  }
+
+  function retirerUrlPortfolio(index: number) {
+    setErreurUrlPortfolio(null);
+    setPortfolioUrls(portfolioUrls.filter((_, i) => i !== index));
   }
 
   return (
@@ -184,7 +232,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               <p className="mt-1 text-sm text-ink-soft">{utilisateur.email}</p>
 
               <div className="mt-3">
-                <Tag tone="rice">Étudiant</Tag>
+                <Tag>Étudiant</Tag>
               </div>
             </div>
           </div>
@@ -282,7 +330,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               {profil?.competences?.length ? (
                 <div className="flex flex-wrap gap-2">
                   {profil.competences.map((competence) => (
-                    <Tag key={competence} tone="rice">
+                    <Tag key={competence}>
                       {competence}
                     </Tag>
                   ))}
@@ -408,6 +456,25 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               />
             </div>
           </NoticeCard>
+
+          {/* Portfolio */}
+
+          <NoticeCard>
+            <div className="mb-6 flex items-center gap-3">
+              <FolderOpen size={20} className="text-ocre-dark" />
+
+              <h2 className="font-display text-xl font-semibold">Portfolio</h2>
+            </div>
+
+            {(profil?.portfolioUrls ?? []).filter(Boolean).length > 0 ? (
+              <PortfolioGalerie urls={profil?.portfolioUrls ?? []} />
+            ) : (
+              <MessageVide>
+                Aucun projet dans le portfolio pour le moment. Cliquez sur
+                « Gérer mon profil » pour ajouter vos réalisations.
+              </MessageVide>
+            )}
+          </NoticeCard>
         </>
       )}
 
@@ -496,6 +563,76 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               />
             </Field>
 
+            <Field
+              label="Portfolio"
+              htmlFor="portfolioUrl"
+              hint="Lien vers un projet, un site ou une image (https://…)"
+            >
+              <div className="flex gap-2">
+                <Input
+                  id="portfolioUrl"
+                  value={nouvelleUrlPortfolio}
+                  onChange={(e) => setNouvelleUrlPortfolio(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      ajouterUrlPortfolio();
+                    }
+                  }}
+                  placeholder="https://monportfolio.com"
+                />
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={ajouterUrlPortfolio}
+                  disabled={envoi || !nouvelleUrlPortfolio.trim()}
+                >
+                  Ajouter
+                </Button>
+              </div>
+            </Field>
+
+            {erreurUrlPortfolio && (
+              <p className="text-xs text-brique">{erreurUrlPortfolio}</p>
+            )}
+
+            {portfolioUrls.length > 0 && (
+              <ul className="flex flex-col gap-2">
+                {portfolioUrls.map((url, index) => (
+                  <li
+                    key={`${url}-${index}`}
+                    className="flex items-center gap-2.5 rounded-lg border border-ink/20 bg-ink/[0.02] px-3 py-2"
+                  >
+                    <span
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-ink-soft"
+                      aria-hidden="true"
+                    >
+                      {estImageUrl(url) ? (
+                        <ImageIcon size={13} />
+                      ) : (
+                        <Globe size={13} />
+                      )}
+                    </span>
+
+                    <span className="min-w-0 flex-1 truncate text-sm text-ink">
+                      {url}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => retirerUrlPortfolio(index)}
+                      disabled={envoi}
+                      aria-label={`Retirer ${url} du portfolio`}
+                      className="shrink-0 text-ink-soft/60 transition-colors hover:text-brique disabled:opacity-50"
+                    >
+                      <X size={15} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
             <div className="grid gap-5 sm:grid-cols-2 items-end">
               <Field label="Tarif horaire (Ar)" htmlFor="tarifHoraire">
                 <Input
@@ -513,7 +650,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                   type="checkbox"
                   checked={disponibilite}
                   onChange={(e) => setDisponibilite(e.target.checked)}
-                  className="h-4 w-4 accent-rice"
+                  className="h-4 w-4 accent-ocre"
                 />
                 Disponible pour de nouvelles missions
               </label>

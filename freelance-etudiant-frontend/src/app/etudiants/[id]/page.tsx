@@ -6,11 +6,19 @@ import { Star } from "lucide-react";
 import { api } from "@/lib/api";
 import type { EtudiantProfile, Evaluation, ServiceOffert } from "@/lib/types";
 import { formatArgent, formatDateCourte } from "@/lib/format";
-import { NoticeCard, StampBadge, Tag } from "@/components/ui/Notice";
+import {
+  MessageVide,
+  NoticeCard,
+  SousTitreSection,
+  StampBadge,
+  Tag,
+} from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
+import { PortfolioGalerie } from "@/components/ui/Portfolio";
 import { ReactionProfil } from "@/components/ui/ReactionProfil";
 import { FavoriBouton } from "@/components/ui/FavoriBouton";
 import { SignalerBouton } from "@/components/ui/SignalerBouton";
+import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 export default function ProfilEtudiantPage({
   params,
@@ -49,9 +57,17 @@ export default function ProfilEtudiantPage({
     );
   }
 
+  // Le backend renvoie le profil complet, portfolioUrls inclus ; on ignore
+  // les entrées vides pour ne pas afficher de section à moitié vide.
+  const portfolioUrls = (etudiant.portfolioUrls ?? []).filter(Boolean);
+
   return (
-    <div className="mx-auto max-w-3xl px-5 py-14">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
+    <div className="mx-auto max-w-3xl px-5 pt-8 pb-14">
+      <div className="mb-4">
+        <BoutonRetour repli="/" />
+      </div>
+
+      <header className="mb-10 flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-5">
           <div className="relative shrink-0">
             <Avatar
@@ -73,7 +89,11 @@ export default function ProfilEtudiantPage({
             </p>
             <p className="text-xs text-ink-soft/70 mt-1 font-mono">
               {etudiant.nombreMissionsTerminees} projet(s) livré(s) · note
-              moyenne {Number(etudiant.noteMoyenne).toFixed(1)}/5 ·{" "}
+              moyenne {Number(etudiant.noteMoyenne).toFixed(1)}/5
+              {etudiant.tarifHoraire != null && (
+                <> · {formatArgent(etudiant.tarifHoraire)}/h</>
+              )}{" "}
+              ·{" "}
               {etudiant.disponibilite ? (
                 <span className="text-rice">disponible</span>
               ) : (
@@ -90,84 +110,107 @@ export default function ProfilEtudiantPage({
           </div>
           <SignalerBouton cibleType="utilisateur" cibleId={id} />
         </div>
-      </div>
+      </header>
 
-      {etudiant.description && (
-        <p className="text-sm text-ink-soft leading-relaxed mb-8 whitespace-pre-line">
-          {etudiant.description}
-        </p>
-      )}
-
-      {etudiant.competences.length > 0 && (
-        <div className="mb-10">
-          <h2 className="font-display text-lg font-semibold mb-3">Compétences</h2>
-          <div className="flex flex-wrap gap-2">
-            {etudiant.competences.map((c) => (
-              <Tag key={c} tone="rice">
-                {c}
-              </Tag>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {services.length > 0 && (
-        <div className="mb-10">
-          <h2 className="font-display text-lg font-semibold mb-4">
-            Services proposés
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {services.map((service) => (
-              <Link key={service.id} href={`/services/${service.id}`}>
-                <NoticeCard>
-                  <p className="font-display font-medium">{service.titre}</p>
-                  <p className="mt-2 font-mono text-sm text-ocre-dark">
-                    {formatArgent(service.prix)}
-                  </p>
-                </NoticeCard>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div>
-        <h2 className="font-display text-lg font-semibold mb-4">
-          Avis reçus ({evaluations.length})
-        </h2>
-        {evaluations.length === 0 ? (
-          <p className="text-sm text-ink-soft/70">
-            Aucun avis pour le moment.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {evaluations.map((evaluation) => (
-              <NoticeCard key={evaluation.id} className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1" aria-label={`${evaluation.note} sur 5`}>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        size={14}
-                        className={
-                          i < evaluation.note
-                            ? "fill-ocre-dark text-ocre-dark"
-                            : "text-ink/20"
-                        }
-                      />
-                    ))}
-                  </div>
-                  <p className="text-xs font-mono text-ink-soft/70">
-                    {formatDateCourte(evaluation.dateEvaluation)}
-                  </p>
-                </div>
-                {evaluation.commentaire && (
-                  <p className="text-sm text-ink-soft">{evaluation.commentaire}</p>
-                )}
-              </NoticeCard>
-            ))}
-          </div>
+      <div className="space-y-10">
+        {etudiant.description && (
+          <section>
+            <SousTitreSection>À propos</SousTitreSection>
+            <p className="text-sm text-ink-soft leading-relaxed whitespace-pre-line">
+              {etudiant.description}
+            </p>
+          </section>
         )}
+
+        {(etudiant.competences.length > 0 || etudiant.langues.length > 0) && (
+          <section className="grid gap-8 sm:grid-cols-2">
+            {etudiant.competences.length > 0 && (
+              <div>
+                <SousTitreSection>Compétences</SousTitreSection>
+                <div className="flex flex-wrap gap-2">
+                  {etudiant.competences.map((c) => (
+                    <Tag key={c}>
+                      {c}
+                    </Tag>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {etudiant.langues.length > 0 && (
+              <div>
+                <SousTitreSection>Langues</SousTitreSection>
+                <div className="flex flex-wrap gap-2">
+                  {etudiant.langues.map((l) => (
+                    <Tag key={l} tone="ocre">
+                      {l}
+                    </Tag>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {portfolioUrls.length > 0 && (
+          <section>
+            <SousTitreSection>Portfolio</SousTitreSection>
+            <PortfolioGalerie urls={portfolioUrls} />
+          </section>
+        )}
+
+        {services.length > 0 && (
+          <section>
+            <SousTitreSection>Services proposés</SousTitreSection>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {services.map((service) => (
+                <Link key={service.id} href={`/services/${service.id}`}>
+                  <NoticeCard>
+                    <p className="font-display font-medium">{service.titre}</p>
+                    <p className="mt-2 font-mono text-sm text-ocre-dark">
+                      {formatArgent(service.prix)}
+                    </p>
+                  </NoticeCard>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section>
+          <SousTitreSection>Avis reçus ({evaluations.length})</SousTitreSection>
+          {evaluations.length === 0 ? (
+            <MessageVide>Aucun avis pour le moment.</MessageVide>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {evaluations.map((evaluation) => (
+                <NoticeCard key={evaluation.id} className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1" aria-label={`${evaluation.note} sur 5`}>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          size={14}
+                          className={
+                            i < evaluation.note
+                              ? "fill-ocre-dark text-ocre-dark"
+                              : "text-ink/20"
+                          }
+                        />
+                      ))}
+                    </div>
+                    <p className="text-xs font-mono text-ink-soft/70">
+                      {formatDateCourte(evaluation.dateEvaluation)}
+                    </p>
+                  </div>
+                  {evaluation.commentaire && (
+                    <p className="text-sm text-ink-soft">{evaluation.commentaire}</p>
+                  )}
+                </NoticeCard>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

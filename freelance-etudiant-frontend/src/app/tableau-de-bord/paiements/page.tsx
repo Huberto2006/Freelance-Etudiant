@@ -26,6 +26,8 @@ import {
   PageHeader,
   Tag,
 } from "@/components/ui/Notice";
+import { BoutonRetour } from "@/components/ui/BoutonRetour";
+import { SousNavigation } from "@/components/ui/SousNavigation";
 
 // ============================================================
 // CONFIGURATION DES COULEURS DES STATUTS
@@ -367,6 +369,9 @@ export default function PaiementsPage() {
 
   const [chargement, setChargement] = useState(true);
 
+  // Sous-menu actif : À payer / En attente / Confirmés / Historique.
+  const [ongletPaiements, setOngletPaiements] = useState("historique");
+
   // ==========================================================
   // CHARGER LES DONNÉES
   // ==========================================================
@@ -502,8 +507,19 @@ export default function PaiementsPage() {
   // AFFICHAGE
   // ==========================================================
 
+  const transactionsEnAttente = transactions.filter(
+    (t) => t.statut === "en_attente",
+  );
+  const transactionsConfirmees = transactions.filter(
+    (t) => t.statut === "confirmee" || t.statut === "liberee",
+  );
+
   return (
     <div>
+      <div className="mb-4">
+        <BoutonRetour repli="/tableau-de-bord" forcer />
+      </div>
+
       <PageHeader
         icon={Wallet}
         eyebrow="Suivi financier"
@@ -527,10 +543,46 @@ export default function PaiementsPage() {
       )}
 
       {/* ======================================================
+          SOUS-MENU
+         ====================================================== */}
+
+      <SousNavigation
+        onglets={[
+          ...(utilisateur.role === "client"
+            ? [
+                {
+                  valeur: "a_payer",
+                  label: "À payer",
+                  compte: candidaturesAPayer.length,
+                },
+              ]
+            : []),
+          {
+            valeur: "en_attente",
+            label: "En attente",
+            compte: transactionsEnAttente.length,
+          },
+          {
+            valeur: "confirmes",
+            label: "Confirmés",
+            compte: transactionsConfirmees.length,
+          },
+          {
+            valeur: "historique",
+            label: "Historique",
+            compte: transactions.length,
+          },
+        ]}
+        actif={ongletPaiements}
+        onChanger={setOngletPaiements}
+      />
+
+      {/* ======================================================
           MISSIONS À PAYER POUR LE CLIENT
          ====================================================== */}
 
       {utilisateur.role === "client" &&
+        ongletPaiements === "a_payer" &&
         candidaturesAPayer.length > 0 && (
           <div className="mb-6">
             <h2 className="mb-3 font-display text-lg font-semibold">
@@ -586,34 +638,69 @@ export default function PaiementsPage() {
           </div>
         )}
 
+      {utilisateur.role === "client" &&
+        ongletPaiements === "a_payer" &&
+        candidaturesAPayer.length === 0 && (
+          <NoticeCard className="mb-6">
+            <p className="text-sm text-ink-soft/70">
+              Aucune mission en attente de paiement pour le moment.
+            </p>
+          </NoticeCard>
+        )}
+
       {/* ======================================================
-          HISTORIQUE DES TRANSACTIONS
+          TRANSACTIONS (selon le sous-menu actif)
          ====================================================== */}
 
-      <h2 className="mb-3 font-display text-lg font-semibold">
-        Historique
-      </h2>
+      {ongletPaiements !== "a_payer" && (
+        <>
+          <h2 className="mb-3 font-display text-lg font-semibold">
+            {ongletPaiements === "en_attente"
+              ? "En attente"
+              : ongletPaiements === "confirmes"
+                ? "Confirmés"
+                : "Historique"}
+          </h2>
 
-      {chargement ? (
-        <p className="text-sm text-ink-soft">
-          Chargement…
-        </p>
-      ) : transactions.length === 0 ? (
-        <NoticeCard>
-          <p className="text-sm text-ink-soft/70">
-            Aucun paiement pour le moment.
-          </p>
-        </NoticeCard>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {transactions.map((transaction) => (
-            <CarteTransaction
-              key={transaction.id}
-              transaction={transaction}
-              onVerifie={recharger}
-            />
-          ))}
-        </div>
+          {(() => {
+            const transactionsAffichees =
+              ongletPaiements === "en_attente"
+                ? transactionsEnAttente
+                : ongletPaiements === "confirmes"
+                  ? transactionsConfirmees
+                  : transactions;
+
+            if (chargement) {
+              return (
+                <p className="text-sm text-ink-soft">
+                  Chargement…
+                </p>
+              );
+            }
+
+            if (transactionsAffichees.length === 0) {
+              return (
+                <NoticeCard>
+                  <p className="text-sm text-ink-soft/70">
+                    Aucun paiement dans cette catégorie.
+                  </p>
+                </NoticeCard>
+              );
+            }
+
+            return (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {transactionsAffichees.map((transaction) => (
+                  <CarteTransaction
+                    key={transaction.id}
+                    transaction={transaction}
+                    onVerifie={recharger}
+                  />
+                ))}
+              </div>
+            );
+          })()}
+        </>
       )}
     </div>
   );

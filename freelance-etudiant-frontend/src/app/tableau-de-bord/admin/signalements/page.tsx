@@ -8,6 +8,7 @@ import { formatDateCourte, statutSignalementLabel } from "@/lib/format";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Field";
 import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
+import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 const toneParStatut: Record<string, "ocre" | "rice" | "brique" | "ink"> = {
   ouvert: "brique",
@@ -58,6 +59,10 @@ export default function AdminSignalementsPage() {
 
   return (
     <div>
+      <div className="mb-4">
+        <BoutonRetour repli="/tableau-de-bord/admin" forcer />
+      </div>
+
       <PageHeader icon={Flag} eyebrow="Administration" title="Signalements" />
       {erreur && <p className="text-sm text-brique mb-4">{erreur}</p>}
 

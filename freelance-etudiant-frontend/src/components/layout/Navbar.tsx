@@ -36,21 +36,11 @@ type NavbarProps = {
   /**
    * true lorsque le Navbar est utilisé
    * avec la Sidebar du dashboard.
-   *
-   * false pour les pages sans Sidebar.
-   *
-   * C'est le LAYOUT qui décide de cette
-   * valeur, jamais le Navbar lui-même.
    */
   hasSidebar?: boolean;
 
   /**
-   * Callback déclenché par le bouton
-   * hamburger (mobile) lorsque hasSidebar
-   * est true, pour ouvrir le drawer mobile
-   * de la Sidebar.
-   *
-   * Ignoré si hasSidebar est false.
+   * Ouvre la Sidebar mobile.
    */
   onMenuClick?: () => void;
 };
@@ -88,32 +78,19 @@ export function Navbar({
   /*
    * ==========================================================
    * PARAMÈTRES
-   *
-   * On récupère l'entrée existante dans
-   * navigationParRole afin de ne pas
-   * inventer une nouvelle route.
    * ==========================================================
    */
 
   const itemParametres =
     groupes.find(
       (item) =>
-        item.label === "Paramètres",
+        item.label ===
+        "Paramètres",
     );
 
-  /*
-   * Les liens du menu Paramètres.
-   *
-   * La structure actuelle utilise "liens"
-   * pour les éléments du groupe Paramètres.
-   */
   const liensParametres =
     itemParametres?.liens ?? [];
 
-  /*
-   * Si Paramètres possède directement
-   * un href sans sous-liens.
-   */
   const hrefParametres =
     itemParametres?.href;
 
@@ -200,8 +177,8 @@ export function Navbar({
       ref={navbarRef}
       className={`
         fixed
-        right-0
         top-0
+        right-0
         z-50
         h-16
         border-b
@@ -229,10 +206,8 @@ export function Navbar({
         "
       >
         {/* ====================================================
-            SIDEBAR PRÉSENTE
-            → bouton hamburger (mobile uniquement),
-              la Sidebar reste responsable de l'identité.
-        ==================================================== */}
+            MENU MOBILE
+            ==================================================== */}
 
         {hasSidebar && (
           <button
@@ -244,6 +219,7 @@ export function Navbar({
               flex
               h-9
               w-9
+              shrink-0
               items-center
               justify-center
               rounded-lg
@@ -259,17 +235,12 @@ export function Navbar({
         )}
 
         {/* ====================================================
-            SIDEBAR ABSENTE
-            → LOGO KIANJA, visible à toutes les tailles d'écran.
-            → réutilise le motif déjà utilisé par le projet
-              (badge "K" + wordmark), tel que défini dans
-              Sidebar.tsx, pour ne pas dupliquer l'identité
-              visuelle.
-        ==================================================== */}
+            LOGO
+            ==================================================== */}
 
         {!hasSidebar && (
           <Link
-            href="/"
+            href={utilisateur ? "/tableau-de-bord" : "/"}
             className="
               flex
               items-center
@@ -287,13 +258,11 @@ export function Navbar({
                 items-center
                 justify-center
                 rounded-full
-                border-2
-                border-rice
                 bg-ink
                 font-mono
                 text-[10px]
                 font-bold
-                text-rice
+                text-paper-light
                 sm:h-9
                 sm:w-9
                 sm:text-xs
@@ -319,24 +288,25 @@ export function Navbar({
 
         {/* ====================================================
             ESPACE
-        ==================================================== */}
+            ==================================================== */}
 
         <div className="flex-1" />
 
         {/* ====================================================
             ACTIONS TOPBAR
-        ==================================================== */}
+            ==================================================== */}
 
         <div
           className="
             flex
+            min-w-0
             items-center
             gap-1
           "
         >
           {/* ==================================================
               RECHERCHE DESKTOP
-          ================================================== */}
+              ================================================== */}
 
           <form
             action="/services"
@@ -386,9 +356,9 @@ export function Navbar({
                   outline-none
                   transition
                   placeholder:text-ink-soft/50
-                  focus:border-rice
+                  focus:border-ocre
                   focus:ring-2
-                  focus:ring-rice/10
+                  focus:ring-ocre/15
                 "
               />
             </div>
@@ -396,7 +366,7 @@ export function Navbar({
 
           {/* ==================================================
               RECHERCHE MOBILE
-          ================================================== */}
+              ================================================== */}
 
           <Link
             href="/services"
@@ -404,6 +374,7 @@ export function Navbar({
               flex
               h-9
               w-9
+              shrink-0
               items-center
               justify-center
               rounded-lg
@@ -421,14 +392,14 @@ export function Navbar({
 
           {/* ==================================================
               UTILISATEUR CONNECTÉ
-          ================================================== */}
+              ================================================== */}
 
           {!chargement &&
             utilisateur && (
               <>
                 {/* ==============================================
                     SITE / ACCUEIL
-                ============================================== */}
+                    ============================================== */}
 
                 <Link
                   href="/"
@@ -438,6 +409,7 @@ export function Navbar({
                     flex
                     h-9
                     w-9
+                    shrink-0
                     items-center
                     justify-center
                     rounded-lg
@@ -455,13 +427,13 @@ export function Navbar({
 
                 {/* ==============================================
                     MESSAGES
-                ============================================== */}
+                    ============================================== */}
 
                 <MessagesLink />
 
                 {/* ==============================================
                     NOTIFICATIONS
-                ============================================== */}
+                    ============================================== */}
 
                 <NotificationBell />
               </>
@@ -469,7 +441,7 @@ export function Navbar({
 
           {/* ====================================================
               SÉPARATEUR
-          ==================================================== */}
+              ==================================================== */}
 
           {utilisateur && (
             <div
@@ -477,6 +449,7 @@ export function Navbar({
                 mx-2
                 h-6
                 w-px
+                shrink-0
                 bg-ink/10
               "
               aria-hidden="true"
@@ -485,10 +458,10 @@ export function Navbar({
 
           {/* ====================================================
               PROFIL
-          ==================================================== */}
+              ==================================================== */}
 
           {chargement ? null : utilisateur ? (
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 type="button"
                 onClick={() => {
@@ -516,7 +489,7 @@ export function Navbar({
               >
                 {/* ==================================================
                     AVATAR
-                ================================================== */}
+                    ================================================== */}
 
                 <div
                   className="
@@ -558,7 +531,7 @@ export function Navbar({
 
                 {/* ==================================================
                     NOM
-                ================================================== */}
+                    ================================================== */}
 
                 <div
                   className="
@@ -614,7 +587,7 @@ export function Navbar({
 
               {/* ==================================================
                   MENU PROFIL
-              ================================================== */}
+                  ================================================== */}
 
               {menuProfilOuvert && (
                 <div
@@ -636,7 +609,7 @@ export function Navbar({
                 >
                   {/* ==============================================
                       INFORMATIONS UTILISATEUR
-                  ============================================== */}
+                      ============================================== */}
 
                   <div
                     className="
@@ -685,11 +658,13 @@ export function Navbar({
 
                   {/* ==============================================
                       MON PROFIL
-                  ============================================== */}
+                      ============================================== */}
 
                   <Link
                     href="/tableau-de-bord/profil"
-                    onClick={closeMenus}
+                    onClick={
+                      closeMenus
+                    }
                     role="menuitem"
                     className="
                       flex
@@ -713,7 +688,7 @@ export function Navbar({
 
                   {/* ==============================================
                       PARAMÈTRES
-                  ============================================== */}
+                      ============================================== */}
 
                   {liensParametres.length >
                     0 ? (
@@ -755,7 +730,9 @@ export function Navbar({
                             />
 
                             <span>
-                              {link.label}
+                              {
+                                link.label
+                              }
                             </span>
                           </Link>
                         );
@@ -797,7 +774,7 @@ export function Navbar({
 
                   {/* ==============================================
                       APPARENCE
-                  ============================================== */}
+                      ============================================== */}
 
                   <div
                     className="
@@ -843,7 +820,7 @@ export function Navbar({
 
                   {/* ==============================================
                       DÉCONNEXION
-                  ============================================== */}
+                      ============================================== */}
 
                   <button
                     type="button"
@@ -879,7 +856,7 @@ export function Navbar({
           ) : (
             /* ==================================================
                UTILISATEUR NON CONNECTÉ
-            ================================================== */
+               ================================================== */
 
             <div
               className="

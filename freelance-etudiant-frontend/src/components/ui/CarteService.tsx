@@ -57,7 +57,7 @@ export function CarteService({ service }: { service: ServiceOffert }) {
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
           />
         ) : (
-          <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-ocre/15 via-paper-light to-rice/10">
+          <span className="flex h-full w-full items-center justify-center bg-paper">
             <VisuelCategorie categorie={service.categorie} />
           </span>
         )}

@@ -179,7 +179,7 @@ function CorpsRecommandations({
             <Tag tone="ocre">{libelleCategorie(mission.categorie)}</Tag>
 
             <span
-              className="font-mono text-xs font-semibold text-rice"
+              className="font-mono text-xs font-semibold text-ocre-dark"
               title="Score de correspondance calculé par le système de matching"
             >
               {scoreCompatibilite} % de correspondance
@@ -198,7 +198,7 @@ function CorpsRecommandations({
             {mission.competencesRequises.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {mission.competencesRequises.slice(0, 3).map((competence) => (
-                  <Tag key={competence} tone="rice">
+                  <Tag key={competence}>
                     #{competence}
                   </Tag>
                 ))}

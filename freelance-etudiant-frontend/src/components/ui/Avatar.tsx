@@ -36,7 +36,7 @@ export function Avatar({
   const contenu = (
     <span
       className={clsx(
-        "flex shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-rice bg-ocre/10 text-ocre-dark",
+        "flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-ink/15 bg-ocre/10 text-ocre-dark",
         className,
       )}
       style={{ width: size, height: size }}

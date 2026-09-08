@@ -32,6 +32,7 @@ export const statutMissionLabel: Record<string, string> = {
   en_cours: "En cours",
   terminee: "Terminée",
   fermee: "Fermée",
+  expiree: "Expirée",
 };
 
 export const statutCandidatureLabel: Record<string, string> = {

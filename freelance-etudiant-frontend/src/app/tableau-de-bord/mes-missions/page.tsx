@@ -6,6 +6,7 @@ import { BriefcaseBusiness, Pencil, Plus, X } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
 import type { Candidature, Mission } from "@/lib/types";
+import { SousNavigation } from "@/components/ui/SousNavigation";
 
 import {
   formatArgent,
@@ -27,6 +28,9 @@ export default function MesMissionsPage() {
   const [missionEnEdition, setMissionEnEdition] = useState<Mission | null>(null);
 
   const [missionOuverte, setMissionOuverte] = useState<string | null>(null);
+
+  // Sous-menu actif : Toutes / Ouvertes / En cours / Terminées / Expirées
+  const [ongletMissions, setOngletMissions] = useState("toutes");
 
   /**
    * Recharge les missions après une action.
@@ -92,10 +96,6 @@ export default function MesMissionsPage() {
 
   return (
     <div>
-      {/* =====================================================
-          EN-TÊTE
-          ===================================================== */}
-
       <div className="mb-8 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <span
@@ -186,74 +186,138 @@ export default function MesMissionsPage() {
           </p>
         </NoticeCard>
       ) : (
-        <div className="flex flex-col gap-4">
-          {missions.map((mission) => (
-            <NoticeCard key={mission.id}>
-              {/* =================================================
-                  INFORMATIONS MISSION
-                  ================================================= */}
+        <>
+          {(() => {
+            const estExpiree = (mission: Mission) =>
+              mission.statut === "expiree" ||
+              (mission.statut === "ouverte" &&
+                new Date(mission.dateLimite) < new Date());
 
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="mb-2 flex items-center gap-2">
-                    <Tag tone="rice">{statutMissionLabel[mission.statut]}</Tag>
+            const ouvertes = missions.filter(
+              (m) => m.statut === "ouverte" && !estExpiree(m),
+            ).length;
+            const enCours = missions.filter((m) => m.statut === "en_cours").length;
+            const terminees = missions.filter((m) => m.statut === "terminee").length;
+            const expirees = missions.filter(estExpiree).length;
 
-                    <Tag tone="ink">{mission.categorie}</Tag>
+            const missionsAffichees = missions.filter((mission) => {
+              switch (ongletMissions) {
+                case "ouvertes":
+                  return mission.statut === "ouverte" && !estExpiree(mission);
+                case "en_cours":
+                  return mission.statut === "en_cours";
+                case "terminees":
+                  return mission.statut === "terminee";
+                case "expirees":
+                  return estExpiree(mission);
+                default:
+                  return true;
+              }
+            });
+
+            return (
+              <>
+                <SousNavigation
+                  onglets={[
+                    { valeur: "toutes", label: "Toutes", compte: missions.length },
+                    { valeur: "ouvertes", label: "Ouvertes", compte: ouvertes },
+                    { valeur: "en_cours", label: "En cours", compte: enCours },
+                    { valeur: "terminees", label: "Terminées", compte: terminees },
+                    { valeur: "expirees", label: "Expirées", compte: expirees },
+                  ]}
+                  actif={ongletMissions}
+                  onChanger={setOngletMissions}
+                />
+
+                {missionsAffichees.length === 0 ? (
+                  <NoticeCard>
+                    <p className="text-sm text-ink-soft">
+                      Aucune mission dans cette catégorie.
+                    </p>
+                  </NoticeCard>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {missionsAffichees.map((mission) => (
+                      <NoticeCard key={mission.id}>
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <div className="mb-2 flex items-center gap-2">
+                              <Tag
+                                tone={
+                                  estExpiree(mission) ? "brique" : "rice"
+                                }
+                              >
+                                {statutMissionLabel[mission.statut]}
+                              </Tag>
+
+                              <Tag tone="ink">{mission.categorie}</Tag>
+                            </div>
+
+                            <p className="font-display text-lg font-medium">
+                              {mission.titre}
+                            </p>
+
+                            <p className="mt-1 text-xs text-ink-soft/70">
+                              {mission.candidatures?.length ?? 0} candidature(s)
+                              reçue(s)
+                              {" · "}
+                              budget {formatArgent(mission.budget)}
+                              {estExpiree(mission) &&
+                              mission.statut === "ouverte"
+                                ? " · échéance dépassée"
+                                : ""}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="gap-1.5"
+                              onClick={() => {
+                                setAfficherFormulaire(false);
+                                setMissionEnEdition(mission);
+                              }}
+                            >
+                              <Pencil size={13} />
+                              Modifier
+                            </Button>
+
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() =>
+                                setMissionOuverte(
+                                  missionOuverte === mission.id
+                                    ? null
+                                    : mission.id,
+                                )
+                              }
+                            >
+                              {missionOuverte === mission.id
+                                ? "Masquer les candidatures"
+                                : "Voir les candidatures"}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* =============================================
+                            CANDIDATURES
+                            ============================================= */}
+
+                        {missionOuverte === mission.id && (
+                          <div className="mt-5 border-t border-ink/15 pt-5">
+                            <CandidaturesMission missionId={mission.id} />
+                          </div>
+                        )}
+                      </NoticeCard>
+                    ))}
                   </div>
-
-                  <p className="font-display text-lg font-medium">
-                    {mission.titre}
-                  </p>
-
-                  <p className="mt-1 text-xs text-ink-soft/70">
-                    {mission.candidatures?.length ?? 0} candidature(s) reçue(s)
-                    {" · "}
-                    budget {formatArgent(mission.budget)}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="gap-1.5"
-                    onClick={() => {
-                      setAfficherFormulaire(false);
-                      setMissionEnEdition(mission);
-                    }}
-                  >
-                    <Pencil size={13} />
-                    Modifier
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      setMissionOuverte(
-                        missionOuverte === mission.id ? null : mission.id,
-                      )
-                    }
-                  >
-                    {missionOuverte === mission.id
-                      ? "Masquer les candidatures"
-                      : "Voir les candidatures"}
-                  </Button>
-                </div>
-              </div>
-
-              {/* =================================================
-                  CANDIDATURES
-                  ================================================= */}
-
-              {missionOuverte === mission.id && (
-                <div className="mt-5 border-t border-ink/15 pt-5">
-                  <CandidaturesMission missionId={mission.id} />
-                </div>
-              )}
-            </NoticeCard>
-          ))}
-        </div>
+                )}
+              </>
+            );
+          })()}
+        </>
       )}
     </div>
   );

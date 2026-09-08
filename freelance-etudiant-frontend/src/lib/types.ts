@@ -9,7 +9,8 @@
     | "ouverte"
     | "en_cours"
     | "terminee"
-    | "fermee";
+    | "fermee"
+    | "expiree";
 
   export type StatutLivraison =
     | "en_attente"
@@ -104,6 +105,13 @@
     imagesUrls: string[];
 
     disponible: boolean;
+
+    /**
+     * Service archivé par son propriétaire (suppression logique) :
+     * absent du catalogue public et non commandable, mais conservé
+     * pour l'historique des demandes de service.
+     */
+    estArchive?: boolean;
 
     etudiantId: string;
 
@@ -227,7 +235,8 @@
     | "paiement_initie"
     | "paiement_confirme"
     | "paiement_libere"
-    | "nouvelle_reaction";
+    | "nouvelle_reaction"
+    | "mission_expiree";
 
   export interface NotificationItem {
     id: string;

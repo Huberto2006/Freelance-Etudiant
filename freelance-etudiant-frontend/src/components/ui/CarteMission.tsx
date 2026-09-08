@@ -57,7 +57,7 @@ export function CarteMission({ mission }: { mission: Mission }) {
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
           />
         ) : (
-          <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-ocre/15 via-paper-light to-rice/10">
+          <span className="flex h-full w-full items-center justify-center bg-paper">
             <VisuelCategorie categorie={mission.categorie} />
           </span>
         )}
@@ -90,7 +90,7 @@ export function CarteMission({ mission }: { mission: Mission }) {
         {mission.competencesRequises.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {mission.competencesRequises.slice(0, 3).map((competence) => (
-              <Tag key={competence} tone="rice">
+              <Tag key={competence}>
                 #{competence}
               </Tag>
             ))}

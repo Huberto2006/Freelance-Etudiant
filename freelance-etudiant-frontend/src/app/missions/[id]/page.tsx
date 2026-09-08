@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { BoutonsReaction } from "@/components/ui/BoutonsReaction";
 import { SectionCommentaires } from "@/components/ui/SectionCommentaires";
+import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 export default function MissionDetailPage({
   params,
@@ -78,7 +79,11 @@ export default function MissionDetailPage({
   const estProprietaire = utilisateur?.id === mission.clientId;
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-14">
+
+    <div className="mx-auto max-w-3xl px-5 pt-8 pb-14">
+      <div className="mb-4">
+              <BoutonRetour repli="/missions" />
+            </div>
       {mission.imageUrl && (
         <div className="mb-6 overflow-hidden rounded-2xl border border-ink/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -91,7 +96,7 @@ export default function MissionDetailPage({
       )}
 
       <div className="flex items-center gap-3 mb-4">
-        <Tag tone="rice">{mission.categorie}</Tag>
+        <Tag tone="ocre">{mission.categorie}</Tag>
         <Tag tone="ink">{statutMissionLabel[mission.statut]}</Tag>
       </div>
 

@@ -74,7 +74,7 @@ export function SectionAvantages() {
       </div>
 
       {/* Appel a l'action final */}
-      <div className="mt-10 rounded-xl border border-ink/15 bg-gradient-to-br from-rice/10 via-paper-light to-ocre/15 px-6 py-10 text-center sm:px-10">
+      <div className="mt-10 rounded-xl border border-ink/15 bg-paper px-6 py-10 text-center sm:px-10">
         <h3 className="font-display text-2xl font-semibold sm:text-3xl">
           Prêt à démarrer votre projet ?
         </h3>

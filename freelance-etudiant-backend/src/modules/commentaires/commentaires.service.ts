@@ -8,6 +8,7 @@ import { MissionsService } from '../missions/missions.service';
 import { ServicesService } from '../services/services.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { CommentairesGateway } from './commentaires.gateway';
 
 @Injectable()
 export class CommentairesService {
@@ -17,7 +18,8 @@ export class CommentairesService {
     private readonly missionsService: MissionsService,
     private readonly servicesService: ServicesService,
     private readonly notificationsService: NotificationsService,
-  ) {}
+    private readonly commentairesGateway: CommentairesGateway,
+  ) { }
 
   /**
    * Resout le proprietaire (destinataire de notification) d'une mission
@@ -36,13 +38,17 @@ export class CommentairesService {
     return { proprietaireId: service.etudiantId, titre: service.titre };
   }
 
-  async creer(auteurId: string, dto: CreerCommentaireDto): Promise<Commentaire> {
+  async creer(
+    auteurId: string,
+    dto: CreerCommentaireDto,
+  ): Promise<Commentaire> {
     const commentaire = this.repo.create({
       contenu: dto.contenu.trim(),
       cibleType: dto.cibleType,
       cibleId: dto.cibleId,
       auteurId,
     });
+
     const saved = await this.repo.save(commentaire);
 
     // Notification au proprietaire du contenu (sauf s'il commente lui-meme).
@@ -50,8 +56,13 @@ export class CommentairesService {
       dto.cibleType,
       dto.cibleId,
     );
+
     if (proprietaireId !== auteurId) {
-      const chemin = dto.cibleType === TypeCibleContenu.MISSION ? 'missions' : 'services';
+      const chemin =
+        dto.cibleType === TypeCibleContenu.MISSION
+          ? 'missions'
+          : 'services';
+
       await this.notificationsService.creer({
         destinataireId: proprietaireId,
         type: TypeNotification.NOUVEAU_COMMENTAIRE,
@@ -61,7 +72,13 @@ export class CommentairesService {
       });
     }
 
-    return this.findOne(saved.id);
+    const commentaireComplet = await this.findOne(saved.id);
+
+    this.commentairesGateway.diffuserNouveauCommentaire(
+      commentaireComplet,
+    );
+
+    return commentaireComplet;
   }
 
   async findOne(id: string): Promise<Commentaire> {
@@ -101,21 +118,46 @@ export class CommentairesService {
       );
     }
     commentaire.contenu = dto.contenu.trim();
+
     await this.repo.save(commentaire);
-    return this.findOne(id);
+
+    const commentaireModifie = await this.findOne(id);
+
+    this.commentairesGateway.diffuserCommentaireModifie(
+      commentaireModifie,
+    );
+
+    return commentaireModifie;
   }
 
   /**
    * RGc2 : seul l'auteur (ou un administrateur, pour la moderation) peut
    * supprimer un commentaire.
    */
-  async supprimer(id: string, utilisateurId: string, estAdmin: boolean): Promise<void> {
+  async supprimer(
+    id: string,
+    utilisateurId: string,
+    estAdmin: boolean,
+  ): Promise<void> {
     const commentaire = await this.findOne(id);
-    if (commentaire.auteurId !== utilisateurId && !estAdmin) {
+
+    if (
+      commentaire.auteurId !== utilisateurId &&
+      !estAdmin
+    ) {
       throw new ForbiddenException(
         'Vous ne pouvez supprimer que vos propres commentaires',
       );
     }
+
+    const cible = {
+      id: commentaire.id,
+      cibleType: commentaire.cibleType,
+      cibleId: commentaire.cibleId,
+    };
+
     await this.repo.remove(commentaire);
+
+    this.commentairesGateway.diffuserCommentaireSupprime(cible);
   }
 }
