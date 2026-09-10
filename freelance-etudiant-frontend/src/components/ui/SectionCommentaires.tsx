@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MessageSquare, Pencil, Trash2 } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
@@ -49,14 +49,26 @@ export function SectionCommentaires({
   const [idEnEdition, setIdEnEdition] = useState<string | null>(null);
   const [contenuEdition, setContenuEdition] = useState("");
 
+  /*
+   * Ref du formulaire de nouveau commentaire : permet a `Enter` de
+   * declencher exactement le meme chemin de soumission que le clic
+   * sur "Publier" (form.requestSubmit()), sans dupliquer la logique.
+   */
+  const formCommentaireRef = useRef<HTMLFormElement>(null);
+
+  /*
+   * Verrous synchrones anti-double-envoi : plus fiables qu'un test
+   * sur le seul state React en cas d'appuis tres rapproches sur
+   * Enter (le state ne se met a jour qu'au prochain rendu).
+   */
+  const envoiEnCoursRef = useRef(false);
+  const editionEnCoursRef = useRef(false);
+
   /**
    * Charge les commentaires existants via REST.
    */
   useEffect(() => {
     let actif = true;
-
-    setChargement(true);
-    setErreur(null);
 
     api
       .get<Commentaire[]>(
@@ -210,8 +222,16 @@ export function SectionCommentaires({
   async function envoyer(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!nouveauContenu.trim()) return;
+    /*
+     * `nouveauContenu` garde tous les retours a la ligne saisis
+     * (Shift+Enter) pendant la redaction ; seul `.trim()` au moment
+     * de l'envoi retire les espaces/retours a la ligne en debut/fin.
+     */
+    const contenu = nouveauContenu.trim();
 
+    if (!contenu || envoiEnCoursRef.current) return;
+
+    envoiEnCoursRef.current = true;
     setEnvoi(true);
     setErreur(null);
 
@@ -219,7 +239,7 @@ export function SectionCommentaires({
       const commentaire = await api.post<Commentaire>(
         "/commentaires",
         {
-          contenu: nouveauContenu.trim(),
+          contenu,
           cibleType,
           cibleId,
         },
@@ -241,16 +261,39 @@ export function SectionCommentaires({
         return [...prev, commentaire];
       });
 
+      // Le champ n'est vide qu'apres confirmation du succes de l'envoi.
       setNouveauContenu("");
     } catch (err) {
+      // Le texte saisi n'est pas efface : il reste dans le champ
+      // pour permettre de reessayer sans tout retaper.
       setErreur(
         err instanceof ApiError
           ? err.message
           : "Erreur lors de l'envoi",
       );
     } finally {
+      envoiEnCoursRef.current = false;
       setEnvoi(false);
     }
+  }
+
+  /*
+   * Clavier du champ "nouveau commentaire" :
+   * - Enter seul (hors composition IME) -> envoie, jamais de saut de
+   *   ligne ;
+   * - Shift+Enter -> comportement natif du textarea (nouvelle ligne),
+   *   n'envoie jamais.
+   * Passe par form.requestSubmit() pour reutiliser exactement le
+   * meme chemin que le bouton "Publier".
+   */
+  function gererToucheNouveauCommentaire(
+    e: React.KeyboardEvent<HTMLTextAreaElement>,
+  ) {
+    if (e.key !== "Enter") return;
+    if (e.shiftKey || e.nativeEvent.isComposing) return;
+
+    e.preventDefault();
+    formCommentaireRef.current?.requestSubmit();
   }
 
   /**
@@ -266,15 +309,18 @@ export function SectionCommentaires({
    * Enregistrer une modification.
    */
   async function enregistrerEdition(id: string) {
-    if (!contenuEdition.trim()) return;
+    const contenu = contenuEdition.trim();
 
+    if (!contenu || editionEnCoursRef.current) return;
+
+    editionEnCoursRef.current = true;
     setErreur(null);
 
     try {
       const maj = await api.patch<Commentaire>(
         `/commentaires/${id}`,
         {
-          contenu: contenuEdition.trim(),
+          contenu,
         },
       );
 
@@ -291,12 +337,32 @@ export function SectionCommentaires({
       setIdEnEdition(null);
       setContenuEdition("");
     } catch (err) {
+      // Le texte en cours d'edition n'est pas efface en cas
+      // d'erreur, pour permettre de reessayer sans tout retaper.
       setErreur(
         err instanceof ApiError
           ? err.message
           : "Erreur lors de la modification",
       );
+    } finally {
+      editionEnCoursRef.current = false;
     }
+  }
+
+  /*
+   * Clavier du champ d'edition d'un commentaire existant : meme
+   * logique que le champ "nouveau commentaire" (pas de <form> ici,
+   * on appelle donc directement enregistrerEdition).
+   */
+  function gererToucheEdition(
+    id: string,
+    e: React.KeyboardEvent<HTMLTextAreaElement>,
+  ) {
+    if (e.key !== "Enter") return;
+    if (e.shiftKey || e.nativeEvent.isComposing) return;
+
+    e.preventDefault();
+    void enregistrerEdition(id);
   }
 
   /**
@@ -341,6 +407,7 @@ export function SectionCommentaires({
 
       {utilisateur && (
         <form
+          ref={formCommentaireRef}
           onSubmit={envoyer}
           className="mb-6 flex flex-col gap-2"
         >
@@ -350,7 +417,8 @@ export function SectionCommentaires({
             onChange={(e) =>
               setNouveauContenu(e.target.value)
             }
-            placeholder="Ajouter un commentaire…"
+            onKeyDown={gererToucheNouveauCommentaire}
+            placeholder="Ajouter un commentaire… (Entrée pour envoyer, Maj+Entrée pour une nouvelle ligne)"
             disabled={envoi}
           />
 
@@ -437,6 +505,12 @@ export function SectionCommentaires({
                         onChange={(e) =>
                           setContenuEdition(
                             e.target.value,
+                          )
+                        }
+                        onKeyDown={(e) =>
+                          gererToucheEdition(
+                            commentaire.id,
+                            e,
                           )
                         }
                       />

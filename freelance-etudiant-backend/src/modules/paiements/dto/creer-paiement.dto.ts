@@ -2,6 +2,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   Matches,
   Min,
@@ -11,10 +12,23 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { MethodePaiement } from '../../../common/enums/statut-transaction.enum';
 
 export class CreerPaiementDto {
-  @ApiProperty({ example: 75000 })
+  /**
+   * SOURCE DE VERITE FINANCIERE : le montant reel facture est TOUJOURS
+   * `candidature.prixPropose`, recalcule cote backend depuis la candidature
+   * acceptee. Ce champ n'est plus utilise pour fixer le montant : s'il est
+   * fourni, il doit correspondre au prix convenu (sinon 400) ; s'il est
+   * absent, le backend utilise le prix convenu. Le frontend ne peut donc
+   * jamais declarer un montant superieur ou inferieur au prix accepte.
+   */
+  @ApiPropertyOptional({
+    example: 75000,
+    description:
+      'Optionnel. Doit correspondre au prix convenu (candidature.prixPropose). Le montant reel applique est recalcule par le backend.',
+  })
+  @IsOptional()
   @IsNumber()
   @Min(1)
-  montant: number;
+  montant?: number;
 
   @ApiProperty({
     enum: MethodePaiement,

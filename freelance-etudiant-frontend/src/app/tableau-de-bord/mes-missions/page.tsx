@@ -543,6 +543,14 @@ function CandidaturesMission({ missionId }: { missionId: string }) {
   const [erreur, setErreur] = useState<string | null>(null);
 
   /**
+   * Identifiant de la candidature en cours de traitement (acceptation ou
+   * refus). Protege contre le double-clic : les deux boutons d'une
+   * candidature sont desactives pendant l'appel, et les autres
+   * candidatures restent utilisables.
+   */
+  const [actionEnCours, setActionEnCours] = useState<string | null>(null);
+
+  /**
    * Recharge les candidatures.
    */
   const charger = useCallback(async () => {
@@ -615,6 +623,9 @@ function CandidaturesMission({ missionId }: { missionId: string }) {
    * Accepter une candidature.
    */
   async function accepter(id: string) {
+    if (actionEnCours) return; // anti double-clic
+    setActionEnCours(id);
+    setErreur(null);
     try {
       await api.patch(`/candidatures/${id}/accepter`);
 
@@ -627,6 +638,8 @@ function CandidaturesMission({ missionId }: { missionId: string }) {
           ? error.message
           : "Impossible d'accepter cette candidature.",
       );
+    } finally {
+      setActionEnCours(null);
     }
   }
 
@@ -634,6 +647,9 @@ function CandidaturesMission({ missionId }: { missionId: string }) {
    * Refuser une candidature.
    */
   async function refuser(id: string) {
+    if (actionEnCours) return; // anti double-clic
+    setActionEnCours(id);
+    setErreur(null);
     try {
       await api.patch(`/candidatures/${id}/refuser`);
 
@@ -646,6 +662,8 @@ function CandidaturesMission({ missionId }: { missionId: string }) {
           ? error.message
           : "Impossible de refuser cette candidature.",
       );
+    } finally {
+      setActionEnCours(null);
     }
   }
 
@@ -730,16 +748,25 @@ function CandidaturesMission({ missionId }: { missionId: string }) {
 
             {candidature.statut === "en_attente" && (
               <div className="mt-3 flex gap-2">
-                <Button size="sm" onClick={() => accepter(candidature.id)}>
-                  Accepter
+                <Button
+                  size="sm"
+                  disabled={actionEnCours !== null}
+                  onClick={() => accepter(candidature.id)}
+                >
+                  {actionEnCours === candidature.id
+                    ? "Acceptation…"
+                    : "Accepter"}
                 </Button>
 
                 <Button
                   size="sm"
                   variant="ghost"
+                  disabled={actionEnCours !== null}
                   onClick={() => refuser(candidature.id)}
                 >
-                  Refuser
+                  {actionEnCours === candidature.id
+                    ? "Refus…"
+                    : "Refuser"}
                 </Button>
               </div>
             )}

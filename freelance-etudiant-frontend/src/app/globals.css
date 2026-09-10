@@ -1,39 +1,208 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ==========================================================================
+   VARIABLES DE THÈMES CSS (Custom Properties)
+   ========================================================================== */
+
+:root {
+  /* Valeurs par défaut (Thème Slate / Gris-bleu Kianja) */
+  --theme-primary: #475569;
+  --theme-primary-dark: #334155;
+  --theme-primary-soft: rgba(71, 85, 105, 0.12);
+  --theme-secondary: #64748b;
+  --theme-accent: #475569;
+  --theme-paper: #f8fafc;
+  --theme-paper-light: #ffffff;
+  --theme-ink: #0f172a;
+  --theme-ink-soft: #334155;
+
+  --theme-font-display: "Zilla Slab", Georgia, serif;
+  --theme-font-body: "Inter", -apple-system, sans-serif;
+  --theme-font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+/* --- THÈME : SLATE (Gris-bleu Kianja Classique) --- */
+[data-theme="slate"] {
+  --theme-primary: #475569;
+  --theme-primary-dark: #334155;
+  --theme-primary-soft: rgba(71, 85, 105, 0.12);
+  --theme-secondary: #64748b;
+  --theme-accent: #475569;
+  --theme-paper: #f8fafc;
+  --theme-paper-light: #ffffff;
+  --theme-ink: #0f172a;
+  --theme-ink-soft: #334155;
+  --theme-font-display: "Zilla Slab", Georgia, serif;
+  --theme-font-body: "Inter", -apple-system, sans-serif;
+}
+
+.dark[data-theme="slate"],
+[data-theme="slate"].dark,
+.dark:not([data-theme]) {
+  --theme-primary: #94a3b8;
+  --theme-primary-dark: #cbd5e1;
+  --theme-primary-soft: rgba(148, 163, 184, 0.15);
+  --theme-secondary: #64748b;
+  --theme-accent: #94a3b8;
+  --theme-paper: #0f172a;
+  --theme-paper-light: #1e293b;
+  --theme-ink: #f1f5f9;
+  --theme-ink-soft: #94a3b8;
+}
+
+/* --- THÈME : BLEU OCÉAN (Moderne & Tech) --- */
+[data-theme="blue"] {
+  --theme-primary: #2563eb;
+  --theme-primary-dark: #1d4ed8;
+  --theme-primary-soft: rgba(37, 99, 235, 0.12);
+  --theme-secondary: #3b82f6;
+  --theme-accent: #2563eb;
+  --theme-paper: #f0f7ff;
+  --theme-paper-light: #ffffff;
+  --theme-ink: #0f1e36;
+  --theme-ink-soft: #334e68;
+  --theme-font-display: "Plus Jakarta Sans", "Inter", sans-serif;
+  --theme-font-body: "Plus Jakarta Sans", "Inter", sans-serif;
+}
+
+.dark[data-theme="blue"],
+[data-theme="blue"].dark {
+  --theme-primary: #60a5fa;
+  --theme-primary-dark: #93c5fd;
+  --theme-primary-soft: rgba(96, 165, 250, 0.15);
+  --theme-secondary: #3b82f6;
+  --theme-accent: #60a5fa;
+  --theme-paper: #0b1329;
+  --theme-paper-light: #132247;
+  --theme-ink: #f0f6ff;
+  --theme-ink-soft: #9fb3c8;
+}
+
+/* --- THÈME : VERT ÉMERAUDE (Nature & Croissance) --- */
+[data-theme="green"] {
+  --theme-primary: #059669;
+  --theme-primary-dark: #047857;
+  --theme-primary-soft: rgba(5, 150, 105, 0.12);
+  --theme-secondary: #10b981;
+  --theme-accent: #059669;
+  --theme-paper: #f2fbf7;
+  --theme-paper-light: #ffffff;
+  --theme-ink: #06281e;
+  --theme-ink-soft: #1e4e40;
+  --theme-font-display: "Outfit", "Inter", sans-serif;
+  --theme-font-body: "Inter", -apple-system, sans-serif;
+}
+
+.dark[data-theme="green"],
+[data-theme="green"].dark {
+  --theme-primary: #34d399;
+  --theme-primary-dark: #6ee7b7;
+  --theme-primary-soft: rgba(52, 211, 153, 0.15);
+  --theme-secondary: #10b981;
+  --theme-accent: #34d399;
+  --theme-paper: #062319;
+  --theme-paper-light: #0d382b;
+  --theme-ink: #ecfdf5;
+  --theme-ink-soft: #a7f3d0;
+}
+
+/* --- THÈME : VIOLET IMPÉRIAL (Créatif & Distinction) --- */
+[data-theme="purple"] {
+  --theme-primary: #7c3aed;
+  --theme-primary-dark: #6d28d9;
+  --theme-primary-soft: rgba(124, 58, 237, 0.12);
+  --theme-secondary: #8b5cf6;
+  --theme-accent: #7c3aed;
+  --theme-paper: #faf5ff;
+  --theme-paper-light: #ffffff;
+  --theme-ink: #1e1035;
+  --theme-ink-soft: #4c3272;
+  --theme-font-display: "Playfair Display", Georgia, serif;
+  --theme-font-body: "Plus Jakarta Sans", "Inter", sans-serif;
+}
+
+.dark[data-theme="purple"],
+[data-theme="purple"].dark {
+  --theme-primary: #a78bfa;
+  --theme-primary-dark: #c4b5fd;
+  --theme-primary-soft: rgba(167, 139, 250, 0.15);
+  --theme-secondary: #8b5cf6;
+  --theme-accent: #a78bfa;
+  --theme-paper: #170b2c;
+  --theme-paper-light: #261347;
+  --theme-ink: #faf5ff;
+  --theme-ink-soft: #d8b4fe;
+}
+
+/* --- THÈME : OCRE MALAGASY (Chaleureux & Terroir) --- */
+[data-theme="amber"] {
+  --theme-primary: #d97706;
+  --theme-primary-dark: #b45309;
+  --theme-primary-soft: rgba(217, 119, 6, 0.12);
+  --theme-secondary: #f59e0b;
+  --theme-accent: #d97706;
+  --theme-paper: #fffdfa;
+  --theme-paper-light: #ffffff;
+  --theme-ink: #291804;
+  --theme-ink-soft: #5c4018;
+  --theme-font-display: "Zilla Slab", Georgia, serif;
+  --theme-font-body: "Inter", -apple-system, sans-serif;
+}
+
+.dark[data-theme="amber"],
+[data-theme="amber"].dark {
+  --theme-primary: #fbbf24;
+  --theme-primary-dark: #fde68a;
+  --theme-primary-soft: rgba(251, 191, 36, 0.15);
+  --theme-secondary: #f59e0b;
+  --theme-accent: #fbbf24;
+  --theme-paper: #201608;
+  --theme-paper-light: #32230e;
+  --theme-ink: #fef3c7;
+  --theme-ink-soft: #fcd34d;
+}
+
+/* ==========================================================================
+   CONFIG TAILWIND CSS v4
+   ========================================================================== */
+
 @theme {
-  /* Palette "Kianja" — place de marche malgache */
-  --color-ink: #21261f;
-  --color-ink-soft: #3c3a2e;
-  --color-paper: #ede7d9;
-  --color-paper-light: #f5f1e6;
-  --color-ocre: #b8842b;
-  --color-ocre-dark: #94661d;
+  /* Palette de couleurs réactive au thème dynamique */
+  --color-ink: var(--theme-ink);
+  --color-ink-soft: var(--theme-ink-soft);
+  --color-paper: var(--theme-paper);
+  --color-paper-light: var(--theme-paper-light);
+
+  --color-ocre: var(--theme-primary);
+  --color-ocre-dark: var(--theme-primary-dark);
+  --color-primary: var(--theme-primary);
+  --color-primary-dark: var(--theme-primary-dark);
+  --color-primary-soft: var(--theme-primary-soft);
+  --color-secondary: var(--theme-secondary);
+  --color-accent: var(--theme-accent);
+
+  /* Couleurs fonctionnelles d'état (succès / erreur) */
   --color-rice: #24594a;
   --color-rice-light: #34715f;
   --color-brique: #a23e29;
   --color-brique-light: #c0553c;
 
-  --font-display: "Zilla Slab", Georgia, serif;
-  --font-body: "Inter", -apple-system, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* Typographie réactive au thème */
+  --font-display: var(--theme-font-display);
+  --font-body: var(--theme-font-body);
+  --font-mono: var(--theme-font-mono);
 
-  /* Rayons de bordure — coins adoucis, dans l'esprit du papier decoupe */
+  /* Rayons de bordure */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
   --radius-xl: 22px;
 }
 
-/* --- Mode sombre : on redefinit les memes jetons, les utilitaires suivent --- */
 .dark {
-  --color-ink: #ece6d8;
-  --color-ink-soft: #b9b3a2;
-  --color-paper: #17190f;
-  --color-paper-light: #21241a;
-  --color-ocre: #d9a54a;
-  --color-ocre-dark: #e8bd6d;
   --color-rice: #5fa78f;
   --color-rice-light: #7cc0a8;
   --color-brique: #d1614a;
@@ -41,6 +210,10 @@
 
   color-scheme: dark;
 }
+
+/* ==========================================================================
+   STYLES GLOBAUX DU DOCUMENT
+   ========================================================================== */
 
 html {
   scroll-behavior: smooth;
@@ -51,14 +224,14 @@ body {
   color: var(--color-ink);
   font-family: var(--font-body);
   background-image:
-    radial-gradient(circle at 1px 1px, rgba(33, 38, 31, 0.045) 1px, transparent 0);
+    radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.035) 1px, transparent 0);
   background-size: 22px 22px;
-  transition: background-color 200ms ease, color 200ms ease;
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
 }
 
 .dark body {
   background-image:
-    radial-gradient(circle at 1px 1px, rgba(236, 230, 216, 0.05) 1px, transparent 0);
+    radial-gradient(circle at 1px 1px, rgba(241, 245, 249, 0.04) 1px, transparent 0);
 }
 
 ::selection {
@@ -84,20 +257,20 @@ body {
 .notice-card {
   position: relative;
   background-color: var(--color-paper-light);
-  border: 1px solid rgba(60, 58, 46, 0.25);
+  border: 1px solid rgba(15, 23, 42, 0.10);
   border-radius: var(--radius-lg);
-  box-shadow: 0 1px 0 rgba(33, 38, 31, 0.05), 0 8px 16px -12px rgba(33, 38, 31, 0.35);
-  transition: transform 180ms ease, box-shadow 180ms ease;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04), 0 8px 16px -12px rgba(15, 23, 42, 0.20);
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 200ms ease, border-color 200ms ease;
 }
 
 .dark .notice-card {
-  border-color: rgba(236, 230, 216, 0.16);
+  border-color: rgba(241, 245, 249, 0.12);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 8px 16px -12px rgba(0, 0, 0, 0.7);
 }
 
 .notice-card:hover {
   transform: rotate(-0.4deg) translateY(-2px);
-  box-shadow: 0 2px 0 rgba(33, 38, 31, 0.06), 0 16px 28px -14px rgba(33, 38, 31, 0.4);
+  box-shadow: 0 2px 0 rgba(15, 23, 42, 0.05), 0 16px 28px -14px rgba(15, 23, 42, 0.25);
 }
 
 .dark .notice-card:hover {
@@ -111,11 +284,11 @@ body {
   width: 16px;
   height: 16px;
   border-radius: 9999px;
-  background: radial-gradient(circle at 35% 30%, #d9a54a, var(--color-ocre-dark));
+  background: radial-gradient(circle at 35% 30%, var(--color-ocre), var(--color-ocre-dark));
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35);
 }
 
-/* --- Tampon circulaire de reputation --- */
+/* --- Tampon circulaire de réputation --- */
 .stamp {
   display: inline-flex;
   align-items: center;

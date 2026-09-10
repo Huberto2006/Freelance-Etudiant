@@ -172,6 +172,91 @@ class DepotMemoire<T extends EntiteAvecId> {
     return item;
   }
 
+  async update(
+    criteria: Record<string, unknown> | string,
+    partialEntity: Partial<T>,
+  ): Promise<{ affected?: number }> {
+    const crit = typeof criteria === 'string' ? { id: criteria } : criteria;
+    const entries = Object.entries(crit);
+    let affected = 0;
+    for (const item of this.items) {
+      const match = entries.every(
+        ([k, v]) => (item as Record<string, unknown>)[k] === v,
+      );
+      if (match) {
+        Object.assign(item, partialEntity);
+        affected++;
+      }
+    }
+    return { affected };
+  }
+
+  async find(options?: {
+    where?: Record<string, unknown> | Array<Record<string, unknown>>;
+  }): Promise<T[]> {
+    if (!options?.where) {
+      return this.items.map((i) => this.hydrater(i));
+    }
+    const criteres = Array.isArray(options.where)
+      ? options.where
+      : [options.where];
+    const resultats = this.items.filter((item) =>
+      criteres.some((critere) =>
+        Object.entries(critere).every(
+          ([k, v]) => (item as Record<string, unknown>)[k] === v,
+        ),
+      ),
+    );
+    return resultats.map((i) => this.hydrater(i));
+  }
+
+  async count(options?: {
+    where?: Record<string, unknown>;
+  }): Promise<number> {
+    if (!options?.where) return this.items.length;
+    const entries = Object.entries(options.where);
+    return this.items.filter((item) =>
+      entries.every(
+        ([k, v]) => (item as Record<string, unknown>)[k] === v,
+      ),
+    ).length;
+  }
+
+  get manager() {
+    return {
+      transaction: async <R>(cb: (mgr: any) => Promise<R>): Promise<R> => {
+        const mgr = {
+          save: async (entityOrTarget: any, maybeEntity?: any) => {
+            const entity = maybeEntity !== undefined ? maybeEntity : entityOrTarget;
+            if (entityOrTarget === Mission || (!maybeEntity && (entity as any).titre)) {
+              return depotMissions.save(entity);
+            }
+            if (entityOrTarget === Evaluation || (!maybeEntity && (entity as any).note !== undefined)) {
+              return depotEvaluations.save(entity);
+            }
+            if (entityOrTarget === Transaction) {
+              return depotTransactions.save(entity);
+            }
+            return this.save(entity);
+          },
+          update: async (target: any, criteria: any, partialEntity: any) => {
+            if (target === Mission) {
+              return depotMissions.update(criteria, partialEntity);
+            }
+            if (target === Evaluation) {
+              return depotEvaluations.update(criteria, partialEntity);
+            }
+            if (target === Transaction) {
+              return depotTransactions.update(criteria, partialEntity);
+            }
+            return this.update(criteria, partialEntity);
+          },
+        };
+        return cb(mgr);
+      },
+    };
+  }
+
   async remove(item: T): Promise<void> {
     this.items = this.items.filter(
       (existant) => existant.id !== item.id,
@@ -282,6 +367,7 @@ const missionsService = new MissionsService(
 
 const candidaturesService = new CandidaturesService(
   depotCandidatures as unknown as Repository<Candidature>,
+  null as unknown as any,
   missionsService,
   notificationsFaux,
 );

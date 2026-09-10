@@ -6,10 +6,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 
 import { Candidature } from './entities/candidature.entity';
 import { CreateCandidatureDto } from './dto/create-candidature.dto';
+import { Mission } from '../missions/entities/mission.entity';
 
 import { StatutCandidature } from '../../common/enums/statut-candidature.enum';
 import { StatutMission } from '../../common/enums/statut-mission.enum';
@@ -25,6 +26,8 @@ export class CandidaturesService {
   constructor(
     @InjectRepository(Candidature)
     private readonly repo: Repository<Candidature>,
+
+    private readonly dataSource: DataSource,
 
     private readonly missionsService: MissionsService,
 
@@ -266,16 +269,30 @@ export class CandidaturesService {
    * ========================================================
    * ACCEPTER UNE CANDIDATURE
    * ========================================================
+   *
+   * ATOMICITE ET CONCURRENCE :
+   *  - Ecritures critiques (candidature acceptee, refus groupe des
+   *    autres candidatures, passage de la mission EN_COURS) dans UNE
+   *    SEULE transaction : soit tout reussit, soit rien n'est conserve.
+   *  - Verrous pessimistes : la ligne MISSION est verrouillee d'abord
+   *    (SELECT ... FOR UPDATE), puis la ligne CANDIDATURE — ordre
+   *    constant, donc pas de deadlock entre deux acceptations
+   *    concurrentes (deux candidatures differentes ou double requete).
+   *  - Regles metier verifiees SOUS VERROU : candidature EN_ATTENTE
+   *    (jamais acceptee deux fois), propriete du client, et mission
+   *    OUVERTE (une mission EXPIREE / TERMINEE / deja EN_COURS refuse
+   *    toute acceptation).
+   *  - Notifications (secondaires) envoyees APRES le commit.
    */
   async accepter(
     id: string,
     clientId: string,
   ): Promise<Candidature> {
-    const candidature =
-      await this.findOne(id);
+    // Lecture initiale : erreurs rapides avant d'ouvrir une transaction.
+    const candidatureInitiale = await this.findOne(id);
 
     if (
-      candidature.mission.clientId !==
+      candidatureInitiale.mission.clientId !==
       clientId
     ) {
       throw new ForbiddenException(
@@ -284,7 +301,7 @@ export class CandidaturesService {
     }
 
     if (
-      candidature.statut !==
+      candidatureInitiale.statut !==
       StatutCandidature.EN_ATTENTE
     ) {
       throw new BadRequestException(
@@ -292,82 +309,139 @@ export class CandidaturesService {
       );
     }
 
-    candidature.statut =
-      StatutCandidature.ACCEPTEE;
+    const missionId = candidatureInitiale.missionId;
 
-    await this.repo.save(
-      candidature,
-    );
+    const resultat = await this.dataSource.transaction(
+      async (manager) => {
+        // 1. Verrou de la mission : serialise toute acceptation concurrente
+        // de cette mission et fige son statut pendant la transaction.
+        const mission = await manager.findOne(Mission, {
+          where: { id: missionId },
+          lock: { mode: 'pessimistic_write' },
+        });
 
-    /**
-     * Les autres candidatures de la même mission
-     * sont automatiquement refusées. On les recupere
-     * d'abord (avec l'etudiant) pour pouvoir notifier
-     * chacun apres la mise a jour groupee.
-     */
-    const autresCandidatures = await this.repo.find({
-      where: {
-        missionId: candidature.missionId,
-        statut: StatutCandidature.EN_ATTENTE,
+        if (!mission) {
+          throw new NotFoundException('Mission introuvable');
+        }
+
+        if (mission.clientId !== clientId) {
+          throw new ForbiddenException(
+            'Vous ne pouvez traiter que les candidatures de vos propres missions',
+          );
+        }
+
+        if (mission.statut !== StatutMission.OUVERTE) {
+          throw new ConflictException(
+            "Cette mission n'accepte plus de candidature : impossible d'accepter une candidature sur une mission qui n'est plus ouverte.",
+          );
+        }
+
+        // 2. Verrou de la ligne candidature : serialize les doubles
+        // requetes portant sur la meme candidature.
+        const candidatureVerrouillee = await manager.findOne(Candidature, {
+          where: { id },
+          lock: { mode: 'pessimistic_write' },
+        });
+
+        if (!candidatureVerrouillee) {
+          throw new NotFoundException('Candidature introuvable');
+        }
+
+        if (
+          candidatureVerrouillee.statut !==
+          StatutCandidature.EN_ATTENTE
+        ) {
+          throw new ConflictException(
+            'Cette candidature a deja ete traitee',
+          );
+        }
+
+        // 3. Acceptation conditionnelle : si une requete concurrente a
+        // deja modifie le statut, l'UPDATE n'affecte rien et on echoue.
+        const resultatAcceptation = await manager.update(
+          Candidature,
+          { id, statut: StatutCandidature.EN_ATTENTE },
+          { statut: StatutCandidature.ACCEPTEE },
+        );
+
+        if (
+          !resultatAcceptation.affected ||
+          resultatAcceptation.affected === 0
+        ) {
+          throw new ConflictException(
+            'Cette candidature a deja ete traitee',
+          );
+        }
+
+        // 4. Refus groupe des autres candidatures (dans la transaction),
+        // precede de la lecture des lignes a notifier SOUS VERROU.
+        const autresCandidaturesAAvertir = await manager.find(Candidature, {
+          where: {
+            missionId,
+            statut: StatutCandidature.EN_ATTENTE,
+          },
+          relations: ['etudiant'],
+        });
+
+        await manager
+          .createQueryBuilder()
+          .update(Candidature)
+          .set({ statut: StatutCandidature.REFUSEE })
+          .where('missionId = :missionId AND id != :id', {
+            missionId,
+            id,
+          })
+          .andWhere('statut = :statut', {
+            statut: StatutCandidature.EN_ATTENTE,
+          })
+          .execute();
+
+        // 5. Passage de la mission EN_COURS, conditionne a son statut
+        // courant (defense en profondeur apres le verrou). Un affected 0
+        // echoue et ROLLBACK l'ensemble : aucune candidature acceptee sur
+        // une mission non ouverte.
+        const resultatMission = await manager.update(
+          Mission,
+          { id: missionId, statut: StatutMission.OUVERTE },
+          { statut: StatutMission.EN_COURS },
+        );
+
+        if (!resultatMission.affected || resultatMission.affected === 0) {
+          throw new ConflictException(
+            "Cette mission n'accepte plus de candidature : impossible d'accepter une candidature sur une mission qui n'est plus ouverte.",
+          );
+        }
+
+        candidatureVerrouillee.statut = StatutCandidature.ACCEPTEE;
+        candidatureVerrouillee.mission = mission;
+
+        return {
+          candidature: candidatureVerrouillee,
+          autres: autresCandidaturesAAvertir.filter((c) => c.id !== id),
+        };
       },
-      relations: ['etudiant'],
-    });
-    const autresCandidaturesAAvertir = autresCandidatures.filter(
-      (c) => c.id !== candidature.id,
     );
 
-    await this.repo
-      .createQueryBuilder()
-      .update(Candidature)
-      .set({
-        statut:
-          StatutCandidature.REFUSEE,
-      })
-      .where(
-        'missionId = :missionId AND id != :id',
-        {
-          missionId:
-            candidature.missionId,
-          id:
-            candidature.id,
-        },
-      )
-      .andWhere(
-        'statut = :statut',
-        {
-          statut:
-            StatutCandidature.EN_ATTENTE,
-        },
-      )
-      .execute();
-
+    // ============================================================
+    // Effets de bord SECONDAIRES (post-commit) : les notifications ne
+    // peuvent plus faire echouer l'acceptation ni laisser la base dans
+    // un etat partiel.
+    // ============================================================
     await Promise.all(
-      autresCandidaturesAAvertir.map((c) =>
+      resultat.autres.map((c) =>
         this.notificationsService.creer({
           destinataireId: c.etudiant.utilisateurId,
           type: TypeNotification.CANDIDATURE_REFUSEE,
           titre: 'Candidature refusée',
-          message: `Votre candidature pour "${candidature.mission.titre}" a été refusée.`,
+          message: `Votre candidature pour "${candidatureInitiale.mission.titre}" a été refusée.`,
           lienUrl: '/tableau-de-bord/candidatures',
         }),
       ),
     );
 
-    /**
-     * La mission passe en cours.
-     */
-    await this.missionsService.setStatut(
-      candidature.missionId,
-      StatutMission.EN_COURS,
-    );
-
-    /**
-     * Notification de l'étudiant.
-     */
     await this.notificationsService.creer({
       destinataireId:
-        candidature.etudiant
-          .utilisateurId,
+        resultat.candidature.etudiant.utilisateurId,
 
       type:
         TypeNotification.CANDIDATURE_ACCEPTEE,
@@ -375,13 +449,13 @@ export class CandidaturesService {
       titre:
         'Candidature acceptée',
 
-      message: `Votre candidature pour "${candidature.mission.titre}" a été acceptée.`,
+      message: `Votre candidature pour "${candidatureInitiale.mission.titre}" a été acceptée.`,
 
       lienUrl:
         '/tableau-de-bord/candidatures',
     });
 
-    return candidature;
+    return resultat.candidature;
   }
 
   /**
@@ -414,13 +488,30 @@ export class CandidaturesService {
       );
     }
 
+    // ============================================================
+    // Transition ATOMIQUE EN_ATTENTE -> REFUSEE (UPDATE conditionnel
+    // sur le statut courant). Garantit :
+    //  - la meme candidature ne peut jamais etre refusee deux fois
+    //    (double-clic, double requete) ;
+    //  - pas de course avec accepter() : si l'acceptation a eu lieu
+    //    entre-temps, l'UPDATE n'affecte rien -> 409, jamais un refus
+    //    qui ecraserait une acceptation.
+    // ============================================================
+    const resultat = await this.repo.update(
+      { id, statut: StatutCandidature.EN_ATTENTE },
+      { statut: StatutCandidature.REFUSEE },
+    );
+
+    if (!resultat.affected || resultat.affected === 0) {
+      throw new ConflictException(
+        'Cette candidature a deja ete traitee',
+      );
+    }
+
     candidature.statut =
       StatutCandidature.REFUSEE;
 
-    const saved =
-      await this.repo.save(
-        candidature,
-      );
+    const saved = candidature;
 
     await this.notificationsService.creer({
       destinataireId:
@@ -646,14 +737,18 @@ export class CandidaturesService {
    * directement une candidature au statut "acceptee" pour reutiliser tout
    * le cycle existant (messagerie, livraison, paiement).
    */
-  async creerAccepteeDirectement(params: {
-    missionId: string;
-    etudiantId: string;
-    prixPropose: number;
-    delaiPropose: number;
-    message?: string;
-  }): Promise<Candidature> {
-    const candidature = this.repo.create({
+  async creerAccepteeDirectement(
+    params: {
+      missionId: string;
+      etudiantId: string;
+      prixPropose: number;
+      delaiPropose: number;
+      message?: string;
+    },
+    manager?: EntityManager,
+  ): Promise<Candidature> {
+    const repo = manager?.getRepository(Candidature) ?? this.repo;
+    const candidature = repo.create({
       missionId: params.missionId,
       etudiantId: params.etudiantId,
       prixPropose: params.prixPropose,
@@ -661,7 +756,7 @@ export class CandidaturesService {
       message: params.message,
       statut: StatutCandidature.ACCEPTEE,
     });
-    return this.repo.save(candidature);
+    return repo.save(candidature);
   }
 
   /**

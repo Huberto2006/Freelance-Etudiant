@@ -1,15 +1,17 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Mission } from './entities/mission.entity';
 import { CreateMissionDto, UpdateMissionDto } from './dto/mission.dto';
 import { FiltrerMissionsDto } from './dto/filtrer-missions.dto';
 import { StatutMission } from '../../common/enums/statut-mission.enum';
+import { StatutCandidature } from '../../common/enums/statut-candidature.enum';
 
 @Injectable()
 export class MissionsService {
@@ -112,6 +114,24 @@ export class MissionsService {
         'Vous ne pouvez modifier que vos propres missions',
       );
     }
+    // ============================================================
+    // Transitions impossibles interdites : une mission TERMINEE ou
+    // FERMEE n'est plus modifiable, comme si elle etait ouverte. Une
+    // fois le projet cloture (livraison validee + paiement + evaluation)
+    // ou ferme, ses parametres (budget, description, date limite...)
+    // sont figes : modifier le budget d'une mission terminee fausserait
+    // le prix convenu avec l'etudiant (source de verite financiere).
+    // Les statuts OUVERTE / EXPIREE restent editables (reouverture
+    // possible en prolongeant la date limite, voir ci-dessous).
+    // ============================================================
+    if (
+      mission.statut === StatutMission.TERMINEE ||
+      mission.statut === StatutMission.FERMEE
+    ) {
+      throw new ConflictException(
+        `Cette mission est ${mission.statut === StatutMission.TERMINEE ? 'terminee' : 'fermee'} : elle ne peut plus etre modifiee.`,
+      );
+    }
     const nouvelleDateLimite = dto.dateLimite
       ? new Date(dto.dateLimite)
       : undefined;
@@ -145,6 +165,30 @@ export class MissionsService {
         'Vous ne pouvez supprimer que vos propres missions',
       );
     }
+    // ============================================================
+    // Protection de l'integrite : une mission EN_COURS (candidature
+    // acceptee) ou TERMINEE porte un historique metier (livraisons,
+    // paiements RESTRICT, evaluations). Sa suppression brutale echouerait
+    // soit avec une erreur SQL 23503 exposee en 500 (transaction RESTRICT),
+    // soit en detruisant le workflow en cours. Seules les missions sans
+    // candidature acceptee peuvent etre supprimees physiquement.
+    // ============================================================
+    if (
+      mission.statut === StatutMission.EN_COURS ||
+      mission.statut === StatutMission.TERMINEE
+    ) {
+      throw new ConflictException(
+        'Cette mission est en cours ou terminee : elle ne peut pas etre supprimee (un historique metier lui est rattache).',
+      );
+    }
+    const nombreCandidaturesAcceptees = (mission.candidatures ?? []).filter(
+      (candidature) => candidature.statut === StatutCandidature.ACCEPTEE,
+    ).length;
+    if (nombreCandidaturesAcceptees > 0) {
+      throw new ConflictException(
+        'Cette mission a une candidature acceptee : elle ne peut pas etre supprimee.',
+      );
+    }
     await this.repo.remove(mission);
   }
 
@@ -154,8 +198,31 @@ export class MissionsService {
     return this.repo.save(mission);
   }
 
+  /**
+   * Transition de statut interne (appels services : acceptation de
+   * candidature -> EN_COURS, evaluation finale -> TERMINEE).
+   * Carte des transitions legales : tout autre passage est refuse. Une
+   * mission fermee/terminee ne peut jamais redevenir active (RG3).
+   */
+  private static readonly TRANSITIONS_AUTORISEES: Readonly<
+    Record<StatutMission, readonly StatutMission[]>
+  > = {
+    [StatutMission.OUVERTE]: [StatutMission.EN_COURS],
+    [StatutMission.EN_COURS]: [StatutMission.TERMINEE],
+    [StatutMission.TERMINEE]: [],
+    [StatutMission.FERMEE]: [],
+    [StatutMission.EXPIREE]: [],
+  };
+
   async setStatut(id: string, statut: StatutMission): Promise<Mission> {
     const mission = await this.findOne(id);
+    if (
+      !MissionsService.TRANSITIONS_AUTORISEES[mission.statut].includes(statut)
+    ) {
+      throw new ConflictException(
+        `Transition de statut impossible : ${mission.statut} -> ${statut}`,
+      );
+    }
     mission.statut = statut;
     return this.repo.save(mission);
   }
@@ -167,20 +234,29 @@ export class MissionsService {
    * moderee/publique (elle ne doit pas apparaitre dans le panneau
    * d'affichage ni recevoir d'autres candidatures) ; elle sert uniquement
    * de support au cycle existant (livraison, paiement, messagerie).
+   *
+   * `manager` (optionnel) : permet d'executer la creation DANS la
+   * transaction de l'appelant (DemandesServiceService.accepter) afin que
+   * mission + candidature + demande soient atomiques.
    */
-  async creerDepuisDemandeService(params: {
-    clientId: string;
-    titre: string;
-    description: string;
-    budget: number;
-    delaiJours: number;
-    categorie: string;
-    competencesRequises: string[];
-  }): Promise<Mission> {
+  async creerDepuisDemandeService(
+    params: {
+      clientId: string;
+      titre: string;
+      description: string;
+      budget: number;
+      delaiJours: number;
+      categorie: string;
+      competencesRequises: string[];
+    },
+    manager?: EntityManager,
+  ): Promise<Mission> {
+    const repo = manager?.getRepository(Mission) ?? this.repo;
+
     const dateLimite = new Date();
     dateLimite.setDate(dateLimite.getDate() + Math.max(1, params.delaiJours));
 
-    const mission = this.repo.create({
+    const mission = repo.create({
       titre: params.titre,
       description: params.description,
       budget: params.budget,
@@ -191,7 +267,7 @@ export class MissionsService {
       statut: StatutMission.EN_COURS,
       estModere: false,
     });
-    return this.repo.save(mission);
+    return repo.save(mission);
   }
 
   /**

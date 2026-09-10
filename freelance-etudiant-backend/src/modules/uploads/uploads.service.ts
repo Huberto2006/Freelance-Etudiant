@@ -1,10 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { existsSync, unlinkSync } from 'fs';
+import { basename, join } from 'path';
 import { Repository } from 'typeorm';
 import { Utilisateur } from '../users/entities/utilisateur.entity';
 
 @Injectable()
 export class UploadsService {
+  private readonly logger = new Logger(UploadsService.name);
+
   constructor(
     @InjectRepository(Utilisateur)
     private readonly utilisateurRepository: Repository<Utilisateur>,
@@ -27,9 +35,42 @@ export class UploadsService {
 
     const url = `/uploads/profiles/${filename}`;
 
+    // Ancienne photo a remplacer (stockage : sans ce nettoyage, chaque
+    // changement de photo laisse l'ancien fichier orphelin sur le disque).
+    const anciennePhotoUrl = utilisateur.photoUrl;
+
     utilisateur.photoUrl = url;
 
     await this.utilisateurRepository.save(utilisateur);
+
+    // Suppression de l'ancien fichier APRES l'enregistrement reussi.
+    // basename() empeche toute remontee de repertoire (path traversal) :
+    // seuls les fichiers directement presents dans uploads/profiles sont
+    // supprimables. Un echec de suppression est journalise sans faire
+    // echouer l'upload (l'ancienne photo orpheline n'est pas critique).
+    if (
+      anciennePhotoUrl &&
+      anciennePhotoUrl !== url &&
+      anciennePhotoUrl.startsWith('/uploads/profiles/')
+    ) {
+      const cheminAncien = join(
+        process.cwd(),
+        'uploads',
+        'profiles',
+        basename(anciennePhotoUrl),
+      );
+      try {
+        if (existsSync(cheminAncien)) {
+          unlinkSync(cheminAncien);
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Suppression de l'ancienne photo impossible (${anciennePhotoUrl}) : ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+    }
 
     return {
       message: 'Photo de profil enregistrée avec succès',

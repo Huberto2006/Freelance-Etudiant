@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void Promise.resolve().then(() => {
       rafraichirProfil();
     });
-  }, []);
+  }, [rafraichirProfil]);
 
   // Synchronise immédiatement l'état React quand api.ts détecte qu'un
   // rafraîchissement de jeton a définitivement échoué (session expirée).

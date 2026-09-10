@@ -159,9 +159,11 @@ function FormulairePaiement({
   onEnvoye: () => void;
   onFermer: () => void;
 }) {
-  const [montant, setMontant] = useState(
-    String(candidature.prixPropose),
-  );
+  // Le montant n'est PAS modifiable : le prix convenu a l'acceptation de
+  // la candidature (prixPropose) est la source de verite, recalculee et
+  // appliquee par le backend. Un montant editable laisserait croire que
+  // le client peut payer un autre prix.
+  const montant = String(candidature.prixPropose);
 
   const [methode, setMethode] =
     useState<MethodePaiement>("mvola");
@@ -251,16 +253,16 @@ function FormulairePaiement({
         className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end"
       >
         <div className="w-full sm:w-40">
-          <Field label="Montant (Ar)" htmlFor="montant">
+          <Field label="Montant convenu (Ar)" htmlFor="montant">
+            {/* Lecture seule : le prix convenu a l'acceptation fait foi,
+                le backend refuserait tout autre montant. */}
             <Input
               id="montant"
               type="number"
               min={1}
               required
+              readOnly
               value={montant}
-              onChange={(e) =>
-                setMontant(e.target.value)
-              }
             />
           </Field>
         </div>

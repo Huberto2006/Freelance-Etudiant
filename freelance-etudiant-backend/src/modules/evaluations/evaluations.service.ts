@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
 import { Evaluation } from './entities/evaluation.entity';
 import { Transaction } from '../paiements/entities/transaction.entity';
+import { Mission } from '../missions/entities/mission.entity';
 import { CreateEvaluationDto } from './dto/create-evaluation.dto';
 import { LivraisonsService } from '../livraisons/livraisons.service';
 import { ReputationService } from '../reputation/reputation.service';
@@ -95,21 +96,50 @@ export class EvaluationsService {
       evalueId: livraison.candidature.etudiantId,
     });
 
-    let saved: Evaluation;
-    try {
-      saved = await this.repo.save(evaluation);
-    } catch (error) {
-      // Filet de securite si deux requetes simultanees passent la
-      // verification `existante` ci-dessus en meme temps : la contrainte
-      // UNIQUE(livraison_id) en base rejette la seconde ecriture.
-      if (
-        error instanceof QueryFailedError &&
-        (error as unknown as { code?: string }).code === '23505'
-      ) {
-        throw new ConflictException('Cette livraison a deja ete evaluee');
+    // ============================================================
+    // ATOMICITE evaluation + cloture : l'ecriture de l'evaluation et le
+    // passage de la mission a TERMINEE sont dans UNE SEULE transaction.
+    // Avant ce correctif, un echec du setStatut apres le save laissait
+    // la mission EN_COURS pour toujours (la contrainte unique
+    // livraison_id empechant de repasser par une nouvelle evaluation).
+    // La cloture est conditionnelle au statut EN_COURS ; un affected 0
+    // annule tout (l'evaluation n'est pas conservee).
+    // ============================================================
+    const saved = await this.repo.manager.transaction(async (manager) => {
+      let created: Evaluation;
+      try {
+        created = await manager.save(Evaluation, evaluation);
+      } catch (error) {
+        // Filet de securite si deux requetes simultanees passent la
+        // verification `existante` ci-dessus en meme temps : la
+        // contrainte UNIQUE(livraison_id) en base rejette la seconde
+        // ecriture.
+        if (
+          error instanceof QueryFailedError &&
+          (error as unknown as { code?: string }).code === '23505'
+        ) {
+          throw new ConflictException('Cette livraison a deja ete evaluee');
+        }
+        throw error;
       }
-      throw error;
-    }
+
+      const cloture = await manager.update(
+        Mission,
+        {
+          id: livraison.candidature.missionId,
+          statut: StatutMission.EN_COURS,
+        },
+        { statut: StatutMission.TERMINEE },
+      );
+
+      if (!cloture.affected || cloture.affected === 0) {
+        throw new ConflictException(
+          'La mission liee a cette livraison ne peut pas etre cloturee (statut inattendu).',
+        );
+      }
+
+      return created;
+    });
 
     await this.reputationService.recalculerScore(livraison.candidature.etudiantId);
 
@@ -120,20 +150,6 @@ export class EvaluationsService {
       message: `Vous avez reçu une note de ${dto.note}/5 pour "${livraison.candidature.mission.titre}".`,
       lienUrl: `/etudiants/${livraison.candidature.etudiantId}`,
     });
-
-    // ============================================================
-    // RG (fin de projet) : l'evaluation n'est possible qu'apres
-    // validation de la livraison ET confirmation du paiement. A partir
-    // d'ici les trois conditions obligatoires sont reunies :
-    //   livraison validee + paiement confirme + evaluation effectuee
-    // -> le projet peut etre marque comme termine (StatutMission.TERMINEE,
-    // statut existant ; le passage immediat a la validation de la
-    // livraison a ete retire de LivraisonsService.valider).
-    // ============================================================
-    await this.missionsService.setStatut(
-      livraison.candidature.missionId,
-      StatutMission.TERMINEE,
-    );
 
     return saved;
   }

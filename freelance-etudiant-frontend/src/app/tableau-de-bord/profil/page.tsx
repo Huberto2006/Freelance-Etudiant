@@ -17,6 +17,7 @@ import {
   FileText,
   Pencil,
   X,
+  Palette,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
@@ -26,6 +27,7 @@ import { Field, Input, Textarea } from "@/components/ui/Field";
 import { MessageVide, NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
 import { PhotoProfil } from "@/components/ui/PhotoProfil";
 import { PortfolioGalerie, estImageUrl } from "@/components/ui/Portfolio";
+import { SelecteurTheme } from "@/components/ui/SelecteurTheme";
 import type { ClientProfile, EtudiantProfile, Utilisateur } from "@/lib/types";
 
 export default function ProfilPage() {
@@ -33,36 +35,51 @@ export default function ProfilPage() {
 
   if (!utilisateur) return null;
 
-  if (utilisateur.role === "etudiant") {
-    return <ProfilEtudiant utilisateur={utilisateur} />;
-  }
-
-  if (utilisateur.role === "client") {
-    return <ProfilClient utilisateur={utilisateur} />;
-  }
-
   return (
-    <div>
-      <PageHeader icon={User} eyebrow="Votre compte" title="Mon profil" />
+    <div className="space-y-8">
+      {utilisateur.role === "etudiant" ? (
+        <ProfilEtudiant utilisateur={utilisateur} />
+      ) : utilisateur.role === "client" ? (
+        <ProfilClient utilisateur={utilisateur} />
+      ) : (
+        <div className="space-y-6">
+          <PageHeader icon={User} eyebrow="Votre compte" title="Mon profil" />
 
-      <NoticeCard>
-        <div className="flex items-center gap-4">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-ocre/10 text-ocre-dark">
-            <User size={20} />
-          </span>
+          <NoticeCard>
+            <div className="flex items-center gap-4">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-ocre/10 text-ocre-dark">
+                <User size={20} />
+              </span>
 
-          <div>
-            <p className="font-display text-lg font-medium">
-              {utilisateur.nom}
+              <div>
+                <p className="font-display text-lg font-medium">
+                  {utilisateur.nom}
+                </p>
+                <p className="text-sm text-ink-soft">{utilisateur.email}</p>
+              </div>
+            </div>
+
+            <p className="mt-5 text-sm text-ink-soft">
+              Les administrateurs n&apos;ont pas de profil public à modifier.
             </p>
-            <p className="text-sm text-ink-soft">{utilisateur.email}</p>
-          </div>
+          </NoticeCard>
         </div>
+      )}
 
-        <p className="mt-5 text-sm text-ink-soft">
-          Les administrateurs n&apos;ont pas de profil public à modifier.
-        </p>
-      </NoticeCard>
+      {/* =========================================================
+          SECTION APPARENCE & THÈME
+      ========================================================= */}
+      <section aria-labelledby="theme-section-title" className="pt-2">
+        <PageHeader
+          icon={Palette}
+          eyebrow="Personnalisation"
+          title="Apparence & Thème"
+        />
+
+        <NoticeCard>
+          <SelecteurTheme variante="complet" />
+        </NoticeCard>
+      </section>
     </div>
   );
 }
@@ -245,6 +262,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 setErreur(null);
                 setGestion(true);
               }}
+              className="flex items-center justify-center gap-2"
             >
               <Pencil size={16} />
               Gérer mon profil
