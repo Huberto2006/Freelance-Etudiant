@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -151,27 +152,62 @@ export class DemandesServiceService {
       throw new BadRequestException('Cette demande a deja ete traitee');
     }
 
-    const mission = await this.missionsService.creerDepuisDemandeService({
-      clientId: demande.clientId,
-      titre: demande.service.titre,
-      description: demande.cahierDesCharges,
-      budget: Number(demande.budgetPropose),
-      delaiJours: demande.delaiSouhaite,
-      categorie: demande.service.categorie,
-      competencesRequises: demande.service.competences,
-    });
+    // ============================================================
+    // ATOMICITE : la creation de la mission privee, de la candidature
+    // acceptee et l'acceptation de la demande sont ATOMIQUES. Avant ce
+    // correctif, un echec entre deux ecritures laissait soit une mission
+    // orpheline (sans candidature acceptee), soit une demande ACCEPTEE
+    // sans mission. La bascule finale de la demande est conditionnelle
+    // (UPDATE ... WHERE statut = 'en_attente') : deux requetes
+    // concurrentes ne peuvent jamais accepter deux fois la meme demande
+    // (la seconde echoue avec rollback de ses ecritures).
+    // ============================================================
+    const demandeAcceptee = await this.repo.manager.transaction(
+      async (manager) => {
+        const mission = await this.missionsService.creerDepuisDemandeService(
+          {
+            clientId: demande.clientId,
+            titre: demande.service.titre,
+            description: demande.cahierDesCharges,
+            budget: Number(demande.budgetPropose),
+            delaiJours: demande.delaiSouhaite,
+            categorie: demande.service.categorie,
+            competencesRequises: demande.service.competences,
+          },
+          manager,
+        );
 
-    await this.candidaturesService.creerAccepteeDirectement({
-      missionId: mission.id,
-      etudiantId,
-      prixPropose: Number(demande.budgetPropose),
-      delaiPropose: demande.delaiSouhaite,
-      message: 'Demande de service acceptée directement.',
-    });
+        await this.candidaturesService.creerAccepteeDirectement(
+          {
+            missionId: mission.id,
+            etudiantId,
+            prixPropose: Number(demande.budgetPropose),
+            delaiPropose: demande.delaiSouhaite,
+            message: 'Demande de service acceptée directement.',
+          },
+          manager,
+        );
 
-    demande.statut = StatutDemandeService.ACCEPTEE;
-    demande.missionId = mission.id;
-    const saved = await this.repo.save(demande);
+        const resultat = await manager.update(
+          DemandeService,
+          { id: demande.id, statut: StatutDemandeService.EN_ATTENTE },
+          {
+            statut: StatutDemandeService.ACCEPTEE,
+            missionId: mission.id,
+          },
+        );
+
+        if (!resultat.affected || resultat.affected === 0) {
+          // Une requete concurrente a deja traite la demande : tout
+          // annuler (mission + candidature) pour ne rien laisser d'orphelin.
+          throw new ConflictException('Cette demande a deja ete traitee');
+        }
+
+        demande.statut = StatutDemandeService.ACCEPTEE;
+        demande.missionId = mission.id;
+        return demande;
+      },
+    );
 
     await this.notificationsService.creer({
       destinataireId: demande.clientId,
@@ -181,7 +217,7 @@ export class DemandesServiceService {
       lienUrl: '/tableau-de-bord/mes-missions',
     });
 
-    return saved;
+    return demandeAcceptee;
   }
 
   async refuser(id: string, etudiantId: string): Promise<DemandeService> {

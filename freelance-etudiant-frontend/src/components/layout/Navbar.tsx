@@ -29,6 +29,7 @@ import { getFileUrl } from "@/lib/api";
 
 import { Button } from "@/components/ui/Button";
 import { BasculeTheme } from "@/components/ui/BasculeTheme";
+import { SelecteurTheme } from "@/components/ui/SelecteurTheme";
 import { MessagesLink } from "@/components/ui/MessagesLink";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 
@@ -773,7 +774,7 @@ export function Navbar({
                   ) : null}
 
                   {/* ==============================================
-                      APPARENCE
+                      APPARENCE & THÈMES
                       ============================================== */}
 
                   <div
@@ -784,38 +785,7 @@ export function Navbar({
                       py-3
                     "
                   >
-                    <div
-                      className="
-                        flex
-                        items-center
-                        justify-between
-                        gap-3
-                      "
-                    >
-                      <div>
-                        <p
-                          className="
-                            text-sm
-                            font-medium
-                            text-ink
-                          "
-                        >
-                          Apparence
-                        </p>
-
-                        <p
-                          className="
-                            mt-0.5
-                            text-[11px]
-                            text-ink-soft
-                          "
-                        >
-                          Thème
-                        </p>
-                      </div>
-
-                      <BasculeTheme />
-                    </div>
+                    <SelecteurTheme variante="compact" />
                   </div>
 
                   {/* ==============================================
@@ -865,6 +835,8 @@ export function Navbar({
                 gap-2
               "
             >
+              <BasculeTheme />
+
               <Link href="/connexion">
                 <Button
                   variant="ghost"

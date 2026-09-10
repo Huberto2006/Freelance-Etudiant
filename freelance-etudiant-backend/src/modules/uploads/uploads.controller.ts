@@ -31,6 +31,28 @@ function assurerRepertoire(destination: string): string {
   return destination;
 }
 
+/**
+ * Verifie que l'EXTENSION du fichier correspond a une liste blanche
+ * (voir extensionsAutorisees). Le MIME declare par le client est
+ * falsifiable : sans controle d'extension, un fichier nomme "x.svg" (ou
+ * "x.html") envoye avec le MIME image/png serait stocke tel quel puis
+ * servi par express.static avec un Content-Type executant du script dans
+ * le navigateur (vecteur XSS). L'extension doit donc elle-meme appartenir
+ * a la liste des types de contenu autorises.
+ */
+function verifierExtension(
+  file: { originalname: string },
+  extensionsAutorisees: readonly string[],
+  message: string,
+  cb: (error: Error | null, acceptFile: boolean) => void,
+): void {
+  const extension = extname(file.originalname).toLowerCase();
+  if (!extensionsAutorisees.includes(extension)) {
+    return cb(new BadRequestException(message), false);
+  }
+  cb(null, true);
+}
+
 @ApiTags('Uploads')
 @ApiBearerAuth()
 @Controller('uploads')
@@ -77,7 +99,14 @@ export class UploadsController {
           );
         }
 
-        cb(null, true);
+        // Le MIME declare ne suffit pas : l'extension doit appartenir au
+        // meme ensemble (protection XSS via extension falsifiee).
+        return verifierExtension(
+          file,
+          ['.jpg', '.jpeg', '.png', '.webp'],
+          'Format non supporté. Utilisez JPG, PNG ou WebP.',
+          cb,
+        );
       },
     }),
   )
@@ -144,7 +173,26 @@ export class UploadsController {
           );
         }
 
-        cb(null, true);
+        // Extension whitelistee en coherence avec les MIME ci-dessus.
+        return verifierExtension(
+          file,
+          [
+            '.pdf',
+            '.doc',
+            '.docx',
+            '.xls',
+            '.xlsx',
+            '.zip',
+            '.rar',
+            '.jpg',
+            '.jpeg',
+            '.png',
+            '.webp',
+            '.txt',
+          ],
+          'Format non supporté. Utilisez PDF, Word, Excel, une image, une archive ou un fichier texte.',
+          cb,
+        );
       },
     }),
   )

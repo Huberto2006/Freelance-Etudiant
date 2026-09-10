@@ -1,9 +1,10 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
+  Entity,
+  Index,
   JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
   CreateDateColumn,
 } from 'typeorm';
 import { Candidature } from '../../candidatures/entities/candidature.entity';
@@ -26,6 +27,15 @@ import {
  *        RESTRICT.
  */
 @Entity('transactions')
+// IDEMPOTENCE PAIEMENT : une seule transaction NON ANNULEE par candidature.
+// Index unique PARTIEL (les transactions annulees sont exclues pour
+// permettre a un client de redeclarer un paiement apres annulation
+// administrative). Garantit qu'une double requete concurrente ne peut
+// jamais creer deux paiements actifs pour le meme projet.
+@Index('uq_transaction_active_par_candidature', ['candidatureId'], {
+  unique: true,
+  where: "statut != 'annulee'",
+})
 export class Transaction {
   @PrimaryGeneratedColumn('uuid')
   id: string;

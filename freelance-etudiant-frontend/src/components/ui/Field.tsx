@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import type { InputHTMLAttributes, LabelHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { InputHTMLAttributes, LabelHTMLAttributes, Ref, TextareaHTMLAttributes } from "react";
 
 export function Field({
   label,
@@ -41,13 +41,24 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
   );
 }
 
-export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export function Textarea({
+  className,
+  ref,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  /**
+   * React 19 : le ref est transmis comme une prop classique, ce qui permet
+   * aux pages d'ajuster dynamiquement la hauteur du champ (messagerie).
+   */
+  ref?: Ref<HTMLTextAreaElement>;
+}) {
   return (
     <textarea
+      ref={ref}
       {...props}
       className={clsx(
         "rounded-lg border border-ink/30 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 focus:border-ocre transition-colors resize-y",
-        props.className,
+        className,
       )}
     />
   );

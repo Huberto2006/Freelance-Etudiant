@@ -38,7 +38,7 @@ export function DashboardHeader({
         </p>
 
         <h1 className="font-display text-3xl font-semibold leading-tight">
-          Bonjour, {prenom} 👋
+          Bonjour, {prenom}
         </h1>
 
         <p className="mt-1 text-sm text-ink-soft">{sousTitre}</p>

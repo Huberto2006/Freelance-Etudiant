@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -8,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { Transaction } from './entities/transaction.entity';
 import { Livraison } from '../livraisons/entities/livraison.entity';
 import { CreerPaiementDto } from './dto/creer-paiement.dto';
@@ -104,8 +105,35 @@ export class PaiementsService {
       );
     }
 
+    // ============================================================
+    // SOURCE DE VERITE FINANCIERE (cote backend) : le montant facture
+    // est le prix CONVENU a l'acceptation de la candidature
+    // (candidature.prixPropose), jamais un montant envoye par le
+    // frontend. Si le client envoie un montant, il doit correspondre
+    // au prix convenu (comparaison en centimes pour eviter les ecarts
+    // de virgule flottante) ; sinon l'appel est refuse.
+    // ============================================================
+    const montantConvenu = Number(candidature.prixPropose);
+    if (dto.montant !== undefined) {
+      const montantDeclare = Number(dto.montant);
+      if (
+        !Number.isFinite(montantDeclare) ||
+        Math.round(montantDeclare * 100) !== Math.round(montantConvenu * 100)
+      ) {
+        throw new BadRequestException(
+          `Le montant declare (${dto.montant} Ar) ne correspond pas au prix convenu pour ce projet (${montantConvenu} Ar).`,
+        );
+      }
+    }
+
     if (dto.methode === MethodePaiement.MVOLA) {
-      return this.creerPaiementMvola(candidature, candidatureId, clientId, dto);
+      return this.creerPaiementMvola(
+        candidature,
+        candidatureId,
+        clientId,
+        dto,
+        montantConvenu,
+      );
     }
 
     // ---- Declaration manuelle (virement bancaire) ----
@@ -113,19 +141,36 @@ export class PaiementsService {
       candidatureId,
       clientId,
       etudiantId: candidature.etudiant.utilisateurId,
-      montant: dto.montant,
+      montant: montantConvenu,
       methode: dto.methode,
       reference: dto.reference as string,
       statut: StatutTransaction.EN_ATTENTE,
       provider: 'manuel',
     });
-    const saved = await this.repo.save(transaction);
+    let saved: Transaction;
+    try {
+      saved = await this.repo.save(transaction);
+    } catch (error) {
+      // Filet d'idempotence : l'index unique partiel (une seule
+      // transaction non annulee par candidature) rejette une double
+      // soumission qui aurait passe la verification `existante`
+      // ci-dessus en meme temps (deux requetes concurrentes).
+      if (
+        error instanceof QueryFailedError &&
+        (error as unknown as { code?: string }).code === '23505'
+      ) {
+        throw new ConflictException(
+          'Un paiement existe deja pour cette candidature',
+        );
+      }
+      throw error;
+    }
 
     await this.notificationsService.creer({
       destinataireId: candidature.etudiant.utilisateurId,
       type: TypeNotification.PAIEMENT_INITIE,
       titre: 'Paiement déclaré',
-      message: `Le client a déclaré un paiement de ${dto.montant} Ar pour "${candidature.mission.titre}".`,
+      message: `Le client a déclaré un paiement de ${montantConvenu} Ar pour "${candidature.mission.titre}".`,
       lienUrl: '/tableau-de-bord/paiements',
     });
     await this.emailService.envoyerPaiementInitie(
@@ -133,7 +178,7 @@ export class PaiementsService {
       {
         nom: candidature.etudiant.utilisateur?.nom ?? 'Etudiant',
         titreMission: candidature.mission.titre,
-        montant: Number(dto.montant),
+        montant: montantConvenu,
         reference: saved.reference,
       },
     );
@@ -153,6 +198,7 @@ export class PaiementsService {
     candidatureId: string,
     clientId: string,
     dto: CreerPaiementDto,
+    montantConvenu: number,
   ): Promise<Transaction> {
     if (!this.mvolaService.estConfigure) {
       throw new ServiceUnavailableException(
@@ -168,7 +214,9 @@ export class PaiementsService {
     };
     try {
       initiation = await this.mvolaService.initierPaiement({
-        montantAr: Number(dto.montant),
+        // Le montant demande au fournisseur est le prix convenu
+        // (backend), jamais un montant transmis par le frontend.
+        montantAr: montantConvenu,
         transactionReference: reference,
         telephoneDebite: dto.telephoneDebite as string,
         description: `Paiement mission "${candidature.mission.titre}" - KIANJA`,
@@ -188,7 +236,7 @@ export class PaiementsService {
       candidatureId,
       clientId,
       etudiantId: candidature.etudiant.utilisateurId,
-      montant: dto.montant,
+      montant: montantConvenu,
       methode: MethodePaiement.MVOLA,
       reference,
       statut: StatutTransaction.EN_ATTENTE,
@@ -197,13 +245,28 @@ export class PaiementsService {
       telephoneDebite: dto.telephoneDebite,
       providerStatut: initiation.statut,
     });
-    const saved = await this.repo.save(transaction);
+    let saved: Transaction;
+    try {
+      saved = await this.repo.save(transaction);
+    } catch (error) {
+      // Filet d'idempotence (cf. declaration manuelle) : une double
+      // requete concurrente est rejetee par l'index unique partiel.
+      if (
+        error instanceof QueryFailedError &&
+        (error as unknown as { code?: string }).code === '23505'
+      ) {
+        throw new ConflictException(
+          'Un paiement existe deja pour cette candidature',
+        );
+      }
+      throw error;
+    }
 
     await this.notificationsService.creer({
       destinataireId: candidature.etudiant.utilisateurId,
       type: TypeNotification.PAIEMENT_INITIE,
       titre: 'Paiement initié',
-      message: `Un paiement MVola de ${dto.montant} Ar est en attente de confirmation pour "${candidature.mission.titre}".`,
+      message: `Un paiement MVola de ${montantConvenu} Ar est en attente de confirmation pour "${candidature.mission.titre}".`,
       lienUrl: '/tableau-de-bord/paiements',
     });
     await this.emailService.envoyerPaiementInitie(
@@ -211,7 +274,7 @@ export class PaiementsService {
       {
         nom: candidature.etudiant.utilisateur?.nom ?? 'Etudiant',
         titreMission: candidature.mission.titre,
-        montant: Number(dto.montant),
+        montant: montantConvenu,
         reference,
       },
     );
@@ -419,9 +482,39 @@ export class PaiementsService {
    * est deja validee (flux : validation -> paiement -> liberation).
    */
   private async marquerConfirmee(transaction: Transaction): Promise<Transaction> {
+    // ============================================================
+    // Transition ATOMIQUE : la mise a jour est conditionnee au statut
+    // courant (UPDATE ... WHERE statut = 'en_attente'). Deux appels
+    // concurrents (webhook rejoue + polling client, double-clic admin)
+    // ne peuvent jamais confirmer deux fois la meme transaction : seul
+    // l'appel dont l'UPDATE affecte une ligne declenche les effets de
+    // bord (notifications, emails, liberation). Les autres obtiennent
+    // la transaction deja confirmee sans rien dupliquer.
+    // ============================================================
+    const maintenant = new Date();
+    const resultat = await this.repo.update(
+      {
+        id: transaction.id,
+        statut: StatutTransaction.EN_ATTENTE,
+      },
+      {
+        statut: StatutTransaction.CONFIRMEE,
+        dateConfirmation: maintenant,
+      },
+    );
+
+    if (!resultat.affected || resultat.affected === 0) {
+      // Un autre appel a deja transitionne la transaction : effet nul.
+      const aJour = await this.repo.findOne({
+        where: { id: transaction.id },
+        relations: ['candidature', 'candidature.mission', 'client', 'etudiant'],
+      });
+      return aJour ?? { ...transaction, statut: StatutTransaction.CONFIRMEE };
+    }
+
     transaction.statut = StatutTransaction.CONFIRMEE;
-    transaction.dateConfirmation = new Date();
-    const saved = await this.repo.save(transaction);
+    transaction.dateConfirmation = maintenant;
+    const saved = transaction;
 
     const titreMission =
       transaction.candidature?.mission?.titre ?? 'Mission';
@@ -498,10 +591,30 @@ export class PaiementsService {
     return saved;
   }
 
-  /** Passage EN_ATTENTE -> ANNULEE (echec fournisseur ou rejet admin). */
+  /** Passage EN_ATTENTE -> ANNULEE (echec fournisseur ou rejet admin).
+   * Transition atomique (cf. marquerConfirmee) : les effets de bord ne
+   * s'executent que si CET appel a remporte la course. */
   private async marquerAnnulee(transaction: Transaction): Promise<Transaction> {
+    const resultat = await this.repo.update(
+      {
+        id: transaction.id,
+        statut: StatutTransaction.EN_ATTENTE,
+      },
+      {
+        statut: StatutTransaction.ANNULEE,
+      },
+    );
+
+    if (!resultat.affected || resultat.affected === 0) {
+      const aJour = await this.repo.findOne({
+        where: { id: transaction.id },
+        relations: ['candidature', 'candidature.mission'],
+      });
+      return aJour ?? { ...transaction, statut: StatutTransaction.ANNULEE };
+    }
+
     transaction.statut = StatutTransaction.ANNULEE;
-    const saved = await this.repo.save(transaction);
+    const saved = transaction;
 
     await this.notificationsService.creer({
       destinataireId: transaction.clientId,
@@ -537,9 +650,25 @@ export class PaiementsService {
     });
     if (!transaction) return;
 
+    // Transition ATOMIQUE CONFIRMEE -> LIBEREE : la validation de la
+    // livraison et la confirmation du paiement peuvent arriver quasi
+    // simultanement (les deux declenchent cette liberation). Un seul
+    // appel peut remporter l'UPDATE conditionnel : les notifications et
+    // l'email ne partent donc jamais deux fois.
+    const resultat = await this.repo.update(
+      {
+        id: transaction.id,
+        statut: StatutTransaction.CONFIRMEE,
+      },
+      {
+        statut: StatutTransaction.LIBEREE,
+        dateLiberation: new Date(),
+      },
+    );
+    if (!resultat.affected || resultat.affected === 0) {
+      return; // deja liberee par un appel concurrent
+    }
     transaction.statut = StatutTransaction.LIBEREE;
-    transaction.dateLiberation = new Date();
-    await this.repo.save(transaction);
 
     const titreMission = transaction.candidature.mission.titre;
 

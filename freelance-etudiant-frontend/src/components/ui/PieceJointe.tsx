@@ -20,10 +20,17 @@ export function SelecteurPieceJointe({
   valeur,
   onChange,
   disabled,
+  compact = false,
 }: {
   valeur: PieceJointeValeur | null;
   onChange: (piece: PieceJointeValeur | null) => void;
   disabled?: boolean;
+  /**
+   * Variante compacte (icône seule) pour les zones de saisie resserrées
+   * (ex. barre d'envoi de la messagerie). Le comportement d'envoi du
+   * fichier reste identique ; la pilule « fichier choisi » est inchangée.
+   */
+  compact?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [envoi, setEnvoi] = useState(false);
@@ -73,6 +80,39 @@ export function SelecteurPieceJointe({
         >
           <X size={13} />
         </button>
+      </div>
+    );
+  }
+
+  if (compact) {
+    return (
+      <div>
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={disabled || envoi}
+          title="Joindre un fichier"
+          aria-label="Joindre un fichier"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ink/25 text-ink-soft transition-colors hover:border-ink/50 hover:text-ink disabled:cursor-wait disabled:opacity-60"
+        >
+          {envoi ? (
+            <Loader2 size={17} className="animate-spin" />
+          ) : (
+            <Paperclip size={17} />
+          )}
+        </button>
+        <input
+          ref={inputRef}
+          type="file"
+          onChange={onFichierChoisi}
+          className="sr-only"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png,.webp,.txt"
+        />
+        {erreur && (
+          <p role="alert" className="mt-1 text-xs text-brique">
+            {erreur}
+          </p>
+        )}
       </div>
     );
   }

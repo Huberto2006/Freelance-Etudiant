@@ -1,97 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-type Theme = "clair" | "sombre";
-
-const THEME_KEY = "kianja-theme";
+import { useTheme } from "@/lib/theme-context";
 
 /**
- * Vérifie si une valeur correspond à un thème valide.
+ * Bouton de bascule rapide entre Mode Clair et Mode Sombre.
+ * Consomme le ThemeProvider centralisé pour garantir la synchronisation
+ * globale et instantanée de tout le frontend.
  */
-function estTheme(value: string | null): value is Theme {
-  return value === "clair" || value === "sombre";
-}
-
-/**
- * Récupère le thème enregistré.
- */
-function lireTheme(): Theme {
-  if (typeof window === "undefined") {
-    return "clair";
-  }
-
-  try {
-    const theme = window.localStorage.getItem(THEME_KEY);
-
-    return estTheme(theme) ? theme : "clair";
-  } catch {
-    return "clair";
-  }
-}
-
-/**
- * Enregistre le thème.
- */
-function enregistrerTheme(theme: Theme) {
-  try {
-    window.localStorage.setItem(THEME_KEY, theme);
-  } catch {
-    // localStorage indisponible
-  }
-}
-
-/**
- * Applique le thème au document HTML.
- */
-function appliquerTheme(theme: Theme) {
-  if (typeof document === "undefined") {
-    return;
-  }
-
-  document.documentElement.classList.toggle(
-    "dark",
-    theme === "sombre",
-  );
-}
-
 export function BasculeTheme() {
-  const [theme, setTheme] = useState<Theme>("clair");
-  const [estInitialise, setEstInitialise] = useState(false);
+  const { mode, basculerMode, estInitialise } = useTheme();
 
-  /**
-   * Initialisation du thème côté navigateur.
-   */
-  useEffect(() => {
-    const themeInitial = lireTheme();
-
-    // appliquerTheme synchronise un systeme externe (le DOM) : c'est le
-    // role legitime d'un effet. Les mises a jour d'etat React sont
-    // differees hors du corps synchrone de l'effet (react-hooks/
-    // set-state-in-effect).
-    appliquerTheme(themeInitial);
-
-    void Promise.resolve().then(() => {
-      setTheme(themeInitial);
-      setEstInitialise(true);
-    });
-  }, []);
-
-  /**
-   * Change le thème.
-   */
-  const basculer = () => {
-    const nouveauTheme: Theme =
-      theme === "clair" ? "sombre" : "clair";
-
-    setTheme(nouveauTheme);
-    appliquerTheme(nouveauTheme);
-    enregistrerTheme(nouveauTheme);
-  };
-
-  /**
-   * Évite les différences entre SSR et navigateur.
-   */
   if (!estInitialise) {
     return (
       <button
@@ -120,12 +38,12 @@ export function BasculeTheme() {
     );
   }
 
-  const modeSombre = theme === "sombre";
+  const modeSombre = mode === "sombre";
 
   return (
     <button
       type="button"
-      onClick={basculer}
+      onClick={basculerMode}
       aria-label={
         modeSombre
           ? "Passer en mode clair"
@@ -137,6 +55,8 @@ export function BasculeTheme() {
           : "Passer en mode sombre"
       }
       className="
+￼
+
         group
         flex h-9 w-9
         items-center justify-center
@@ -173,7 +93,6 @@ export function BasculeTheme() {
             aria-hidden="true"
           >
             <circle cx="12" cy="12" r="4" />
-
             <path
               strokeLinecap="round"
               d="

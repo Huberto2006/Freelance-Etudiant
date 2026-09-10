@@ -1,12 +1,13 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
 
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Not, QueryFailedError, Repository } from "typeorm";
 
 import { Livraison } from "./entities/livraison.entity";
 
@@ -88,6 +89,12 @@ export class LivraisonsService {
         existante.lienLivrable = dto.lienLivrable;
       }
 
+      // Livraison par fichiers : la nouvelle liste remplace l'ancienne
+      // (les pieces uploadees ne sont rattachees qu'au dernier envoi).
+      if (dto.piecesJointes !== undefined) {
+        existante.piecesJointes = dto.piecesJointes;
+      }
+
       if (dto.commentaireLivraison !== undefined) {
         existante.commentaireLivraison =
           dto.commentaireLivraison;
@@ -132,10 +139,31 @@ export class LivraisonsService {
 
       lienLivrable: dto.lienLivrable,
 
+      piecesJointes: dto.piecesJointes,
+
       commentaireLivraison: dto.commentaireLivraison,
     });
 
-    const saved = await this.repo.save(livraison);
+    let saved: Livraison;
+    try {
+      saved = await this.repo.save(livraison);
+    } catch (error) {
+      // Filet d'anti-doublon : la colonne candidature_id porte une
+      // contrainte UNIQUE (relation OneToOne). Deux POST simultanes sur
+      // une candidature sans livraison passeraient tous deux la
+      // verification `existante` ci-dessus ; la contrainte rejette le
+      // second insert et on renvoie une erreur 409 explicite au lieu
+      // d'un 500 brut.
+      if (
+        error instanceof QueryFailedError &&
+        (error as unknown as { code?: string }).code === '23505'
+      ) {
+        throw new ConflictException(
+          'Une livraison existe déjà pour cette candidature.',
+        );
+      }
+      throw error;
+    }
 
     // Notification au client
     await this.notificationsService.creer({
@@ -397,9 +425,32 @@ export class LivraisonsService {
       );
     }
 
+    // ============================================================
+    // Transition ATOMIQUE : UPDATE conditionnel (ne transitionne que si
+    // la livraison n'est pas deja validee). Un double-clic ou deux
+    // requetes concurrentes ne peuvent jamais valider deux fois : le
+    // second appel echoue (409) sans dupliquer notification ni
+    // liberation de fonds (libererSiConfirmee est elle-meme atomique).
+    // ============================================================
+    const resultat = await this.repo.update(
+      {
+        id,
+        statut: Not(StatutLivraison.VALIDEE),
+      },
+      {
+        statut: StatutLivraison.VALIDEE,
+      },
+    );
+
+    if (!resultat.affected || resultat.affected === 0) {
+      throw new ConflictException(
+        "Cette livraison a déjà été traitée.",
+      );
+    }
+
     livraison.statut = StatutLivraison.VALIDEE;
 
-    const saved = await this.repo.save(livraison);
+    const saved = livraison;
 
     // ============================================================
     // RG (fin de projet) : la validation de la livraison rend le

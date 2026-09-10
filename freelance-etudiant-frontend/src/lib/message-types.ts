@@ -1,10 +1,27 @@
+import type { Role } from "./types";
+
 export interface MessageAvecUtilisateurs {
   id: string;
   contenu: string;
   expediteurId: string;
   destinataireId: string;
-  expediteur?: { id: string; nom: string };
-  destinataire?: { id: string; nom: string };
+  /**
+   * Le backend sérialise l'entité Utilisateur complète (relations
+   * expediteur/destinataire de Message) : le typage documente ici les
+   * champs réellement exploités par l'interface (nom, photo, rôle).
+   */
+  expediteur?: {
+    id: string;
+    nom: string;
+    photoUrl?: string | null;
+    role?: Role;
+  };
+  destinataire?: {
+    id: string;
+    nom: string;
+    photoUrl?: string | null;
+    role?: Role;
+  };
   missionId?: string | null;
   pieceJointeUrl?: string | null;
   pieceJointeNom?: string | null;

@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/lib/auth-context";
@@ -78,10 +74,6 @@ export default function TableauDeBordLayout({
 
   if (chargement || !utilisateur) {
     return (
-      // 100vh - 4rem : l'écran de chargement vit sous la Navbar fixed
-      // (h-16), dont l'espace est déjà réservé par le <main> du layout
-      // racine (pt-16). Sans cette correction, la page dépasserait de
-      // 4rem et provoquerait un scroll fantôme.
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-paper px-5">
         <p className="text-sm text-ink-soft">
           Chargement…
@@ -92,48 +84,22 @@ export default function TableauDeBordLayout({
 
   /*
    * ==========================================================
-   * VARIABLE DE LAYOUT
-   * ==========================================================
-   *
-   * Valeur initiale :
-   * 260px = sidebar ouverte.
-   *
-   * La Sidebar modifiera ensuite cette variable lorsque
-   * l'utilisateur replie ou déplie la sidebar.
-   *
-   * Cette valeur initiale évite un mauvais positionnement
-   * lors du premier rendu.
-   */
-
-  const layoutStyle = {
-    "--sidebar-width": "260px",
-  } as CSSProperties;
-
-  /*
-   * ==========================================================
    * LAYOUT GLOBAL
    * ==========================================================
    *
-   * Hiérarchie des repères (aucun padding dupliqué) :
+   * IMPORTANT :
+   * --sidebar-width est géré directement par Sidebar.tsx.
    *
-   * - Hauteur de la Navbar (h-16) : réservée une seule fois par le
-   *   <main className="flex-1 pt-16"> du layout racine. La Navbar
-   *   hasSidebar étant fixed au même endroit, ce padding suffit.
+   * Sidebar ouverte  => 260px
+   * Sidebar réduite  => 76px
    *
-   * - Largeur de la Sidebar : pilotée par --sidebar-width (260px
-   *   ouverte, 76px réduite). La Sidebar écrit la variable, la zone
-   *   de contenu et la Navbar la consomment (lg:ml / lg:left).
-   *
-   * - Mobile : la Sidebar passe en drawer (z-index supérieur), la
-   *   marge lg:ml-[var(--sidebar-width)] ne s'applique qu'à partir
-   *   de lg.
+   * Il ne faut PAS redéfinir --sidebar-width ici avec
+   * un style inline, sinon la valeur provenant de Sidebar
+   * ne peut pas modifier la marge du contenu.
    */
 
   return (
-    <div
-      className="bg-paper"
-      style={layoutStyle}
-    >
+    <div className="bg-paper">
       {/* =====================================================
           SIDEBAR
           ===================================================== */}
@@ -147,18 +113,6 @@ export default function TableauDeBordLayout({
 
       {/* =====================================================
           ZONE PRINCIPALE
-          =====================================================
-          
-          IMPORTANT :
-          Ne pas ajouter "w-full" ni "min-h-screen" ici.
-
-          - Largeur : cette zone possède déjà
-                margin-left: var(--sidebar-width)
-            une largeur automatique permet au navigateur
-            de prendre uniquement l'espace restant.
-          - Hauteur : le <main className="flex-1"> du layout racine
-            remplit déjà le viewport (min-h-screen ici créerait un
-            débordement de la hauteur de la Navbar).
           ===================================================== */}
 
       <div
@@ -182,11 +136,6 @@ export default function TableauDeBordLayout({
 
         {/* ===================================================
             CONTENU
-            ===================================================
-            
-            L'espace sous la Navbar (h-16) est déjà réservé par
-            le <main> du layout racine : aucun padding-top ici,
-            sinon double espace entre la Navbar et le contenu.
             =================================================== */}
 
         <div
