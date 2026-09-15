@@ -7,9 +7,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
+  OneToMany,
 } from 'typeorm';
 import { Utilisateur } from '../../users/entities/utilisateur.entity';
 import { TypeCibleContenu } from '../../../common/enums/type-cible-contenu.enum';
+import { Mention } from './mention.entity';
 
 /**
  * Table Commentaire : echanges publics sous une mission ou un service
@@ -44,4 +46,14 @@ export class Commentaire {
 
   @UpdateDateColumn({ name: 'date_modification', type: 'timestamptz' })
   dateModification: Date;
+
+  /**
+   * Utilisateurs identifies via @ dans le texte du commentaire.
+   *
+   * Relation non chargee par defaut (aucune requete existante n'y fait
+   * reference) : elle documente l'association et porte la contrainte
+   * onDelete CASCADE inverse definie dans l'entite Mention.
+   */
+  @OneToMany(() => Mention, (mention) => mention.commentaire)
+  mentions: Mention[];
 }

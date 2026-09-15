@@ -60,6 +60,23 @@ export class LivraisonsService {
       candidature,
     );
 
+    if (dto.lienLivrable) {
+      const plateforme = dto.plateforme?.toLowerCase();
+      const url = dto.lienLivrable.trim();
+      const estGitHub = /^https?:\/\/(www\.)?github\.com\//i.test(url);
+      const estGitLab = /^https?:\/\/(www\.)?gitlab\.com\//i.test(url);
+
+      if (
+        (plateforme === 'github' && !estGitHub) ||
+        (plateforme === 'gitlab' && !estGitLab) ||
+        (!plateforme && !estGitHub && !estGitLab)
+      ) {
+        throw new BadRequestException(
+          'Le lien ne correspond pas à la plateforme sélectionnée.',
+        );
+      }
+    }
+
     // Chercher une livraison existante
     const existante = await this.repo.findOne({
       where: {
@@ -87,6 +104,10 @@ export class LivraisonsService {
 
       if (dto.lienLivrable !== undefined) {
         existante.lienLivrable = dto.lienLivrable;
+      }
+
+      if (dto.branche !== undefined) {
+        existante.branche = dto.branche.trim() || undefined;
       }
 
       // Livraison par fichiers : la nouvelle liste remplace l'ancienne
@@ -138,6 +159,8 @@ export class LivraisonsService {
       fichierUrl: dto.fichierUrl,
 
       lienLivrable: dto.lienLivrable,
+
+      branche: dto.branche?.trim() || undefined,
 
       piecesJointes: dto.piecesJointes,
 

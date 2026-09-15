@@ -11,11 +11,19 @@ import {
   Package,
   MessageCircle,
   ExternalLink,
+  FileUp,
+  Trash2,
   Users,
   CheckCircle,
   XCircle,
   Clock,
   Star,
+  ChevronRight,
+  Search,
+  FolderGit2,
+  Wallet,
+  Timer,
+  Check,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
@@ -26,23 +34,29 @@ import type {
   Candidature,
   Evaluation,
   Livraison,
+  PieceJointeLivraison,
   Transaction,
 } from "@/lib/types";
 
-import { statutLivraisonLabel } from "@/lib/format";
+import { formatArgent, formatDateCourte, statutLivraisonLabel } from "@/lib/format";
+import { getFileUrl } from "@/lib/api";
 
+import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import {
   Field,
   Input,
+  Select,
   Textarea,
 } from "@/components/ui/Field";
 
 import {
   NoticeCard,
   PageHeader,
+  StatCard,
   Tag,
 } from "@/components/ui/Notice";
+import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { SousNavigation } from "@/components/ui/SousNavigation";
 
 // ============================================================
@@ -133,6 +147,12 @@ function LivraisonsContent() {
     ongletLivraisons,
     setOngletLivraisons,
   ] = useState("toutes");
+
+  const [recherche, setRecherche] = useState("");
+  const [filtreClient, setFiltreClient] = useState("");
+  const [filtreMission, setFiltreMission] = useState("");
+  const [filtreStatut, setFiltreStatut] = useState("");
+  const [filtreMethode, setFiltreMethode] = useState("");
 
   // ==========================================================
   // RÔLE RÉEL DE L'UTILISATEUR
@@ -338,24 +358,68 @@ function LivraisonsContent() {
     ).length,
   };
 
+  function livraisonPour(candidature: Candidature) {
+    return livraisons.find((item) => item.candidatureId === candidature.id);
+  }
+
+  function methodeLivraison(livraison: Livraison | undefined) {
+    if (livraison?.piecesJointes?.length) return "fichiers";
+    if (livraison?.lienLivrable?.toLowerCase().includes("gitlab.com")) return "gitlab";
+    if (livraison?.lienLivrable) return "github";
+    return "";
+  }
+
+  // Identité de l'autre partie affichée sur chaque ligne / le panneau
+  // de détail : l'étudiant pour un client, le client pour un étudiant.
+  function infosAutrePersonne(candidature: Candidature) {
+    if (role === "client") {
+      return {
+        nom: candidature.etudiant?.utilisateur?.nom ?? "Étudiant",
+        photoUrl: candidature.etudiant?.utilisateur?.photoUrl ?? null,
+        label: "Étudiant",
+      };
+    }
+    return {
+      nom:
+        candidature.mission?.client?.utilisateur?.nom ??
+        candidature.mission?.client?.nomEntreprise ??
+        "Client",
+      photoUrl: candidature.mission?.client?.utilisateur?.photoUrl ?? null,
+      label: "Client",
+    };
+  }
+
+  const candidaturesAvecFiltres = candidaturesFiltrees.filter((candidature) => {
+    const livraison = livraisonPour(candidature);
+    const client = candidature.mission?.client?.utilisateur?.nom ?? candidature.mission?.client?.nomEntreprise ?? "";
+    const mission = candidature.mission?.titre ?? "";
+    const texte = `${client} ${mission} ${candidature.missionId} ${livraison?.id ?? ""}`.toLowerCase();
+    return (
+      (!recherche.trim() || texte.includes(recherche.trim().toLowerCase())) &&
+      (!filtreClient || client === filtreClient) &&
+      (!filtreMission || mission === filtreMission) &&
+      (!filtreStatut || livraison?.statut === filtreStatut) &&
+      (!filtreMethode || methodeLivraison(livraison) === filtreMethode)
+    );
+  });
+
   const candidaturesAffichees =
     ongletLivraisons === "toutes"
-      ? candidaturesFiltrees
-      : candidaturesFiltrees.filter(
+      ? candidaturesAvecFiltres
+      : candidaturesAvecFiltres.filter(
           (c) => categorieLivraison(c) === ongletLivraisons,
         );
 
-  const candidatureSelectionnee =
-    candidatureParam
-      ? candidaturesFiltrees.find(
-          (candidature) =>
-            candidature.id ===
-            candidatureParam,
-        ) ??
-        candidaturesFiltrees[0] ??
-        null
-      : candidaturesFiltrees[0] ??
-        null;
+  // Contrairement à l'ancienne disposition « maître-détail » (liste +
+  // détail toujours visibles côte à côte), l'écran de détail n'est
+  // affiché que si une candidature est explicitement demandée via
+  // l'URL (clic sur « Voir » ou lien depuis une notification). Sans
+  // paramètre, l'écran liste (cartes stats + tableau) reste affiché.
+  const candidatureSelectionnee = candidatureParam
+    ? (candidaturesFiltrees.find(
+        (candidature) => candidature.id === candidatureParam,
+      ) ?? candidaturesFiltrees[0] ?? null)
+    : null;
 
   const livraisonSelectionnee =
     candidatureSelectionnee
@@ -430,6 +494,140 @@ function LivraisonsContent() {
   // AFFICHAGE
   // ==========================================================
 
+  // ==========================================================
+  // ÉCRAN DE DÉTAIL (une livraison sélectionnée via l'URL)
+  // ==========================================================
+
+  if (candidatureSelectionnee) {
+    const infos = infosAutrePersonne(candidatureSelectionnee);
+
+    return (
+      <div>
+        {/* FIL D'ARIANE + RETOUR */}
+
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <nav
+            aria-label="Fil d'Ariane"
+            className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-ink-soft"
+          >
+            <Link
+              href="/tableau-de-bord/livraisons"
+              className="hover:text-ink hover:underline"
+            >
+              Livraisons
+            </Link>
+            <ChevronRight size={13} aria-hidden="true" />
+            <span className="text-ink">Détail</span>
+          </nav>
+
+          <BoutonRetour
+            label="Retour"
+            repli="/tableau-de-bord/livraisons"
+            forcer
+          />
+        </div>
+
+        <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
+          {/* CONTENU PRINCIPAL */}
+
+          <div>
+            {role === "client" ? (
+              livraisonSelectionnee ? (
+                <LivraisonClient
+                  key={candidatureSelectionnee.id}
+                  candidature={candidatureSelectionnee}
+                  livraison={livraisonSelectionnee}
+                  paiements={paiements}
+                  onRafraichir={rafraichirDonnees}
+                />
+              ) : (
+                <NoticeCard>
+                  <p className="text-sm text-ink-soft">
+                    Aucune livraison n&apos;a encore été déposée.
+                  </p>
+                </NoticeCard>
+              )
+            ) : (
+              <LivraisonEtudiant
+                key={candidatureSelectionnee.id}
+                candidature={candidatureSelectionnee}
+                livraison={livraisonSelectionnee}
+              />
+            )}
+          </div>
+
+          {/* PANNEAU LATÉRAL — DÉTAILS DE LA MISSION */}
+
+          <div className="flex flex-col gap-5">
+            <NoticeCard>
+              <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+                Détails de la mission
+              </p>
+
+              <Link
+                href={`/missions/${candidatureSelectionnee.missionId}`}
+                className="mt-3 block"
+              >
+                <Button size="sm" variant="ghost" className="w-full">
+                  Voir la mission
+                </Button>
+              </Link>
+
+              <div className="mt-4 space-y-3 border-t border-ink/15 pt-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Wallet size={15} className="shrink-0 text-ink-soft" aria-hidden="true" />
+                  <span>{formatArgent(candidatureSelectionnee.prixPropose)}</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Timer size={15} className="shrink-0 text-ink-soft" aria-hidden="true" />
+                  <span>
+                    Livraison : {candidatureSelectionnee.delaiPropose} jour
+                    {candidatureSelectionnee.delaiPropose > 1 ? "s" : ""}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Avatar
+                    nom={infos.nom}
+                    photoUrl={infos.photoUrl}
+                    size={22}
+                  />
+                  <span>
+                    {infos.label} : {infos.nom}
+                  </span>
+                </div>
+              </div>
+
+              {livraisonSelectionnee && (
+                <div className="mt-4 border-t border-ink/15 pt-4">
+                  <p className="mb-2 text-xs text-ink-soft">
+                    Statut de la livraison
+                  </p>
+                  <Tag
+                    tone={
+                      livraisonSelectionnee.statut === "validee"
+                        ? "rice"
+                        : livraisonSelectionnee.statut === "correction_demandee"
+                          ? "brique"
+                          : "ocre"
+                    }
+                  >
+                    {statutLivraisonLabel[livraisonSelectionnee.statut]}
+                  </Tag>
+                </div>
+              )}
+            </NoticeCard>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================================
+  // ÉCRAN LISTE
+  // ==========================================================
+
   return (
     <div>
 
@@ -461,6 +659,111 @@ function LivraisonsContent() {
             {erreur}
           </p>
         </NoticeCard>
+      )}
+
+      {/* ========================================================
+          CARTES STATISTIQUES
+          ======================================================== */}
+
+      {!chargement && candidaturesFiltrees.length > 0 && (
+        <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <button
+            type="button"
+            onClick={() => setOngletLivraisons("a_traiter")}
+            className="text-left"
+          >
+            <StatCard
+              icon={Package}
+              tone="ink"
+              label="À traiter"
+              value={compteLivraisons.a_traiter}
+              sublabel="Livraisons à envoyer"
+            />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setOngletLivraisons("corrections")}
+            className="text-left"
+          >
+            <StatCard
+              icon={XCircle}
+              tone="brique"
+              label="Corrections demandées"
+              value={compteLivraisons.corrections}
+              sublabel="À reprendre"
+            />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setOngletLivraisons("attente_validation")}
+            className="text-left"
+          >
+            <StatCard
+              icon={Clock}
+              tone="ocre"
+              label="En attente de validation"
+              value={compteLivraisons.attente_validation}
+              sublabel="Chez le client"
+            />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setOngletLivraisons("validees")}
+            className="text-left"
+          >
+            <StatCard
+              icon={CheckCircle}
+              tone="rice"
+              label="Livraisons validées"
+              value={compteLivraisons.validees}
+              sublabel="Terminées"
+            />
+          </button>
+        </div>
+      )}
+
+      {/* ========================================================
+          FILTRES
+          ======================================================== */}
+
+      {!chargement && candidaturesFiltrees.length > 0 && (
+        <div className="mb-6 grid gap-3 rounded-xl border border-ink/15 bg-paper p-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="relative">
+            <Search
+              size={15}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+              aria-hidden="true"
+            />
+            <Input
+              value={recherche}
+              onChange={(event) => setRecherche(event.target.value)}
+              placeholder="Rechercher un client, une mission…"
+              aria-label="Rechercher une livraison"
+              className="pl-9"
+            />
+          </div>
+          <Select value={filtreClient} onChange={(event) => setFiltreClient(event.target.value)} aria-label="Filtrer par client">
+            <option value="">Tous les clients</option>
+            {Array.from(new Set(candidaturesFiltrees.map((c) => c.mission?.client?.utilisateur?.nom ?? c.mission?.client?.nomEntreprise ?? "Client"))).map((client) => <option key={client} value={client}>{client}</option>)}
+          </Select>
+          <Select value={filtreMission} onChange={(event) => setFiltreMission(event.target.value)} aria-label="Filtrer par mission">
+            <option value="">Toutes les missions</option>
+            {Array.from(new Set(candidaturesFiltrees.map((c) => c.mission?.titre ?? "Mission"))).map((mission) => <option key={mission} value={mission}>{mission}</option>)}
+          </Select>
+          <Select value={filtreStatut} onChange={(event) => setFiltreStatut(event.target.value)} aria-label="Filtrer par statut">
+            <option value="">Tous les statuts</option>
+            {Object.entries(statutLivraisonLabel).map(([valeur, label]) => <option key={valeur} value={valeur}>{label}</option>)}
+          </Select>
+          <Select value={filtreMethode} onChange={(event) => setFiltreMethode(event.target.value)} aria-label="Filtrer par méthode">
+            <option value="">Toutes les méthodes</option>
+            <option value="github">GitHub</option>
+            <option value="gitlab">GitLab</option>
+            <option value="fichiers">Fichiers</option>
+          </Select>
+        </div>
       )}
 
       {/* ========================================================
@@ -532,122 +835,103 @@ function LivraisonsContent() {
             onChanger={setOngletLivraisons}
           />
 
-        <div className="grid gap-5 md:grid-cols-[240px_1fr]">
           {/* ====================================================
-              LISTE
+              LISTE (lignes façon tableau)
               ==================================================== */}
 
-          <div className="flex flex-row gap-2 overflow-x-auto md:flex-col md:overflow-visible">
+          <div className="flex flex-col gap-3">
             {candidaturesAffichees.length === 0 && (
-              <p className="text-sm text-ink-soft">
-                Aucune livraison dans cette catégorie.
-              </p>
+              <NoticeCard>
+                <p className="text-sm text-ink-soft">
+                  Aucune livraison dans cette catégorie.
+                </p>
+              </NoticeCard>
             )}
 
-            {candidaturesAffichees.map(
-              (candidature) => {
-                const active =
-                  candidature.id ===
-                  candidatureSelectionnee?.id;
+            {candidaturesAffichees.map((candidature) => {
+              const livraison = livraisonPour(candidature);
+              const infos = infosAutrePersonne(candidature);
+              const methode = methodeLivraison(livraison);
 
-                const livraison =
-                  livraisons.find(
-                    (item) =>
-                      item.candidatureId ===
-                      candidature.id,
-                  );
+              return (
+                <NoticeCard
+                  key={candidature.id}
+                  className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex flex-1 flex-col gap-4 sm:flex-row sm:items-center">
+                    {/* PERSONNE */}
+                    <div className="flex items-center gap-3 sm:w-44 sm:shrink-0">
+                      <Avatar nom={infos.nom} photoUrl={infos.photoUrl} size={36} />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{infos.nom}</p>
+                        <p className="text-xs text-ink-soft">{infos.label}</p>
+                      </div>
+                    </div>
 
-                return (
-                  <Link
-                    key={candidature.id}
-                    href={`/tableau-de-bord/livraisons?candidature=${encodeURIComponent(
-                      candidature.id,
-                    )}`}
-                    className={`min-w-[200px] border px-3 py-3 text-left transition-colors md:min-w-0 ${
-                      active
-                        ? "border-ocre-dark bg-ocre/10 text-ocre-dark"
-                        : "border-ink/15 hover:border-ink/40"
-                    }`}
-                  >
-                    <p className="text-sm font-medium">
-                      {candidature
-                        .mission?.titre ??
-                        "Mission"}
-                    </p>
-
-                    <p className="mt-1 text-xs text-ink-soft">
-                      {livraison
-                        ? statutLivraisonLabel[
-                            livraison.statut
-                          ]
-                        : "Aucune livraison"}
-                    </p>
-
-                    {role === "client" && (
-                      <p className="mt-1 text-xs text-ink-soft">
-                        Étudiant :{" "}
-                        {candidature
-                          .etudiant
-                          ?.utilisateur
-                          ?.nom ??
-                          "Inconnu"}
+                    {/* MISSION */}
+                    <div className="min-w-0 sm:flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {candidature.mission?.titre ?? "Mission"}
                       </p>
-                    )}
+                      {candidature.mission?.categorie && (
+                        <Tag tone="ink">{candidature.mission.categorie}</Tag>
+                      )}
+                    </div>
+
+                    {/* MÉTHODE */}
+                    <div className="flex items-center gap-1.5 text-xs text-ink-soft sm:w-32 sm:shrink-0">
+                      {(methode === "github" || methode === "gitlab") && (
+                        <FolderGit2 size={14} aria-hidden="true" />
+                      )}
+                      {methode === "fichiers" && <FileUp size={14} aria-hidden="true" />}
+                      <span>
+                        {methode === "github"
+                          ? `GitHub${livraison?.branche ? ` · ${livraison.branche}` : ""}`
+                          : methode === "gitlab"
+                            ? `GitLab${livraison?.branche ? ` · ${livraison.branche}` : ""}`
+                            : methode === "fichiers"
+                              ? `${livraison?.piecesJointes?.length ?? 0} fichier${(livraison?.piecesJointes?.length ?? 0) > 1 ? "s" : ""}`
+                              : "—"}
+                      </span>
+                    </div>
+
+                    {/* DATE */}
+                    <div className="text-xs text-ink-soft sm:w-20 sm:shrink-0">
+                      {formatDateCourte(
+                        livraison?.dateLivraison ?? candidature.dateCandidature,
+                      )}
+                    </div>
+
+                    {/* STATUT */}
+                    <div className="sm:w-40 sm:shrink-0">
+                      <Tag
+                        tone={
+                          !livraison
+                            ? "ink"
+                            : livraison.statut === "validee"
+                              ? "rice"
+                              : livraison.statut === "correction_demandee"
+                                ? "brique"
+                                : "ocre"
+                        }
+                      >
+                        {livraison ? statutLivraisonLabel[livraison.statut] : "Aucune livraison"}
+                      </Tag>
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`/tableau-de-bord/livraisons?candidature=${encodeURIComponent(candidature.id)}`}
+                    className="shrink-0"
+                  >
+                    <Button size="sm" variant="ghost">
+                      Voir
+                    </Button>
                   </Link>
-                );
-              },
-            )}
-          </div>
-
-          {/* ====================================================
-              CONTENU
-              ==================================================== */}
-
-          <div>
-            {!candidatureSelectionnee ? (
-              <p className="text-sm text-ink-soft">
-                Sélectionnez une mission.
-              </p>
-            ) : role === "client" ? (
-              livraisonSelectionnee ? (
-                <LivraisonClient
-                  key={
-                    candidatureSelectionnee.id
-                  }
-                  candidature={
-                    candidatureSelectionnee
-                  }
-                  livraison={
-                    livraisonSelectionnee
-                  }
-                  paiements={paiements}
-                  onRafraichir={
-                    rafraichirDonnees
-                  }
-                />
-              ) : (
-                <NoticeCard>
-                  <p className="text-sm text-ink-soft">
-                    Aucune livraison n&apos;a
-                    encore été déposée.
-                  </p>
                 </NoticeCard>
-              )
-            ) : (
-              <LivraisonEtudiant
-                key={
-                  candidatureSelectionnee.id
-                }
-                candidature={
-                  candidatureSelectionnee
-                }
-                livraison={
-                  livraisonSelectionnee
-                }
-              />
-            )}
+              );
+            })}
           </div>
-        </div>
         </>
       )}
     </div>
@@ -678,12 +962,22 @@ function LivraisonEtudiant({
       ?.nomEntreprise ??
     "Client";
 
-  const [
-    lienLivrable,
-    setLienLivrable,
-  ] = useState(
+  const [lienLivrable, setLienLivrable] = useState(
     livraison?.lienLivrable ?? "",
   );
+  const [plateforme, setPlateforme] = useState<"github" | "gitlab">(
+    livraison?.lienLivrable?.toLowerCase().includes("gitlab.com")
+      ? "gitlab"
+      : "github",
+  );
+  const [methode, setMethode] = useState<"depot" | "fichiers">(
+    livraison?.piecesJointes?.length ? "fichiers" : "depot",
+  );
+  const [branche, setBranche] = useState(livraison?.branche ?? "");
+  const [piecesJointes, setPiecesJointes] = useState<PieceJointeLivraison[]>(
+    livraison?.piecesJointes ?? [],
+  );
+  const [uploadEnCours, setUploadEnCours] = useState(false);
 
   const [
     commentaireLivraison,
@@ -699,6 +993,69 @@ function LivraisonEtudiant({
   const [erreur, setErreur] =
     useState<string | null>(null);
 
+  // Étapes du formulaire de dépôt : 1) méthode, 2) informations,
+  // 3) aperçu avant envoi. N'a d'effet que sur la présentation ; la
+  // soumission (onSubmit) reste inchangée.
+  const [etape, setEtape] = useState<1 | 2 | 3>(1);
+
+  function etapeSuivante() {
+    if (etape === 2) {
+      const lien = lienLivrable.trim();
+      if (methode === "depot" && !lien) {
+        setErreur("Veuillez renseigner le lien vers votre livrable.");
+        return;
+      }
+      if (methode === "fichiers" && !piecesJointes.length) {
+        setErreur("Ajoutez au moins un fichier avant de continuer.");
+        return;
+      }
+    }
+    setErreur(null);
+    setEtape((precedente) => (precedente < 3 ? ((precedente + 1) as 1 | 2 | 3) : precedente));
+  }
+
+  function etapePrecedente() {
+    setErreur(null);
+    setEtape((precedente) => (precedente > 1 ? ((precedente - 1) as 1 | 2 | 3) : precedente));
+  }
+
+  async function ajouterFichiers(files: FileList | File[]) {
+    const selections = Array.from(files);
+    if (!selections.length) return;
+    if (piecesJointes.length + selections.length > 10) {
+      setErreur("Maximum 10 fichiers par livraison.");
+      return;
+    }
+    setErreur(null);
+    setUploadEnCours(true);
+    try {
+      const nouveaux: PieceJointeLivraison[] = [];
+      for (const file of selections) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const resultat = await api.upload<{
+          url: string;
+          nomFichier: string;
+          tailleOctets: number;
+        }>("/uploads/document", formData);
+        nouveaux.push({
+          url: resultat.url,
+          nom: resultat.nomFichier,
+          tailleOctets: resultat.tailleOctets,
+        });
+      }
+      setPiecesJointes((precedentes) => [...precedentes, ...nouveaux]);
+    } catch (error) {
+      setErreur(
+        error instanceof ApiError
+          ? error.message
+          : "Impossible d'ajouter ce fichier.",
+      );
+    } finally {
+      setUploadEnCours(false);
+    }
+  }
+
   // ==========================================================
   // ENVOYER / MODIFIER LIVRAISON
   // ==========================================================
@@ -713,36 +1070,30 @@ function LivraisonEtudiant({
     }
 
     const lien = lienLivrable.trim();
-
-    if (!lien) {
+    if (methode === "depot" && !lien) {
       setErreur(
         "Veuillez renseigner le lien vers votre livrable.",
       );
       return;
     }
+    if (methode === "fichiers" && !piecesJointes.length) {
+      setErreur("Ajoutez au moins un fichier avant l'envoi.");
+      return;
+    }
 
     setErreur(null);
     setEnvoi(true);
-
     try {
-      await api.post(
-        `/candidatures/${candidature.id}/livraison`,
-        {
-          lienLivrable: lien,
-
-          commentaireLivraison:
-            commentaireLivraison.trim() ||
-            undefined,
-        },
-      );
-
+      await api.post(`/candidatures/${candidature.id}/livraison`, {
+        lienLivrable: methode === "depot" ? lien : undefined,
+        plateforme: methode === "depot" ? plateforme : undefined,
+        branche: methode === "depot" ? branche.trim() || undefined : undefined,
+        piecesJointes: methode === "fichiers" ? piecesJointes : undefined,
+        commentaireLivraison: commentaireLivraison.trim() || undefined,
+      });
       window.location.reload();
     } catch (error) {
-      console.error(
-        "Erreur lors de l'envoi de la livraison :",
-        error,
-      );
-
+      console.error("Erreur lors de l'envoi de la livraison :", error);
       setErreur(
         error instanceof ApiError
           ? error.message
@@ -755,8 +1106,6 @@ function LivraisonEtudiant({
 
   return (
     <NoticeCard>
-      {/* EN-TÊTE */}
-
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
@@ -867,83 +1216,275 @@ function LivraisonEtudiant({
         </div>
       )}
 
-      {/* FORMULAIRE */}
+      {/* FORMULAIRE — présenté en 3 étapes : méthode, informations, aperçu */}
 
       {livraison?.statut !==
         "validee" && (
-        <form
-          onSubmit={onSubmit}
-          className="mt-6 max-w-xl border-t border-ink/15 pt-6"
-        >
+        <div className="mt-6 max-w-xl border-t border-ink/15 pt-6">
           <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
             {livraison
               ? "Modifier ma livraison"
               : "Déposer ma livraison"}
           </p>
 
-          <div className="mt-4">
-            <Field
-              label="Lien vers le livrable"
-              htmlFor={`lien-${candidature.id}`}
-            >
-              <Input
-                id={`lien-${candidature.id}`}
-                value={lienLivrable}
-                onChange={(event) =>
-                  setLienLivrable(
-                    event.target.value,
-                  )
-                }
-                placeholder="https://github.com/…"
-                disabled={envoi}
-              />
-            </Field>
+          {/* INDICATEUR D'ÉTAPES */}
+
+          <div className="mt-4 flex items-center">
+            {(
+              [
+                { numero: 1, label: "Méthode" },
+                { numero: 2, label: "Informations" },
+                { numero: 3, label: "Aperçu" },
+              ] as const
+            ).map((item, index) => (
+              <div
+                key={item.numero}
+                className={`flex items-center ${index < 2 ? "flex-1" : ""}`}
+              >
+                <div className="flex shrink-0 items-center gap-2">
+                  <span
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-mono ${
+                      etape === item.numero
+                        ? "bg-ocre-dark text-paper-light"
+                        : etape > item.numero
+                          ? "bg-rice text-paper-light"
+                          : "border border-ink/25 text-ink-soft"
+                    }`}
+                  >
+                    {etape > item.numero ? <Check size={13} aria-hidden="true" /> : item.numero}
+                  </span>
+                  <span
+                    className={`hidden text-xs sm:inline ${etape === item.numero ? "font-medium text-ink" : "text-ink-soft"}`}
+                  >
+                    {item.label}
+                  </span>
+                </div>
+                {index < 2 && (
+                  <span className="mx-2 h-px flex-1 bg-ink/15" aria-hidden="true" />
+                )}
+              </div>
+            ))}
           </div>
 
-          <div className="mt-4">
-            <Field
-              label="Commentaire"
-              htmlFor={`commentaire-${candidature.id}`}
-            >
-              <Textarea
-                id={`commentaire-${candidature.id}`}
-                rows={4}
-                value={
-                  commentaireLivraison
-                }
-                onChange={(event) =>
-                  setCommentaireLivraison(
-                    event.target.value,
-                  )
-                }
-                placeholder="Précisions sur votre livraison…"
-                disabled={envoi}
-              />
-            </Field>
-          </div>
+          <form onSubmit={onSubmit} className="mt-6">
+            {/* ÉTAPE 1 : MÉTHODE */}
 
-          {erreur && (
-            <p className="mt-3 text-xs text-brique">
-              {erreur}
-            </p>
-          )}
+            {etape === 1 && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setMethode("depot")}
+                  className={`relative border p-3 text-left text-sm ${methode === "depot" ? "border-ocre-dark bg-ocre/10" : "border-ink/20"}`}
+                >
+                  {methode === "depot" && (
+                    <Check size={14} className="absolute right-3 top-3 text-ocre-dark" aria-hidden="true" />
+                  )}
+                  <span className="font-medium">Lien de dépôt</span>
+                  <span className="mt-1 block text-xs text-ink-soft">GitHub ou GitLab</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMethode("fichiers")}
+                  className={`relative border p-3 text-left text-sm ${methode === "fichiers" ? "border-ocre-dark bg-ocre/10" : "border-ink/20"}`}
+                >
+                  {methode === "fichiers" && (
+                    <Check size={14} className="absolute right-3 top-3 text-ocre-dark" aria-hidden="true" />
+                  )}
+                  <span className="font-medium">Fichiers</span>
+                  <span className="mt-1 block text-xs text-ink-soft">Jusqu&apos;à 10 fichiers</span>
+                </button>
+              </div>
+            )}
 
-          <Button
-            type="submit"
-            size="sm"
-            disabled={
-              envoi ||
-              !lienLivrable.trim()
-            }
-            className="mt-4"
-          >
-            {envoi
-              ? "Envoi…"
-              : livraison
-                ? "Mettre à jour la livraison"
-                : "Déposer ma livraison"}
-          </Button>
-        </form>
+            {/* ÉTAPE 2 : INFORMATIONS */}
+
+            {etape === 2 &&
+              (methode === "depot" ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Plateforme" htmlFor={`plateforme-${candidature.id}`}>
+                    <Select
+                      id={`plateforme-${candidature.id}`}
+                      value={plateforme}
+                      onChange={(event) => setPlateforme(event.target.value as "github" | "gitlab")}
+                      disabled={envoi}
+                    >
+                      <option value="github">GitHub</option>
+                      <option value="gitlab">GitLab</option>
+                    </Select>
+                  </Field>
+                  <Field label="Branche (optionnel)" htmlFor={`branche-${candidature.id}`}>
+                    <Input
+                      id={`branche-${candidature.id}`}
+                      value={branche}
+                      onChange={(event) => setBranche(event.target.value)}
+                      placeholder="main"
+                      disabled={envoi}
+                    />
+                  </Field>
+                  <div className="sm:col-span-2">
+                    <Field label="URL du dépôt" htmlFor={`lien-${candidature.id}`}>
+                      <Input
+                        id={`lien-${candidature.id}`}
+                        value={lienLivrable}
+                        onChange={(event) => setLienLivrable(event.target.value)}
+                        placeholder={plateforme === "github" ? "https://github.com/…" : "https://gitlab.com/…"}
+                        disabled={envoi}
+                      />
+                    </Field>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Field label="Commentaire" htmlFor={`commentaire-${candidature.id}`}>
+                      <Textarea
+                        id={`commentaire-${candidature.id}`}
+                        rows={4}
+                        value={commentaireLivraison}
+                        onChange={(event) => setCommentaireLivraison(event.target.value)}
+                        placeholder="Précisions sur votre livraison…"
+                        disabled={envoi}
+                      />
+                    </Field>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label
+                    htmlFor={`fichiers-${candidature.id}`}
+                    className="flex cursor-pointer flex-col items-center gap-2 border border-dashed border-ink/30 p-6 text-center text-sm hover:border-ocre-dark"
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      void ajouterFichiers(event.dataTransfer.files);
+                    }}
+                  >
+                    <FileUp size={20} />
+                    <span>{uploadEnCours ? "Envoi des fichiers…" : "Sélectionner ou déposer des fichiers"}</span>
+                    <span className="text-xs text-ink-soft">PDF, Word, Excel, image, archive ou texte</span>
+                    <input
+                      id={`fichiers-${candidature.id}`}
+                      type="file"
+                      multiple
+                      className="sr-only"
+                      onChange={(event) => {
+                        void ajouterFichiers(event.target.files ?? []);
+                        event.target.value = "";
+                      }}
+                      disabled={envoi || uploadEnCours}
+                    />
+                  </label>
+                  {piecesJointes.length > 0 && (
+                    <ul className="mt-3 space-y-2 text-sm">
+                      {piecesJointes.map((piece, index) => (
+                        <li key={`${piece.url}-${index}`} className="flex items-center justify-between gap-3 border border-ink/10 px-3 py-2">
+                          <span className="min-w-0 truncate">{piece.nom} <span className="text-xs text-ink-soft">({Math.ceil((piece.tailleOctets ?? 0) / 1024)} Ko)</span></span>
+                          <button type="button" onClick={() => setPiecesJointes((precedentes) => precedentes.filter((_, pieceIndex) => pieceIndex !== index))} aria-label={`Supprimer ${piece.nom}`} className="shrink-0 text-brique">
+                            <Trash2 size={16} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  <div className="mt-4">
+                    <Field label="Commentaire" htmlFor={`commentaire-${candidature.id}`}>
+                      <Textarea
+                        id={`commentaire-${candidature.id}`}
+                        rows={4}
+                        value={commentaireLivraison}
+                        onChange={(event) => setCommentaireLivraison(event.target.value)}
+                        placeholder="Précisions sur votre livraison…"
+                        disabled={envoi}
+                      />
+                    </Field>
+                  </div>
+                </div>
+              ))}
+
+            {/* ÉTAPE 3 : APERÇU */}
+
+            {etape === 3 && (
+              <div className="space-y-3 rounded-lg border border-ink/15 bg-ink/5 p-4 text-sm">
+                <p>
+                  <span className="text-ink-soft">Méthode : </span>
+                  {methode === "depot"
+                    ? `Lien de dépôt (${plateforme === "github" ? "GitHub" : "GitLab"})`
+                    : "Fichiers"}
+                </p>
+
+                {methode === "depot" ? (
+                  <>
+                    <p className="break-all">
+                      <span className="text-ink-soft">URL : </span>
+                      {lienLivrable || "—"}
+                    </p>
+                    {branche && (
+                      <p>
+                        <span className="text-ink-soft">Branche : </span>
+                        {branche}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p>
+                    <span className="text-ink-soft">Fichiers : </span>
+                    {piecesJointes.length} fichier{piecesJointes.length > 1 ? "s" : ""}
+                  </p>
+                )}
+
+                {commentaireLivraison && (
+                  <p>
+                    <span className="text-ink-soft">Commentaire : </span>
+                    {commentaireLivraison}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {erreur && (
+              <p className="mt-3 text-xs text-brique">
+                {erreur}
+              </p>
+            )}
+
+            <div className="mt-5 flex items-center justify-between gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={etapePrecedente}
+                disabled={etape === 1 || envoi}
+              >
+                Précédent
+              </Button>
+
+              {etape < 3 ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={etapeSuivante}
+                  disabled={envoi || uploadEnCours}
+                >
+                  Suivant
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={
+                    envoi ||
+                    uploadEnCours ||
+                    (methode === "depot" ? !lienLivrable.trim() : !piecesJointes.length)
+                  }
+                >
+                  {envoi
+                    ? "Envoi…"
+                    : livraison
+                      ? "Mettre à jour la livraison"
+                      : "Déposer ma livraison"}
+                </Button>
+              )}
+            </div>
+          </form>
+        </div>
       )}
     </NoticeCard>
   );
@@ -1308,6 +1849,29 @@ function LivraisonClient({
             <ExternalLink size={15} />
             Ouvrir le livrable
           </a>
+        </div>
+      )}
+
+      {livraison.piecesJointes && livraison.piecesJointes.length > 0 && (
+        <div className="mt-5">
+          <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+            Fichiers livrés
+          </p>
+          <ul className="mt-2 space-y-2 text-sm">
+            {livraison.piecesJointes.map((piece) => (
+              <li key={piece.url}>
+                <a
+                  href={getFileUrl(piece.url) ?? piece.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex max-w-full items-center gap-2 break-all text-ocre-dark hover:underline"
+                >
+                  <ExternalLink size={15} />
+                  {piece.nom}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

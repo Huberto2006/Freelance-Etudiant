@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+
 import {
   Bell,
   MessageCircle,
@@ -27,45 +28,65 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
   // ==========================================================
   // ÉTUDIANT
   // ==========================================================
+
   etudiant: [
     {
       label: "Tableau de bord",
       href: "/tableau-de-bord",
     },
+
     {
       label: "Missions",
       href: "/missions",
     },
+
     {
       label: "Services",
       href: "/services",
     },
+
     {
       label: "Mes services",
       href: "/tableau-de-bord/mes-services",
     },
+
     {
       label: "Mes candidatures",
       href: "/tableau-de-bord/candidatures",
     },
+
+    {
+      label: "Groupes",
+      href: "/tableau-de-bord/groupes",
+    },
+
+    {
+      label: "Amis",
+      href: "/tableau-de-bord/amis",
+    },
+
     {
       label: "Demandes de service",
       href: "/tableau-de-bord/demandes-service",
     },
+
     {
       label: "Livraisons",
       href: "/tableau-de-bord/livraisons",
     },
+
     {
       label: "Notifications",
       href: "/tableau-de-bord/notifications",
       icon: Bell,
     },
+
     {
       label: "Messages",
       href: "/tableau-de-bord/messages",
       icon: MessageCircle,
     },
+
     {
       label: "Paramètres",
       icon: Settings,
@@ -74,6 +95,7 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
           href: "/tableau-de-bord/paiements",
           label: "Paiements",
         },
+
         {
           href: "/tableau-de-bord/favoris",
           label: "Favoris",
@@ -85,41 +107,50 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
   // ==========================================================
   // CLIENT
   // ==========================================================
+
   client: [
     {
       label: "Tableau de bord",
       href: "/tableau-de-bord",
     },
+
     {
       label: "Missions",
       href: "/missions",
     },
+
     {
       label: "Services",
       href: "/services",
     },
+
     {
       label: "Mes missions",
       href: "/tableau-de-bord/mes-missions",
     },
+
     {
       label: "Demandes de service",
       href: "/tableau-de-bord/demandes-service",
     },
+
     {
       label: "Livraisons",
       href: "/tableau-de-bord/livraisons",
     },
+
     {
       label: "Notifications",
       href: "/tableau-de-bord/notifications",
       icon: Bell,
     },
+
     {
       label: "Messages",
       href: "/tableau-de-bord/messages",
       icon: MessageCircle,
     },
+
     {
       label: "Paramètres",
       icon: Settings,
@@ -128,6 +159,7 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
           href: "/tableau-de-bord/paiements",
           label: "Paiements",
         },
+
         {
           href: "/tableau-de-bord/favoris",
           label: "Favoris",
@@ -139,11 +171,13 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
   // ==========================================================
   // ADMINISTRATEUR
   // ==========================================================
+
   admin: [
     {
       label: "Tableau de bord",
       href: "/tableau-de-bord",
     },
+
     {
       label: "Administration",
       liens: [
@@ -151,26 +185,31 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
           href: "/tableau-de-bord/admin",
           label: "Gestion",
         },
+
         {
           href: "/tableau-de-bord/admin/signalements",
           label: "Signalements",
         },
+
         {
           href: "/tableau-de-bord/admin/paiements",
           label: "Paiements",
         },
       ],
     },
+
     {
       label: "Notifications",
       href: "/tableau-de-bord/notifications",
       icon: Bell,
     },
+
     {
       label: "Messages",
       href: "/tableau-de-bord/messages",
       icon: MessageCircle,
     },
+
     {
       label: "Paramètres",
       icon: Settings,

@@ -178,6 +178,67 @@
     dateCandidature: string;
   }
 
+  export type RoleMembreGroupe = "chef" | "membre";
+
+  export type StatutInvitationGroupe =
+    | "en_attente"
+    | "acceptee"
+    | "refusee";
+
+  export interface Groupe {
+    id: string;
+
+    nom: string;
+
+    description?: string | null;
+
+    createurId: string;
+
+    createur?: EtudiantProfile;
+
+    missionId?: string | null;
+
+    mission?: Mission | null;
+
+    membres?: MembreGroupe[];
+
+    dateCreation: string;
+  }
+
+  export interface MembreGroupe {
+    id: string;
+
+    groupeId: string;
+
+    etudiantId: string;
+
+    etudiant?: EtudiantProfile;
+
+    role: RoleMembreGroupe;
+
+    dateAdhesion: string;
+  }
+
+  export interface InvitationGroupe {
+    id: string;
+
+    groupeId: string;
+
+    groupe?: Groupe;
+
+    inviteurId: string;
+
+    inviteur?: EtudiantProfile;
+
+    inviteId: string;
+
+    invite?: EtudiantProfile;
+
+    statut: StatutInvitationGroupe;
+
+    dateCreation: string;
+  }
+
   export interface Livraison {
     id: string;
 
@@ -186,6 +247,10 @@
     fichierUrl?: string | null;
 
     lienLivrable?: string | null;
+
+    branche?: string | null;
+
+    piecesJointes?: PieceJointeLivraison[] | null;
 
     commentaireLivraison?: string | null;
 
@@ -204,6 +269,14 @@
     evaluations?: Evaluation[];
 
     dateLivraison: string;
+  }
+
+  export interface PieceJointeLivraison {
+    url: string;
+
+    nom: string;
+
+    tailleOctets?: number;
   }
 
   export interface Evaluation {
@@ -236,7 +309,8 @@
     | "paiement_confirme"
     | "paiement_libere"
     | "nouvelle_reaction"
-    | "mission_expiree";
+    | "mission_expiree"
+    | "mention";
 
   export interface NotificationItem {
     id: string;
@@ -368,6 +442,22 @@
 
   export type TypeCibleContenu = "mission" | "service";
 
+  /**
+   * Suggestion d'utilisateur pour l'autocompletion @mention des
+   * commentaires (reponse de GET /commentaires/mentions-suggestions).
+   */
+  export interface SuggestionMention {
+    id: string;
+
+    nom: string;
+
+    role: Role;
+
+    photoUrl?: string | null;
+
+    sousTitre?: string | null;
+  }
+
   export interface Commentaire {
     id: string;
 
@@ -464,4 +554,61 @@
     disponible: boolean;
 
     tarifHoraire?: number | null;
+  }
+
+  // ==========================================================
+  // AMITIÉ
+  // ==========================================================
+
+  export type StatutAmitie = "en_attente" | "acceptee" | "refusee";
+
+  /**
+   * Presentation synthetique d'un profil etudiant renvoyee par le
+   * module Amitie du backend (jamais d'entite Utilisateur brute).
+   */
+  export interface ProfilAmitie {
+    id: string;
+
+    nom: string | null;
+
+    photoUrl: string | null;
+
+    niveauEtude: string | null;
+
+    universite: string | null;
+
+    competences: string[];
+  }
+
+  /**
+   * Demande d'amitie : `demandeur` (recues) ou `receveur` (envoyees)
+   * selon l'endpoint.
+   */
+  export interface DemandeAmitie {
+    id: string;
+
+    statut: StatutAmitie;
+
+    dateCreation: string;
+
+    demandeur?: ProfilAmitie | null;
+
+    receveur?: ProfilAmitie | null;
+  }
+
+  /**
+   * Relation d'amitie acceptee (GET /amities) : `ami` pointe vers
+   * l'autre etudiant, quelle que soit la direction de la demande
+   * initiale.
+   */
+  export interface RelationAmitie {
+    id: string;
+
+    statut: StatutAmitie;
+
+    dateCreation: string;
+
+    dateReponse: string | null;
+
+    ami: ProfilAmitie | null;
   }

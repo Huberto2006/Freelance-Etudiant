@@ -11,14 +11,13 @@ import {
   Wallet,
   Star,
   User,
+  Users,
+  UserRoundPlus,
   LogOut,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
 import {
   useAuth,
@@ -48,8 +47,16 @@ const ICONS: Record<
 
   Services: ShoppingBag,
 
+  "Mes services": ShoppingBag,
+
   Candidatures: ClipboardList,
   "Mes candidatures": ClipboardList,
+
+  Groupes: Users,
+
+  Amis: UserRoundPlus,
+
+  "Demandes de service": ClipboardList,
 
   Livraisons: Package,
   "Mes livraisons": Package,
@@ -63,6 +70,8 @@ const ICONS: Record<
 
   Profil: User,
   "Mon profil": User,
+
+  Favoris: Star,
 };
 
 function getIcon(label: string) {
@@ -97,6 +106,12 @@ function getSection(
   const value =
     label.toLowerCase();
 
+  /*
+   * ==========================================================
+   * TROUVER
+   * ==========================================================
+   */
+
   if (
     value.includes("mission") ||
     value.includes("service") ||
@@ -105,21 +120,41 @@ function getSection(
     return "TROUVER";
   }
 
+  /*
+   * ==========================================================
+   * MON ACTIVITÉ
+   * ==========================================================
+   */
+
   if (
     value.includes("candidature") ||
+    value.includes("groupe") ||
     value.includes("livraison") ||
     value.includes("paiement")
   ) {
     return "MON ACTIVITÉ";
   }
 
+  /*
+   * ==========================================================
+   * COMMUNAUTÉ
+   * ==========================================================
+   */
+
   if (
+    value.includes("ami") ||
     value.includes("évaluation") ||
     value.includes("evaluation") ||
     value.includes("commentaire")
   ) {
     return "COMMUNAUTÉ";
   }
+
+  /*
+   * ==========================================================
+   * PRINCIPAL
+   * ==========================================================
+   */
 
   return "PRINCIPAL";
 }
@@ -144,16 +179,6 @@ export function Sidebar({
    * ==========================================================
    * SYNCHRONISATION DE LA LARGEUR
    * ==========================================================
-   *
-   * La Sidebar reste la source de vérité pour la largeur.
-   *
-   * Ouverte :
-   * 260px
-   *
-   * Réduite :
-   * 76px
-   *
-   * Le Layout et le Navbar utilisent la même variable CSS.
    */
 
   useEffect(() => {
@@ -165,11 +190,17 @@ export function Sidebar({
       "--sidebar-width",
       width,
     );
+
+    return () => {
+      document.documentElement.style.removeProperty(
+        "--sidebar-width",
+      );
+    };
   }, [collapsed]);
 
   /*
    * ==========================================================
-   * DRAWER MOBILE — ESCAPE
+   * ESCAPE — MOBILE
    * ==========================================================
    */
 
@@ -204,7 +235,7 @@ export function Sidebar({
 
   /*
    * ==========================================================
-   * CHARGEMENT
+   * CHARGEMENT AUTHENTIFICATION
    * ==========================================================
    */
 
@@ -217,7 +248,7 @@ export function Sidebar({
 
   /*
    * ==========================================================
-   * NAVIGATION
+   * NAVIGATION SELON LE RÔLE
    * ==========================================================
    */
 
@@ -227,7 +258,9 @@ export function Sidebar({
     ] ?? [];
 
   /*
-   * Ces éléments sont gérés par le Navbar.
+   * ==========================================================
+   * ÉLÉMENTS GÉRÉS PAR LE NAVBAR
+   * ==========================================================
    */
 
   const navigationSidebar =
@@ -242,7 +275,7 @@ export function Sidebar({
 
   /*
    * ==========================================================
-   * DASHBOARD
+   * TABLEAU DE BORD
    * ==========================================================
    */
 
@@ -270,7 +303,8 @@ export function Sidebar({
     );
 
   /*
-   * Le profil est placé en bas.
+   * Le profil est toujours affiché
+   * dans la partie inférieure.
    */
 
   const items =
@@ -346,7 +380,9 @@ export function Sidebar({
       getIcon(item.label);
 
     /*
-     * Groupe contenant plusieurs liens
+     * ========================================================
+     * GROUPE AVEC SOUS-LIENS
+     * ========================================================
      */
 
     if (
@@ -783,7 +819,7 @@ export function Sidebar({
           trouver,
         )}
 
-        {/* Activité */}
+        {/* Mon activité */}
 
         {renderSection(
           "MON ACTIVITÉ",

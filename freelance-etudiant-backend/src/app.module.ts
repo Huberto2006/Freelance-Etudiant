@@ -35,6 +35,8 @@ import { EmailModule } from './modules/email/email.module';
 
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { UploadsModule } from './modules/uploads/uploads.module';
+import { GroupesModule } from './modules/groupes/groupes.module';
+import { AmitieModule } from './modules/amitie/amitie.module';
 
 @Module({
   imports: [
@@ -95,6 +97,8 @@ import { UploadsModule } from './modules/uploads/uploads.module';
     ReactionsContenuModule,
     RealtimeModule,
     EmailModule,
+    GroupesModule,
+    AmitieModule,
   ],
   providers: [
     {

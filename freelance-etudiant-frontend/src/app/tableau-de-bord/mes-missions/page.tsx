@@ -2,21 +2,23 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { BriefcaseBusiness, Pencil, Plus, X } from "lucide-react";
+import { BriefcaseBusiness, Check, Loader2, MoreVertical, Pencil, Plus, Search, X } from "lucide-react";
 
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, getFileUrl } from "@/lib/api";
 import type { Candidature, Mission } from "@/lib/types";
 import { SousNavigation } from "@/components/ui/SousNavigation";
+import { iconePourCategorie } from "@/lib/categories";
 
 import {
   formatArgent,
+  formatDateCourte,
   statutCandidatureLabel,
   statutMissionLabel,
 } from "@/lib/format";
 
 import { Button } from "@/components/ui/Button";
-import { Field, Input, Textarea } from "@/components/ui/Field";
-import { NoticeCard, StampBadge, Tag } from "@/components/ui/Notice";
+import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { NoticeCard, PageHeader, StampBadge, StatCard, Tag } from "@/components/ui/Notice";
 import { SelecteurImage } from "@/components/ui/SelecteurImage";
 
 export default function MesMissionsPage() {
@@ -31,6 +33,10 @@ export default function MesMissionsPage() {
 
   // Sous-menu actif : Toutes / Ouvertes / En cours / Terminées / Expirées
   const [ongletMissions, setOngletMissions] = useState("toutes");
+
+  // Recherche et filtre catégorie (au-dessus de la liste).
+  const [recherche, setRecherche] = useState("");
+  const [filtreCategorie, setFiltreCategorie] = useState("");
 
   /**
    * Recharge les missions après une action.
@@ -94,23 +100,62 @@ export default function MesMissionsPage() {
     };
   }, []);
 
+  // ==========================================================
+  // CALCULS (aucun Hook ici)
+  // ==========================================================
+
+  const estExpiree = (mission: Mission) =>
+    mission.statut === "expiree" ||
+    (mission.statut === "ouverte" &&
+      new Date(mission.dateLimite) < new Date());
+
+  const ouvertes = missions.filter(
+    (m) => m.statut === "ouverte" && !estExpiree(m),
+  ).length;
+  const enCours = missions.filter((m) => m.statut === "en_cours").length;
+  const terminees = missions.filter((m) => m.statut === "terminee").length;
+  const expirees = missions.filter(estExpiree).length;
+
+  const categoriesDisponibles = Array.from(
+    new Set(missions.map((m) => m.categorie).filter(Boolean)),
+  );
+
+  const missionsFiltrees = missions.filter((mission) => {
+    const texte = `${mission.titre} ${mission.categorie}`.toLowerCase();
+    return (
+      (!recherche.trim() || texte.includes(recherche.trim().toLowerCase())) &&
+      (!filtreCategorie || mission.categorie === filtreCategorie)
+    );
+  });
+
+  const missionsAffichees = missionsFiltrees.filter((mission) => {
+    switch (ongletMissions) {
+      case "ouvertes":
+        return mission.statut === "ouverte" && !estExpiree(mission);
+      case "en_cours":
+        return mission.statut === "en_cours";
+      case "terminees":
+        return mission.statut === "terminee";
+      case "expirees":
+        return estExpiree(mission);
+      default:
+        return true;
+    }
+  });
+
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <span
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ocre/10 text-ocre-dark"
-            aria-hidden="true"
-          >
-            <BriefcaseBusiness size={20} />
-          </span>
-
-          <h1 className="font-display text-3xl font-semibold">Mes missions</h1>
-        </div>
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <PageHeader
+          icon={BriefcaseBusiness}
+          eyebrow="Espace client"
+          title="Mes missions"
+          className="mb-0"
+        />
 
         <Button
           variant="secondary"
-          className="gap-2"
+          className="flex items-center justify-center gap-2"
           onClick={() => {
             setMissionEnEdition(null);
             setAfficherFormulaire((v) => !v);
@@ -138,6 +183,27 @@ export default function MesMissionsPage() {
         <NoticeCard className="mb-6">
           <p className="text-sm text-brique">{erreur}</p>
         </NoticeCard>
+      )}
+
+      {/* =====================================================
+          CARTES STATISTIQUES
+          ===================================================== */}
+
+      {!chargement && missions.length > 0 && (
+        <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <button type="button" onClick={() => setOngletMissions("toutes")} className="cursor-pointer text-left">
+            <StatCard icon={BriefcaseBusiness} tone="ink" label="Total" value={missions.length} sublabel="Missions publiées" />
+          </button>
+          <button type="button" onClick={() => setOngletMissions("ouvertes")} className="cursor-pointer text-left">
+            <StatCard icon={BriefcaseBusiness} tone="rice" label="Ouvertes" value={ouvertes} sublabel="En attente de candidats" />
+          </button>
+          <button type="button" onClick={() => setOngletMissions("en_cours")} className="cursor-pointer text-left">
+            <StatCard icon={BriefcaseBusiness} tone="ocre" label="En cours" value={enCours} sublabel="Avec un étudiant" />
+          </button>
+          <button type="button" onClick={() => setOngletMissions("terminees")} className="cursor-pointer text-left">
+            <StatCard icon={BriefcaseBusiness} tone="ink" label="Terminées" value={terminees} sublabel="Projets livrés" />
+          </button>
+        </div>
       )}
 
       {/* =====================================================
@@ -178,145 +244,217 @@ export default function MesMissionsPage() {
           ===================================================== */}
 
       {chargement ? (
-        <p className="text-sm text-ink-soft">Chargement…</p>
+        <p className="flex items-center gap-2 text-sm text-ink-soft">
+          <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+          Chargement de vos missions…
+        </p>
       ) : missions.length === 0 ? (
         <NoticeCard>
-          <p className="text-sm text-ink-soft">
-            Vous n&apos;avez pas encore publié de mission.
-          </p>
+          <div className="flex flex-col items-center gap-3 py-6 text-center">
+            <span
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-ocre/10 text-ocre-dark"
+              aria-hidden="true"
+            >
+              <BriefcaseBusiness size={22} />
+            </span>
+            <p className="text-sm text-ink-soft">
+              Vous n&apos;avez pas encore publié de mission.
+            </p>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="gap-2"
+              onClick={() => setAfficherFormulaire(true)}
+            >
+              <Plus size={14} aria-hidden="true" />
+              Publier une mission
+            </Button>
+          </div>
         </NoticeCard>
       ) : (
         <>
-          {(() => {
-            const estExpiree = (mission: Mission) =>
-              mission.statut === "expiree" ||
-              (mission.statut === "ouverte" &&
-                new Date(mission.dateLimite) < new Date());
+          <SousNavigation
+            onglets={[
+              { valeur: "toutes", label: "Toutes", compte: missions.length },
+              { valeur: "ouvertes", label: "Ouvertes", compte: ouvertes },
+              { valeur: "en_cours", label: "En cours", compte: enCours },
+              { valeur: "terminees", label: "Terminées", compte: terminees },
+              { valeur: "expirees", label: "Expirées", compte: expirees },
+            ]}
+            actif={ongletMissions}
+            onChanger={setOngletMissions}
+          />
 
-            const ouvertes = missions.filter(
-              (m) => m.statut === "ouverte" && !estExpiree(m),
-            ).length;
-            const enCours = missions.filter((m) => m.statut === "en_cours").length;
-            const terminees = missions.filter((m) => m.statut === "terminee").length;
-            const expirees = missions.filter(estExpiree).length;
-
-            const missionsAffichees = missions.filter((mission) => {
-              switch (ongletMissions) {
-                case "ouvertes":
-                  return mission.statut === "ouverte" && !estExpiree(mission);
-                case "en_cours":
-                  return mission.statut === "en_cours";
-                case "terminees":
-                  return mission.statut === "terminee";
-                case "expirees":
-                  return estExpiree(mission);
-                default:
-                  return true;
-              }
-            });
-
-            return (
-              <>
-                <SousNavigation
-                  onglets={[
-                    { valeur: "toutes", label: "Toutes", compte: missions.length },
-                    { valeur: "ouvertes", label: "Ouvertes", compte: ouvertes },
-                    { valeur: "en_cours", label: "En cours", compte: enCours },
-                    { valeur: "terminees", label: "Terminées", compte: terminees },
-                    { valeur: "expirees", label: "Expirées", compte: expirees },
-                  ]}
-                  actif={ongletMissions}
-                  onChanger={setOngletMissions}
+          {/* Filtres de l'onglet courant */}
+          {!chargement && missions.length > 0 && (
+            <NoticeCard className="mb-6 mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="relative">
+                <Search
+                  size={15}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+                  aria-hidden="true"
                 />
+                <Input
+                  value={recherche}
+                  onChange={(e) => setRecherche(e.target.value)}
+                  placeholder={
+                    ongletMissions === "ouvertes"
+                      ? "Rechercher une mission ouverte…"
+                      : ongletMissions === "en_cours"
+                        ? "Rechercher une mission en cours…"
+                        : ongletMissions === "terminees"
+                          ? "Rechercher une mission terminée…"
+                          : ongletMissions === "expirees"
+                            ? "Rechercher une mission expirée…"
+                            : "Rechercher une mission…"
+                  }
+                  aria-label="Rechercher une mission"
+                  className="pl-9"
+                />
+              </div>
 
-                {missionsAffichees.length === 0 ? (
-                  <NoticeCard>
-                    <p className="text-sm text-ink-soft">
-                      Aucune mission dans cette catégorie.
-                    </p>
-                  </NoticeCard>
-                ) : (
-                  <div className="flex flex-col gap-4">
-                    {missionsAffichees.map((mission) => (
-                      <NoticeCard key={mission.id}>
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <div className="mb-2 flex items-center gap-2">
-                              <Tag
-                                tone={
-                                  estExpiree(mission) ? "brique" : "rice"
-                                }
-                              >
-                                {statutMissionLabel[mission.statut]}
-                              </Tag>
+              <Select
+                value={filtreCategorie}
+                onChange={(e) => setFiltreCategorie(e.target.value)}
+                aria-label="Filtrer par catégorie"
+              >
+                <option value="">Toutes les catégories</option>
+                {categoriesDisponibles.map((categorie) => (
+                  <option key={categorie} value={categorie}>
+                    {categorie}
+                  </option>
+                ))}
+              </Select>
+            </NoticeCard>
+          )}
 
-                              <Tag tone="ink">{mission.categorie}</Tag>
-                            </div>
+          {missionsAffichees.length === 0 ? (
+            <NoticeCard>
+              <p className="text-sm text-ink-soft">
+                Aucune mission dans cette catégorie.
+              </p>
+            </NoticeCard>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {missionsAffichees.map((mission) => {
+                const image = getFileUrl(mission.imageUrl ?? null);
+                const IconeCategorie = iconePourCategorie(mission.categorie);
 
-                            <p className="font-display text-lg font-medium">
-                              {mission.titre}
-                            </p>
+                return (
+                  <NoticeCard key={mission.id} className="group">
+                    <div className="flex flex-wrap items-start gap-4">
+                      {/* VIGNETTE */}
+                      <div className="hidden h-20 w-28 shrink-0 overflow-hidden rounded-lg border border-ink/10 bg-paper sm:block">
+                        {image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={image} alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
+                        ) : (
+                          <span className="flex h-full w-full items-center justify-center">
+                            <IconeCategorie size={22} className="text-ocre-dark/50" aria-hidden="true" />
+                          </span>
+                        )}
+                      </div>
 
-                            <p className="mt-1 text-xs text-ink-soft/70">
-                              {mission.candidatures?.length ?? 0} candidature(s)
-                              reçue(s)
-                              {" · "}
-                              budget {formatArgent(mission.budget)}
-                              {estExpiree(mission) &&
-                              mission.statut === "ouverte"
-                                ? " · échéance dépassée"
-                                : ""}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="gap-1.5"
-                              onClick={() => {
-                                setAfficherFormulaire(false);
-                                setMissionEnEdition(mission);
-                              }}
-                            >
-                              <Pencil size={13} />
-                              Modifier
-                            </Button>
-
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() =>
-                                setMissionOuverte(
-                                  missionOuverte === mission.id
-                                    ? null
-                                    : mission.id,
-                                )
+                      <div className="flex flex-1 flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <div className="mb-2 flex items-center gap-2">
+                            <Tag
+                              tone={
+                                estExpiree(mission) ? "brique" : "rice"
                               }
                             >
-                              {missionOuverte === mission.id
-                                ? "Masquer les candidatures"
-                                : "Voir les candidatures"}
-                            </Button>
+                              {statutMissionLabel[mission.statut]}
+                            </Tag>
+
+                            <Tag tone="ink">{mission.categorie}</Tag>
                           </div>
+
+                          <p className="font-display text-lg font-medium transition-colors group-hover:text-ocre-dark">
+                            {mission.titre}
+                          </p>
+
+                          <p className="mt-1 text-xs text-ink-soft/70">
+                            {mission.candidatures?.length ?? 0} candidature(s)
+                            reçue(s)
+                            {" · "}
+                            budget {formatArgent(mission.budget)}
+                            {" · "}
+                            avant le {formatDateCourte(mission.dateLimite)}
+                            {estExpiree(mission) &&
+                            mission.statut === "ouverte"
+                              ? " (échéance dépassée)"
+                              : ""}
+                          </p>
                         </div>
 
-                        {/* =============================================
-                            CANDIDATURES
-                            ============================================= */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {/* Menu des actions principales */}
+                          <details className="relative">
+                            <summary
+                              className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg text-ink-soft transition hover:bg-ink/5 hover:text-ink [&::-webkit-details-marker]:hidden"
+                              aria-label={`Actions pour ${mission.titre}`}
+                            >
+                              <MoreVertical size={19} />
+                            </summary>
 
-                        {missionOuverte === mission.id && (
-                          <div className="mt-5 border-t border-ink/15 pt-5">
-                            <CandidaturesMission missionId={mission.id} />
-                          </div>
-                        )}
-                      </NoticeCard>
-                    ))}
-                  </div>
-                )}
-              </>
-            );
-          })()}
+                            <div className="absolute right-0 top-11 z-30 w-44 overflow-hidden rounded-xl border border-ink/10 bg-paper p-1.5 shadow-lg">
+                              <Link
+                                href={`/missions/${mission.id}`}
+                                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink transition hover:bg-ink/5"
+                              >
+                                <Search size={15} />
+                                Voir
+                              </Link>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAfficherFormulaire(false);
+                                  setMissionEnEdition(mission);
+                                }}
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink transition hover:bg-ink/5"
+                              >
+                                <Pencil size={15} />
+                                Modifier
+                              </button>
+                            </div>
+                          </details>
+
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                              setMissionOuverte(
+                                missionOuverte === mission.id
+                                  ? null
+                                  : mission.id,
+                              )
+                            }
+                          >
+                            {missionOuverte === mission.id
+                              ? "Masquer les candidatures"
+                              : `Candidatures (${
+                                  mission.candidatures?.length ?? 0
+                                })`}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* =============================================
+                        CANDIDATURES
+                        ============================================= */}
+
+                    {missionOuverte === mission.id && (
+                      <div className="mt-5 border-t border-ink/15 pt-5">
+                        <CandidaturesMission missionId={mission.id} />
+                      </div>
+                    )}
+                  </NoticeCard>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
     </div>
@@ -402,23 +540,69 @@ function FormulaireMission({
 
   return (
     <NoticeCard>
-      <h2 className="mb-4 font-display text-xl font-semibold">
+      <h2 className="font-display text-xl font-semibold">
         {enEdition ? "Modifier la mission" : "Nouvelle mission"}
       </h2>
+      <p className="mt-1 text-sm text-ink-soft">
+        {enEdition
+          ? "Les modifications sont visibles immédiatement après enregistrement."
+          : "Votre annonce sera visible dans le catalogue des missions dès sa publication."}
+      </p>
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-5">
-        {/* Image principale */}
+      <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-5">
+        {/* — 01 · VISUEL */}
 
-        <Field label="Image principale" htmlFor="imageMission">
-          <SelecteurImage
-            valeur={imageUrl}
-            onChange={(url) => {
-              setImageUrl(url);
-              setImageModifiee(true);
-            }}
-            disabled={envoi}
-          />
-        </Field>
+        <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft/70">
+          01 · Visuel
+        </p>
+
+        <div className="grid items-start gap-4 sm:grid-cols-[auto,1fr]">
+          <Field label="Image principale" htmlFor="imageMission">
+            <SelecteurImage
+              valeur={imageUrl}
+              onChange={(url) => {
+                setImageUrl(url);
+                setImageModifiee(true);
+              }}
+              disabled={envoi}
+            />
+          </Field>
+
+          <ul className="grid gap-2 self-center text-xs text-ink-soft/80">
+            <li className="flex items-start gap-2">
+              <Check
+                size={12}
+                className="mt-0.5 shrink-0 text-rice"
+                aria-hidden="true"
+              />
+              L&apos;image est facultative : sans elle, un visuel de catégorie
+              est affiché automatiquement.
+            </li>
+            <li className="flex items-start gap-2">
+              <Check
+                size={12}
+                className="mt-0.5 shrink-0 text-rice"
+                aria-hidden="true"
+              />
+              Une image claire et lumineuse attire davantage de candidatures.
+            </li>
+            <li className="flex items-start gap-2">
+              <Check
+                size={12}
+                className="mt-0.5 shrink-0 text-rice"
+                aria-hidden="true"
+              />
+              Indiquez un budget et une échéance réalistes pour inspirer
+              confiance.
+            </li>
+          </ul>
+        </div>
+
+        {/* — 02 · CONTENU */}
+
+        <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft/70">
+          02 · Contenu
+        </p>
 
         {/* Titre */}
 
@@ -442,11 +626,16 @@ function FormulaireMission({
             rows={4}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            placeholder="Décrivez le contexte, les livrables attendus et vos contraintes…"
             disabled={envoi}
           />
         </Field>
 
-        {/* Catégorie / Budget / Date */}
+        {/* — 03 · PARAMÈTRES */}
+
+        <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft/70">
+          03 · Paramètres
+        </p>
 
         <div className="grid gap-5 sm:grid-cols-3">
           <Field label="Catégorie" htmlFor="categorie">
@@ -484,7 +673,11 @@ function FormulaireMission({
           </Field>
         </div>
 
-        {/* Compétences */}
+        {/* — 04 · COMPÉTENCES */}
+
+        <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft/70">
+          04 · Compétences
+        </p>
 
         <Field
           label="Compétences requises"
@@ -504,18 +697,13 @@ function FormulaireMission({
 
         {erreur && <p className="text-sm text-brique">{erreur}</p>}
 
-        {/* Bouton */}
+        {/* — ACTIONS */}
 
-        <div className="flex gap-2">
-          <Button type="submit" disabled={envoi} className="self-start">
-            {envoi
-              ? enEdition
-                ? "Enregistrement…"
-                : "Publication…"
-              : enEdition
-                ? "Enregistrer les modifications"
-                : "Publier"}
-          </Button>
+        <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-ink/10 pt-5">
+          <p className="mr-auto text-xs text-ink-soft/60">
+            L&apos;image et les compétences sont facultatives.
+          </p>
+
           {enEdition && onAnnuler && (
             <Button
               type="button"
@@ -526,6 +714,24 @@ function FormulaireMission({
               Annuler
             </Button>
           )}
+
+          <Button
+            type="submit"
+            variant="secondary"
+            disabled={envoi}
+            className="gap-2"
+          >
+            {envoi && (
+              <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+            )}
+            {envoi
+              ? enEdition
+                ? "Enregistrement…"
+                : "Publication…"
+              : enEdition
+                ? "Enregistrer les modifications"
+                : "Publier la mission"}
+          </Button>
         </div>
       </form>
     </NoticeCard>

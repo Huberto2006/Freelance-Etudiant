@@ -1,8 +1,15 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
+import { In, QueryFailedError, Repository } from 'typeorm';
 import { Utilisateur } from './entities/utilisateur.entity';
 import { Role } from '../../common/enums/role.enum';
+
+/**
+ * Limite raisonnable de resultats pour l'autocompletion @mention :
+ * la recherche est faite par le backend (jamais la liste complete des
+ * utilisateurs cote frontend).
+ */
+const LIMITE_SUGGESTIONS_MENTION = 8;
 
 @Injectable()
 export class UsersService {
@@ -72,6 +79,64 @@ export class UsersService {
       where: role ? { role } : {},
       relations: ['profilEtudiant', 'profilClient'],
       order: { dateInscription: 'DESC' },
+    });
+  }
+
+  /**
+   * Recherche des utilisateurs actifs pour l'autocompletion @mention des
+   * commentaires. La recherche est faite par le backend avec une limite
+   * de resultats (jamais la liste complete cote frontend).
+   *
+   * Regles :
+   * - seuls les utilisateurs existants, actifs et non suspendus sont
+   *   suggérés (role etudiant ou client) ;
+   * - l'auteur du commentaire est exclu des suggestions (se mentionner
+   *   soi-meme n'envoie jamais de notification, cf. MentionService).
+   */
+  async rechercherSuggestionsMention(
+    terme: string,
+    excludeId: string | null,
+  ): Promise<Utilisateur[]> {
+    const query = this.utilisateurRepo
+      .createQueryBuilder('utilisateur')
+      .leftJoinAndSelect('utilisateur.profilEtudiant', 'profil')
+      .where('utilisateur.estActif = true')
+      .andWhere('utilisateur.estSuspendu = false')
+      .andWhere('utilisateur.role IN (:...roles)', {
+        roles: [Role.ETUDIANT, Role.CLIENT],
+      });
+
+    const termeNettoye = terme.trim();
+    if (termeNettoye) {
+      query.andWhere('utilisateur.nom ILIKE :terme', {
+        terme: `%${termeNettoye}%`,
+      });
+    }
+
+    if (excludeId) {
+      query.andWhere('utilisateur.id != :excludeId', { excludeId });
+    }
+
+    return query
+      .orderBy('utilisateur.nom', 'ASC')
+      .take(LIMITE_SUGGESTIONS_MENTION)
+      .getMany();
+  }
+
+  /**
+   * Liste legere (id + nom uniquement) des utilisateurs actifs pouvant
+   * etre mentions dans un commentaire. Utilisee par le module commentaires
+   * pour resoudre les @Nom du texte : la resolution se fait a partir des
+   * noms reels en base, JAMAIS d'identifiant envoye par le frontend.
+   */
+  async findIdNomActifs(): Promise<{ id: string; nom: string }[]> {
+    return this.utilisateurRepo.find({
+      select: { id: true, nom: true },
+      where: {
+        estActif: true,
+        estSuspendu: false,
+        role: In([Role.ETUDIANT, Role.CLIENT]),
+      },
     });
   }
 

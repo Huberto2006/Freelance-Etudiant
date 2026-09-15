@@ -34,6 +34,28 @@ export class CommentairesController {
     return this.commentairesService.findByCible(cibleType, cibleId);
   }
 
+  /**
+   * Route authentifiee (PAS de @Public) : un utilisateur non connecte ne
+   * peut pas preparer de mention. Retourne les suggestions pour
+   * l'autocompletion @ dans le champ de commentaire.
+   */
+  @UseGuards(RolesGuard)
+  @ApiBearerAuth()
+  @Get('mentions-suggestions')
+  @ApiOperation({
+    summary:
+      "Suggestions d'utilisateurs pour l'autocompletion @mention des commentaires",
+  })
+  async suggestionsMention(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('q') q?: string,
+  ) {
+    return this.commentairesService.rechercherSuggestionsMention(
+      q ?? '',
+      user.id,
+    );
+  }
+
   @UseGuards(RolesGuard)
   @ApiBearerAuth()
   @Post()

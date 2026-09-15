@@ -21,18 +21,27 @@ import { TypeNotification } from '../../common/enums/type-notification.enum';
 
 import { Utilisateur } from '../users/entities/utilisateur.entity';
 
+import { Groupe } from '../groupes/entities/groupe.entity';
+import { MembreGroupe } from '../groupes/entities/membre-groupe.entity';
+
 @Injectable()
 export class CandidaturesService {
   constructor(
     @InjectRepository(Candidature)
     private readonly repo: Repository<Candidature>,
 
+    @InjectRepository(Groupe)
+    private readonly groupeRepository: Repository<Groupe>,
+
+    @InjectRepository(MembreGroupe)
+    private readonly membreRepository: Repository<MembreGroupe>,
+
     private readonly dataSource: DataSource,
 
     private readonly missionsService: MissionsService,
 
     private readonly notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   /**
    * ========================================================
@@ -105,6 +114,136 @@ export class CandidaturesService {
   }
 
   /**
+ * ========================================================
+ * CREER UNE CANDIDATURE POUR UN GROUPE
+ * ========================================================
+ *
+ * Le chef du groupe dépose la candidature au nom
+ * de l'ensemble du groupe.
+ *
+ * RG :
+ * - seul un étudiant peut candidater ;
+ * - seul le chef du groupe peut déposer ;
+ * - le groupe doit exister ;
+ * - le groupe peut avoir été créé sans mission ;
+ * - la mission doit être ouverte ;
+ * - un groupe ne peut candidater qu'une seule fois
+ *   à une même mission.
+ */
+  async createGroupe(
+    missionId: string,
+    groupeId: string,
+    chefId: string,
+    dto: CreateCandidatureDto,
+  ): Promise<Candidature> {
+    const mission =
+      await this.missionsService.findOne(missionId);
+
+    this.missionsService.assertMissionOuverteAuxCandidatures(
+      mission,
+    );
+
+    const groupe =
+      await this.groupeRepository.findOne({
+        where: {
+          id: groupeId,
+        },
+        relations: [
+          'createur',
+          'membres',
+          'membres.etudiant',
+        ],
+      });
+
+    if (!groupe) {
+      throw new NotFoundException(
+        'Groupe introuvable',
+      );
+    }
+
+    /**
+     * Vérifie que l'utilisateur connecté est bien
+     * le chef du groupe.
+     */
+    const membreChef =
+      await this.membreRepository.findOne({
+        where: {
+          groupeId,
+          etudiantId: chefId,
+          role: 'chef',
+        },
+      });
+
+    if (!membreChef) {
+      throw new ForbiddenException(
+        'Seul le chef du groupe peut déposer une candidature au nom du groupe',
+      );
+    }
+
+    /**
+     * Un groupe ne peut candidater qu'une seule fois
+     * à une même mission.
+     */
+    const dejaCandidat =
+      await this.repo.findOne({
+        where: {
+          missionId,
+          groupeId,
+        },
+      });
+
+    if (dejaCandidat) {
+      throw new ConflictException(
+        'Ce groupe a deja postule a cette mission',
+      );
+    }
+
+    /**
+     * Création de la candidature.
+     *
+     * etudiantId = chef du groupe qui effectue
+     * techniquement la demande.
+     *
+     * groupeId = groupe représenté par la candidature.
+     */
+    const candidature =
+      this.repo.create({
+        ...dto,
+        missionId,
+        etudiantId: chefId,
+        groupeId,
+        statut:
+          StatutCandidature.EN_ATTENTE,
+      });
+
+    const saved =
+      await this.repo.save(candidature);
+
+    /**
+     * Le client reçoit une seule notification,
+     * puisque le groupe dépose une seule candidature.
+     */
+    await this.notificationsService.creer({
+      destinataireId:
+        mission.clientId,
+
+      type:
+        TypeNotification.NOUVELLE_CANDIDATURE,
+
+      titre:
+        'Nouvelle candidature reçue',
+
+      message:
+        `Le groupe "${groupe.nom}" a déposé une candidature pour "${mission.titre}".`,
+
+      lienUrl:
+        '/tableau-de-bord/mes-missions',
+    });
+
+    return saved;
+  }
+
+  /**
    * ========================================================
    * CANDIDATURES D'UNE MISSION
    * ========================================================
@@ -137,6 +276,10 @@ export class CandidaturesService {
         'etudiant',
         'etudiant.utilisateur',
         'livraison',
+        'groupe',
+        'groupe.membres',
+        'groupe.membres.etudiant',
+        'groupe.membres.etudiant.utilisateur',
       ],
 
       order: {
@@ -173,6 +316,10 @@ export class CandidaturesService {
         'mission.client',
         'mission.client.utilisateur',
         'livraison',
+        'groupe',
+        'groupe.membres',
+        'groupe.membres.etudiant',
+        'groupe.membres.etudiant.utilisateur',
       ],
 
       order: {
@@ -217,6 +364,23 @@ export class CandidaturesService {
         'livraison',
       )
 
+      .leftJoinAndSelect(
+        'candidature.groupe',
+        'groupe',
+      )
+      .leftJoinAndSelect(
+        'groupe.membres',
+        'membreGroupe',
+      )
+      .leftJoinAndSelect(
+        'membreGroupe.etudiant',
+        'membreEtudiant',
+      )
+      .leftJoinAndSelect(
+        'membreEtudiant.utilisateur',
+        'membreUtilisateur',
+      )
+
       .where(
         'mission.clientId = :clientId',
         {
@@ -253,6 +417,10 @@ export class CandidaturesService {
           'etudiant',
           'etudiant.utilisateur',
           'livraison',
+          'groupe',
+          'groupe.membres',
+          'groupe.membres.etudiant',
+          'groupe.membres.etudiant.utilisateur',
         ],
       });
 
@@ -551,7 +719,7 @@ export class CandidaturesService {
       !utilisateurAId ||
       !utilisateurBId ||
       utilisateurAId ===
-        utilisateurBId
+      utilisateurBId
     ) {
       return false;
     }
@@ -702,7 +870,7 @@ export class CandidaturesService {
       if (
         etudiant &&
         etudiant.id !==
-          utilisateurId
+        utilisateurId
       ) {
         contacts.set(
           etudiant.id,
@@ -713,7 +881,7 @@ export class CandidaturesService {
       if (
         client &&
         client.id !==
-          utilisateurId
+        utilisateurId
       ) {
         contacts.set(
           client.id,

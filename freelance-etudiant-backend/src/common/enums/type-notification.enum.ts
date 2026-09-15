@@ -15,6 +15,10 @@ export enum TypeNotification {
   PAIEMENT_CONFIRME = 'paiement_confirme',
   PAIEMENT_LIBERE = 'paiement_libere',
   NOUVELLE_REACTION = 'nouvelle_reaction',
+  NOUVELLE_DEMANDE_AMITIE = 'nouvelle_demande_amitie',
+  NOUVELLE_INVITATION_GROUPE = 'nouvelle_invitation_groupe',
+  /** Un utilisateur a ete identifie via @ dans un commentaire. */
+  MENTION = 'mention',
   /** La mission d'un client est arrivee a echeance (date limite depassee). */
   MISSION_EXPIREE = 'mission_expiree',
 }
