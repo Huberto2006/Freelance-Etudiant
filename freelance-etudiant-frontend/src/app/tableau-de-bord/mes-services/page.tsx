@@ -1,734 +1,873 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Archive, ArchiveRestore, Plus, Pencil, Wrench, X } from "lucide-react";
-import { api, ApiError } from "@/lib/api";
+import Link from "next/link";
+import {
+  Archive,
+  ArchiveRestore,
+  Check,
+  Loader2,
+  MoreVertical,
+  Pencil,
+  Plus,
+  Search,
+  Wrench,
+  X,
+} from "lucide-react";
+
+import { api, ApiError, getFileUrl } from "@/lib/api";
 import type { ServiceOffert } from "@/lib/types";
 import { formatArgent } from "@/lib/format";
+import { iconePourCategorie } from "@/lib/categories";
+
 import { Button } from "@/components/ui/Button";
-import { Field, Input, Textarea } from "@/components/ui/Field";
-import { NoticeCard, Tag } from "@/components/ui/Notice";
+import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import {
+  NoticeCard,
+  PageHeader,
+  StatCard,
+  Tag,
+} from "@/components/ui/Notice";
 import { SelecteurImage } from "@/components/ui/SelecteurImage";
 import { SousNavigation } from "@/components/ui/SousNavigation";
+
+type OngletServices = "actifs" | "archives";
+
+type ServiceOffertAvecDelai = ServiceOffert & {
+  delaiJours?: number;
+};
+
+type FormulaireServiceData = {
+  titre: string;
+  description: string;
+  categorie: string;
+  prix: string;
+  delaiJours: string;
+  disponible: boolean;
+  imageUrl: string;
+};
+
+const FORMULAIRE_INITIAL: FormulaireServiceData = {
+  titre: "",
+  description: "",
+  categorie: "",
+  prix: "",
+  delaiJours: "",
+  disponible: true,
+  imageUrl: "",
+};
+
+function FormulaireService({
+  initialValues = FORMULAIRE_INITIAL,
+  mode,
+  serviceId,
+  onSuccess,
+  onCancel,
+}: {
+  initialValues?: FormulaireServiceData;
+  mode: "creation" | "edition";
+  serviceId?: number | string;
+  onSuccess: (service: ServiceOffert) => void;
+  onCancel?: () => void;
+}) {
+  const [formulaire, setFormulaire] =
+    useState<FormulaireServiceData>(initialValues);
+
+  const [chargement, setChargement] = useState(false);
+  const [erreur, setErreur] = useState("");
+
+  useEffect(() => {
+    setFormulaire(initialValues);
+  }, [initialValues]);
+
+  const modifierChamp = (
+    champ: keyof FormulaireServiceData,
+    valeur: string | boolean,
+  ) => {
+    setFormulaire((ancien) => ({
+      ...ancien,
+      [champ]: valeur,
+    }));
+  };
+
+  const soumettre = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    setErreur("");
+
+    if (!formulaire.titre.trim()) {
+      setErreur("Le titre est obligatoire.");
+      return;
+    }
+
+    if (!formulaire.description.trim()) {
+      setErreur("La description est obligatoire.");
+      return;
+    }
+
+    if (!formulaire.categorie) {
+      setErreur("La catégorie est obligatoire.");
+      return;
+    }
+
+    if (!formulaire.prix) {
+      setErreur("Le prix est obligatoire.");
+      return;
+    }
+
+    if (!formulaire.delaiJours) {
+      setErreur("Le délai est obligatoire.");
+      return;
+    }
+
+    setChargement(true);
+
+    try {
+      const payload = {
+        titre: formulaire.titre.trim(),
+        description: formulaire.description.trim(),
+        categorie: formulaire.categorie,
+        prix: Number(formulaire.prix),
+        delai: Number(formulaire.delaiJours),
+        disponible: formulaire.disponible,
+        imagesUrls: formulaire.imageUrl ? [formulaire.imageUrl] : [],
+      };
+
+      const service =
+        mode === "creation"
+          ? await api.post<ServiceOffert>("/services", payload)
+          : await api.patch<ServiceOffert>(
+              `/services/${serviceId}`,
+              payload,
+            );
+
+      onSuccess(service);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setErreur(error.message);
+      } else {
+        setErreur("Une erreur est survenue.");
+      }
+    } finally {
+      setChargement(false);
+    }
+  };
+
+  return (
+    <form onSubmit={soumettre} className="space-y-5">
+      {erreur && (
+        <div className="rounded-xl border border-brique/20 bg-brique/5 px-4 py-3 text-sm text-brique">
+          {erreur}
+        </div>
+      )}
+
+      <Field label="Titre" htmlFor="service-titre">
+        <Input
+          id="service-titre"
+          value={formulaire.titre}
+          onChange={(event) =>
+            modifierChamp("titre", event.target.value)
+          }
+          placeholder="Ex. Création d'un logo professionnel"
+          disabled={chargement}
+        />
+      </Field>
+
+      <Field label="Description" htmlFor="service-description">
+        <Textarea
+          id="service-description"
+          value={formulaire.description}
+          onChange={(event) =>
+            modifierChamp("description", event.target.value)
+          }
+          placeholder="Décrivez votre service..."
+          rows={5}
+          disabled={chargement}
+        />
+      </Field>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Catégorie" htmlFor="service-categorie">
+          <Select
+            id="service-categorie"
+            value={formulaire.categorie}
+            onChange={(event) =>
+              modifierChamp("categorie", event.target.value)
+            }
+            disabled={chargement}
+          >
+            <option value="">Sélectionner une catégorie</option>
+            <option value="Design">Design</option>
+            <option value="Développement">Développement</option>
+            <option value="Rédaction">Rédaction</option>
+            <option value="Traduction">Traduction</option>
+            <option value="Marketing">Marketing</option>
+            <option value="Multimédia">Multimédia</option>
+            <option value="Autre">Autre</option>
+          </Select>
+        </Field>
+
+        <Field label="Prix (Ar)" htmlFor="service-prix">
+          <Input
+            id="service-prix"
+            type="number"
+            min="0"
+            value={formulaire.prix}
+            onChange={(event) =>
+              modifierChamp("prix", event.target.value)
+            }
+            placeholder="50000"
+            disabled={chargement}
+          />
+        </Field>
+
+        <Field label="Délai (jours)" htmlFor="service-delai">
+          <Input
+            id="service-delai"
+            type="number"
+            min="1"
+            value={formulaire.delaiJours}
+            onChange={(event) =>
+              modifierChamp("delaiJours", event.target.value)
+            }
+            placeholder="3"
+            disabled={chargement}
+          />
+        </Field>
+      </div>
+
+      <Field label="Image" htmlFor="service-image">
+        <SelecteurImage
+          valeur={formulaire.imageUrl}
+          onChange={(value) => modifierChamp("imageUrl", value ?? "")}
+        />
+      </Field>
+
+      <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-ink/10 bg-paper px-4 py-3">
+        <input
+          type="checkbox"
+          checked={formulaire.disponible}
+          onChange={(event) =>
+            modifierChamp("disponible", event.target.checked)
+          }
+          disabled={chargement}
+          className="h-4 w-4"
+        />
+
+        <div>
+          <p className="text-sm font-medium text-ink">
+            Service disponible
+          </p>
+          <p className="text-xs text-ink-soft">
+            Les clients pourront voir et commander ce service.
+          </p>
+        </div>
+      </label>
+
+      <div className="flex flex-wrap justify-end gap-3">
+        {onCancel && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onCancel}
+            disabled={chargement}
+          >
+            Annuler
+          </Button>
+        )}
+
+        <Button 
+          type="submit"
+          className="flex items-center justify-center gap-2" 
+          disabled={chargement}
+        >
+          {chargement ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              Enregistrement...
+            </>
+          ) : mode === "creation" ? (
+            <>
+              <Plus size={16} />
+              Publier le service
+            </>
+          ) : (
+            <>
+              <Check size={16} />
+              Enregistrer
+            </>
+          )}
+        </Button>
+      </div>
+    </form>
+  );
+}
 
 export default function MesServicesPage() {
   const [services, setServices] = useState<ServiceOffert[]>([]);
   const [chargement, setChargement] = useState(true);
-  const [erreur, setErreur] = useState<string | null>(null);
-  const [afficherFormulaire, setAfficherFormulaire] =
-    useState(false);
+  const [erreur, setErreur] = useState("");
+
+  const [ongletServices, setOngletServices] =
+    useState<OngletServices>("actifs");
+
+  const [recherche, setRecherche] = useState("");
+  const [filtreCategorie, setFiltreCategorie] = useState("");
+
   const [serviceEnEdition, setServiceEnEdition] =
     useState<ServiceOffert | null>(null);
-  const [actionEnCours, setActionEnCours] = useState<string | null>(
-    null,
-  );
 
-  // Sous-menu actif : Actifs / Archivés
-  const [ongletServices, setOngletServices] = useState("actifs");
+  const [afficherCreation, setAfficherCreation] = useState(false);
 
-  /**
-   * Recharge la liste des services.
-   * Utilisé après une création, modification ou suppression.
-   */
-  const charger = useCallback(async () => {
+  const chargerServices = useCallback(async () => {
     setChargement(true);
-    setErreur(null);
+    setErreur("");
 
     try {
-      const data = await api.get<ServiceOffert[]>(
+      const resultat = await api.get<ServiceOffert[]>(
         "/services/me/mes-services",
       );
 
-      setServices(data);
+      setServices(resultat);
     } catch (error) {
-      console.error(
-        "Erreur lors du chargement des services :",
-        error,
-      );
-
-      setErreur(
-        error instanceof ApiError
-          ? error.message
-          : "Impossible de charger vos services.",
-      );
+      if (error instanceof ApiError) {
+        setErreur(error.message);
+      } else {
+        setErreur("Impossible de charger vos services.");
+      }
     } finally {
       setChargement(false);
     }
   }, []);
 
-  /**
-   * Chargement initial.
-   *
-   * On ne fait pas charger() ici car charger()
-   * contient setChargement(true).
-   */
   useEffect(() => {
-    let cancelled = false;
+    chargerServices();
+  }, [chargerServices]);
 
-    const chargerInitial = async () => {
-      try {
-        const data = await api.get<ServiceOffert[]>(
-          "/services/me/mes-services",
-        );
+  const categoriesDisponibles = Array.from(
+    new Set(
+      services
+        .map((service) => service.categorie)
+        .filter(Boolean),
+    ),
+  ).sort();
 
-        if (!cancelled) {
-          setServices(data);
-          setErreur(null);
-        }
-      } catch (error) {
-        console.error(
-          "Erreur lors du chargement initial :",
-          error,
-        );
+  const servicesFiltres = services.filter((service) => {
+    const texte =
+      `${service.titre} ${service.categorie}`.toLowerCase();
 
-        if (!cancelled) {
-          setErreur(
-            error instanceof ApiError
-              ? error.message
-              : "Impossible de charger vos services.",
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setChargement(false);
-        }
-      }
-    };
+    const correspondRecherche =
+      !recherche.trim() ||
+      texte.includes(recherche.trim().toLowerCase());
 
-    chargerInitial();
+    const correspondCategorie =
+      !filtreCategorie ||
+      service.categorie === filtreCategorie;
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    return correspondRecherche && correspondCategorie;
+  });
 
-  /**
-   * Masquer / Republier un service.
-   */
-  async function basculerDisponibilite(
+  const servicesAffiches = servicesFiltres.filter((service) =>
+    ongletServices === "archives"
+      ? service.estArchive
+      : !service.estArchive,
+  );
+
+  const total = services.length;
+
+  const actifs = services.filter(
+    (service) => !service.estArchive,
+  ).length;
+
+  const archives = services.filter(
+    (service) => service.estArchive,
+  ).length;
+
+  const masques = services.filter(
+    (service) => !service.estArchive && !service.disponible,
+  ).length;
+
+  const changerDisponibilite = async (
     service: ServiceOffert,
-  ) {
-    setActionEnCours(service.id);
-    setErreur(null);
-
+  ) => {
     try {
-      await api.patch(`/services/${service.id}`, {
-        disponible: !service.disponible,
-      });
-
-      await charger();
-    } catch (error) {
-      console.error(
-        "Erreur lors de la modification de la disponibilité :",
-        error,
+      const serviceMisAJour = await api.patch<ServiceOffert>(
+        `/services/${service.id}`,
+        {
+          disponible: !service.disponible,
+        },
       );
 
+      setServices((anciens) =>
+        anciens.map((item) =>
+          item.id === service.id ? serviceMisAJour : item,
+        ),
+      );
+    } catch (error) {
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de modifier la disponibilité du service.",
+          : "Impossible de modifier la disponibilité.",
       );
-    } finally {
-      setActionEnCours(null);
     }
-  }
+  };
 
-  /**
-   * Archiver un service (suppression logique reversible) :
-   * il quitte le catalogue public et n'accepte plus de commande, tout en
-   * conservant l'historique des demandes de service. Confirmation
-   * demandée avant l'opération.
-   */
-  async function archiver(service: ServiceOffert) {
-    if (
-      !window.confirm(
-        `Archiver « ${service.titre} » ? Il sera retiré du catalogue et ne recevra plus de commande (réversible).`,
-      )
-    ) {
-      return;
-    }
-
-    setActionEnCours(service.id);
-    setErreur(null);
-
+  const archiver = async (service: ServiceOffert) => {
     try {
-      await api.patch(`/services/${service.id}/archiver`);
-      await charger();
+      const serviceMisAJour = await api.patch<ServiceOffert>(
+        `/services/${service.id}/archiver`,
+        {},
+      );
+
+      setServices((anciens) =>
+        anciens.map((item) =>
+          item.id === service.id ? serviceMisAJour : item,
+        ),
+      );
     } catch (error) {
-      console.error("Erreur lors de l'archivage :", error);
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible d'archiver ce service.",
+          : "Impossible d'archiver le service.",
       );
-    } finally {
-      setActionEnCours(null);
     }
-  }
+  };
 
-  /**
-   * Restaurer un service archivé (redevient éditable ; la republication
-   * publique reste à la charge du propriétaire via « Republier »).
-   */
-  async function restaurer(service: ServiceOffert) {
-    setActionEnCours(service.id);
-    setErreur(null);
-
+  const restaurer = async (service: ServiceOffert) => {
     try {
-      await api.patch(`/services/${service.id}/restaurer`);
-      await charger();
+      const serviceMisAJour = await api.patch<ServiceOffert>(
+        `/services/${service.id}/restaurer`,
+        {},
+      );
+
+      setServices((anciens) =>
+        anciens.map((item) =>
+          item.id === service.id ? serviceMisAJour : item,
+        ),
+      );
     } catch (error) {
-      console.error("Erreur lors de la restauration :", error);
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de restaurer ce service.",
+          : "Impossible de restaurer le service.",
       );
-    } finally {
-      setActionEnCours(null);
     }
-  }
+  };
 
-  /**
-   * Supprimer un service.
-   *
-   * Le backend refuse la suppression (409) si le service est lié à des
-   * demandes de service (historique à conserver) : le message d'erreur
-   * invite alors à l'archiver.
-   */
-  async function supprimer(service: ServiceOffert) {
-    if (
-      !window.confirm(
-        `Supprimer « ${service.titre} » ?`,
-      )
-    ) {
-      return;
-    }
+  const supprimer = async (service: ServiceOffert) => {
+    const confirmation = window.confirm(
+      `Voulez-vous vraiment supprimer « ${service.titre} » ?`,
+    );
 
-    setActionEnCours(service.id);
-    setErreur(null);
+    if (!confirmation) return;
 
     try {
       await api.delete(`/services/${service.id}`);
 
-      await charger();
-    } catch (error) {
-      console.error(
-        "Erreur lors de la suppression :",
-        error,
+      setServices((anciens) =>
+        anciens.filter((item) => item.id !== service.id),
       );
-
+    } catch (error) {
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de supprimer ce service.",
+          : "Impossible de supprimer le service.",
       );
-    } finally {
-      setActionEnCours(null);
     }
-  }
+  };
+
+  const apresCreation = (service: ServiceOffert) => {
+    setServices((anciens) => [service, ...anciens]);
+    setAfficherCreation(false);
+    setOngletServices("actifs");
+  };
+
+  const apresEdition = (service: ServiceOffert) => {
+    setServices((anciens) =>
+      anciens.map((item) =>
+        item.id === service.id ? service : item,
+      ),
+    );
+
+    setServiceEnEdition(null);
+  };
 
   return (
-    <div>
-      {/* En-tête */}
-      <div className="flex items-center justify-between mb-8 gap-4">
-        <div className="flex items-center gap-3">
-          <span
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ocre/10 text-ocre-dark"
-            aria-hidden="true"
-          >
-            <Wrench size={20} />
-          </span>
-          <h1 className="font-display text-3xl font-semibold">
-            Mes services
-          </h1>
-        </div>
+    <div className="space-y-6">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <PageHeader
+          icon={Wrench}
+          eyebrow="Espace étudiant"
+          title="Mes services"
+          className="mb-0"
+        />
 
         <Button
-          variant="secondary"
-          className="gap-2"
           onClick={() => {
+            setAfficherCreation(true);
             setServiceEnEdition(null);
-            setAfficherFormulaire((v) => !v);
           }}
+          className="flex items-center justify-center gap-2"
         >
-          {afficherFormulaire ? (
-            <>
-              <X size={16} />
-              Fermer
-            </>
-          ) : (
-            <>
-              <Plus size={16} />
-              Publier un service
-            </>
-          )}
+          <Plus size={17} />
+          Nouveau service
         </Button>
       </div>
 
-      {/* Message d'erreur */}
       {erreur && (
-        <NoticeCard className="mb-6">
-          <p className="text-sm text-brique">
-            {erreur}
-          </p>
+        <NoticeCard>
+          <div className="flex items-start gap-3">
+            <X size={18} className="mt-0.5 text-brique" />
+            <div>
+              <p className="font-medium text-ink">
+                Une erreur est survenue
+              </p>
+              <p className="mt-1 text-sm text-ink-soft">
+                {erreur}
+              </p>
+            </div>
+          </div>
         </NoticeCard>
       )}
 
-      {/* Formulaire de création */}
-      {afficherFormulaire && (
-        <div className="mb-8">
-          <FormulaireService
-            onCree={async () => {
-              setAfficherFormulaire(false);
-              await charger();
-            }}
-          />
-        </div>
-      )}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Total" value={total} icon={Wrench} />
 
-      {/* Formulaire d'édition */}
-      {serviceEnEdition && (
-        <div className="mb-8">
-          <FormulaireService
-            key={serviceEnEdition.id}
-            serviceExistant={serviceEnEdition}
-            onCree={async () => {
-              setServiceEnEdition(null);
-              await charger();
-            }}
-            onAnnuler={() => setServiceEnEdition(null)}
-          />
-        </div>
-      )}
+        <StatCard label="Actifs" value={actifs} icon={Check} />
 
-      {/* Chargement */}
-      {chargement ? (
-        <p className="text-sm text-ink-soft">
-          Chargement…
-        </p>
-      ) : services.length === 0 ? (
+        <StatCard label="Archivés" value={archives} icon={Archive} />
+
+        <StatCard label="Masqués" value={masques} icon={X} />
+      </div>
+
+      {afficherCreation && (
         <NoticeCard>
-          <p className="text-sm text-ink-soft">
-            Vous n&apos;avez pas encore publié de service.
-          </p>
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-ink">
+                Nouveau service
+              </h2>
+              <p className="mt-1 text-sm text-ink-soft">
+                Présentez clairement le service que vous proposez.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setAfficherCreation(false)}
+              className="rounded-lg p-2 text-ink-soft transition hover:bg-ink/5 hover:text-ink"
+              aria-label="Fermer"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <FormulaireService
+            mode="creation"
+            onSuccess={apresCreation}
+            onCancel={() => setAfficherCreation(false)}
+          />
+        </NoticeCard>
+      )}
+
+      <SousNavigation
+        onglets={[
+          { valeur: "actifs", label: "Actifs" },
+          { valeur: "archives", label: "Archivés" },
+        ]}
+        actif={ongletServices}
+        onChanger={(valeur) =>
+          setOngletServices(valeur as OngletServices)
+        }
+      />
+
+      {/* Filtres de l'onglet courant */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="relative">
+          <Search
+            size={15}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+            aria-hidden="true"
+          />
+
+          <Input
+            value={recherche}
+            onChange={(event) =>
+              setRecherche(event.target.value)
+            }
+            placeholder={
+              ongletServices === "archives"
+                ? "Rechercher un service archivé…"
+                : "Rechercher un service actif…"
+            }
+            aria-label="Rechercher un service"
+            className="pl-9"
+          />
+        </div>
+
+        <Select
+          value={filtreCategorie}
+          onChange={(event) =>
+            setFiltreCategorie(event.target.value)
+          }
+          aria-label="Filtrer par catégorie"
+        >
+          <option value="">Toutes les catégories</option>
+
+          {categoriesDisponibles.map((categorie) => (
+            <option key={categorie} value={categorie}>
+              {categorie}
+            </option>
+          ))}
+        </Select>
+      </div>
+
+      {chargement ? (
+        <div className="flex min-h-48 items-center justify-center">
+          <Loader2
+            size={24}
+            className="animate-spin text-ink-soft"
+          />
+        </div>
+      ) : servicesAffiches.length === 0 ? (
+        <NoticeCard>
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-ink/5">
+              <Wrench size={20} className="text-ink-soft" />
+            </div>
+
+            <h3 className="font-semibold text-ink">
+              {ongletServices === "archives"
+                ? "Aucun service archivé"
+                : "Aucun service actif"}
+            </h3>
+
+            <p className="mt-1 max-w-md text-sm text-ink-soft">
+              {recherche || filtreCategorie
+                ? "Aucun service ne correspond aux filtres sélectionnés."
+                : ongletServices === "archives"
+                  ? "Les services que vous archivez apparaîtront ici."
+                  : "Créez votre premier service pour commencer à proposer vos compétences."}
+            </p>
+
+            {ongletServices === "actifs" &&
+              !recherche &&
+              !filtreCategorie && (
+                <Button
+                  className="mt-5"
+                  onClick={() => setAfficherCreation(true)}
+                >
+                  <Plus size={16} />
+                  Créer un service
+                </Button>
+              )}
+          </div>
         </NoticeCard>
       ) : (
-        <>
-          {/* Sous-menus : Actifs / Archivés */}
-          {(() => {
-            const actifs = services.filter((s) => !s.estArchive).length;
-            const archives = services.filter((s) => s.estArchive).length;
-
-            const servicesAffiches = services.filter((service) =>
-              ongletServices === "archives"
-                ? service.estArchive
-                : !service.estArchive,
+        <div className="grid gap-5 lg:grid-cols-2">
+          {servicesAffiches.map((service) => {
+            const IconeCategorie = iconePourCategorie(
+              service.categorie,
+            );
+            const delaiJours = Number(service.delai ?? 0);
+            const imagePrincipale = getFileUrl(
+              service.imagesUrls?.[0] ?? null,
             );
 
             return (
-              <>
-                <SousNavigation
-                  onglets={[
-                    { valeur: "actifs", label: "Actifs", compte: actifs },
-                    { valeur: "archives", label: "Archivés", compte: archives },
-                  ]}
-                  actif={ongletServices}
-                  onChanger={setOngletServices}
-                />
+              <article
+                key={service.id}
+                className="group relative overflow-visible rounded-2xl border border-ink/10 bg-paper p-5 shadow-sm transition hover:border-ink/20 hover:shadow-md"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-ink/5 text-ink-soft">
+                    <IconeCategorie size={21} />
+                  </div>
 
-                {servicesAffiches.length === 0 ? (
-                  <NoticeCard>
-                    <p className="text-sm text-ink-soft">
-                      {ongletServices === "archives"
-                        ? "Aucun service archivé."
-                        : "Aucun service actif."}
-                    </p>
-                  </NoticeCard>
-                ) : (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {servicesAffiches.map((service) => {
-                      const action =
-                        actionEnCours === service.id;
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate font-semibold text-ink">
+                          {service.titre}
+                        </h3>
 
-                      return (
-                        <NoticeCard key={service.id}>
-                          {/* Statut + prix */}
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex flex-wrap gap-1.5">
-                              <Tag
-                                tone={
-                                  service.estArchive
-                                    ? "ink"
-                                    : service.disponible
-                                      ? "rice"
-                                      : "ink"
-                                }
-                              >
-                                {service.estArchive
-                                  ? "Archivé"
-                                  : service.disponible
-                                    ? "Disponible"
-                                    : "Masqué"}
-                              </Tag>
-                            </div>
+                        <p className="mt-1 text-sm text-ink-soft">
+                          {service.categorie}
+                        </p>
+                      </div>
 
-                            <span className="font-mono text-sm text-ocre-dark">
-                              {formatArgent(service.prix)}
-                            </span>
-                          </div>
+                      {/* Menu ⋮ */}
+                      <details className="relative shrink-0">
+                        <summary
+                          className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg text-ink-soft transition hover:bg-ink/5 hover:text-ink [&::-webkit-details-marker]:hidden"
+                          aria-label={`Actions pour ${service.titre}`}
+                        >
+                          <MoreVertical size={19} />
+                        </summary>
 
-                          {/* Titre */}
-                          <p className="mt-3 font-display text-lg font-medium">
-                            {service.titre}
-                          </p>
+                        <div className="absolute right-0 top-11 z-30 w-44 overflow-hidden rounded-xl border border-ink/10 bg-paper p-1.5 shadow-lg">
+                          <Link
+                            href={`/services/${service.id}`}
+                            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink transition hover:bg-ink/5"
+                          >
+                            <Search size={15} />
+                            Voir
+                          </Link>
 
-                          {/* Description */}
-                          <p className="mt-2 text-sm text-ink-soft line-clamp-2">
-                            {service.description}
-                          </p>
+                          {!service.estArchive && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setServiceEnEdition(service)
+                              }
+                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink transition hover:bg-ink/5"
+                            >
+                              <Pencil size={15} />
+                              Modifier
+                            </button>
+                          )}
 
-                          {/* Catégorie / délai */}
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            <Tag tone="ink">
-                              {service.categorie}
-                            </Tag>
+                          {!service.estArchive && (
+                            <button
+                              type="button"
+                              onClick={() => supprimer(service)}
+                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-brique transition hover:bg-brique/5"
+                            >
+                              <X size={15} />
+                              Supprimer
+                            </button>
+                          )}
+                        </div>
+                      </details>
+                    </div>
 
-                            <span className="text-xs text-ink-soft">
-                              livré en {service.delai} jour
-                              {service.delai > 1 ? "s" : ""}
-                            </span>
-                          </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <Tag>{formatArgent(service.prix)}</Tag>
 
-                          {/* Actions */}
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            {!service.estArchive && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="gap-1.5"
-                                  disabled={action}
-                                  onClick={() => {
-                                    setAfficherFormulaire(false);
-                                    setServiceEnEdition(service);
-                                  }}
-                                >
-                                  <Pencil size={13} />
-                                  Modifier
-                                </Button>
+                      <Tag>
+                        {delaiJours} jour
+                        {delaiJours > 1 ? "s" : ""}
+                      </Tag>
 
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  disabled={action}
-                                  onClick={() =>
-                                    basculerDisponibilite(service)
-                                  }
-                                >
-                                  {action
-                                    ? "..."
-                                    : service.disponible
-                                      ? "Masquer"
-                                      : "Republier"}
-                                </Button>
-                              </>
-                            )}
+                      {service.estArchive ? (
+                        <Tag>Archivé</Tag>
+                      ) : service.disponible ? (
+                        <Tag>Disponible</Tag>
+                      ) : (
+                        <Tag>Masqué</Tag>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-                            {service.estArchive ? (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="gap-1.5"
-                                disabled={action}
-                                onClick={() => restaurer(service)}
-                              >
-                                <ArchiveRestore size={13} />
-                                Restaurer
-                              </Button>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="gap-1.5"
-                                disabled={action}
-                                onClick={() => archiver(service)}
-                              >
-                                <Archive size={13} />
-                                Archiver
-                              </Button>
-                            )}
-
-                            {!service.estArchive && (
-                              <Button
-                                size="sm"
-                                variant="danger"
-                                disabled={action}
-                                onClick={() =>
-                                  supprimer(service)
-                                }
-                              >
-                                {action
-                                  ? "..."
-                                  : "Supprimer"}
-                              </Button>
-                            )}
-                          </div>
-                        </NoticeCard>
-                      );
-                    })}
+                {imagePrincipale && (
+                  <div className="mt-4 overflow-hidden rounded-xl">
+                    <img
+                      src={imagePrincipale}
+                      alt=""
+                      className="h-44 w-full object-cover"
+                    />
                   </div>
                 )}
-              </>
+
+                {service.description && (
+                  <p className="mt-4 line-clamp-3 text-sm leading-6 text-ink-soft">
+                    {service.description}
+                  </p>
+                )}
+
+                <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-ink/10 pt-4">
+                  {!service.estArchive && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex items-center justify-center gap-2"
+                      onClick={() =>
+                        changerDisponibilite(service)
+                      }
+                    >
+                      {service.disponible ? (
+                        <>
+                          <X size={15} />
+                          Masquer
+                        </>
+                      ) : (
+                        <>
+                          <Check size={15} />
+                          Republier
+                        </>
+                      )}
+                    </Button>
+                  )}
+
+                  {service.estArchive ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex items-center justify-center gap-2"
+                      onClick={() => restaurer(service)}
+                    >
+                      <ArchiveRestore size={15} />
+                      Restaurer
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex items-center justify-center gap-2"
+                      onClick={() => archiver(service)}
+                    >
+                      <Archive size={15} />
+                      Archiver
+                    </Button>
+                  )}
+                </div>
+              </article>
             );
-          })()}
-        </>
+          })}
+        </div>
+      )}
+
+      {serviceEnEdition && (
+        <NoticeCard>
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-ink">
+                Modifier le service
+              </h2>
+
+              <p className="mt-1 text-sm text-ink-soft">
+                Modifiez les informations de votre service.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setServiceEnEdition(null)}
+              className="rounded-lg p-2 text-ink-soft transition hover:bg-ink/5 hover:text-ink"
+              aria-label="Fermer"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <FormulaireService
+            mode="edition"
+            serviceId={serviceEnEdition.id}
+            initialValues={{
+              titre: serviceEnEdition.titre,
+              description: serviceEnEdition.description,
+              categorie: serviceEnEdition.categorie,
+              prix: String(serviceEnEdition.prix),
+              delaiJours: String(Number(serviceEnEdition.delai ?? 0)),
+              disponible: serviceEnEdition.disponible,
+              imageUrl: serviceEnEdition.imagesUrls?.[0] ?? "",
+            }}
+            onSuccess={apresEdition}
+            onCancel={() => setServiceEnEdition(null)}
+          />
+        </NoticeCard>
       )}
     </div>
-  );
-}
-
-/* =========================================================
-   FORMULAIRE DE CREATION D'UN SERVICE
-   ========================================================= */
-
-function FormulaireService({
-  serviceExistant,
-  onCree,
-  onAnnuler,
-}: {
-  serviceExistant?: ServiceOffert;
-  onCree: () => void | Promise<void>;
-  onAnnuler?: () => void;
-}) {
-  const enEdition = Boolean(serviceExistant);
-
-  const [titre, setTitre] = useState(serviceExistant?.titre ?? "");
-  const [description, setDescription] = useState(serviceExistant?.description ?? "");
-  const [categorie, setCategorie] = useState(serviceExistant?.categorie ?? "");
-  const [prix, setPrix] = useState(serviceExistant ? String(serviceExistant.prix) : "");
-  const [delai, setDelai] = useState(serviceExistant ? String(serviceExistant.delai) : "");
-  const [competences, setCompetences] = useState(
-    serviceExistant?.competences.join(", ") ?? "",
-  );
-  const [imageUrl, setImageUrl] = useState<string | null>(
-    serviceExistant?.imagesUrls?.[0] ?? null,
-  );
-  const [imageModifiee, setImageModifiee] = useState(false);
-
-  const [envoi, setEnvoi] = useState(false);
-  const [erreur, setErreur] = useState<string | null>(
-    null,
-  );
-
-  async function onSubmit(
-    e: React.FormEvent<HTMLFormElement>,
-  ) {
-    e.preventDefault();
-
-    setErreur(null);
-    setEnvoi(true);
-
-    try {
-      const payload = {
-        titre: titre.trim(),
-        description: description.trim(),
-        categorie: categorie.trim(),
-        prix: Number(prix),
-        delai: Number(delai),
-        // Comme pour les missions : on n'envoie imagesUrls que si
-        // l'image a été modifiée, pour conserver l'image actuelle sinon.
-        ...(imageModifiee ? { imagesUrls: imageUrl ? [imageUrl] : [] } : {}),
-
-        competences: competences
-          .split(",")
-          .map((c) => c.trim())
-          .filter(Boolean),
-      };
-
-      if (enEdition && serviceExistant) {
-        await api.patch(`/services/${serviceExistant.id}`, payload);
-      } else {
-        await api.post("/services", payload);
-      }
-
-      await onCree();
-    } catch (err) {
-      console.error(
-        "Erreur lors de la création du service :",
-        err,
-      );
-
-      setErreur(
-        err instanceof ApiError
-          ? err.message
-          : "Erreur inattendue.",
-      );
-    } finally {
-      setEnvoi(false);
-    }
-  }
-
-  return (
-    <NoticeCard>
-      <h2 className="font-display text-xl font-semibold mb-4">
-        {enEdition ? "Modifier le service" : "Nouveau service"}
-      </h2>
-
-      <form
-        onSubmit={onSubmit}
-        className="flex flex-col gap-5"
-      >
-        {/* Image principale */}
-        <Field label="Image principale" htmlFor="service-image">
-          <SelecteurImage
-            valeur={imageUrl}
-            onChange={(url) => {
-              setImageUrl(url);
-              setImageModifiee(true);
-            }}
-            disabled={envoi}
-          />
-        </Field>
-
-        {/* Titre */}
-        <Field
-          label="Titre"
-          htmlFor="service-titre"
-        >
-          <Input
-            id="service-titre"
-            required
-            value={titre}
-            onChange={(e) =>
-              setTitre(e.target.value)
-            }
-            placeholder="Création d'une maquette Figma"
-            disabled={envoi}
-          />
-        </Field>
-
-        {/* Description */}
-        <Field
-          label="Description"
-          htmlFor="service-description"
-        >
-          <Textarea
-            id="service-description"
-            required
-            rows={4}
-            value={description}
-            onChange={(e) =>
-              setDescription(e.target.value)
-            }
-            disabled={envoi}
-          />
-        </Field>
-
-        {/* Catégorie / prix / délai */}
-        <div className="grid gap-5 sm:grid-cols-3">
-          <Field
-            label="Catégorie"
-            htmlFor="service-categorie"
-          >
-            <Input
-              id="service-categorie"
-              required
-              value={categorie}
-              onChange={(e) =>
-                setCategorie(e.target.value)
-              }
-              placeholder="Design"
-              disabled={envoi}
-            />
-          </Field>
-
-          <Field
-            label="Prix (Ar)"
-            htmlFor="service-prix"
-          >
-            <Input
-              id="service-prix"
-              type="number"
-              min={0}
-              required
-              value={prix}
-              onChange={(e) =>
-                setPrix(e.target.value)
-              }
-              disabled={envoi}
-            />
-          </Field>
-
-          <Field
-            label="Délai (jours)"
-            htmlFor="service-delai"
-          >
-            <Input
-              id="service-delai"
-              type="number"
-              min={1}
-              required
-              value={delai}
-              onChange={(e) =>
-                setDelai(e.target.value)
-              }
-              disabled={envoi}
-            />
-          </Field>
-        </div>
-
-        {/* Compétences */}
-        <Field
-          label="Compétences"
-          htmlFor="service-competences"
-          hint="Séparées par des virgules"
-        >
-          <Input
-            id="service-competences"
-            value={competences}
-            onChange={(e) =>
-              setCompetences(e.target.value)
-            }
-            placeholder="Figma, UI/UX"
-            disabled={envoi}
-          />
-        </Field>
-
-        {/* Erreur */}
-        {erreur && (
-          <p className="text-sm text-brique">
-            {erreur}
-          </p>
-        )}
-
-        {/* Bouton */}
-        <div className="flex gap-2">
-          <Button
-            type="submit"
-            disabled={envoi}
-            className="self-start"
-          >
-            {envoi
-              ? enEdition
-                ? "Enregistrement…"
-                : "Publication…"
-              : enEdition
-                ? "Enregistrer les modifications"
-                : "Publier"}
-          </Button>
-          {enEdition && onAnnuler && (
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={envoi}
-              onClick={onAnnuler}
-            >
-              Annuler
-            </Button>
-          )}
-        </div>
-      </form>
-    </NoticeCard>
   );
 }

@@ -72,3 +72,14 @@ export const statutDemandeServiceLabel: Record<string, string> = {
   acceptee: "Acceptée",
   refusee: "Refusée",
 };
+
+export const statutInvitationGroupeLabel: Record<string, string> = {
+  en_attente: "En attente",
+  acceptee: "Acceptée",
+  refusee: "Refusée",
+};
+
+export const roleMembreGroupeLabel: Record<string, string> = {
+  chef: "Chef",
+  membre: "Membre",
+};

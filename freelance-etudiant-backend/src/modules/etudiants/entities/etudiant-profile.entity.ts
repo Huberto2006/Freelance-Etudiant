@@ -9,6 +9,9 @@ import {
 import { Utilisateur } from '../../users/entities/utilisateur.entity';
 import { ServiceOffert } from '../../services/entities/service.entity';
 import { Candidature } from '../../candidatures/entities/candidature.entity';
+import { Groupe } from '../../groupes/entities/groupe.entity';
+import { MembreGroupe } from '../../groupes/entities/membre-groupe.entity';
+import { InvitationGroupe } from '../../groupes/entities/invitation-groupe.entity';
 
 @Entity('profils_etudiants')
 export class EtudiantProfile {
@@ -109,4 +112,16 @@ export class EtudiantProfile {
 
   @OneToMany(() => Candidature, (candidature) => candidature.etudiant)
   candidatures!: Candidature[];
+
+  @OneToMany(() => Groupe, (groupe) => groupe.createur)
+  groupesCrees!: Groupe[];
+
+  @OneToMany(() => MembreGroupe, (membre) => membre.etudiant)
+  membresGroupes!: MembreGroupe[];
+
+  @OneToMany(() => InvitationGroupe, (invitation) => invitation.inviteur)
+  invitationsGroupesEnvoyees!: InvitationGroupe[];
+
+  @OneToMany(() => InvitationGroupe, (invitation) => invitation.invite)
+  invitationsGroupesRecues!: InvitationGroupe[];
 }

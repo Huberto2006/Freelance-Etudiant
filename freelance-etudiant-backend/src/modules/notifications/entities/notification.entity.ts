@@ -17,32 +17,32 @@ import { TypeNotification } from '../../../common/enums/type-notification.enum';
 @Entity('notifications')
 export class Notification {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ type: 'enum', enum: TypeNotification })
-  type: TypeNotification;
+  type!: TypeNotification;
 
   @Column({ type: 'varchar', length: 150 })
-  titre: string;
+  titre!: string;
 
   @Column({ type: 'text' })
-  message: string;
+  message!: string;
 
   @Column({ name: 'lien_url', type: 'varchar', length: 300, nullable: true })
   lienUrl?: string;
 
   @Column({ name: 'est_lue', type: 'boolean', default: false })
   @Index()
-  estLue: boolean;
+  estLue!: boolean;
 
   @ManyToOne(() => Utilisateur, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'destinataire_id' })
-  destinataire: Utilisateur;
+  destinataire!: Utilisateur;
 
   @Column({ name: 'destinataire_id' })
   @Index()
-  destinataireId: string;
+  destinataireId!: string;
 
   @CreateDateColumn({ name: 'date_creation', type: 'timestamptz' })
-  dateCreation: Date;
+  dateCreation!: Date;
 }

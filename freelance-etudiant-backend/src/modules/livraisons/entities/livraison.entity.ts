@@ -60,6 +60,9 @@ export class Livraison {
   @Column({ name: 'lien_livrable', type: 'varchar', length: 500, nullable: true })
   lienLivrable?: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  branche?: string;
+
   @Column({ type: 'text', nullable: true })
   commentaireLivraison?: string;
 

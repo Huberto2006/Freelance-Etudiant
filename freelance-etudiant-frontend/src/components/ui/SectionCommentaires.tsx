@@ -12,6 +12,7 @@ import type { Commentaire, TypeCibleContenu } from "@/lib/types";
 import { formatDateCourte } from "@/lib/format";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { ChampAvecMentions } from "@/components/ui/ChampAvecMentions";
 import { Textarea } from "@/components/ui/Field";
 
 /**
@@ -411,14 +412,18 @@ export function SectionCommentaires({
           onSubmit={envoyer}
           className="mb-6 flex flex-col gap-2"
         >
-          <Textarea
+          {/*
+           * Champ avec autocompletion @mention : le composant delegue
+           * Entree (sans suggestion affichee) a gererToucheNouveauCommentaire,
+           * qui conserve le comportement existant (Envoi / Maj+Entree
+           * nouvelle ligne).
+           */}
+          <ChampAvecMentions
             rows={2}
             value={nouveauContenu}
-            onChange={(e) =>
-              setNouveauContenu(e.target.value)
-            }
-            onKeyDown={gererToucheNouveauCommentaire}
-            placeholder="Ajouter un commentaire… (Entrée pour envoyer, Maj+Entrée pour une nouvelle ligne)"
+            onChange={setNouveauContenu}
+            onEnter={gererToucheNouveauCommentaire}
+            placeholder="Ajouter un commentaire… (taper @ pour identifier un étudiant)"
             disabled={envoi}
           />
 

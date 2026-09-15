@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Wrench } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
 import type { ServiceOffert } from "@/lib/types";
@@ -17,14 +18,16 @@ import {
 import { CarteService } from "@/components/ui/CarteService";
 import { NoticeCard } from "@/components/ui/Notice";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
+import { Button } from "@/components/ui/Button";
+import { SqueletteCatalogue } from "@/components/ui/SqueletteCatalogue";
 import { useAuth } from "@/lib/auth-context";
 
 export default function ServicesPage() {
   return (
     <Suspense
       fallback={
-        <div className="container mx-auto max-w-6xl px-4 py-10">
-          <p className="text-sm text-ink-soft">Chargement…</p>
+        <div className="container mx-auto max-w-6xl px-4 pb-10 pt-8">
+          <SqueletteCatalogue nombre={6} />
         </div>
       }
     >
@@ -178,6 +181,10 @@ function ServicesContent() {
         </p>
         <h1 className="font-display text-3xl font-bold">Services</h1>
         <p className="mt-1 text-sm text-ink-soft">
+          Les services proposés par les étudiants de la plateforme, prêts à
+          être commandés.
+        </p>
+        <p className="mt-0.5 text-xs text-ink-soft/70">
           {chargement
             ? "Chargement des services…"
             : `${services.length} service${services.length > 1 ? "s" : ""} disponible${services.length > 1 ? "s" : ""}`}
@@ -213,16 +220,31 @@ function ServicesContent() {
 
         <div className="min-w-0 flex-1">
           {chargement ? (
-            <p className="text-sm text-ink-soft">Chargement…</p>
+            <SqueletteCatalogue nombre={6} />
           ) : erreur ? (
             <NoticeCard>
               <p className="text-sm text-brique">{erreur}</p>
             </NoticeCard>
           ) : services.length === 0 ? (
             <NoticeCard>
-              <p className="text-sm text-ink-soft">
-                Aucun service ne correspond à ces critères pour le moment.
-              </p>
+              <div className="flex flex-col items-center gap-3 py-8 text-center">
+                <span
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-ocre/10 text-ocre-dark"
+                  aria-hidden="true"
+                >
+                  <Wrench size={22} />
+                </span>
+                <p className="text-sm text-ink-soft">
+                  Aucun service ne correspond à ces critères pour le moment.
+                </p>
+                <p className="max-w-sm text-xs text-ink-soft/70">
+                  Essayez d&apos;élargir vos filtres ou revenez plus tard : de
+                  nouveaux services sont publiés régulièrement.
+                </p>
+                <Button variant="secondary" size="sm" href="/services">
+                  Voir tous les services
+                </Button>
+              </div>
             </NoticeCard>
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">

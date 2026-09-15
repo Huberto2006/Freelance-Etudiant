@@ -5,13 +5,17 @@ import {
 } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { Message } from './entities/message.entity';
+import { MessageGroupeLecture } from './entities/message-groupe-lecture.entity';
 import { EnvoyerMessageDto } from './dto/envoyer-message.dto';
+import { EnvoyerMessageGroupeDto } from './dto/envoyer-message-groupe.dto';
 
 import { CandidaturesService } from '../candidatures/candidatures.service';
+import { AmitieService } from '../amitie/amitie.service';
 import { UsersService } from '../users/users.service';
+import { GroupesService } from '../groupes/groupes.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 import { Role } from '../../common/enums/role.enum';
@@ -23,12 +27,19 @@ export class MessagesService {
     @InjectRepository(Message)
     private readonly repo: Repository<Message>,
 
+    @InjectRepository(MessageGroupeLecture)
+    private readonly lectureRepo: Repository<MessageGroupeLecture>,
+
     private readonly candidaturesService: CandidaturesService,
+
+    private readonly amitieService: AmitieService,
 
     private readonly usersService: UsersService,
 
+    private readonly groupesService: GroupesService,
+
     private readonly realtimeGateway: RealtimeGateway,
-  ) {}
+  ) { }
 
   /**
    * ========================================================
@@ -94,20 +105,32 @@ export class MessagesService {
     ) {
       return;
     }
-
     /*
-     * Pour les autres utilisateurs,
-     * il faut une candidature acceptée.
+     * Pour les autres utilisateurs :
+     * - une candidature acceptée autorise la conversation ;
+     * - ou une amitié acceptée entre deux étudiants.
      */
-    const autorisee =
+    const candidatureAutorisee =
       await this.candidaturesService.existeCandidatureAccepteeEntre(
         expediteurId,
         destinataireId,
       );
 
+    const amitieAutorisee =
+      !candidatureAutorisee &&
+      expediteur.role === Role.ETUDIANT &&
+      destinataire.role === Role.ETUDIANT &&
+      await this.amitieService.sontAmis(
+        expediteurId,
+        destinataireId,
+      );
+
+    const autorisee =
+      candidatureAutorisee || amitieAutorisee;
+
     if (!autorisee) {
       throw new ForbiddenException(
-        "La messagerie est disponible uniquement après l'acceptation d'une candidature.",
+        "La messagerie est disponible uniquement après l'acceptation d'une candidature ou d'une amitié.",
       );
     }
   }
@@ -285,6 +308,13 @@ export class MessagesService {
           },
         )
 
+        /*
+         * Les messages de groupe n'appartiennent a aucune conversation
+         * individuelle : ils disposent de leur propre endpoint
+         * (GET /messages/groupes/:groupeId).
+         */
+        .andWhere('message.groupeId IS NULL')
+
         .orderBy(
           'message.dateEnvoi',
           'DESC',
@@ -343,6 +373,12 @@ export class MessagesService {
       new Set<string>();
 
     for (const message of messages) {
+      if (!message.destinataireId) {
+        // Securite de typage : les messages de groupe (destinataire NULL)
+        // sont deja filtres par la requete ci-dessus.
+        continue;
+      }
+
       if (
         message.expediteurId === userId
       ) {
@@ -413,24 +449,24 @@ export class MessagesService {
     return messages
       .map((message) => this.masquerSupprime(message))
       .sort(
-      (a, b) => {
-        const dateA =
-          a.dateEnvoi instanceof Date
-            ? a.dateEnvoi.getTime()
-            : new Date(
+        (a, b) => {
+          const dateA =
+            a.dateEnvoi instanceof Date
+              ? a.dateEnvoi.getTime()
+              : new Date(
                 a.dateEnvoi,
               ).getTime();
 
-        const dateB =
-          b.dateEnvoi instanceof Date
-            ? b.dateEnvoi.getTime()
-            : new Date(
+          const dateB =
+            b.dateEnvoi instanceof Date
+              ? b.dateEnvoi.getTime()
+              : new Date(
                 b.dateEnvoi,
               ).getTime();
 
-        return dateB - dateA;
-      },
-    );
+          return dateB - dateA;
+        },
+      );
   }
 
   /**
@@ -442,13 +478,57 @@ export class MessagesService {
    * leur contenu n'est plus visible.
    */
   async compterNonLus(userId: string): Promise<number> {
-    return this.repo.count({
+    /*
+     * Messages individuels (comportement existant, inchangé).
+     */
+    const individuels = await this.repo.count({
       where: {
         destinataireId: userId,
         estLu: false,
         estSupprime: false,
       },
     });
+
+    /*
+     * Messages de groupe : un message de groupe est non lu tant qu'il
+     * n'existe pas d'enregistrement de lecture pour l'utilisateur dans
+     * message_groupe_lectures. L'auteur n'est jamais destinataire non lu
+     * de son propre message.
+     */
+    const groupe = await this.compterNonLusGroupes(userId);
+
+    return individuels + groupe;
+  }
+
+  /**
+   * Compteur limite aux messages de groupe (voir compterNonLus).
+   * Seuls les groupes dont l'utilisateur est membre actif sont comptes.
+   */
+  private async compterNonLusGroupes(userId: string): Promise<number> {
+    const lignes = await this.repo.query(
+      `
+      SELECT COUNT(*)::int AS total
+      FROM messages m
+      WHERE m.groupe_id IS NOT NULL
+        AND m.est_supprime = false
+        AND m.expediteur_id <> $1
+        AND EXISTS (
+          SELECT 1
+          FROM membres_groupes mg
+          WHERE mg.groupe_id = m.groupe_id
+            AND mg.etudiant_id = $1
+        )
+        AND NOT EXISTS (
+          SELECT 1
+          FROM message_groupe_lectures l
+          WHERE l.message_id = m.id
+            AND l.utilisateur_id = $1
+        )
+      `,
+      [userId],
+    );
+
+    return Number(lignes[0]?.total ?? 0);
   }
 
   /**
@@ -466,6 +546,11 @@ export class MessagesService {
    * masque dans toutes les lectures (voir masquerSupprime) et les deux
    * participants voient « Message supprime ». L'operation est
    * idempotente.
+   *
+   * S'applique aussi aux messages de groupe : l'auteur d'un message de
+   * groupe peut supprimer son propre message (meme regle, meme
+   * tombstone), apres verification de son appartenance au groupe ; les
+   * membres sont informes en temps reel (message:groupe:supprime).
    */
   async supprimer(messageId: string, userId: string): Promise<void> {
     const message = await this.repo.findOne({
@@ -487,9 +572,24 @@ export class MessagesService {
       return;
     }
 
+    /*
+     * Message de GROUPE : l'auteur reste soumis a la regle d'appartenance
+     * (le fait d'etre chef n'accorde aucun privilege supplementaire sur la
+     * messagerie). Verification AVANT la suppression logique.
+     */
+    if (message.groupeId) {
+      await this.groupesService.verifierMembreActif(message.groupeId, userId);
+    }
+
     message.estSupprime = true;
     message.supprimeParId = userId;
     await this.repo.save(message);
+
+    if (message.groupeId) {
+      // Temps reel : tous les membres du groupe mettent a jour leur fil.
+      await this.notifierSuppressionGroupe(message);
+      return;
+    }
 
     // Temps reel : les deux participants mettent a jour leur fil.
     this.realtimeGateway.emitToUser(
@@ -497,21 +597,23 @@ export class MessagesService {
       'message:supprime',
       { id: message.id },
     );
-    this.realtimeGateway.emitToUser(
-      message.destinataireId,
-      'message:supprime',
-      { id: message.id },
-    );
-
-    // Le contenu n'etant plus visible, il ne compte plus dans le compteur
-    // de non lus du destinataire s'il n'avait pas encore ete lu.
-    if (!message.estLu) {
-      const total = await this.compterNonLus(message.destinataireId);
+    if (message.destinataireId) {
       this.realtimeGateway.emitToUser(
         message.destinataireId,
-        'message:compteur',
-        { total },
+        'message:supprime',
+        { id: message.id },
       );
+
+      // Le contenu n'etant plus visible, il ne compte plus dans le compteur
+      // de non lus du destinataire s'il n'avait pas encore ete lu.
+      if (!message.estLu) {
+        const total = await this.compterNonLus(message.destinataireId);
+        this.realtimeGateway.emitToUser(
+          message.destinataireId,
+          'message:compteur',
+          { total },
+        );
+      }
     }
   }
 
@@ -559,5 +661,255 @@ export class MessagesService {
 
     const total = await this.compterNonLus(userId);
     this.realtimeGateway.emitToUser(userId, 'message:compteur', { total });
+  }
+
+  /**
+   * ========================================================
+   * MESSAGERIE DE GROUPE
+   * ========================================================
+   *
+   * Un message de groupe est stocke UNE SEULE fois dans messages
+   * (destinataire_id NULL, groupe_id renseigne) ; aucun enregistrement
+   * par membre. Chaque membre materialise sa lecture dans
+   * message_groupe_lectures.
+   *
+   * Le chef et les membres sont soumis aux MEMES regles de messagerie :
+   * toutes les verifications d'appartenance sont deleguees a
+   * GroupesService (les regles de gestion du groupe restent dans son
+   * module).
+   */
+
+  /**
+   * ENVOYER UN MESSAGE A UN GROUPE
+   *
+   * 1. le groupe doit exister ;
+   * 2. l'expediteur doit etre membre du groupe ;
+   * 3. son adhesion doit etre active (ligne dans membres_groupes) ;
+   * 4. un seul enregistrement est cree dans messages ;
+   * 5. les membres sont notifies en temps reel via leurs rooms
+   *    user:<id> (evenement message:groupe:nouveau).
+   */
+  async envoyerAuGroupe(
+    expediteurId: string,
+    groupeId: string,
+    dto: EnvoyerMessageGroupeDto,
+  ): Promise<Message> {
+    /*
+     * Verification centralisee dans GroupesService :
+     * groupe existant + membre actif (sinon NotFound/Forbidden).
+     */
+    await this.groupesService.verifierMembreActif(groupeId, expediteurId);
+
+    const message = this.repo.create({
+      contenu: dto.contenu,
+      pieceJointeUrl: dto.pieceJointeUrl ?? null,
+      pieceJointeNom: dto.pieceJointeNom ?? null,
+      expediteurId,
+      destinataireId: null,
+      groupeId,
+    });
+
+    const saved = await this.repo.save(message);
+
+    /*
+     * Recharge avec l'expediteur et le groupe : le payload temps reel a la
+     * meme forme que les messages renvoyes par
+     * GET /messages/groupes/:groupeId, ce que le frontend attend.
+     */
+    const messageComplet = await this.repo.findOne({
+      where: { id: saved.id },
+      relations: ['expediteur', 'groupe'],
+    });
+
+    if (messageComplet) {
+      await this.notifierNouveauMessageGroupe(
+        groupeId,
+        messageComplet,
+        expediteurId,
+      );
+    }
+
+    return saved;
+  }
+
+  /**
+   * CONSULTER LA CONVERSATION D'UN GROUPE
+   *
+   * Reservee aux membres actifs du groupe (404 si le groupe n'existe pas,
+   * 403 sinon). Messages dans l'ordre chronologique. Pour chaque message,
+   * estLu est renseigne dynamiquement pour l'utilisateur courant (le
+   * drapeau persiste n'est pas utilise pour les messages de groupe).
+   */
+  async findConversationGroupe(
+    userId: string,
+    groupeId: string,
+  ): Promise<Message[]> {
+    await this.groupesService.verifierMembreActif(groupeId, userId);
+
+    const messages = await this.repo
+      .createQueryBuilder('message')
+      .leftJoinAndSelect('message.expediteur', 'expediteur')
+      .where('message.groupeId = :groupeId', { groupeId })
+      .orderBy('message.dateEnvoi', 'ASC')
+      .getMany();
+
+    /*
+     * Etat de lecture pour l'utilisateur courant.
+     */
+    let messagesLus = new Set<string>();
+
+    if (messages.length > 0) {
+      const lectures = await this.lectureRepo.find({
+        where: {
+          utilisateurId: userId,
+          messageId: In(messages.map((message) => message.id)),
+        },
+      });
+
+      messagesLus = new Set(lectures.map((lecture) => lecture.messageId));
+    }
+
+    for (const message of messages) {
+      message.estLu =
+        message.expediteurId === userId || messagesLus.has(message.id);
+    }
+
+    // Les messages supprimes logiquement voyagent avec un contenu masque.
+    return messages.map((message) => this.masquerSupprime(message));
+  }
+
+
+  /**
+   * MARQUER COMME LUS LES MESSAGES D'UN GROUPE
+   *
+   * Cree une entree de lecture pour chaque message du groupe non supprime
+   * et non ecrit par l'utilisateur, puis met a jour son compteur temps
+   * reel. Retourne le nombre de messages nouvellement marques comme lus.
+   */
+  async marquerMessagesGroupeCommeLus(
+    userId: string,
+    groupeId: string,
+  ): Promise<number> {
+    await this.groupesService.verifierMembreActif(groupeId, userId);
+
+    const messagesGroupe = await this.repo.find({
+      where: { groupeId, estSupprime: false },
+      select: ['id', 'expediteurId'],
+    });
+
+    /*
+     * L'auteur n'est pas destinataire non lu de son propre message.
+     */
+    const idsCandidats = messagesGroupe
+      .filter((message) => message.expediteurId !== userId)
+      .map((message) => message.id);
+
+    if (idsCandidats.length === 0) {
+      return 0;
+    }
+
+    const lecturesExistantes = await this.lectureRepo.find({
+      where: {
+        utilisateurId: userId,
+        messageId: In(idsCandidats),
+      },
+      select: ['messageId'],
+    });
+
+    const dejaLus = new Set(
+      lecturesExistantes.map((lecture) => lecture.messageId),
+    );
+
+    const aInserer = idsCandidats
+      .filter((messageId) => !dejaLus.has(messageId))
+      .map((messageId) =>
+        this.lectureRepo.create({ messageId, utilisateurId: userId }),
+      );
+
+    if (aInserer.length > 0) {
+      /*
+       * orIgnore() -> ON CONFLICT DO NOTHING : la cle unique
+       * (message_id, utilisateur_id) empeche tout doublon, meme en cas
+       * d'appels concurrents.
+       */
+      await this.lectureRepo
+        .createQueryBuilder()
+        .insert()
+        .into(MessageGroupeLecture)
+        .values(aInserer)
+        .orIgnore()
+        .execute();
+    }
+
+    const total = await this.compterNonLus(userId);
+    this.realtimeGateway.emitToUser(userId, 'message:compteur', { total });
+
+    return aInserer.length;
+  }
+
+  /**
+   * Diffuse un nouveau message de groupe aux rooms user:<id> de tous les
+   * membres (expediteur inclus : synchronisation multi-onglets), puis met
+   * a jour le compteur de non lus de chaque membre autre que l'auteur.
+   */
+  private async notifierNouveauMessageGroupe(
+    groupeId: string,
+    message: Message,
+    expediteurId: string,
+  ): Promise<void> {
+    const membres = await this.groupesService.trouverMembres(groupeId);
+
+    for (const membre of membres) {
+      this.realtimeGateway.emitToUser(
+        membre.etudiantId,
+        'message:groupe:nouveau',
+        message,
+      );
+    }
+
+    for (const membre of membres) {
+      if (membre.etudiantId === expediteurId) {
+        continue;
+      }
+
+      const total = await this.compterNonLus(membre.etudiantId);
+      this.realtimeGateway.emitToUser(membre.etudiantId, 'message:compteur', {
+        total,
+      });
+    }
+  }
+
+  /**
+   * Informe les membres de la suppression logique d'un message de groupe
+   * (message:groupe:supprime) et rafraichit leurs compteurs de non lus.
+   */
+  private async notifierSuppressionGroupe(message: Message): Promise<void> {
+    if (!message.groupeId) {
+      return;
+    }
+
+    const membres = await this.groupesService.trouverMembres(message.groupeId);
+
+    for (const membre of membres) {
+      this.realtimeGateway.emitToUser(
+        membre.etudiantId,
+        'message:groupe:supprime',
+        {
+          id: message.id,
+          groupeId: message.groupeId,
+        },
+      );
+    }
+
+    for (const membre of membres) {
+      if (membre.etudiantId === message.expediteurId) {
+        continue;
+      }
+
+      const total = await this.compterNonLus(membre.etudiantId);
+      this.realtimeGateway.emitToUser(membre.etudiantId, 'message:compteur', {
+        total,
+      });
+    }
   }
 }

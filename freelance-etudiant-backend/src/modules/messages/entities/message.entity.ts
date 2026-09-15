@@ -8,11 +8,16 @@ import {
 } from 'typeorm';
 import { Utilisateur } from '../../users/entities/utilisateur.entity';
 import { Mission } from '../../missions/entities/mission.entity';
+import { Groupe } from '../../groupes/entities/groupe.entity';
 
 /**
  * Table Message (cf. 5.2 Messagerie Integree).
- * Echanges directs Client <-> Etudiant, optionnellement rattaches a une
- * mission pour donner le contexte de la conversation.
+ * Deux formes :
+ * - message individuel : expediteur -> destinataire (groupe_id NULL),
+ *   optionnellement rattache a une mission pour donner le contexte de la
+ *   conversation ;
+ * - message de groupe : expediteur -> groupe (destinataire_id NULL),
+ *   stocke UNE SEULE fois, lecture suivie dans message_groupe_lectures.
  */
 @Entity('messages')
 export class Message {
@@ -29,12 +34,15 @@ export class Message {
   @Column({ name: 'expediteur_id' })
   expediteurId: string;
 
-  @ManyToOne(() => Utilisateur, { onDelete: 'CASCADE' })
+  /**
+   * NULL pour un message de groupe (seul groupe_id est renseigne).
+   */
+  @ManyToOne(() => Utilisateur, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'destinataire_id' })
-  destinataire: Utilisateur;
+  destinataire?: Utilisateur | null;
 
-  @Column({ name: 'destinataire_id' })
-  destinataireId: string;
+  @Column({ name: 'destinataire_id', type: 'uuid', nullable: true })
+  destinataireId?: string | null;
 
   @ManyToOne(() => Mission, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'mission_id' })
@@ -42,6 +50,18 @@ export class Message {
 
   @Column({ name: 'mission_id', nullable: true })
   missionId?: string;
+
+  /**
+   * Groupe destinataire (NULL pour un message individuel). La suppression
+   * du groupe entraine celle de sa conversation (et des lectures associees
+   * via le message).
+   */
+  @ManyToOne(() => Groupe, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'groupe_id' })
+  groupe?: Groupe | null;
+
+  @Column({ name: 'groupe_id', type: 'uuid', nullable: true })
+  groupeId?: string | null;
 
   @Column({ type: 'boolean', name: 'est_lu', default: false })
   estLu: boolean;

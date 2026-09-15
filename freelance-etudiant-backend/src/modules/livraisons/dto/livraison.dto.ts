@@ -56,6 +56,20 @@ export class CreerLivraisonDto {
   })
   lienLivrable?: string;
 
+  @ApiProperty({ required: false, enum: ['github', 'gitlab'] })
+  @IsOptional()
+  @IsString()
+  @Matches(/^(github|gitlab)$/i, {
+    message: 'La plateforme doit être GitHub ou GitLab.',
+  })
+  plateforme?: 'github' | 'gitlab';
+
+  @ApiProperty({ required: false, example: 'main' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  branche?: string;
+
   @ApiProperty({
     required: false,
     type: [PieceJointeLivraisonDto],

@@ -35,7 +35,7 @@ import { Role } from "../../common/enums/role.enum";
 export class CandidaturesController {
   constructor(
     private readonly candidaturesService: CandidaturesService,
-  ) {}
+  ) { }
 
   // ============================================================
   // ÉTUDIANT : POSTULER À UNE MISSION
@@ -148,6 +148,29 @@ export class CandidaturesController {
     return this.candidaturesService.refuser(
       id,
       user.id,
+    );
+  }
+
+  // ============================================================
+  // ÉTUDIANT : POSTULER À UNE MISSION AU NOM D'UN GROUPE
+  // ============================================================
+
+  @Roles(Role.ETUDIANT)
+  @Post("missions/:missionId/groupes/:groupeId/candidatures")
+  @ApiOperation({
+    summary: "Postuler à une mission au nom d'un groupe",
+  })
+  async postulerAvecGroupe(
+    @Param("missionId") missionId: string,
+    @Param("groupeId") groupeId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateCandidatureDto,
+  ) {
+    return this.candidaturesService.createGroupe(
+      missionId,
+      groupeId,
+      user.id,
+      dto,
     );
   }
 }

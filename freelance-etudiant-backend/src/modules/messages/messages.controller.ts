@@ -10,6 +10,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessagesService } from './messages.service';
 import { EnvoyerMessageDto } from './dto/envoyer-message.dto';
+import { EnvoyerMessageGroupeDto } from './dto/envoyer-message-groupe.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 
@@ -26,6 +27,20 @@ export class MessagesController {
     @Body() dto: EnvoyerMessageDto,
   ) {
     return this.messagesService.envoyer(user.id, dto);
+  }
+
+  /**
+   * Message de groupe : groupeId vient du parametre de route.
+   * Seuls les membres du groupe peuvent envoyer.
+   */
+  @Post('groupes/:groupeId')
+  @ApiOperation({ summary: "Envoyer un message a un groupe dont je suis membre" })
+  async envoyerAuGroupe(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('groupeId') groupeId: string,
+    @Body() dto: EnvoyerMessageGroupeDto,
+  ) {
+    return this.messagesService.envoyerAuGroupe(user.id, groupeId, dto);
   }
 
   @Get('non-lus/compteur')
@@ -48,6 +63,39 @@ export class MessagesController {
     @Param('autreUtilisateurId') autreUtilisateurId: string,
   ) {
     return this.messagesService.findConversation(user.id, autreUtilisateurId);
+  }
+
+  /**
+   * Conversation de groupe : reservee aux membres du groupe, messages
+   * dans l'ordre chronologique.
+   */
+  @Get('groupes/:groupeId')
+  @ApiOperation({ summary: "Consulter la conversation d'un groupe dont je suis membre" })
+  async conversationGroupe(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('groupeId') groupeId: string,
+  ) {
+    return this.messagesService.findConversationGroupe(user.id, groupeId);
+  }
+
+  /**
+   * Marque comme lus les messages du groupe pour l'utilisateur connecte.
+   */
+  @Patch('groupes/:groupeId/lu')
+  @ApiOperation({ summary: "Marquer comme lus les messages d'un groupe" })
+  async marquerGroupeLu(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('groupeId') groupeId: string,
+  ) {
+    const total = await this.messagesService.marquerMessagesGroupeCommeLus(
+      user.id,
+      groupeId,
+    );
+
+    return {
+      message: 'Messages du groupe marques comme lus',
+      total,
+    };
   }
 
   @Patch(':id/lu')

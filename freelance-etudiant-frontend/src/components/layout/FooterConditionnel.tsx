@@ -5,30 +5,13 @@ import { usePathname } from "next/navigation";
 import { Footer } from "./Footer";
 
 /**
- * Pages (et sections) sur lesquelles le Footer est affiché :
+ * Le Footer ne doit être affiché que sur la page d'accueil.
  *
- * - Accueil            : "/"
- * - Section Missions   : "/missions" et "/missions/..."
- * - Section Services   : "/services" et "/services/..."
- *
- * Partout ailleurs (tableau de bord, profil, paramètres, messages,
- * notifications, candidatures, livraisons, paiements, pages
- * d'authentification, vérification email...) le Footer est masqué.
- *
- * On raisonne par SEGMENTS de route (égalité exacte + préfixe de
- * segment terminé par "/") et non par un simple `pathname.includes()`
- * : une page comme "/tableau-de-bord/missions" contient la chaîne
- * "missions" mais ne fait PAS partie de la section Missions et ne
- * doit donc PAS afficher le Footer.
+ * Toutes les autres routes, y compris les sections publiques comme
+ * "/missions" et "/services", doivent le masquer.
  */
 function footerVisibleSur(pathname: string): boolean {
-  return (
-    pathname === "/" ||
-    pathname === "/missions" ||
-    pathname.startsWith("/missions/") ||
-    pathname === "/services" ||
-    pathname.startsWith("/services/")
-  );
+  return pathname === "/";
 }
 
 /**
