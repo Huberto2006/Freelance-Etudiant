@@ -152,6 +152,11 @@ avec `--delete-after` et applique les exclusions de
 les fichiers Git et les dépendances de développement sont préservés ou
 exclus, selon les [règles de protection rsync](https://download.samba.org/pub/rsync/rsync.1).
 PostgreSQL et les uploads Docker restent dans leurs volumes persistants.
+Les exclusions des uploads sont limitées à `/freelance-etudiant-backend/uploads/`
+et `/uploads/` : le module NestJS `src/modules/uploads/` est transféré avec les
+autres sources. Avant toute connexion SSH, le workflow teste une synchronisation
+locale complète avec `deploy/test-rsync.sh` pour vérifier le transfert des sources
+et la conservation du `.env`, des uploads et des sauvegardes.
 
 `deploy/deploy.sh` valide Compose sans afficher ses secrets, construit les
 images sur le serveur, démarre les services, attend leur état sain et contrôle

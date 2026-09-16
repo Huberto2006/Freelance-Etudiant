@@ -34,6 +34,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends rsync openssh-client
 
+      - name: Verifier les exclusions rsync
+        run: bash deploy/test-rsync.sh
+
       - name: Configurer SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
