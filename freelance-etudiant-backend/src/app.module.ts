@@ -37,6 +37,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { GroupesModule } from './modules/groupes/groupes.module';
 import { AmitieModule } from './modules/amitie/amitie.module';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -100,6 +101,7 @@ import { AmitieModule } from './modules/amitie/amitie.module';
     GroupesModule,
     AmitieModule,
   ],
+  controllers: [HealthController],
   providers: [
     {
       // Rate limiting global (100 requetes/min/IP). Enregistre AVANT le

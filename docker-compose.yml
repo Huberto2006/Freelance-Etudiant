@@ -1,0 +1,126 @@
+name: ${COMPOSE_PROJECT_NAME:-kianja}
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:?DB_DATABASE requis dans .env}
+      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME requis dans .env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD requis dans .env}
+      TZ: ${TZ:-Indian/Antananarivo}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    logging: *logging
+
+  backend:
+    build:
+      context: ./freelance-etudiant-backend
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      API_PREFIX: api/v1
+      TRUST_PROXY_HOPS: "2"
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_DATABASE: ${DB_DATABASE:?DB_DATABASE requis dans .env}
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME requis dans .env}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD requis dans .env}
+      DB_SYNCHRONIZE: "false"
+      DB_LOGGING: ${DB_LOGGING:-false}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET requis dans .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-2d}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET requis dans .env}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL requis dans .env}
+      CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN requis dans .env}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-KIANJA <no-reply@kianja.arato.mg>}
+      CONTACT_MAIL_TO: ${CONTACT_MAIL_TO:-support@arato.mg}
+      MVOLA_BASE_URL: ${MVOLA_BASE_URL:-https://api.mvola.mg}
+      MVOLA_CONSUMER_KEY: ${MVOLA_CONSUMER_KEY:-}
+      MVOLA_CONSUMER_SECRET: ${MVOLA_CONSUMER_SECRET:-}
+      MVOLA_API_KEY: ${MVOLA_API_KEY:-}
+      MVOLA_PARTNER_ID: ${MVOLA_PARTNER_ID:-}
+      MVOLA_PARTNER_NAME: ${MVOLA_PARTNER_NAME:-KIANJA}
+      MVOLA_USER_ACCOUNT_ORIGIN: ${MVOLA_USER_ACCOUNT_ORIGIN:-034}
+      PAIEMENT_WEBHOOK_SECRET: ${PAIEMENT_WEBHOOK_SECRET:?PAIEMENT_WEBHOOK_SECRET requis dans .env}
+      TZ: ${TZ:-Indian/Antananarivo}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/uploads
+    healthcheck:
+      test: ["CMD", "node", "-e", "const http=require('node:http'); const req=http.get('http://127.0.0.1:3000/api/v1/health',res=>{res.resume();process.exit(res.statusCode===200?0:1)}); req.on('error',()=>process.exit(1)); req.setTimeout(4000,()=>{req.destroy();process.exit(1)});"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+    logging: *logging
+
+  frontend:
+    build:
+      context: ./freelance-etudiant-frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api/v1}
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+      API_INTERNAL_URL: http://backend:3000/api/v1
+      NEXT_TELEMETRY_DISABLED: "1"
+      TZ: ${TZ:-Indian/Antananarivo}
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "const http=require('node:http'); const req=http.get('http://127.0.0.1:3000/',res=>{res.resume();process.exit(res.statusCode===200?0:1)}); req.on('error',()=>process.exit(1)); req.setTimeout(4000,()=>{req.destroy();process.exit(1)});"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging: *logging
+
+  gateway:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${APP_HTTP_PORT:-3210}:8080"
+    volumes:
+      - ./deploy/nginx/docker.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    logging: *logging
+
+volumes:
+  postgres_data:
+  uploads_data:

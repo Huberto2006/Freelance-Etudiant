@@ -7,6 +7,7 @@ import {
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { WsJwtGuard, SocketAuthentifie } from './guards/ws-jwt.guard';
+import { getCorsOrigins } from '../../config/cors.config';
 
 /**
  * Gateway temps reel unique pour toute la plateforme (notifications et
@@ -24,10 +25,7 @@ import { WsJwtGuard, SocketAuthentifie } from './guards/ws-jwt.guard';
  */
 @WebSocketGateway({
   cors: {
-    origin:
-      process.env.CORS_ORIGIN ||
-      process.env.FRONTEND_URL ||
-      'http://localhost:3001',
+    origin: getCorsOrigins(),
     credentials: true,
   },
 })

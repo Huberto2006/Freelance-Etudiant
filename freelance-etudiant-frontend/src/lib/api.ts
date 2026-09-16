@@ -19,6 +19,10 @@ const API_ORIGIN = (() => {
  * pour se connecter au meme serveur que l'API REST.
  */
 export function getApiOrigin(): string {
+  // Une API relative doit connecter Socket.IO a l'origine de la page.
+  if (!API_ORIGIN && typeof window !== "undefined") {
+    return window.location.origin;
+  }
   return API_ORIGIN;
 }
 

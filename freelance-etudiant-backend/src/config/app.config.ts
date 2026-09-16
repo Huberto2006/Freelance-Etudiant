@@ -1,4 +1,5 @@
 import { registerAs } from '@nestjs/config';
+import { getCorsOrigins } from './cors.config';
 
 export default registerAs('app', () => ({
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -7,10 +8,6 @@ export default registerAs('app', () => ({
   // CORS : '*' est incompatible avec credentials: true (les navigateurs
   // rejettent la reponse). On retombe sur l'URL du frontend plutot que
   // sur le joker, beaucoup trop permissif pour des requetes credentiales.
-  corsOrigin:
-    process.env.CORS_ORIGIN ||
-    process.env.FRONTEND_URL ||
-    'http://localhost:3001',
+  corsOrigin: getCorsOrigins(),
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3001',
 }));
-
