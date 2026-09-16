@@ -9,10 +9,11 @@ import { Server, Socket } from 'socket.io';
 
 import { TypeCibleContenu } from '../../common/enums/type-cible-contenu.enum';
 import { Commentaire } from './entities/commentaire.entity';
+import { getCorsOrigins } from '../../config/cors.config';
 
 @WebSocketGateway({
   cors: {
-    origin: 'http://localhost:3000',
+    origin: getCorsOrigins(),
     credentials: true,
   },
 })

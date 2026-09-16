@@ -25,6 +25,18 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
+  // Deux proxies en production : Nginx hote puis gateway Docker. Sans cela,
+  // le rate limiting confondrait tous les visiteurs avec l'IP du gateway.
+  const trustProxyHops = configService.get<string>("TRUST_PROXY_HOPS");
+  if (trustProxyHops) {
+    const hops = Number(trustProxyHops);
+    if (!Number.isInteger(hops) || hops < 1) {
+      throw new Error("TRUST_PROXY_HOPS doit etre un entier positif");
+    }
+    app.set("trust proxy", hops);
+  }
+  app.enableShutdownHooks();
+
   /*
    * Fichiers statiques
    *
@@ -41,7 +53,7 @@ async function bootstrap() {
   app.use(helmet());
 
   app.enableCors({
-    origin: configService.get<string>("app.corsOrigin"),
+    origin: configService.get<string[]>("app.corsOrigin"),
     credentials: true,
   });
 
@@ -103,7 +115,7 @@ async function bootstrap() {
   const port =
     configService.get<number>("app.port") || 3000;
 
-  await app.listen(port);
+  await app.listen(port, "0.0.0.0");
 
   console.log(
     `API demarree sur http://localhost:${port}/${apiPrefix}`,

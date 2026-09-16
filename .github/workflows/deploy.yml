@@ -1,0 +1,118 @@
+name: Deployer Kianja
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Termine le deploiement en cours avant d'en demarrer un autre.
+concurrency:
+  group: kianja-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_PORT: ${{ secrets.SSH_PORT }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      DEPLOY_WORKDIR: ${{ secrets.WORKDIR || vars.WORKDIR }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Installer rsync et le client SSH
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends rsync openssh-client
+
+      - name: Configurer SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          for name in SSH_HOST SSH_PORT SSH_USER SSH_PRIVATE_KEY DEPLOY_WORKDIR; do
+            if [[ -z "${!name}" ]]; then
+              printf 'Secret ou variable manquant : %s\n' "$name" >&2
+              exit 1
+            fi
+          done
+          [[ "$SSH_HOST" =~ ^[A-Za-z0-9][A-Za-z0-9.:-]*$ ]] || {
+            printf '%s\n' 'SSH_HOST invalide.' >&2; exit 1;
+          }
+          [[ "$SSH_USER" =~ ^[A-Za-z_][A-Za-z0-9_-]*\$?$ ]] || {
+            printf '%s\n' 'SSH_USER invalide.' >&2; exit 1;
+          }
+          [[ "$SSH_PORT" =~ ^[0-9]{1,5}$ ]] && (( 10#$SSH_PORT >= 1 && 10#$SSH_PORT <= 65535 )) || {
+            printf '%s\n' 'SSH_PORT invalide.' >&2; exit 1;
+          }
+
+          umask 077
+          ssh_dir="$RUNNER_TEMP/kianja-ssh"
+          KIANJA_SSH_CONFIG="$ssh_dir/config"
+          KIANJA_SSH_WRAPPER="$ssh_dir/rsync-ssh.sh"
+          mkdir -p "$ssh_dir"
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$ssh_dir/id_deploy"
+          host_check=accept-new
+          if [[ -n "$SSH_KNOWN_HOSTS" ]]; then
+            printf '%s\n' "$SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+            host_check=yes
+          fi
+          cat > "$KIANJA_SSH_CONFIG" <<EOF
+          Host kianja-server
+            HostName $SSH_HOST
+            Port $SSH_PORT
+            User $SSH_USER
+            IdentityFile "$ssh_dir/id_deploy"
+            IdentitiesOnly yes
+            BatchMode yes
+            StrictHostKeyChecking $host_check
+            UserKnownHostsFile "$ssh_dir/known_hosts"
+            ConnectTimeout 20
+            ServerAliveInterval 30
+            ServerAliveCountMax 6
+          EOF
+          printf '#!/bin/sh\nexec ssh -F "$KIANJA_SSH_CONFIG" "$@"\n' > "$KIANJA_SSH_WRAPPER"
+          chmod 700 "$KIANJA_SSH_WRAPPER"
+          printf 'KIANJA_SSH_CONFIG=%s\nKIANJA_SSH_WRAPPER=%s\n' \
+            "$KIANJA_SSH_CONFIG" "$KIANJA_SSH_WRAPPER" >> "$GITHUB_ENV"
+
+      - name: Verifier le dossier serveur et son .env
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          printf -v remote_command 'bash -s -- %q --check' "$DEPLOY_WORKDIR"
+          ssh -F "$KIANJA_SSH_CONFIG" kianja-server "$remote_command" < deploy/deploy.sh
+
+      - name: Synchroniser le projet avec rsync
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rsync --archive --compress --no-owner --no-group \
+            --delay-updates --delete-after --protect-args \
+            --exclude-from=deploy/rsync-excludes.txt \
+            --rsh="$KIANJA_SSH_WRAPPER" \
+            ./ "kianja-server:${DEPLOY_WORKDIR%/}/"
+
+      - name: Construire et demarrer avec Docker Compose
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          printf -v remote_command 'bash -s -- %q --deploy' "$DEPLOY_WORKDIR"
+          ssh -F "$KIANJA_SSH_CONFIG" kianja-server "$remote_command" < deploy/deploy.sh
+          printf 'Kianja deploye depuis le commit `%s`.\n' "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Nettoyer la cle SSH temporaire
+        if: always()
+        shell: bash
+        run: rm -rf -- "$RUNNER_TEMP/kianja-ssh"
