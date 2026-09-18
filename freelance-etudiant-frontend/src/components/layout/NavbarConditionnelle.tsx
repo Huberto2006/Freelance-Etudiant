@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-import { Navbar } from "./Navbar";
+import { NavbarPublique } from "./NavbarPublique";
 
 /**
  * Sections de route gérées par le tableau de bord.
@@ -24,6 +24,16 @@ function tableauDeBordActif(pathname: string): boolean {
   );
 }
 
+function pageAuthActive(pathname: string): boolean {
+  return [
+    "/connexion",
+    "/inscription",
+    "/mot-de-passe-oublie",
+    "/reinitialiser-mot-de-passe",
+    "/verification-email",
+  ].includes(pathname);
+}
+
 /**
  * Enveloppe cliente de la Navbar : le layout racine est un Server
  * Component, il ne peut pas appeler usePathname() lui-même (même
@@ -32,9 +42,12 @@ function tableauDeBordActif(pathname: string): boolean {
 export function NavbarConditionnelle() {
   const pathname = usePathname();
 
-  if (tableauDeBordActif(pathname)) {
+  if (
+    tableauDeBordActif(pathname) ||
+    pageAuthActive(pathname)
+  ) {
     return null;
   }
 
-  return <Navbar />;
+  return <NavbarPublique />;
 }

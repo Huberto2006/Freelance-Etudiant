@@ -16,10 +16,8 @@ export interface CategorieAccueil {
 }
 
 /**
- * Grille des categories de services proposees par les etudiants. Les
- * categories affichees proviennent des services reellement publies
- * (calculees dans la page d'accueil), avec un repli sur le referentiel
- * tant qu'aucun service n'existe encore.
+ * Grille des catégories d'expertise : met en relation les domaines
+ * de formation de l'EMIT avec les besoins des clients.
  */
 export function SectionCategories({
   categories,
@@ -27,12 +25,14 @@ export function SectionCategories({
   categories: CategorieAccueil[];
 }) {
   return (
-    <section id="categories" className="mt-16 scroll-mt-24">
+    <section id="categories" className="mt-16 scroll-mt-24 sm:mt-20">
       <SectionTitre
         icon={LayoutGrid}
-        eyebrow="Domaines de compétences"
+        eyebrow="Domaines de compétences · Filières"
         titre="Explorer par catégorie"
-        sousTitre="Chaque domaine regroupe les services proposés par les étudiants freelances."
+        sousTitre="Chaque domaine regroupe les compétences des étudiants freelances et les besoins confiés par les clients."
+        lienHref="/services"
+        lienLabel="Parcourir le catalogue"
       />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -43,17 +43,17 @@ export function SectionCategories({
             <Link
               key={categorie.valeur}
               href={`/services?categorie=${encodeURIComponent(categorie.valeur)}`}
-              className="notice-card group flex items-center gap-3 p-4"
+              className="notice-card group flex items-center gap-3 p-4 transition-all hover:border-bleu/30"
             >
               <span
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-ink-soft transition-colors group-hover:bg-ocre/15 group-hover:text-ocre-dark"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-ink-soft transition-colors group-hover:bg-bleu/15 group-hover:text-bleu-dark"
                 aria-hidden="true"
               >
                 <Icone size={18} />
               </span>
 
               <span className="min-w-0">
-                <span className="block truncate font-display font-medium transition-colors group-hover:text-ocre-dark">
+                <span className="block truncate font-display font-medium text-ink transition-colors group-hover:text-bleu-dark">
                   {categorie.libelle}
                 </span>
                 <span className="block text-xs text-ink-soft/70">

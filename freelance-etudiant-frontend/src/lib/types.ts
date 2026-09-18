@@ -183,7 +183,8 @@
   export type StatutInvitationGroupe =
     | "en_attente"
     | "acceptee"
-    | "refusee";
+    | "refusee"
+    | "annulee";
 
   export interface Groupe {
     id: string;
@@ -296,6 +297,7 @@
   }
 
   export type TypeNotification =
+    | "nouvelle_invitation_groupe"
     | "nouvelle_candidature"
     | "candidature_acceptee"
     | "candidature_refusee"

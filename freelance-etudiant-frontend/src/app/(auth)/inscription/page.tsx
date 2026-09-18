@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import type { ReponseInscription } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
-import { Field, Input } from "@/components/ui/Field";
+import { Field, Input, PasswordInput } from "@/components/ui/Field";
 import { NoticeCard } from "@/components/ui/Notice";
 
 /**
@@ -226,9 +226,8 @@ function FormulaireInscription() {
             htmlFor="motDePasse"
             hint="8 caractères minimum"
           >
-            <Input
+            <PasswordInput
               id="motDePasse"
-              type="password"
               required
               minLength={8}
               autoComplete="new-password"

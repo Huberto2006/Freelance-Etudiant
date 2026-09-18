@@ -42,6 +42,7 @@ export function Footer() {
 
           <ul className="mt-4 space-y-2.5 text-sm">
             {[
+              { href: "/publications", label: "Publications" },
               { href: "/missions", label: "Missions ouvertes" },
               { href: "/services", label: "Services étudiants" },
               { href: "/tableau-de-bord", label: "Tableau de bord" },

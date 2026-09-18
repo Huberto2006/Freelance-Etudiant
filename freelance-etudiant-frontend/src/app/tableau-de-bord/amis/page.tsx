@@ -184,10 +184,11 @@ function OngletButton({
             type="button"
             onClick={onClick}
             className={[
-                "inline-flex items-center gap-2 border-b-2 px-1 pb-3 text-sm font-medium transition-colors",
+                "inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5",
+                "font-mono text-[11px] uppercase tracking-wider transition-colors",
                 actif
-                    ? "border-ocre text-ink"
-                    : "border-transparent text-ink-soft hover:border-ink/30 hover:text-ink",
+                    ? "border-ink bg-ink text-paper-light"
+                    : "border-ink/20 bg-paper text-ink-soft hover:border-ink/50 hover:text-ink",
             ].join(" ")}
         >
             {children}
@@ -195,10 +196,10 @@ function OngletButton({
             {typeof compteur === "number" && compteur > 0 ? (
                 <span
                     className={[
-                        "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-semibold",
+                        "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-px text-[10px] leading-none",
                         actif
-                            ? "bg-ink text-paper-light"
-                            : "bg-ink/5 text-ink-soft",
+                            ? "bg-paper-light/20 text-paper-light"
+                            : "bg-ink/10 text-ink-soft",
                     ].join(" ")}
                 >
                     {compteur}
@@ -1346,7 +1347,7 @@ export default function AmisPage() {
 
                 {/* ONGLET */}
 
-                <div className="mb-6 overflow-x-auto border-b border-ink/15">
+                <div className="mb-6 overflow-x-auto">
                     <nav
                         className="flex min-w-max gap-6"
                         aria-label="Relations"

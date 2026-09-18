@@ -6,6 +6,7 @@ import { ReactionsContenuController } from './reactions-contenu.controller';
 import { MissionsModule } from '../missions/missions.module';
 import { ServicesModule } from '../services/services.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { CommonModule } from '../../common/common.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     MissionsModule,
     ServicesModule,
     NotificationsModule,
+    CommonModule,
   ],
   providers: [ReactionsContenuService],
   controllers: [ReactionsContenuController],

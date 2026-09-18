@@ -43,7 +43,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const classes = clsx(
-    "rounded-lg font-body font-medium tracking-wide transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed",
+    "inline-flex items-center justify-center rounded-lg font-body font-medium tracking-wide transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed",
     variants[variant],
     sizes[size],
     className,

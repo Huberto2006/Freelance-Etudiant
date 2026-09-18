@@ -22,6 +22,16 @@
   --theme-font-display: "Zilla Slab", Georgia, serif;
   --theme-font-body: "Inter", -apple-system, sans-serif;
   --theme-font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /*
+   * BLEU KIANJA — couleur d'interaction transverse (liens, focus,
+   * navigation active, états dynamiques). Indépendante du thème choisi :
+   * elle remplace progressivement les valeurs hexadécimales codées en
+   * dur (ex. Sidebar) sans modifier la palette primaire existante.
+   */
+  --theme-bleu: #2563eb;
+  --theme-bleu-dark: #1d4ed8;
+  --theme-bleu-soft: rgba(37, 99, 235, 0.12);
 }
 
 /* --- THÈME : SLATE (Gris-bleu Kianja Classique) --- */
@@ -190,6 +200,17 @@
   --color-brique: #a23e29;
   --color-brique-light: #c0553c;
 
+  /* BLEU KIANJA — interaction transverse (voir :root) */
+  --color-bleu: var(--theme-bleu);
+  --color-bleu-dark: var(--theme-bleu-dark);
+  --color-bleu-soft: var(--theme-bleu-soft);
+
+  /* PANEL — surfaces de navigation sombres de la Sidebar.
+     Stable en mode clair comme en mode sombre (identité visuelle
+     de la barre latérale : fond nuit permanent, indépendant du thème). */
+  --color-panel: #0d2038;
+  --color-panel-dark: #0b1b31;
+
   /* Typographie réactive au thème */
   --font-display: var(--theme-font-display);
   --font-body: var(--theme-font-body);
@@ -207,6 +228,11 @@
   --color-rice-light: #7cc0a8;
   --color-brique: #d1614a;
   --color-brique-light: #e07d66;
+
+  /* BLEU KIANJA — variantes mode sombre */
+  --theme-bleu: #60a5fa;
+  --theme-bleu-dark: #93c5fd;
+  --theme-bleu-soft: rgba(96, 165, 250, 0.15);
 
   color-scheme: dark;
 }

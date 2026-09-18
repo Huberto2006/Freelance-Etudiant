@@ -22,6 +22,7 @@ const LIBELLES_PAR_TYPE: Record<
   NotificationItem["type"],
   { label: string; ton: Ton }
 > = {
+  nouvelle_invitation_groupe: { label: "Invitation de groupe", ton: "ocre" },
   nouvelle_candidature: { label: "Nouvelle candidature", ton: "ocre" },
   candidature_acceptee: { label: "Candidature acceptée", ton: "rice" },
   candidature_refusee: { label: "Candidature refusée", ton: "brique" },

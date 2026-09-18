@@ -18,12 +18,7 @@ import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interfa
 import { Role } from '../../common/enums/role.enum';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TypeNotification } from '../../common/enums/type-notification.enum';
-
-enum StatutInvitationGroupe {
-  EN_ATTENTE = 'en_attente',
-  ACCEPTEE = 'acceptee',
-  REFUSEE = 'refusee',
-}
+import { StatutInvitationGroupe } from '../../common/enums/statut-invitation-groupe.enum';
 
 @Injectable()
 export class GroupesService {
@@ -159,7 +154,7 @@ export class GroupesService {
   /**
    * Récupérer un groupe avec ses membres.
    */
-  async findOne(id: string): Promise<Groupe> {
+  async findOne(id: string, utilisateurId: string): Promise<Groupe> {
     const groupe = await this.groupeRepository.findOne({
       where: { id },
       relations: [
@@ -173,6 +168,16 @@ export class GroupesService {
     if (!groupe) {
       throw new NotFoundException(
         'Groupe introuvable.',
+      );
+    }
+
+    const membre = groupe.membres?.find(
+      (element) => element.etudiantId === utilisateurId,
+    );
+
+    if (!membre) {
+      throw new ForbiddenException(
+        "Vous n'êtes pas membre de ce groupe.",
       );
     }
 
@@ -239,6 +244,150 @@ export class GroupesService {
     return this.membreRepository.find({
       where: { groupeId },
     });
+  }
+
+  /**
+   * Un membre non-chef peut quitter le groupe. Le chef doit d'abord
+   * transférer son rôle afin de conserver un responsable valide.
+   */
+  async quitter(groupeId: string, user: AuthenticatedUser): Promise<void> {
+    if (user.role !== Role.ETUDIANT) {
+      throw new ForbiddenException(
+        'Seuls les étudiants peuvent quitter un groupe.',
+      );
+    }
+
+    const membre = await this.verifierMembreActif(groupeId, user.id);
+    if (membre.role === 'chef') {
+      throw new BadRequestException(
+        'Le chef doit transférer son rôle avant de quitter le groupe.',
+      );
+    }
+
+    await this.membreRepository.remove(membre);
+  }
+
+  /** Retire un membre, sans permettre au chef de se retirer lui-même. */
+  async retirerMembre(
+    groupeId: string,
+    etudiantId: string,
+    user: AuthenticatedUser,
+  ): Promise<void> {
+    await this.verifierChef(groupeId, user);
+
+    if (etudiantId === user.id) {
+      throw new BadRequestException(
+        'Le chef ne peut pas se retirer avec cette action.',
+      );
+    }
+
+    const membre = await this.membreRepository.findOne({
+      where: { groupeId, etudiantId },
+    });
+    if (!membre) {
+      throw new NotFoundException('Membre introuvable dans ce groupe.');
+    }
+    if (membre.role === 'chef') {
+      throw new BadRequestException(
+        'Le chef doit transférer son rôle avant d’être retiré.',
+      );
+    }
+
+    await this.membreRepository.remove(membre);
+  }
+
+  /** Transfert atomique du rôle chef vers un membre actif. */
+  async transfererChef(
+    groupeId: string,
+    nouvelEtudiantId: string,
+    user: AuthenticatedUser,
+  ): Promise<MembreGroupe> {
+    await this.verifierChef(groupeId, user);
+
+    if (nouvelEtudiantId === user.id) {
+      throw new BadRequestException(
+        'Vous êtes déjà le chef de ce groupe.',
+      );
+    }
+
+    return this.dataSource.transaction(async (manager) => {
+      const chef = await manager.findOne(MembreGroupe, {
+        where: { groupeId, role: 'chef' },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!chef || chef.etudiantId !== user.id) {
+        throw new ForbiddenException(
+          'Seul le chef du groupe peut transférer ce rôle.',
+        );
+      }
+
+      const membre = await manager.findOne(MembreGroupe, {
+        where: { groupeId, etudiantId: nouvelEtudiantId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!membre) {
+        throw new NotFoundException('Membre introuvable dans ce groupe.');
+      }
+
+      await manager.update(
+        MembreGroupe,
+        { id: chef.id },
+        { role: 'membre' },
+      );
+      await manager.update(
+        MembreGroupe,
+        { id: membre.id },
+        { role: 'chef' },
+      );
+
+      membre.role = 'chef';
+      return membre;
+    });
+  }
+
+  /** Annule une invitation encore en attente, uniquement par le chef. */
+  async annulerInvitation(
+    invitationId: string,
+    user: AuthenticatedUser,
+  ): Promise<InvitationGroupe> {
+    const invitation = await this.invitationRepository.findOne({
+      where: { id: invitationId },
+    });
+    if (!invitation) {
+      throw new NotFoundException('Invitation introuvable.');
+    }
+
+    await this.verifierChef(invitation.groupeId, user);
+
+    if (invitation.statut !== StatutInvitationGroupe.EN_ATTENTE) {
+      throw new BadRequestException(
+        'Seule une invitation en attente peut être annulée.',
+      );
+    }
+
+    invitation.statut = StatutInvitationGroupe.ANNULEE;
+    return this.invitationRepository.save(invitation);
+  }
+
+  private async verifierChef(
+    groupeId: string,
+    user: AuthenticatedUser,
+  ): Promise<MembreGroupe> {
+    if (user.role !== Role.ETUDIANT) {
+      throw new ForbiddenException(
+        'Seuls les étudiants peuvent gérer les membres.',
+      );
+    }
+
+    const chef = await this.membreRepository.findOne({
+      where: { groupeId, etudiantId: user.id, role: 'chef' },
+    });
+    if (!chef) {
+      throw new ForbiddenException(
+        'Seul le chef du groupe peut effectuer cette action.',
+      );
+    }
+    return chef;
   }
 
   /**
@@ -348,10 +497,55 @@ export class GroupesService {
       type: TypeNotification.NOUVELLE_INVITATION_GROUPE,
       titre: 'Invitation à rejoindre un groupe',
       message: `Vous avez été invité à rejoindre le groupe « ${groupe.nom} ».`,
-      lienUrl: `/tableau-de-bord/groupes/${groupeId}`,
+      lienUrl: `/tableau-de-bord/groupes/invitations/${sauvegarde.id}`,
     });
 
     return sauvegarde;
+  }
+
+  async trouverInvitationsPourChef(
+    groupeId: string,
+    user: AuthenticatedUser,
+  ): Promise<InvitationGroupe[]> {
+    await this.verifierChef(groupeId, user);
+
+    return this.invitationRepository.find({
+      where: { groupeId },
+      relations: ['invite'],
+      order: { dateCreation: 'DESC' },
+    });
+  }
+
+  /**
+   * Retourne une invitation uniquement à son destinataire.
+   */
+  async trouverInvitation(
+    invitationId: string,
+    user: AuthenticatedUser,
+  ): Promise<InvitationGroupe> {
+    if (user.role !== Role.ETUDIANT) {
+      throw new ForbiddenException(
+        'Seuls les étudiants peuvent consulter une invitation.',
+      );
+    }
+
+    const invitation = await this.invitationRepository.findOne({
+      where: {
+        id: invitationId,
+        inviteId: user.id,
+      },
+      relations: {
+        groupe: true,
+      },
+    });
+
+    if (!invitation) {
+      throw new NotFoundException(
+        'Invitation introuvable.',
+      );
+    }
+
+    return invitation;
   }
 
   /**

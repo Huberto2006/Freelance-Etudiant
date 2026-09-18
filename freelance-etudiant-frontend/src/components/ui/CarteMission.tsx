@@ -31,10 +31,15 @@ function VisuelCategorie({ categorie }: { categorie: string }) {
  * Carte d'une mission publiee par un client : couverture (image ou repli
  * par categorie), statut, titre, apercu de la description, competences
  * recherchees, puis budget et date limite de candidature. Reutilisee sur
- * la page d'accueil et la liste des missions, avec le meme rythme visuel
- * que CarteService.
+ * la page d'accueil, la liste des missions et le catalogue publications.
  */
-export function CarteMission({ mission }: { mission: Mission }) {
+export function CarteMission({
+  mission,
+  afficherType = false,
+}: {
+  mission: Mission;
+  afficherType?: boolean;
+}) {
   const client = mission.client;
   const auteur = client?.utilisateur;
   const image = getFileUrl(mission.imageUrl ?? null);
@@ -63,6 +68,12 @@ export function CarteMission({ mission }: { mission: Mission }) {
         )}
 
         <span className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+          {afficherType && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-bleu/30 bg-bleu/90 px-2.5 py-0.5 text-[11px] font-mono font-semibold uppercase tracking-wide text-white shadow-xs backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" aria-hidden="true" />
+              Mission
+            </span>
+          )}
           <span className="inline-flex items-center rounded-full border border-ink/10 bg-paper-light/90 px-2.5 py-0.5 text-[11px] font-mono uppercase tracking-wide text-ink-soft backdrop-blur-sm">
             {libelleCategorie(mission.categorie)}
           </span>
@@ -79,7 +90,9 @@ export function CarteMission({ mission }: { mission: Mission }) {
       {/* ---------------------------------------------- CONTENU */}
       <div className="flex flex-1 flex-col p-4">
         <h3 className="font-display text-lg font-semibold leading-snug line-clamp-2 transition-colors group-hover:text-ocre-dark">
-          {mission.titre}
+          <Link href={`/missions/${mission.id}`} className="hover:underline">
+            {mission.titre}
+          </Link>
         </h3>
 
         <p className="mt-1.5 text-sm text-ink-soft line-clamp-2">
@@ -113,19 +126,29 @@ export function CarteMission({ mission }: { mission: Mission }) {
             </p>
           </div>
 
-          {client && (
-            <div className="mt-2.5 flex items-center gap-2">
+          <div className="mt-2.5 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <Avatar
                 nom={auteur?.nom ?? "Client"}
                 photoUrl={auteur?.photoUrl}
                 size={22}
-                href={`/clients/${client.utilisateurId}`}
+                href={client ? `/clients/${client.utilisateurId}` : undefined}
               />
-              <p className="min-w-0 truncate text-xs text-ink-soft/70">
-                {auteur?.nom ?? "Client"}
-              </p>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-medium text-ink">
+                  {auteur?.nom ?? "Client"}
+                </p>
+                <p className="text-[11px] text-ink-soft">Client</p>
+              </div>
             </div>
-          )}
+
+            <Link
+              href={`/missions/${mission.id}`}
+              className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 font-mono text-xs font-semibold text-bleu-dark hover:bg-bleu/10 hover:text-bleu transition-colors"
+            >
+              Voir →
+            </Link>
+          </div>
         </div>
       </div>
     </article>

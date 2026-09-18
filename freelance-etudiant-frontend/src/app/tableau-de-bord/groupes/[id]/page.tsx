@@ -5,8 +5,9 @@ import { Check, Crown, Loader2, Search, UserPlus, Users, X } from "lucide-react"
 
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
-import type { EtudiantProfile, Groupe } from "@/lib/types";
-import { formatDate, roleMembreGroupeLabel } from "@/lib/format";
+import type { EtudiantProfile, Groupe, InvitationGroupe } from "@/lib/types";
+import { formatDate, roleMembreGroupeLabel, statutInvitationGroupeLabel } from "@/lib/format";
+import { DiscussionGroupe } from "@/components/groupes/DiscussionGroupe";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -38,6 +39,8 @@ export default function GroupeDetailPage({
   const [annuaire, setAnnuaire] = useState<EtudiantProfile[]>([]);
 
   const [afficherInvitation, setAfficherInvitation] = useState(false);
+  const [invitations, setInvitations] = useState<InvitationGroupe[]>([]);
+  const [actionEnCours, setActionEnCours] = useState<string | null>(null);
 
   const charger = async () => {
     setChargement(true);
@@ -60,6 +63,7 @@ export default function GroupeDetailPage({
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     charger();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -103,6 +107,36 @@ export default function GroupeDetailPage({
     (m) => m.etudiantId === utilisateur?.id,
   );
   const estChef = monMembre?.role === "chef";
+
+  useEffect(() => {
+    if (!estChef) return;
+    api
+      .get<InvitationGroupe[]>(`/groupes/${id}/invitations`)
+      .then(setInvitations)
+      .catch(() => setInvitations([]));
+  }, [id, estChef]);
+
+  async function executerAction(
+    cle: string,
+    action: () => Promise<void>,
+  ) {
+    setActionEnCours(cle);
+    setErreur(null);
+    try {
+      await action();
+      await charger();
+    } catch (error) {
+      setErreur(
+        error instanceof ApiError ? error.message : "Action impossible.",
+      );
+    } finally {
+      setActionEnCours(null);
+    }
+  }
+
+  function confirmer(message: string): boolean {
+    return window.confirm(message);
+  }
 
   /*
    * ==========================================================
@@ -174,6 +208,10 @@ export default function GroupeDetailPage({
         </div>
       </NoticeCard>
 
+      {membres.length >= 2 && (
+        <DiscussionGroupe groupeId={groupe.id} nombreMembres={membres.length} />
+      )}
+
       {/* =====================================================
           MEMBRES
           ===================================================== */}
@@ -230,10 +268,118 @@ export default function GroupeDetailPage({
                 )}
                 {roleMembreGroupeLabel[membre.role]}
               </Tag>
+
+              {estChef && membre.etudiantId !== utilisateur?.id && (
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={actionEnCours !== null}
+                    onClick={() => {
+                      if (!confirmer("Transférer le rôle de chef à cet étudiant ?")) return;
+                      void executerAction(
+                        `chef-${membre.etudiantId}`,
+                        async () => {
+                          await api.patch(`/groupes/${groupe.id}/chef`, {
+                            etudiantId: membre.etudiantId,
+                          });
+                        },
+                      );
+                    }}
+                  >
+                    Chef
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={actionEnCours !== null}
+                    onClick={() => {
+                      if (!confirmer("Retirer cet étudiant du groupe ?")) return;
+                      void executerAction(
+                        `retirer-${membre.etudiantId}`,
+                        async () => {
+                          await api.delete(
+                            `/groupes/${groupe.id}/membres/${membre.etudiantId}`,
+                          );
+                        },
+                      );
+                    }}
+                  >
+                    Retirer
+                  </Button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
       </NoticeCard>
+
+      {estChef && (
+        <NoticeCard className="mb-6">
+          <h2 className="font-display text-lg font-semibold">
+            Invitations envoyées
+          </h2>
+          {invitations.length === 0 ? (
+            <p className="mt-2 text-sm text-ink-soft/70">
+              Aucune invitation envoyée.
+            </p>
+          ) : (
+            <ul className="mt-3 flex flex-col divide-y divide-ink/10">
+              {invitations.map((invitation) => (
+                <li key={invitation.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                  <p className="flex-1 text-sm">
+                    {nomEtudiant(invitation.inviteId)}
+                    <span className="ml-2 text-xs text-ink-soft/70">
+                      {statutInvitationGroupeLabel[invitation.statut]} · {formatDate(invitation.dateCreation)}
+                    </span>
+                  </p>
+                  {invitation.statut === "en_attente" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={actionEnCours !== null}
+                      onClick={() => {
+                        if (!confirmer("Annuler cette invitation ?")) return;
+                        void executerAction(
+                          `invitation-${invitation.id}`,
+                          async () => {
+                            await api.delete(`/groupes/invitations/${invitation.id}`);
+                            setInvitations((courantes) =>
+                              courantes.map((courante) =>
+                                courante.id === invitation.id
+                                  ? { ...courante, statut: "annulee" }
+                                  : courante,
+                              ),
+                            );
+                          },
+                        );
+                      }}
+                    >
+                      Annuler
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </NoticeCard>
+      )}
+
+      {monMembre && monMembre.role !== "chef" && (
+        <Button
+          variant="ghost"
+          disabled={actionEnCours !== null}
+          onClick={() => {
+            if (!confirmer("Quitter ce groupe ?")) return;
+            void executerAction("quitter", async () => {
+              await api.post(`/groupes/${groupe.id}/quitter`);
+            });
+          }}
+          className="mb-6"
+        >
+          Quitter le groupe
+        </Button>
+      )}
 
       {/* =====================================================
           INVITATION
