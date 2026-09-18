@@ -701,6 +701,78 @@ export class CandidaturesService {
     return saved;
   }
 
+  async modifier(
+    id: string,
+    etudiantId: string,
+    dto: CreateCandidatureDto,
+  ): Promise<Candidature> {
+    const candidature = await this.findOne(id);
+    this.assertModificationAutorisee(candidature, etudiantId);
+    this.missionsService.assertMissionOuverteAuxCandidatures(
+      candidature.mission,
+    );
+
+    const resultat = await this.repo.update(
+      { id, statut: StatutCandidature.EN_ATTENTE },
+      {
+        prixPropose: dto.prixPropose,
+        delaiPropose: dto.delaiPropose,
+        message: dto.message,
+      },
+    );
+    if (!resultat.affected) {
+      throw new ConflictException(
+        'Cette candidature a deja ete traitee et ne peut plus etre modifiee.',
+      );
+    }
+
+    return this.findOne(id);
+  }
+
+  async annuler(id: string, etudiantId: string): Promise<void> {
+    const candidature = await this.findOne(id);
+    this.assertModificationAutorisee(candidature, etudiantId);
+
+    const resultat = await this.repo.delete({
+      id,
+      statut: StatutCandidature.EN_ATTENTE,
+    });
+    if (!resultat.affected) {
+      throw new ConflictException(
+        'Cette candidature a deja ete traitee et ne peut plus etre annulee.',
+      );
+    }
+  }
+
+  private assertModificationAutorisee(
+    candidature: Candidature,
+    etudiantId: string,
+  ): void {
+    if (candidature.etudiantId !== etudiantId) {
+      throw new ForbiddenException(
+        'Vous ne pouvez gérer que vos propres candidatures.',
+      );
+    }
+
+    if (candidature.statut !== StatutCandidature.EN_ATTENTE) {
+      throw new ConflictException(
+        'Une candidature acceptee ou refusee ne peut plus etre modifiee.',
+      );
+    }
+
+    if (candidature.groupeId && candidature.groupe) {
+      const chef = candidature.groupe.membres?.find(
+        (membre) =>
+          membre.etudiantId === etudiantId && membre.role === 'chef',
+      );
+      if (!chef) {
+        throw new ForbiddenException(
+          'Seul le chef du groupe peut gérer cette candidature.',
+        );
+      }
+    }
+  }
+
   /**
    * ========================================================
    * MESSAGERIE

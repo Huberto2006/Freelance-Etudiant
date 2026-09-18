@@ -46,6 +46,11 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
     },
 
     {
+      label: "Mes publications",
+      href: "/tableau-de-bord/mes-publications",
+    },
+
+    {
       label: "Mes services",
       href: "/tableau-de-bord/mes-services",
     },
@@ -122,6 +127,11 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
     {
       label: "Services",
       href: "/services",
+    },
+
+    {
+      label: "Mes publications",
+      href: "/tableau-de-bord/mes-publications",
     },
 
     {

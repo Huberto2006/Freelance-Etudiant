@@ -254,6 +254,7 @@ function LivraisonsContent() {
         const [
           candidaturesData,
           livraisonsData,
+          paiementsData,
         ] = await Promise.all([
           api.get<Candidature[]>(
             "/candidatures/me",
@@ -262,6 +263,18 @@ function LivraisonsContent() {
           api.get<Livraison[]>(
             "/livraisons/me",
           ),
+
+          // Paiements reçus (RG-066) : l'étudiant a besoin de
+          // savoir si le paiement de la mission est confirmé
+          // pour savoir quand il peut évaluer son client.
+          // Un échec ne doit pas masquer les livraisons.
+          api
+            .get<Transaction[]>(
+              "/paiements/recus",
+            )
+            .catch(
+              () => [] as Transaction[],
+            ),
         ]);
 
         if (cancelled) {
@@ -275,6 +288,8 @@ function LivraisonsContent() {
         setLivraisons(
           livraisonsData,
         );
+
+        setPaiements(paiementsData);
       } catch (error) {
         console.error(
           "Erreur lors du chargement des livraisons :",
@@ -552,6 +567,8 @@ function LivraisonsContent() {
                 key={candidatureSelectionnee.id}
                 candidature={candidatureSelectionnee}
                 livraison={livraisonSelectionnee}
+                paiements={paiements}
+                onRafraichir={rafraichirDonnees}
               />
             )}
           </div>
@@ -945,10 +962,16 @@ function LivraisonsContent() {
 function LivraisonEtudiant({
   candidature,
   livraison,
+  paiements,
+  onRafraichir,
 }: {
   candidature: Candidature;
   livraison: Livraison | null;
+  paiements: Transaction[];
+  onRafraichir: () => Promise<void>;
 }) {
+  const { utilisateur } = useAuth();
+
   const clientId =
     candidature.mission?.client
       ?.utilisateur?.id ??
@@ -1017,6 +1040,90 @@ function LivraisonEtudiant({
   function etapePrecedente() {
     setErreur(null);
     setEtape((precedente) => (precedente > 1 ? ((precedente - 1) as 1 | 2 | 3) : precedente));
+  }
+
+  // ==========================================================
+  // ÉVALUATION DU CLIENT (RG-066)
+  // ==========================================================
+
+  const [noteEvalClient, setNoteEvalClient] = useState(0);
+  const [commentaireEvalClient, setCommentaireEvalClient] = useState("");
+  const [envoiEvalClient, setEnvoiEvalClient] = useState(false);
+  const [erreurEvalClient, setErreurEvalClient] = useState<string | null>(null);
+  const [evalClientEnvoyee, setEvalClientEnvoyee] = useState(false);
+  const [editionEvalClient, setEditionEvalClient] = useState(false);
+
+  const paiementConfirme = paiements.some(
+    (transaction) =>
+      transaction.candidatureId === candidature.id &&
+      (transaction.statut === "confirmee" ||
+        transaction.statut === "liberee"),
+  );
+
+  const maEvaluationClient =
+    livraison?.evaluations?.find(
+      (evaluation) => evaluation.evaluateurId === utilisateur?.id,
+    ) ?? null;
+
+  async function envoyerEvalClient(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    if (!livraison) return;
+    if (envoiEvalClient || evalClientEnvoyee || maEvaluationClient) return;
+
+    if (noteEvalClient < 1) {
+      setErreurEvalClient("Veuillez choisir une note entre 1 et 5.");
+      return;
+    }
+
+    setErreurEvalClient(null);
+    setEnvoiEvalClient(true);
+
+    try {
+      await api.post<Evaluation>(
+        `/livraisons/${livraison.id}/evaluation-client`,
+        {
+          note: noteEvalClient,
+          commentaire: commentaireEvalClient.trim() || undefined,
+        },
+      );
+
+      setEvalClientEnvoyee(true);
+      await onRafraichir();
+    } catch (error) {
+      setErreurEvalClient(
+        error instanceof ApiError
+          ? error.message || "Impossible d'envoyer l'évaluation."
+          : "Erreur réseau : impossible d'envoyer l'évaluation.",
+      );
+    } finally {
+      setEnvoiEvalClient(false);
+    }
+  }
+
+  async function enregistrerEvalClient() {
+    if (!maEvaluationClient || noteEvalClient < 1) return;
+
+    setEnvoiEvalClient(true);
+    setErreurEvalClient(null);
+    try {
+      await api.patch<Evaluation>(`/evaluations/${maEvaluationClient.id}`, {
+        note: noteEvalClient,
+        commentaire: commentaireEvalClient.trim() || undefined,
+      });
+      setEditionEvalClient(false);
+      await onRafraichir();
+    } catch (error) {
+      setErreurEvalClient(
+        error instanceof ApiError
+          ? error.message
+          : "Impossible de modifier l'évaluation.",
+      );
+    } finally {
+      setEnvoiEvalClient(false);
+    }
   }
 
   async function ajouterFichiers(files: FileList | File[]) {
@@ -1486,6 +1593,169 @@ function LivraisonEtudiant({
           </form>
         </div>
       )}
+
+      {/* =========================================================
+          ÉVALUATION DU CLIENT (RG-066)
+          L'étudiant évalue le client après livraison validée et
+          paiement confirmé/libéré. Une seule évaluation par auteur
+          et par livraison (unicité livraison_id + evaluateur_id
+          côté backend). Le backend reste la protection principale.
+          ==================================================== */}
+
+      {livraison &&
+        livraison.statut === "validee" &&
+        paiementConfirme && (
+          <>
+            {maEvaluationClient ? (
+              <div className="mt-5 rounded-lg border border-ink/10 bg-ink/[0.03] p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-medium">
+                    Votre évaluation du client : {maEvaluationClient.note}/5
+                  </p>
+                  {!editionEvalClient && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setNoteEvalClient(maEvaluationClient.note);
+                        setCommentaireEvalClient(
+                          maEvaluationClient.commentaire ?? "",
+                        );
+                        setEditionEvalClient(true);
+                      }}
+                    >
+                      Modifier
+                    </Button>
+                  )}
+                </div>
+
+                {editionEvalClient && (
+                  <div className="mt-4 max-w-xl">
+                    <Field
+                      label="Note"
+                      htmlFor={`evaluation-client-modification-${candidature.id}`}
+                    >
+                      <Input
+                        id={`evaluation-client-modification-${candidature.id}`}
+                        type="number"
+                        min={1}
+                        max={5}
+                        value={noteEvalClient}
+                        onChange={(event) =>
+                          setNoteEvalClient(Number(event.target.value))
+                        }
+                      />
+                    </Field>
+                    <Field
+                      label="Commentaire (facultatif)"
+                      htmlFor={`evaluation-client-commentaire-${candidature.id}`}
+                    >
+                      <Textarea
+                        id={`evaluation-client-commentaire-${candidature.id}`}
+                        rows={3}
+                        value={commentaireEvalClient}
+                        onChange={(event) =>
+                          setCommentaireEvalClient(event.target.value)
+                        }
+                      />
+                    </Field>
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        size="sm"
+                        disabled={envoiEvalClient || noteEvalClient < 1}
+                        onClick={() => void enregistrerEvalClient()}
+                      >
+                        Enregistrer
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setEditionEvalClient(false)}
+                      >
+                        Fermer
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              !evalClientEnvoyee && (
+                <form
+                  onSubmit={envoyerEvalClient}
+                  className="mt-5 border-t border-ink/15 pt-5"
+                >
+                  <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+                    Évaluer le client
+                  </p>
+
+                  <p className="mt-1 text-sm text-ink-soft">
+                    Projet terminé et paiement confirmé : partagez votre
+                    retour sur cette collaboration.
+                  </p>
+
+                  <div className="mt-4 max-w-xl">
+                    <Field
+                      label="Note"
+                      htmlFor={`evaluation-client-note-${candidature.id}`}
+                    >
+                      <Input
+                        id={`evaluation-client-note-${candidature.id}`}
+                        type="number"
+                        min={1}
+                        max={5}
+                        value={noteEvalClient}
+                        onChange={(event) =>
+                          setNoteEvalClient(Number(event.target.value))
+                        }
+                        disabled={envoiEvalClient}
+                      />
+                    </Field>
+                    <Field
+                      label="Commentaire (facultatif)"
+                      htmlFor={`evaluation-client-avis-${candidature.id}`}
+                    >
+                      <Textarea
+                        id={`evaluation-client-avis-${candidature.id}`}
+                        rows={3}
+                        value={commentaireEvalClient}
+                        onChange={(event) =>
+                          setCommentaireEvalClient(event.target.value)
+                        }
+                        placeholder="Partagez votre retour sur cette collaboration…"
+                        disabled={envoiEvalClient}
+                      />
+                    </Field>
+
+                    {erreurEvalClient && (
+                      <p className="mt-3 text-xs text-brique">
+                        {erreurEvalClient}
+                      </p>
+                    )}
+
+                    <Button
+                      type="submit"
+                      size="sm"
+                      className="mt-4"
+                      disabled={envoiEvalClient || noteEvalClient < 1}
+                    >
+                      {envoiEvalClient
+                        ? "Envoi…"
+                        : "Envoyer mon évaluation"}
+                    </Button>
+                  </div>
+                </form>
+              )
+            )}
+
+            {evalClientEnvoyee && (
+              <div className="mt-5 rounded-lg border border-rice/20 bg-rice/5 p-4">
+                <p className="text-sm text-rice">
+                  Évaluation envoyée. Merci pour votre retour !
+                </p>
+              </div>
+            )}
+          </>
+        )}
     </NoticeCard>
   );
 }
@@ -1514,6 +1784,23 @@ function LivraisonClient({
     candidature.etudiant
       ?.utilisateur?.nom ??
     "Étudiant";
+
+  // ==========================================================
+  // ÉVALUATIONS (RG-037 / RG-065 / RG-066)
+  // Une livraison peut désormais porter deux évaluations
+  // (client -> étudiant ET étudiant -> client). Chaque partie
+  // ne doit voir et gérer QUE la sienne : on filtre par
+  // evaluateurId. Le backend garantit l'unicité par
+  // (livraison_id, evaluateur_id).
+  // ==========================================================
+  const { utilisateur } = useAuth();
+
+  const maEvaluation =
+    livraison.evaluations?.find(
+      (evaluation) =>
+        evaluation.evaluateurId ===
+        utilisateur?.id,
+    ) ?? null;
 
   const [
     commentaireCorrection,
@@ -1575,6 +1862,7 @@ function LivraisonClient({
     evaluationEnvoyee,
     setEvaluationEnvoyee,
   ] = useState(false);
+  const [editionEvaluation, setEditionEvaluation] = useState(false);
 
   // ==========================================================
   // ÉTAT DU WORKFLOW DE FIN DE PROJET
@@ -1611,9 +1899,10 @@ function LivraisonClient({
     paiementsCandidature.length > 0;
 
   // Les évaluations sont chargées par le backend avec la
-  // livraison (relation "evaluations").
+  // livraison (relation "evaluations"). Seule MA propre
+  // évaluation (client -> étudiant) compte ici.
   const evaluationExistante =
-    (livraison.evaluations?.length ?? 0) > 0;
+    Boolean(maEvaluation);
 
   const evaluationEffectuee =
     evaluationExistante || evaluationEnvoyee;
@@ -1698,6 +1987,29 @@ function LivraisonClient({
           "Erreur réseau : impossible d'envoyer l'évaluation. Vérifiez votre connexion.",
         );
       }
+    } finally {
+      setEvaluationEnvoi(false);
+    }
+  }
+
+  async function enregistrerEvaluation() {
+    if (!maEvaluation || note < 1) return;
+
+    setEvaluationEnvoi(true);
+    setEvaluationErreur(null);
+    try {
+      await api.patch<Evaluation>(`/evaluations/${maEvaluation.id}`, {
+        note,
+        commentaire: commentaireEvaluation.trim() || undefined,
+      });
+      setEditionEvaluation(false);
+      await onRafraichir();
+    } catch (error) {
+      setEvaluationErreur(
+        error instanceof ApiError
+          ? error.message
+          : "Impossible de modifier l'évaluation.",
+      );
     } finally {
       setEvaluationEnvoi(false);
     }
@@ -2223,6 +2535,83 @@ function LivraisonClient({
             </Button>
           </form>
         )}
+
+      {/* =========================================================
+          VOTRE ÉVALUATION (RG-065)
+          Affichée une fois envoyée : consultation + modification
+          de SA propre évaluation uniquement (maEvaluation est
+          filtrée par evaluateurId).
+          ==================================================== */}
+
+      {maEvaluation && (
+        <div className="mt-5 rounded-lg border border-ink/10 bg-ink/[0.03] p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-medium">
+              Votre évaluation : {maEvaluation.note}/5
+            </p>
+            {!editionEvaluation && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setNote(maEvaluation.note);
+                  setCommentaireEvaluation(
+                    maEvaluation.commentaire ?? "",
+                  );
+                  setEditionEvaluation(true);
+                }}
+              >
+                Modifier
+              </Button>
+            )}
+          </div>
+
+          {editionEvaluation && (
+            <div className="mt-4 max-w-xl">
+              <Field
+                label="Note"
+                htmlFor={`evaluation-modification-${candidature.id}`}
+              >
+                <Input
+                  id={`evaluation-modification-${candidature.id}`}
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={note}
+                  onChange={(event) => setNote(Number(event.target.value))}
+                />
+              </Field>
+              <Field
+                label="Commentaire (facultatif)"
+                htmlFor={`evaluation-commentaire-${candidature.id}`}
+              >
+                <Textarea
+                  id={`evaluation-commentaire-${candidature.id}`}
+                  rows={3}
+                  value={commentaireEvaluation}
+                  onChange={(event) => setCommentaireEvaluation(event.target.value)}
+                />
+              </Field>
+              <div className="mt-3 flex gap-2">
+                <Button
+                  size="sm"
+                  disabled={evaluationEnvoi || note < 1}
+                  onClick={() => void enregistrerEvaluation()}
+                >
+                  Enregistrer
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setEditionEvaluation(false)}
+                >
+                  Fermer
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ÉVALUATION ENVOYÉE */}
 

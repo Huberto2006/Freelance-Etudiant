@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 import { useAuth } from "@/lib/auth-context";
 import { Navbar } from "@/components/layout/Navbar";
@@ -14,6 +15,9 @@ export default function TableauDeBordLayout({
 }) {
   const { utilisateur, chargement } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const estPageMessages =
+    pathname === "/tableau-de-bord/messages";
 
   /*
    * ==========================================================
@@ -99,7 +103,13 @@ export default function TableauDeBordLayout({
    */
 
   return (
-    <div className="bg-paper">
+    <div
+      className={
+        estPageMessages
+          ? "h-[calc(100dvh-4rem)] overflow-hidden bg-paper"
+          : "bg-paper"
+      }
+    >
       {/* =====================================================
           SIDEBAR
           ===================================================== */}
@@ -139,7 +149,7 @@ export default function TableauDeBordLayout({
             =================================================== */}
 
         <div
-          className="
+          className={`
             mx-auto
             w-full
             max-w-7xl
@@ -147,7 +157,13 @@ export default function TableauDeBordLayout({
             py-8
             md:px-8
             md:py-10
-          "
+
+            ${
+              estPageMessages
+                ? "h-full min-h-0 overflow-hidden"
+                : ""
+            }
+          `}
         >
           {children}
         </div>

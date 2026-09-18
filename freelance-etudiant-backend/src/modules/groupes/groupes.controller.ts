@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -37,11 +39,51 @@ export class GroupesController {
     return this.groupesService.findMesGroupes(request.user);
   }
 
+  @Get('invitations/:invitationId')
+  async trouverInvitation(
+    @Param('invitationId') invitationId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.groupesService.trouverInvitation(
+      invitationId,
+      user,
+    );
+  }
+
   @Get(':id')
   async trouver(
     @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.groupesService.findOne(id);
+    return this.groupesService.findOne(id, user.id);
+  }
+
+  @Post(':id/quitter')
+  async quitter(
+    @Param('id') groupeId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    await this.groupesService.quitter(groupeId, user);
+    return { message: 'Vous avez quitté le groupe.' };
+  }
+
+  @Delete(':id/membres/:etudiantId')
+  async retirerMembre(
+    @Param('id') groupeId: string,
+    @Param('etudiantId') etudiantId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    await this.groupesService.retirerMembre(groupeId, etudiantId, user);
+    return { message: 'Membre retiré du groupe.' };
+  }
+
+  @Patch(':id/chef')
+  async transfererChef(
+    @Param('id') groupeId: string,
+    @Body('etudiantId') etudiantId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.groupesService.transfererChef(groupeId, etudiantId, user);
   }
 
   @Post(':id/invitations')
@@ -55,6 +97,14 @@ export class GroupesController {
       dto,
       user,
     );
+  }
+
+  @Get(':id/invitations')
+  async invitationsDuGroupe(
+    @Param('id') groupeId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.groupesService.trouverInvitationsPourChef(groupeId, user);
   }
 
   @Post('invitations/:invitationId/accepter')
@@ -77,5 +127,13 @@ export class GroupesController {
       invitationId,
       user,
     );
+  }
+
+  @Delete('invitations/:invitationId')
+  async annulerInvitation(
+    @Param('invitationId') invitationId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.groupesService.annulerInvitation(invitationId, user);
   }
 }

@@ -11,6 +11,7 @@ import { SousNavigation } from "@/components/ui/SousNavigation";
 import { formatArgent, statutCandidatureLabel } from "@/lib/format";
 
 import { Button } from "@/components/ui/Button";
+import { Field, Input, Textarea } from "@/components/ui/Field";
 
 import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
 
@@ -23,6 +24,11 @@ export default function CandidaturesPage() {
   const [chargement, setChargement] = useState(true);
 
   const [erreur, setErreur] = useState<string | null>(null);
+  const [editionId, setEditionId] = useState<string | null>(null);
+  const [prixEdition, setPrixEdition] = useState("");
+  const [delaiEdition, setDelaiEdition] = useState("");
+  const [messageEdition, setMessageEdition] = useState("");
+  const [actionEnCours, setActionEnCours] = useState<string | null>(null);
 
   /*
    * Chargement initial.
@@ -83,6 +89,63 @@ export default function CandidaturesPage() {
       candidature.mission?.client?.nomEntreprise ??
       "Client"
     );
+  }
+
+  function commencerEdition(candidature: Candidature) {
+    setEditionId(candidature.id);
+    setPrixEdition(String(candidature.prixPropose));
+    setDelaiEdition(String(candidature.delaiPropose));
+    setMessageEdition(candidature.message ?? "");
+    setErreur(null);
+  }
+
+  async function enregistrerEdition(candidature: Candidature) {
+    setActionEnCours(candidature.id);
+    setErreur(null);
+    try {
+      const maj = await api.patch<Candidature>(
+        `/candidatures/${candidature.id}`,
+        {
+          prixPropose: Number(prixEdition),
+          delaiPropose: Number(delaiEdition),
+          message: messageEdition.trim() || undefined,
+        },
+      );
+      setCandidatures((courantes) =>
+        courantes.map((courante) =>
+          courante.id === maj.id ? { ...courante, ...maj } : courante,
+        ),
+      );
+      setEditionId(null);
+    } catch (error) {
+      setErreur(
+        error instanceof ApiError
+          ? error.message
+          : "Impossible de modifier la candidature.",
+      );
+    } finally {
+      setActionEnCours(null);
+    }
+  }
+
+  async function annuler(candidature: Candidature) {
+    if (!window.confirm("Annuler cette candidature en attente ?")) return;
+    setActionEnCours(candidature.id);
+    setErreur(null);
+    try {
+      await api.delete(`/candidatures/${candidature.id}`);
+      setCandidatures((courantes) =>
+        courantes.filter((courante) => courante.id !== candidature.id),
+      );
+    } catch (error) {
+      setErreur(
+        error instanceof ApiError
+          ? error.message
+          : "Impossible d'annuler la candidature.",
+      );
+    } finally {
+      setActionEnCours(null);
+    }
   }
 
   return (
@@ -196,6 +259,7 @@ export default function CandidaturesPage() {
                 {/* =================================================
                     INFORMATIONS DE LA CANDIDATURE
                     ================================================= */}
+                {editionId !== candidature.id && (
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
                     <Tag
@@ -231,6 +295,54 @@ export default function CandidaturesPage() {
                     </Link>
                   )}
                 </div>
+                )}
+
+                {editionId === candidature.id && (
+                  <div className="flex flex-col gap-4">
+                    <p className="font-display text-lg font-medium">
+                      Modifier votre candidature
+                    </p>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field label="Prix proposé (Ar)" htmlFor={`prix-${candidature.id}`}>
+                        <Input
+                          id={`prix-${candidature.id}`}
+                          type="number"
+                          min={0}
+                          value={prixEdition}
+                          onChange={(event) => setPrixEdition(event.target.value)}
+                        />
+                      </Field>
+                      <Field label="Délai proposé (jours)" htmlFor={`delai-${candidature.id}`}>
+                        <Input
+                          id={`delai-${candidature.id}`}
+                          type="number"
+                          min={1}
+                          value={delaiEdition}
+                          onChange={(event) => setDelaiEdition(event.target.value)}
+                        />
+                      </Field>
+                    </div>
+                    <Field label="Message (optionnel)" htmlFor={`message-${candidature.id}`}>
+                      <Textarea
+                        id={`message-${candidature.id}`}
+                        value={messageEdition}
+                        onChange={(event) => setMessageEdition(event.target.value)}
+                      />
+                    </Field>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        disabled={actionEnCours !== null}
+                        onClick={() => void enregistrerEdition(candidature)}
+                      >
+                        Enregistrer
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditionId(null)}>
+                        Fermer
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 {/* =================================================
                     ACTIONS SI CANDIDATURE ACCEPTÉE
@@ -276,6 +388,28 @@ export default function CandidaturesPage() {
                           : "Déposer ma livraison"}
                       </Button>
                     </Link>
+                  </div>
+                )}
+
+                {candidature.statut === "en_attente" && editionId !== candidature.id && (
+                  <div className="mt-5 flex flex-wrap gap-2 border-t border-ink/15 pt-5">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={actionEnCours !== null}
+                      onClick={() => commencerEdition(candidature)}
+                    >
+                      Modifier
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={actionEnCours !== null}
+                      onClick={() => void annuler(candidature)}
+                      className="text-brique"
+                    >
+                      Annuler
+                    </Button>
                   </div>
                 )}
               </NoticeCard>

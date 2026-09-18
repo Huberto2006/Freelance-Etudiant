@@ -77,6 +77,7 @@ export const statutInvitationGroupeLabel: Record<string, string> = {
   en_attente: "En attente",
   acceptee: "Acceptée",
   refusee: "Refusée",
+  annulee: "Annulée",
 };
 
 export const roleMembreGroupeLabel: Record<string, string> = {

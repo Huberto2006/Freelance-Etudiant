@@ -5,6 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
   CreateDateColumn,
+  Index,
 } from 'typeorm';
 import { Livraison } from '../../livraisons/entities/livraison.entity';
 import { Utilisateur } from '../../users/entities/utilisateur.entity';
@@ -20,8 +21,16 @@ import { Utilisateur } from '../../users/entities/utilisateur.entity';
  *       donc en RESTRICT : un utilisateur, une candidature ou une
  *       livraison lies a une evaluation ne peuvent pas etre supprimes
  *       tant que l'evaluation existe.
+ * RG-037/RG-066 : une livraison peut recevoir au maximum DEUX evaluations,
+ *       une par direction (client -> etudiant, etudiant -> client). La
+ *       contrainte UNIQUE(livraison_id, evaluateur_id) garantit
+ *       l'anti-doublon PAR AUTEUR (migration
+ *       1802000000000-EvaluationBidirectionnelle).
  */
 @Entity('evaluations')
+@Index('uq_evaluations_livraison_evaluateur_id', ['livraisonId', 'evaluateurId'], {
+  unique: true,
+})
 export class Evaluation {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -38,7 +47,7 @@ export class Evaluation {
   @JoinColumn({ name: 'livraison_id' })
   livraison: Livraison;
 
-  @Column({ name: 'livraison_id', unique: true })
+  @Column({ name: 'livraison_id' })
   livraisonId: string;
 
   @ManyToOne(() => Utilisateur, { onDelete: 'RESTRICT' })

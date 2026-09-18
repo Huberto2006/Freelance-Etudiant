@@ -12,6 +12,7 @@ import { MissionsModule } from '../missions/missions.module';
 import { ServicesModule } from '../services/services.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { UsersModule } from '../users/users.module';
+import { CommonModule } from '../../common/common.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UsersModule } from '../users/users.module';
     ServicesModule,
     NotificationsModule,
     UsersModule,
+    CommonModule,
   ],
   providers: [
     CommentairesService,

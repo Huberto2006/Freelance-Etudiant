@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, Plus, Users, X } from "lucide-react";
+import { Bell, Loader2, Plus, Users, X } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
-import type { Groupe, Mission } from "@/lib/types";
+import type { Groupe, Mission, NotificationItem } from "@/lib/types";
 
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
@@ -28,6 +28,7 @@ export default function GroupesPage() {
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
   const [afficherFormulaire, setAfficherFormulaire] = useState(false);
+  const [invitations, setInvitations] = useState<NotificationItem[]>([]);
 
   const charger = useCallback(async () => {
     setChargement(true);
@@ -71,8 +72,32 @@ export default function GroupesPage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     charger();
   }, [charger]);
+
+  useEffect(() => {
+    let annule = false;
+
+    async function chargerInvitations() {
+      try {
+        const notifications = await api.get<NotificationItem[]>("/notifications");
+        const enAttente = notifications.filter(
+          (notification) =>
+            notification.type === "nouvelle_invitation_groupe" &&
+            notification.lienUrl?.startsWith("/tableau-de-bord/groupes/invitations/"),
+        );
+        if (!annule) setInvitations(enAttente);
+      } catch {
+        // Les invitations restent accessibles depuis le centre de notifications.
+      }
+    }
+
+    void chargerInvitations();
+    return () => {
+      annule = true;
+    };
+  }, []);
 
   return (
     <div>
@@ -103,6 +128,30 @@ export default function GroupesPage() {
           )}
         </Button>
       </div>
+
+      {invitations.length > 0 && (
+        <section className="mb-8">
+          <div className="mb-4 flex items-center gap-2">
+            <Bell size={18} className="text-ocre-dark" aria-hidden="true" />
+            <h2 className="font-display text-lg font-semibold">
+              Invitations de groupe ({invitations.length})
+            </h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {invitations.map((invitation) => (
+              <Link key={invitation.id} href={invitation.lienUrl ?? "#"}>
+                <NoticeCard className="h-full transition-colors hover:border-ink/30">
+                  <p className="font-display font-medium">{invitation.titre}</p>
+                  <p className="mt-1 text-sm text-ink-soft">{invitation.message}</p>
+                  <p className="mt-2 text-xs text-ink-soft/70">
+                    Ouvrir l&apos;invitation
+                  </p>
+                </NoticeCard>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Message d'erreur */}
       {erreur && (

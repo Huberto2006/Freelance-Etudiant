@@ -12,6 +12,7 @@ import { TypeNotification } from '../../common/enums/type-notification.enum';
 import { Role } from '../../common/enums/role.enum';
 import { UsersService } from '../users/users.service';
 import { CommentairesGateway } from './commentaires.gateway';
+import { VerificationCibleService } from '../../common/services/verification-cible.service';
 
 /**
  * Forme de la reponse de GET /commentaires/mentions-suggestions.
@@ -42,6 +43,7 @@ export class CommentairesService {
     private readonly notificationsService: NotificationsService,
     private readonly usersService: UsersService,
     private readonly commentairesGateway: CommentairesGateway,
+    private readonly verificationCibleService: VerificationCibleService,
   ) { }
 
   /**
@@ -65,6 +67,15 @@ export class CommentairesService {
     auteurId: string,
     dto: CreerCommentaireDto,
   ): Promise<Commentaire> {
+    // RG-068 : verifier AVANT ecriture que la cible (mission ou service)
+    // existe reellement et que le type est autorise. Sans cette
+    // verification, un commentaire pourrait etre persiste pointant vers
+    // une cible inexistante.
+    await this.verificationCibleService.assertCibleExistante(
+      dto.cibleType,
+      dto.cibleId,
+    );
+
     const commentaire = this.repo.create({
       contenu: dto.contenu.trim(),
       cibleType: dto.cibleType,

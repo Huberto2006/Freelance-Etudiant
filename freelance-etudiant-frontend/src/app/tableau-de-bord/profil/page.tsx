@@ -28,6 +28,7 @@ import { MessageVide, NoticeCard, PageHeader, Tag } from "@/components/ui/Notice
 import { PhotoProfil } from "@/components/ui/PhotoProfil";
 import { PortfolioGalerie, estImageUrl } from "@/components/ui/Portfolio";
 import { SelecteurTheme } from "@/components/ui/SelecteurTheme";
+import { ThemeCondition } from "@/components/ui/ThemeCondition";
 import type { ClientProfile, EtudiantProfile, Utilisateur } from "@/lib/types";
 
 export default function ProfilPage() {
@@ -69,17 +70,19 @@ export default function ProfilPage() {
       {/* =========================================================
           SECTION APPARENCE & THÈME
       ========================================================= */}
-      <section aria-labelledby="theme-section-title" className="pt-2">
-        <PageHeader
-          icon={Palette}
-          eyebrow="Personnalisation"
-          title="Apparence & Thème"
-        />
+      <ThemeCondition>
+        <section aria-labelledby="theme-section-title" className="pt-2">
+          <PageHeader
+            icon={Palette}
+            eyebrow="Personnalisation"
+            title="Apparence & Thème"
+          />
 
-        <NoticeCard>
-          <SelecteurTheme variante="complet" />
-        </NoticeCard>
-      </section>
+          <NoticeCard>
+            <SelecteurTheme variante="complet" />
+          </NoticeCard>
+        </section>
+      </ThemeCondition>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -149,6 +150,28 @@ export class CandidaturesController {
       id,
       user.id,
     );
+  }
+
+  @Roles(Role.ETUDIANT)
+  @Patch("candidatures/:id")
+  @ApiOperation({ summary: "Modifier une candidature en attente" })
+  async modifier(
+    @Param("id") id: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateCandidatureDto,
+  ) {
+    return this.candidaturesService.modifier(id, user.id, dto);
+  }
+
+  @Roles(Role.ETUDIANT)
+  @Delete("candidatures/:id")
+  @ApiOperation({ summary: "Annuler une candidature en attente" })
+  async annuler(
+    @Param("id") id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    await this.candidaturesService.annuler(id, user.id);
+    return { message: "Candidature annulee" };
   }
 
   // ============================================================

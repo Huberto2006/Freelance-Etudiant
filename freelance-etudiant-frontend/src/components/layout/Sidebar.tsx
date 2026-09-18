@@ -6,6 +6,7 @@ import {
   Home,
   BriefcaseBusiness,
   ShoppingBag,
+  Layers3,
   ClipboardList,
   Package,
   Wallet,
@@ -14,6 +15,7 @@ import {
   Users,
   UserRoundPlus,
   LogOut,
+  Settings,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -27,6 +29,8 @@ import {
 import {
   navigationParRole,
 } from "@/lib/nav-links";
+
+import { getFileUrl } from "@/lib/api";
 
 type SidebarProps = {
   mobileOpen?: boolean;
@@ -47,7 +51,7 @@ const ICONS: Record<
 
   Services: ShoppingBag,
 
-  "Mes services": ShoppingBag,
+  "Mes publications": Layers3,
 
   Candidatures: ClipboardList,
   "Mes candidatures": ClipboardList,
@@ -72,6 +76,8 @@ const ICONS: Record<
   "Mon profil": User,
 
   Favoris: Star,
+
+  Paramètres: Settings,
 };
 
 function getIcon(label: string) {
@@ -98,65 +104,6 @@ function isActive(
   return pathname.startsWith(
     `${href}/`,
   );
-}
-
-function getSection(
-  label: string,
-) {
-  const value =
-    label.toLowerCase();
-
-  /*
-   * ==========================================================
-   * TROUVER
-   * ==========================================================
-   */
-
-  if (
-    value.includes("mission") ||
-    value.includes("service") ||
-    value.includes("explorer")
-  ) {
-    return "TROUVER";
-  }
-
-  /*
-   * ==========================================================
-   * MON ACTIVITÉ
-   * ==========================================================
-   */
-
-  if (
-    value.includes("candidature") ||
-    value.includes("groupe") ||
-    value.includes("livraison") ||
-    value.includes("paiement")
-  ) {
-    return "MON ACTIVITÉ";
-  }
-
-  /*
-   * ==========================================================
-   * COMMUNAUTÉ
-   * ==========================================================
-   */
-
-  if (
-    value.includes("ami") ||
-    value.includes("évaluation") ||
-    value.includes("evaluation") ||
-    value.includes("commentaire")
-  ) {
-    return "COMMUNAUTÉ";
-  }
-
-  /*
-   * ==========================================================
-   * PRINCIPAL
-   * ==========================================================
-   */
-
-  return "PRINCIPAL";
 }
 
 export function Sidebar({
@@ -269,7 +216,6 @@ export function Sidebar({
         ![
           "Messages",
           "Notifications",
-          "Paramètres",
         ].includes(item.label),
     );
 
@@ -302,6 +248,11 @@ export function Sidebar({
         item !== dashboard,
     );
 
+  const parametres =
+    autresItems.find(
+      (item) => item.label === "Paramètres",
+    );
+
   /*
    * Le profil est toujours affiché
    * dans la partie inférieure.
@@ -311,7 +262,8 @@ export function Sidebar({
     autresItems.filter(
       (item) =>
         item.label !== "Profil" &&
-        item.label !== "Mon profil",
+        item.label !== "Mon profil" &&
+        item.label !== "Paramètres",
     );
 
   /*
@@ -320,37 +272,56 @@ export function Sidebar({
    * ==========================================================
    */
 
-  const principal =
-    items.filter(
-      (item) =>
-        getSection(
-          item.label,
-        ) === "PRINCIPAL",
-    );
+  const trouverLabels = [
+    "Publications",
+    "Missions",
+    "Services",
+    "Explorer",
+  ];
 
-  const trouver =
-    items.filter(
-      (item) =>
-        getSection(
-          item.label,
-        ) === "TROUVER",
-    );
+  const activiteLabels = [
+    "Mes publications",
+    "Mes services",
+    "Mes missions",
+    "Mes candidatures",
+    "Candidatures",
+    "Demandes de service",
+    "Livraisons",
+    "Mes livraisons",
+    "Paiements",
+    "Mes paiements",
+    "Évaluations",
+    "Mes évaluations",
+    "Evaluations",
+  ];
 
-  const activite =
-    items.filter(
-      (item) =>
-        getSection(
-          item.label,
-        ) === "MON ACTIVITÉ",
-    );
+  const communauteLabels = [
+    "Groupes",
+    "Amis",
+    "Favoris",
+  ];
 
-  const communaute =
-    items.filter(
+  const trouver = items.filter((item) =>
+    trouverLabels.includes(item.label),
+  );
+
+  const activite = items.filter((item) =>
+    activiteLabels.includes(item.label),
+  );
+
+  const communaute = items.filter((item) =>
+    communauteLabels.includes(item.label),
+  );
+
+  const principal = [
+    ...(dashboard ? [dashboard] : []),
+    ...items.filter(
       (item) =>
-        getSection(
-          item.label,
-        ) === "COMMUNAUTÉ",
-    );
+        !trouverLabels.includes(item.label) &&
+        !activiteLabels.includes(item.label) &&
+        !communauteLabels.includes(item.label),
+    ),
+  ];
 
   /*
    * ==========================================================
@@ -394,9 +365,12 @@ export function Sidebar({
           key={item.label}
           className="space-y-1"
         >
-          {!collapsed && (
-            <p
+          {!collapsed ? (
+            <div
               className="
+                flex
+                items-center
+                gap-2
                 px-3
                 pb-2
                 pt-2
@@ -404,11 +378,25 @@ export function Sidebar({
                 font-semibold
                 uppercase
                 tracking-[0.16em]
-                text-ink-soft/50
+                text-white/45
               "
             >
-              {item.label}
-            </p>
+              <Icon size={13} strokeWidth={2} />
+              <span>{item.label}</span>
+            </div>
+          ) : (
+            <div
+              className="
+                flex
+                justify-center
+                pb-1
+                text-white/45
+              "
+              title={item.label}
+              aria-label={item.label}
+            >
+              <Icon size={16} strokeWidth={2} />
+            </div>
           )}
 
           {item.liens.map(
@@ -444,11 +432,12 @@ export function Sidebar({
                   className={`
                     group
                     flex
+                    min-h-10
                     items-center
                     gap-3
                     rounded-lg
                     px-3
-                    py-2.5
+                    py-2
                     text-sm
                     font-medium
                     transition-all
@@ -462,8 +451,8 @@ export function Sidebar({
 
                     ${
                       active
-                        ? "bg-ink text-paper-light shadow-sm"
-                        : "text-ink-soft hover:bg-ink/5 hover:text-ink"
+                        ? "bg-bleu text-white dark:text-slate-900 shadow-sm"
+                        : "text-white/75 hover:bg-white/10 hover:text-white"
                     }
                   `}
                 >
@@ -478,7 +467,7 @@ export function Sidebar({
                   />
 
                   {!collapsed && (
-                    <span className="truncate">
+                    <span className="truncate pl-1">
                       {
                         link.label
                       }
@@ -530,7 +519,7 @@ export function Sidebar({
           gap-3
           rounded-lg
           px-3
-          py-2.5
+          py-2
           text-sm
           font-medium
           transition-all
@@ -544,8 +533,8 @@ export function Sidebar({
 
           ${
             active
-              ? "bg-ink text-paper-light shadow-sm"
-              : "text-ink-soft hover:bg-ink/5 hover:text-ink"
+              ? "bg-bleu text-white dark:text-slate-900 shadow-sm"
+              : "text-white/75 hover:bg-white/10 hover:text-white"
           }
         `}
       >
@@ -586,17 +575,17 @@ export function Sidebar({
     }
 
     return (
-      <div className="mb-5">
+      <div className="mb-6">
         {!collapsed && (
           <p
             className="
               px-3
-              pb-2
+              pb-2.5
               text-[10px]
               font-semibold
               uppercase
               tracking-[0.16em]
-              text-ink-soft/50
+              text-white/45
             "
           >
             {title}
@@ -625,8 +614,8 @@ export function Sidebar({
         h-full
         flex-col
         border-r
-        border-ink/10
-        bg-paper
+        border-white/10
+        bg-panel
         transition-[width]
         duration-200
         ease-in-out
@@ -649,7 +638,7 @@ export function Sidebar({
           shrink-0
           items-center
           border-b
-          border-ink/10
+          border-white/10
 
           ${
             collapsed
@@ -668,38 +657,34 @@ export function Sidebar({
           "
           aria-label="Kianja"
         >
-          <span
+          <img
+            src="/images/logo-kianja.png"
+            alt="Logo Kianja"
             className="
-              flex
               h-9
               w-9
               shrink-0
-              items-center
-              justify-center
-              rounded-full
-              bg-ink
-              font-mono
-              text-xs
-              font-bold
-              text-paper-light
+              rounded-xl
+              border
+              border-white/15
+              bg-white
+              object-contain
+              p-1
+              shadow-sm
             "
-          >
-            K
-          </span>
+          />
 
           {!collapsed && (
-            <span
-              className="
-                font-display
-                text-xl
-                font-semibold
-                tracking-tight
-                text-ink
-              "
-            >
-              Kianja
+            <span className="leading-tight text-white">
+              <span className="block text-base font-semibold tracking-tight">
+                Kianja
+              </span>
+              <span className="block text-[9px] text-white/55">
+                Freelances étudiants
+              </span>
             </span>
           )}
+
         </Link>
 
         {/* Bouton réduire */}
@@ -719,10 +704,10 @@ export function Sidebar({
               items-center
               justify-center
               rounded-lg
-              text-ink-soft
+              text-white/70
               transition
-              hover:bg-ink/5
-              hover:text-ink
+              hover:bg-white/10
+              hover:text-white
               lg:flex
             "
           >
@@ -732,49 +717,6 @@ export function Sidebar({
           </button>
         )}
       </div>
-
-      {/* =====================================================
-          UTILISATEUR
-          ===================================================== */}
-
-      {!collapsed && (
-        <div
-          className="
-            shrink-0
-            border-b
-            border-ink/10
-            px-5
-            py-3
-          "
-        >
-          <p
-            className="
-              truncate
-              text-xs
-              font-medium
-              text-ink
-            "
-          >
-            {utilisateur.nom}
-          </p>
-
-          <p
-            className="
-              mt-0.5
-              truncate
-              font-mono
-              text-[9px]
-              uppercase
-              tracking-[0.12em]
-              text-ink-soft/60
-            "
-          >
-            {roleLabel(
-              utilisateur.role,
-            )}
-          </p>
-        </div>
-      )}
 
       {/* =====================================================
           NAVIGATION
@@ -787,32 +729,19 @@ export function Sidebar({
           min-h-0
           overflow-y-auto
           px-3
-          py-5
+          py-4
         "
       >
-        {/* Dashboard */}
+        {/* Principal */}
 
-        {dashboard && (
-          <div className="mb-6">
-            {renderItem(
-              dashboard,
-            )}
-          </div>
+        {renderSection(
+          "PRINCIPAL",
+          principal,
         )}
-
-        {/* Séparateur */}
 
         {!collapsed && (
-          <div
-            className="
-              mb-5
-              h-px
-              bg-ink/10
-            "
-          />
+          <div className="mb-5 h-px bg-white/10" />
         )}
-
-        {/* Trouver */}
 
         {renderSection(
           "TROUVER",
@@ -833,12 +762,12 @@ export function Sidebar({
           communaute,
         )}
 
-        {/* Principal */}
-
-        {renderSection(
-          "PRINCIPAL",
-          principal,
+        {parametres && (
+          <div className="mb-6">
+            {renderItem(parametres)}
+          </div>
         )}
+
       </nav>
 
       {/* =====================================================
@@ -849,8 +778,8 @@ export function Sidebar({
         className="
           shrink-0
           border-t
-          border-ink/10
-          bg-paper
+          border-white/10
+          bg-panel-dark
           p-3
         "
       >
@@ -871,7 +800,7 @@ export function Sidebar({
             gap-3
             rounded-lg
             px-3
-            py-2.5
+            py-2
             text-sm
             font-medium
             transition-colors
@@ -887,19 +816,49 @@ export function Sidebar({
                 pathname,
                 "/tableau-de-bord/profil",
               )
-                ? "bg-ink text-paper-light"
-                : "text-ink-soft hover:bg-ink/5 hover:text-ink"
+                ? "bg-bleu text-white dark:text-slate-900"
+                : "text-white/75 hover:bg-white/10 hover:text-white"
             }
           `}
         >
-          <User
-            size={18}
-            className="shrink-0"
-          />
+          <span
+            className="
+              flex
+              h-8
+              w-8
+              shrink-0
+              items-center
+              justify-center
+              overflow-hidden
+              rounded-full
+              bg-white/10
+              text-white/80
+            "
+          >
+            {utilisateur.photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={
+                  getFileUrl(
+                    utilisateur.photoUrl,
+                  ) ?? undefined
+                }
+                alt={utilisateur.nom}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <User size={16} />
+            )}
+          </span>
 
           {!collapsed && (
-            <span>
-              Mon profil
+            <span className="min-w-0 truncate">
+              <span className="block truncate">
+                Mon profil
+              </span>
+              <span className="block truncate text-[10px] font-normal text-white/50">
+                {utilisateur.nom}
+              </span>
             </span>
           )}
         </Link>
@@ -921,12 +880,12 @@ export function Sidebar({
             gap-3
             rounded-lg
             px-3
-            py-2.5
+            py-2
             text-sm
             font-medium
-            text-brique
+            text-white/75
             transition-colors
-            hover:bg-brique/5
+            hover:bg-white/10
 
             ${
               collapsed

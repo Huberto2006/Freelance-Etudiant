@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 
 import "@fontsource/zilla-slab/400.css";
 import "@fontsource/zilla-slab/500.css";
@@ -63,7 +64,12 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+        >
+          {themeInitScript}
+        </Script>
       </head>
 
       <body className="min-h-full flex flex-col">

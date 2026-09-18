@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
-import { Field, Input } from "@/components/ui/Field";
+import { Field, PasswordInput } from "@/components/ui/Field";
 import { NoticeCard } from "@/components/ui/Notice";
 
 function FormulaireReinitialisation() {
@@ -65,9 +65,8 @@ function FormulaireReinitialisation() {
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
           <Field label="Nouveau mot de passe" htmlFor="nouveauMotDePasse">
-            <Input
+            <PasswordInput
               id="nouveauMotDePasse"
-              type="password"
               required
               minLength={8}
               autoComplete="new-password"
@@ -77,9 +76,8 @@ function FormulaireReinitialisation() {
             />
           </Field>
           <Field label="Confirmer le mot de passe" htmlFor="confirmation">
-            <Input
+            <PasswordInput
               id="confirmation"
-              type="password"
               required
               minLength={8}
               autoComplete="new-password"

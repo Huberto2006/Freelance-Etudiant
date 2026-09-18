@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   ChevronDown,
   Globe,
+  LayoutDashboard,
   LogOut,
   Menu,
   Search,
   Settings,
   User,
 } from "lucide-react";
+
 import {
   useEffect,
   useRef,
@@ -32,6 +35,7 @@ import { BasculeTheme } from "@/components/ui/BasculeTheme";
 import { SelecteurTheme } from "@/components/ui/SelecteurTheme";
 import { MessagesLink } from "@/components/ui/MessagesLink";
 import { NotificationBell } from "@/components/ui/NotificationBell";
+import { ThemeCondition } from "@/components/ui/ThemeCondition";
 
 type NavbarProps = {
   /**
@@ -56,6 +60,8 @@ export function Navbar({
     chargement,
   } = useAuth();
 
+  const pathname = usePathname();
+
   const [
     menuProfilOuvert,
     setMenuProfilOuvert,
@@ -63,6 +69,55 @@ export function Navbar({
 
   const navbarRef =
     useRef<HTMLElement>(null);
+
+  /*
+   * ==========================================================
+   * ESPACE ACTUEL
+   * ==========================================================
+   */
+
+  const estDansDashboard =
+    pathname === "/tableau-de-bord" ||
+    pathname.startsWith(
+      "/tableau-de-bord/",
+    );
+
+  /*
+   * ==========================================================
+   * PAGES SANS NAVBAR
+   * ==========================================================
+   *
+   * Ces pages possèdent leur propre interface.
+   *
+  * Toutes les pages du segment d'authentification
+   */
+
+  const estPageAuth = [
+    "/connexion",
+    "/inscription",
+    "/mot-de-passe-oublie",
+    "/reinitialiser-mot-de-passe",
+    "/verification-email",
+  ].includes(pathname);
+
+  /*
+   * ==========================================================
+   * BASCULE SITE / DASHBOARD
+   * ==========================================================
+   *
+   * Dashboard → Site
+   * Site      → Dashboard
+   */
+
+  const hrefBascule =
+    estDansDashboard
+      ? "/"
+      : "/tableau-de-bord";
+
+  const labelBascule =
+    estDansDashboard
+      ? "Retour au site"
+      : "Tableau de bord";
 
   /*
    * ==========================================================
@@ -90,14 +145,19 @@ export function Navbar({
     );
 
   const liensParametres =
-    itemParametres?.liens ?? [];
+    (itemParametres?.liens ?? []).filter(
+      (link) =>
+        !["Paiements", "Favoris"].includes(
+          link.label,
+        ),
+    );
 
   const hrefParametres =
     itemParametres?.href;
 
   /*
    * ==========================================================
-   * FERMER LE MENU
+   * FERMER LES MENUS
    * ==========================================================
    */
 
@@ -169,6 +229,20 @@ export function Navbar({
 
   /*
    * ==========================================================
+   * PAGES CONNEXION / INSCRIPTION
+   * ==========================================================
+   *
+   * Important :
+   * Le return null est placé après tous les hooks React.
+   * Cela évite les erreurs liées aux règles des hooks.
+   */
+
+  if (estPageAuth) {
+    return null;
+  }
+
+  /*
+   * ==========================================================
    * RENDU
    * ==========================================================
    */
@@ -184,7 +258,8 @@ export function Navbar({
         h-16
         border-b
         border-ink/10
-        bg-paper/95
+        bg-paper-light/95
+        shadow-[0_2px_12px_rgba(15,23,42,0.06)]
         backdrop-blur-md
         transition-[left]
         duration-200
@@ -241,7 +316,11 @@ export function Navbar({
 
         {!hasSidebar && (
           <Link
-            href={utilisateur ? "/tableau-de-bord" : "/"}
+            href={
+              utilisateur
+                ? "/tableau-de-bord"
+                : "/"
+            }
             className="
               flex
               items-center
@@ -250,40 +329,24 @@ export function Navbar({
             "
             aria-label="Kianja"
           >
-            <span
+            <img
+              src="/images/logo-kianja.png"
+              alt="Logo Kianja"
               className="
-                flex
-                h-8
-                w-8
+                h-10
+                w-10
                 shrink-0
-                items-center
-                justify-center
-                rounded-full
-                bg-ink
-                font-mono
-                text-[10px]
-                font-bold
-                text-paper-light
-                sm:h-9
-                sm:w-9
-                sm:text-xs
+                rounded-xl
+                border
+                border-ink/10
+                bg-white
+                object-contain
+                p-1
+                shadow-sm
+                sm:h-11
+                sm:w-11
               "
-            >
-              K
-            </span>
-
-            <span
-              className="
-                hidden
-                font-display
-                text-lg
-                font-semibold
-                text-ink
-                sm:block
-              "
-            >
-              Kianja
-            </span>
+            />
           </Link>
         )}
 
@@ -302,7 +365,6 @@ export function Navbar({
             flex
             min-w-0
             items-center
-            gap-1
           "
         >
           {/* ==================================================
@@ -336,13 +398,14 @@ export function Navbar({
                   -translate-y-1/2
                   text-ink-soft/60
                 "
+                aria-hidden="true"
               />
 
               <input
                 type="search"
                 name="q"
-                placeholder="Rechercher..."
-                aria-label="Rechercher"
+                placeholder="Rechercher un service…"
+                aria-label="Rechercher un service"
                 className="
                   h-9
                   w-full
@@ -357,273 +420,214 @@ export function Navbar({
                   outline-none
                   transition
                   placeholder:text-ink-soft/50
-                  focus:border-ocre
+                  focus:border-bleu
                   focus:ring-2
-                  focus:ring-ocre/15
+                  focus:ring-bleu/20
                 "
               />
             </div>
           </form>
 
           {/* ==================================================
-              RECHERCHE MOBILE
+              GROUPE DES ACTIONS
               ================================================== */}
 
-          <Link
-            href="/services"
+          <div
             className="
               flex
-              h-9
-              w-9
-              shrink-0
               items-center
-              justify-center
-              rounded-lg
-              text-ink-soft
-              transition-colors
-              hover:bg-ink/5
-              hover:text-ink
-              md:hidden
+              gap-0.5
+              sm:gap-1
             "
-            aria-label="Rechercher"
-            title="Rechercher"
           >
-            <Search size={18} />
-          </Link>
+            {/* ==============================================
+                RECHERCHE MOBILE
+                ============================================== */}
 
-          {/* ==================================================
-              UTILISATEUR CONNECTÉ
-              ================================================== */}
-
-          {!chargement &&
-            utilisateur && (
-              <>
-                {/* ==============================================
-                    SITE / ACCUEIL
-                    ============================================== */}
-
-                <Link
-                  href="/"
-                  aria-label="Accueil"
-                  title="Kianja"
-                  className="
-                    flex
-                    h-9
-                    w-9
-                    shrink-0
-                    items-center
-                    justify-center
-                    rounded-lg
-                    text-ink-soft
-                    transition-colors
-                    hover:bg-ink/5
-                    hover:text-ink
-                  "
-                >
-                  <Globe
-                    size={19}
-                    strokeWidth={2}
-                  />
-                </Link>
-
-                {/* ==============================================
-                    MESSAGES
-                    ============================================== */}
-
-                <MessagesLink />
-
-                {/* ==============================================
-                    NOTIFICATIONS
-                    ============================================== */}
-
-                <NotificationBell />
-              </>
-            )}
-
-          {/* ====================================================
-              SÉPARATEUR
-              ==================================================== */}
-
-          {utilisateur && (
-            <div
+            <Link
+              href="/services"
+              aria-label="Rechercher"
+              title="Rechercher"
               className="
-                mx-2
-                h-6
-                w-px
+                flex
+                h-9
+                w-9
                 shrink-0
-                bg-ink/10
+                items-center
+                justify-center
+                rounded-lg
+                text-ink-soft
+                transition-colors
+                hover:bg-ink/5
+                hover:text-ink
+                md:hidden
               "
-              aria-hidden="true"
-            />
-          )}
+            >
+              <Search size={18} />
+            </Link>
 
-          {/* ====================================================
-              PROFIL
-              ==================================================== */}
+            {/* ==============================================
+                UTILISATEUR CONNECTÉ
+                ============================================== */}
 
-          {chargement ? null : utilisateur ? (
-            <div className="relative shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuProfilOuvert(
-                    (value) =>
-                      !value,
-                  );
-                }}
-                aria-label="Menu du profil"
-                aria-expanded={
-                  menuProfilOuvert
-                }
-                aria-haspopup="menu"
-                title="Profil"
-                className="
-                  flex
-                  items-center
-                  gap-1.5
-                  rounded-lg
-                  px-1.5
-                  py-1
-                  transition-colors
-                  hover:bg-ink/5
-                "
-              >
-                {/* ==================================================
-                    AVATAR
-                    ================================================== */}
+            {!chargement &&
+              utilisateur && (
+                <>
+                  {/* ==========================================
+                      BASCULE SITE / DASHBOARD
+                      ========================================== */}
 
-                <div
-                  className="
-                    flex
-                    h-8
-                    w-8
-                    shrink-0
-                    items-center
-                    justify-center
-                    overflow-hidden
-                    rounded-full
-                    bg-ocre/10
-                    text-ocre-dark
-                    ring-1
-                    ring-ink/10
-                  "
-                >
-                  {utilisateur.photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={
-                        getFileUrl(
-                          utilisateur.photoUrl,
-                        ) ?? undefined
-                      }
-                      alt={
-                        utilisateur.nom
-                      }
-                      className="
-                        h-full
-                        w-full
-                        object-cover
-                      "
-                    />
-                  ) : (
-                    <User size={15} />
-                  )}
-                </div>
-
-                {/* ==================================================
-                    NOM
-                    ================================================== */}
-
-                <div
-                  className="
-                    hidden
-                    max-w-32
-                    text-left
-                    leading-tight
-                    sm:block
-                  "
-                >
-                  <p
+                  <Link
+                    href={hrefBascule}
+                    aria-label={labelBascule}
+                    title={labelBascule}
                     className="
-                      truncate
-                      text-xs
-                      font-medium
-                      text-ink
+                      flex
+                      h-9
+                      w-9
+                      shrink-0
+                      items-center
+                      justify-center
+                      rounded-lg
+                      text-ink-soft
+                      transition-colors
+                      hover:bg-ink/5
+                      hover:text-ink
                     "
                   >
-                    {utilisateur.nom}
-                  </p>
-
-                  <p
-                    className="
-                      truncate
-                      font-mono
-                      text-[9px]
-                      uppercase
-                      tracking-wider
-                      text-ink-soft/60
-                    "
-                  >
-                    {roleLabel(
-                      utilisateur.role,
+                    {estDansDashboard ? (
+                      <Globe
+                        size={19}
+                        strokeWidth={2}
+                      />
+                    ) : (
+                      <LayoutDashboard
+                        size={19}
+                        strokeWidth={2}
+                      />
                     )}
-                  </p>
-                </div>
+                  </Link>
 
-                <ChevronDown
-                  size={13}
-                  className={`
-                    hidden
-                    transition-transform
-                    sm:block
+                  {/* ==========================================
+                      MESSAGES
+                      ========================================== */}
 
-                    ${
-                      menuProfilOuvert
-                        ? "rotate-180"
-                        : ""
-                    }
-                  `}
-                />
-              </button>
+                  <MessagesLink />
 
-              {/* ==================================================
-                  MENU PROFIL
-                  ================================================== */}
+                  {/* ==========================================
+                      NOTIFICATIONS
+                      ========================================== */}
 
-              {menuProfilOuvert && (
-                <div
-                  role="menu"
-                  className="
-                    absolute
-                    right-0
-                    top-full
-                    z-[100]
-                    mt-2
-                    w-64
-                    overflow-hidden
-                    rounded-xl
-                    border
-                    border-ink/10
-                    bg-paper
-                    shadow-xl
-                  "
-                >
-                  {/* ==============================================
-                      INFORMATIONS UTILISATEUR
-                      ============================================== */}
+                  <NotificationBell />
+
+                  {/* ==========================================
+                      SÉPARATEUR
+                      ========================================== */}
 
                   <div
                     className="
-                      border-b
-                      border-ink/10
-                      px-4
-                      py-3
+                      mx-1.5
+                      h-6
+                      w-px
+                      shrink-0
+                      bg-ink/10
+                      sm:mx-2
+                    "
+                    aria-hidden="true"
+                  />
+                </>
+              )}
+
+            {/* ==================================================
+                PROFIL
+                ================================================== */}
+
+            {chargement ? null : utilisateur ? (
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuProfilOuvert(
+                      (value) =>
+                        !value,
+                    );
+                  }}
+                  aria-label="Menu du profil"
+                  aria-expanded={
+                    menuProfilOuvert
+                  }
+                  aria-haspopup="menu"
+                  title="Profil"
+                  className="
+                    flex
+                    items-center
+                    gap-1.5
+                    rounded-lg
+                    px-1.5
+                    py-1
+                    transition-colors
+                    hover:bg-ink/5
+                  "
+                >
+                  {/* ==========================================
+                      AVATAR
+                      ========================================== */}
+
+                  <div
+                    className="
+                      flex
+                      h-8
+                      w-8
+                      shrink-0
+                      items-center
+                      justify-center
+                      overflow-hidden
+                      rounded-full
+                      bg-ocre/10
+                      text-ocre-dark
+                      ring-1
+                      ring-ink/10
+                    "
+                  >
+                    {utilisateur.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={
+                          getFileUrl(
+                            utilisateur.photoUrl,
+                          ) ?? undefined
+                        }
+                        alt={
+                          utilisateur.nom
+                        }
+                        className="
+                          h-full
+                          w-full
+                          object-cover
+                        "
+                      />
+                    ) : (
+                      <User size={15} />
+                    )}
+                  </div>
+
+                  {/* ==========================================
+                      NOM
+                      ========================================== */}
+
+                  <div
+                    className="
+                      hidden
+                      max-w-32
+                      text-left
+                      leading-tight
+                      sm:block
                     "
                   >
                     <p
                       className="
                         truncate
-                        text-sm
+                        text-xs
                         font-medium
                         text-ink
                       "
@@ -634,16 +638,6 @@ export function Navbar({
                     <p
                       className="
                         truncate
-                        text-xs
-                        text-ink-soft
-                      "
-                    >
-                      {utilisateur.email}
-                    </p>
-
-                    <p
-                      className="
-                        mt-1
                         font-mono
                         text-[9px]
                         uppercase
@@ -657,93 +651,99 @@ export function Navbar({
                     </p>
                   </div>
 
-                  {/* ==============================================
-                      MON PROFIL
-                      ============================================== */}
+                  <ChevronDown
+                    size={13}
+                    className={`
+                      hidden
+                      transition-transform
+                      sm:block
 
-                  <Link
-                    href="/tableau-de-bord/profil"
-                    onClick={
-                      closeMenus
-                    }
-                    role="menuitem"
+                      ${
+                        menuProfilOuvert
+                          ? "rotate-180"
+                          : ""
+                      }
+                    `}
+                  />
+                </button>
+
+                {/* ==============================================
+                    MENU PROFIL
+                    ============================================== */}
+
+                {menuProfilOuvert && (
+                  <div
+                    role="menu"
                     className="
-                      flex
-                      items-center
-                      gap-3
-                      px-4
-                      py-2.5
-                      text-sm
-                      text-ink-soft
-                      transition-colors
-                      hover:bg-ink/5
-                      hover:text-ink
+                      absolute
+                      right-0
+                      top-full
+                      z-[100]
+                      mt-2
+                      w-64
+                      overflow-hidden
+                      rounded-xl
+                      border
+                      border-ink/10
+                      bg-paper-light
+                      shadow-xl
                     "
                   >
-                    <User size={15} />
+                    {/* ==========================================
+                        INFORMATIONS UTILISATEUR
+                        ========================================== */}
 
-                    <span>
-                      Mon profil
-                    </span>
-                  </Link>
+                    <div
+                      className="
+                        border-b
+                        border-ink/10
+                        px-4
+                        py-3
+                      "
+                    >
+                      <p
+                        className="
+                          truncate
+                          text-sm
+                          font-medium
+                          text-ink
+                        "
+                      >
+                        {utilisateur.nom}
+                      </p>
 
-                  {/* ==============================================
-                      PARAMÈTRES
-                      ============================================== */}
+                      <p
+                        className="
+                          truncate
+                          text-xs
+                          text-ink-soft
+                        "
+                      >
+                        {utilisateur.email}
+                      </p>
 
-                  {liensParametres.length >
-                    0 ? (
-                    liensParametres.map(
-                      (link) => {
-                        if (!link.href) {
-                          return null;
-                        }
+                      <p
+                        className="
+                          mt-1
+                          font-mono
+                          text-[9px]
+                          uppercase
+                          tracking-wider
+                          text-ink-soft/60
+                        "
+                      >
+                        {roleLabel(
+                          utilisateur.role,
+                        )}
+                      </p>
+                    </div>
 
-                        return (
-                          <Link
-                            key={
-                              link.href
-                            }
-                            href={
-                              link.href
-                            }
-                            onClick={
-                              closeMenus
-                            }
-                            role="menuitem"
-                            className="
-                              flex
-                              items-center
-                              gap-3
-                              border-t
-                              border-ink/10
-                              px-4
-                              py-2.5
-                              text-sm
-                              text-ink-soft
-                              transition-colors
-                              hover:bg-ink/5
-                              hover:text-ink
-                            "
-                          >
-                            <Settings
-                              size={15}
-                            />
+                    {/* ==========================================
+                        MON PROFIL
+                        ========================================== */}
 
-                            <span>
-                              {
-                                link.label
-                              }
-                            </span>
-                          </Link>
-                        );
-                      },
-                    )
-                  ) : hrefParametres ? (
                     <Link
-                      href={
-                        hrefParametres
-                      }
+                      href="/tableau-de-bord/profil"
                       onClick={
                         closeMenus
                       }
@@ -752,8 +752,6 @@ export function Navbar({
                         flex
                         items-center
                         gap-3
-                        border-t
-                        border-ink/10
                         px-4
                         py-2.5
                         text-sm
@@ -763,99 +761,187 @@ export function Navbar({
                         hover:text-ink
                       "
                     >
-                      <Settings
+                      <User size={15} />
+
+                      <span>
+                        Mon profil
+                      </span>
+                    </Link>
+
+                    {/* ==========================================
+                        PARAMÈTRES
+                        ========================================== */}
+
+                    {liensParametres.length >
+                    0 ? (
+                      liensParametres.map(
+                        (link) => {
+                          if (!link.href) {
+                            return null;
+                          }
+
+                          return (
+                            <Link
+                              key={
+                                link.href
+                              }
+                              href={
+                                link.href
+                              }
+                              onClick={
+                                closeMenus
+                              }
+                              role="menuitem"
+                              className="
+                                flex
+                                items-center
+                                gap-3
+                                border-t
+                                border-ink/10
+                                px-4
+                                py-2.5
+                                text-sm
+                                text-ink-soft
+                                transition-colors
+                                hover:bg-ink/5
+                                hover:text-ink
+                              "
+                            >
+                              <Settings
+                                size={15}
+                              />
+
+                              <span>
+                                {
+                                  link.label
+                                }
+                              </span>
+                            </Link>
+                          );
+                        },
+                      )
+                    ) : hrefParametres ? (
+                      <Link
+                        href={
+                          hrefParametres
+                        }
+                        onClick={
+                          closeMenus
+                        }
+                        role="menuitem"
+                        className="
+                          flex
+                          items-center
+                          gap-3
+                          border-t
+                          border-ink/10
+                          px-4
+                          py-2.5
+                          text-sm
+                          text-ink-soft
+                          transition-colors
+                          hover:bg-ink/5
+                          hover:text-ink
+                        "
+                      >
+                        <Settings
+                          size={15}
+                        />
+
+                        <span>
+                          Paramètres
+                        </span>
+                      </Link>
+                    ) : null}
+
+                    {/* ==========================================
+                        APPARENCE
+                        ========================================== */}
+
+                    <ThemeCondition>
+                      <div
+                        className="
+                          border-t
+                          border-ink/10
+                          px-4
+                          py-3
+                        "
+                      >
+                        <SelecteurTheme
+                          variante="compact"
+                        />
+                      </div>
+                    </ThemeCondition>
+
+                    {/* ==========================================
+                        DÉCONNEXION
+                        ========================================== */}
+
+                    <button
+                      type="button"
+                      onClick={logout}
+                      role="menuitem"
+                      className="
+                        flex
+                        w-full
+                        items-center
+                        gap-3
+                        border-t
+                        border-ink/10
+                        px-4
+                        py-2.5
+                        text-left
+                        text-sm
+                        text-brique
+                        transition-colors
+                        hover:bg-brique/5
+                      "
+                    >
+                      <LogOut
                         size={15}
                       />
 
                       <span>
-                        Paramètres
+                        Se déconnecter
                       </span>
-                    </Link>
-                  ) : null}
-
-                  {/* ==============================================
-                      APPARENCE & THÈMES
-                      ============================================== */}
-
-                  <div
-                    className="
-                      border-t
-                      border-ink/10
-                      px-4
-                      py-3
-                    "
-                  >
-                    <SelecteurTheme variante="compact" />
+                    </button>
                   </div>
+                )}
+              </div>
+            ) : (
+              /* ==================================================
+                 UTILISATEUR NON CONNECTÉ
+                 ================================================== */
 
-                  {/* ==============================================
-                      DÉCONNEXION
-                      ============================================== */}
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-2
+                "
+              >
+                <BasculeTheme />
 
-                  <button
-                    type="button"
-                    onClick={logout}
-                    role="menuitem"
-                    className="
-                      flex
-                      w-full
-                      items-center
-                      gap-3
-                      border-t
-                      border-ink/10
-                      px-4
-                      py-2.5
-                      text-left
-                      text-sm
-                      text-brique
-                      transition-colors
-                      hover:bg-brique/5
-                    "
+                <Link href="/connexion">
+                  <Button
+                    variant="ghost"
+                    size="sm"
                   >
-                    <LogOut
-                      size={15}
-                    />
+                    Se connecter
+                  </Button>
+                </Link>
 
-                    <span>
-                      Se déconnecter
-                    </span>
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            /* ==================================================
-               UTILISATEUR NON CONNECTÉ
-               ================================================== */
-
-            <div
-              className="
-                flex
-                items-center
-                gap-2
-              "
-            >
-              <BasculeTheme />
-
-              <Link href="/connexion">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                >
-                  Se connecter
-                </Button>
-              </Link>
-
-              <Link href="/inscription">
-                <Button
-                  variant="primary"
-                  size="sm"
-                >
-                  S&apos;inscrire
-                </Button>
-              </Link>
-            </div>
-          )}
+                <Link href="/inscription">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                  >
+                    S&apos;inscrire
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

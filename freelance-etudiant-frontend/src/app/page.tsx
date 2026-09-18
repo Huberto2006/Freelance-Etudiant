@@ -15,6 +15,8 @@ import {
 import { SectionServices } from "@/components/home/SectionServices";
 import { SectionMissions } from "@/components/home/SectionMissions";
 import { SectionAvantages } from "@/components/home/SectionAvantages";
+import { SectionAudiences } from "@/components/home/SectionAudiences";
+import { SectionFonctionnement } from "@/components/home/SectionFonctionnement";
 
 /**
  * Page d'accueil publique de Kianja : hero avec recherche, categories de
@@ -94,13 +96,27 @@ export default function PageAccueil() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-8 sm:px-5 sm:pb-12">
+      {/* 1. Hero : recherche bilatérale, métriques vivantes et accès direct */}
       <HeroAccueil suggestions={suggestions} stats={stats} />
 
+      {/* 2. Audiences : mise en valeur immédiate des deux côtés de la marketplace */}
+      <SectionAudiences
+        missions={missions.slice(0, 2)}
+        services={services.slice(0, 2)}
+      />
+
+      {/* 3. Besoins des clients : missions ouvertes aux étudiants */}
+      <SectionMissions missions={missions} />
+
+      {/* 4. Compétences étudiantes : services prêts à l'emploi */}
+      <SectionServices services={services} />
+
+      {/* 5. Catégories : exploration par domaine de compétences / filière */}
       <SectionCategories
         categories={
           categories.length > 0
             ? categories.slice(0, 8)
-            : // Repli : referentiel tant qu'aucun service n'est publie
+            : // Repli : référentiel tant qu'aucun service n'est publié
               [
                 "Developpement",
                 "Design",
@@ -114,21 +130,21 @@ export default function PageAccueil() {
         }
       />
 
-      <SectionServices services={services} />
+      {/* 6. Fonctionnement : les 2 parcours pas à pas */}
+      <SectionFonctionnement />
 
-      <SectionMissions missions={missions} />
-
+      {/* 7. Avantages & double appel à l'action final */}
       <SectionAvantages />
 
       {/* Note de projet académique */}
-      <p className="mt-10 text-center font-mono text-xs text-ink-soft/50">
+      <p className="mt-12 text-center font-mono text-xs text-ink-soft/50">
         Kianja — projet étudiant de mise en relation freelance, développé en
         Licence 3 à l&apos;{" "}
         <Link
           href="https://emit.mg"
           target="_blank"
           rel="noreferrer"
-          className="underline decoration-dotted hover:text-ocre-dark"
+          className="underline decoration-dotted hover:text-bleu-dark"
         >
           EMIT Fianarantsoa
         </Link>

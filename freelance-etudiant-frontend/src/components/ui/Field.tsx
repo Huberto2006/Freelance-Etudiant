@@ -1,4 +1,6 @@
 import { clsx } from "clsx";
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import type { InputHTMLAttributes, LabelHTMLAttributes, Ref, TextareaHTMLAttributes } from "react";
 
 export function Field({
@@ -38,6 +40,34 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
         props.className,
       )}
     />
+  );
+}
+
+export function PasswordInput(
+  props: InputHTMLAttributes<HTMLInputElement>,
+) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div className="relative">
+      <input
+        {...props}
+        type={visible ? "text" : "password"}
+        className={clsx(
+          "w-full rounded-lg border border-ink/30 bg-paper-light px-3 py-2.5 pr-11 text-sm text-ink placeholder:text-ink-soft/50 focus:border-ocre focus:outline-none transition-colors",
+          props.className,
+        )}
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((etat) => !etat)}
+        aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+        title={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+        className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink"
+      >
+        {visible ? <EyeOff size={17} /> : <Eye size={17} />}
+      </button>
+    </div>
   );
 }
 

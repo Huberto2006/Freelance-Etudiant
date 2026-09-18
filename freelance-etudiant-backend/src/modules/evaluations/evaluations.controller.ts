@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { EvaluationsService } from './evaluations.service';
 import { CreateEvaluationDto } from './dto/create-evaluation.dto';
@@ -25,6 +25,42 @@ export class EvaluationsController {
     @Body() dto: CreateEvaluationDto,
   ) {
     return this.evaluationsService.create(livraisonId, user.id, dto);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ETUDIANT)
+  @ApiBearerAuth()
+  @Post('livraisons/:livraisonId/evaluation-client')
+  @ApiOperation({
+    summary:
+      "RG-066 : l'etudiant evalue le client apres livraison validee et paiement confirme",
+  })
+  async evaluerClient(
+    @Param('livraisonId') livraisonId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateEvaluationDto,
+  ) {
+    return this.evaluationsService.creerParEtudiant(
+      livraisonId,
+      user.id,
+      dto,
+    );
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.CLIENT, Role.ETUDIANT)
+  @ApiBearerAuth()
+  @Patch('evaluations/:id')
+  @ApiOperation({
+    summary:
+      'RG-065 : modifier sa propre evaluation (client ou etudiant evaluateur)',
+  })
+  async modifier(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateEvaluationDto,
+  ) {
+    return this.evaluationsService.modifier(id, user.id, dto);
   }
 
   @Public()

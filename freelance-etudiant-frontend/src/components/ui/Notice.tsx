@@ -37,28 +37,109 @@ export function StampBadge({
   );
 }
 
+export type ToneTag = "ink" | "ocre" | "rice" | "brique" | "bleu";
+
 export function Tag({
   children,
   tone = "ink",
+  className,
 }: {
   children: ReactNode;
-  tone?: "ink" | "ocre" | "rice" | "brique";
+  tone?: ToneTag;
+  className?: string;
 }) {
-  const tones: Record<string, string> = {
+  const tones: Record<ToneTag, string> = {
     ink: "border-ink/30 text-ink",
     ocre: "border-ocre-dark/50 text-ocre-dark bg-ocre/10",
     rice: "border-rice/50 text-rice bg-rice/10",
     brique: "border-brique/50 text-brique bg-brique/10",
+    bleu: "border-bleu-dark/40 text-bleu-dark bg-bleu-soft",
   };
   return (
     <span
       className={clsx(
         "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-mono uppercase tracking-wide",
         tones[tone],
+        className,
       )}
     >
       {children}
     </span>
+  );
+}
+
+/*
+ * ============================================================
+ * BADGES DE STATUT — source unique pour toute l'application
+ * ============================================================
+ */
+
+/**
+ * Correspondance statut métier -> ton visuel du badge.
+ * Aucune statut n'est créée ici : uniquement la mise en forme des
+ * statuts déjà définis par le backend (types.ts / format.ts).
+ *
+ * Convention Kianja :
+ * - attente / neutre        -> "ocre"
+ * - positif / en cours      -> "rice"
+ * - négatif / erreur        -> "brique"
+ * - ouvert / disponible     -> "bleu" (interaction disponible)
+ * - terminé / archivé       -> "ink"
+ */
+const TONS_PAR_STATUT: Record<string, ToneTag> = {
+  // --- Missions ---
+  ouverte: "bleu",
+  en_cours: "rice",
+  terminee: "ink",
+  fermee: "ink",
+  expiree: "brique",
+
+  // --- Candidatures / demandes de service / invitations ---
+  en_attente: "ocre",
+  acceptee: "rice",
+  refusee: "brique",
+
+  // --- Livraisons ---
+  validee: "rice",
+  correction_demandee: "brique",
+
+  // --- Transactions / paiements ---
+  confirmee: "rice",
+  liberee: "rice",
+  annulee: "brique",
+
+  // --- Services ---
+  disponible: "bleu",
+
+  // --- Signalements (admin) ---
+  ouvert: "bleu",
+  traite: "rice",
+};
+
+export function toneStatut(statut: string): ToneTag {
+  return TONS_PAR_STATUT[statut] ?? "ink";
+}
+
+/**
+ * Badge de statut standard : ton automatique selon le statut métier
+ * (toneStatut) + libellé français issu des cartes de format.ts.
+ * Réutilisée par missions, services, candidatures, livraisons,
+ * paiements, évaluations, groupes… pour une mise en forme homogène.
+ */
+export function BadgeStatut({
+  statut,
+  labels,
+  className,
+}: {
+  statut: string;
+  /** Carte de libellés (ex. statutCandidatureLabel). */
+  labels: Record<string, string>;
+  className?: string;
+}) {
+  return (
+    <Tag tone={toneStatut(statut)} className={className}>
+      {labels[statut] ?? statut}
+    </Tag>
   );
 }
 

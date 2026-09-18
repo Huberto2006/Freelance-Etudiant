@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { ReactionContenu, TypeReactionContenu } from './entities/reaction-contenu.entity';
 import { ReagirDto } from './dto/reagir.dto';
 import { TypeCibleContenu } from '../../common/enums/type-cible-contenu.enum';
+import { VerificationCibleService } from '../../common/services/verification-cible.service';
 import { MissionsService } from '../missions/missions.service';
 import { ServicesService } from '../services/services.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -23,6 +24,7 @@ export class ReactionsContenuService {
     private readonly missionsService: MissionsService,
     private readonly servicesService: ServicesService,
     private readonly notificationsService: NotificationsService,
+    private readonly verificationCibleService: VerificationCibleService,
   ) {}
 
   private async resoudreProprietaire(
@@ -52,6 +54,13 @@ export class ReactionsContenuService {
     });
 
     if (!existante) {
+      // RG-068 (CREATE) : verifier AVANT ecriture que la cible existe
+      // reellement (mission ou service) et que le type est autorise.
+      await this.verificationCibleService.assertCibleExistante(
+        dto.cibleType,
+        dto.cibleId,
+      );
+
       await this.repo.save(
         this.repo.create({
           auteurId,
@@ -78,6 +87,13 @@ export class ReactionsContenuService {
     } else if (existante.type === dto.type) {
       await this.repo.remove(existante);
     } else {
+      // RG-068 (UPDATE) : la reaction reste attachee a la meme cible ;
+      // on verifie a nouveau son existence avant de changer le type.
+      await this.verificationCibleService.assertCibleExistante(
+        dto.cibleType,
+        dto.cibleId,
+      );
+
       existante.type = dto.type;
       await this.repo.save(existante);
     }

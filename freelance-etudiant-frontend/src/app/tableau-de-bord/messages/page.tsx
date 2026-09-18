@@ -1319,7 +1319,7 @@ function MessagesContent() {
      ========================================================= */
 
   return (
-    <div className="flex h-[calc(100dvh-8rem)] min-h-[560px] flex-col md:h-[calc(100dvh-9rem)]">
+    <div className="flex h-[calc(100dvh-8rem)] min-h-[560px] flex-col overflow-hidden md:h-[calc(100dvh-9rem)]">
       {/* =====================================================
           ERREUR GLOBALE
           ===================================================== */}

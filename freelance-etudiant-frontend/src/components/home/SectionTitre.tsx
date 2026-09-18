@@ -58,10 +58,10 @@ export function SectionTitre({
       {lienHref && lienLabel && (
         <Link
           href={lienHref}
-          className="inline-flex items-center gap-1 text-sm font-medium text-ocre-dark transition-colors hover:text-ocre"
+          className="inline-flex items-center gap-1 font-mono text-xs font-semibold text-bleu-dark transition-colors hover:text-bleu"
         >
           {lienLabel}
-          <ChevronRight size={15} aria-hidden="true" />
+          <ChevronRight size={14} aria-hidden="true" />
         </Link>
       )}
     </div>

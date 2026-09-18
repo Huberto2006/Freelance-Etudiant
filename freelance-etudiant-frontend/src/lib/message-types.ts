@@ -5,6 +5,7 @@ export interface MessageAvecUtilisateurs {
   contenu: string;
   expediteurId: string;
   destinataireId: string;
+  groupeId?: string | null;
   /**
    * Le backend sérialise l'entité Utilisateur complète (relations
    * expediteur/destinataire de Message) : le typage documente ici les

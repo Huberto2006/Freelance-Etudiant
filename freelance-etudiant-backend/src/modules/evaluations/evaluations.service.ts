@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
@@ -66,25 +67,14 @@ export class EvaluationsService {
     // backend : un appel direct a l'API est bloque si le paiement
     // n'est pas confirme.
     // ============================================================
-    const paiement = await this.transactionsRepo.findOne({
-      where: [
-        {
-          candidatureId: livraison.candidatureId,
-          statut: StatutTransaction.CONFIRMEE,
-        },
-        {
-          candidatureId: livraison.candidatureId,
-          statut: StatutTransaction.LIBEREE,
-        },
-      ],
-    });
-    if (!paiement) {
-      throw new BadRequestException(
-        "Vous devez d'abord effectuer le paiement avant d'évaluer le projet.",
-      );
-    }
+    await this.assertPaiementConfirme(livraison.candidatureId);
 
-    const existante = await this.repo.findOne({ where: { livraisonId } });
+    // RG-037 / RG-066 : une seule evaluation PAR AUTEUR et par livraison
+    // (la livraison peut porter deux evaluations : client -> etudiant
+    // et etudiant -> client).
+    const existante = await this.repo.findOne({
+      where: { livraisonId, evaluateurId },
+    });
     if (existante) {
       throw new ConflictException('Cette livraison a deja ete evaluee');
     }
@@ -154,10 +144,136 @@ export class EvaluationsService {
     return saved;
   }
 
+  /**
+   * ========================================================
+   * RG-066 : EVALUATION DU CLIENT PAR L'ETUDIANT
+   * ========================================================
+   *
+   * Parcours inverse de create() : l'etudiant evalue le client
+   * d'une mission qu'il a reellement realisee. Conditions
+   * alignees sur le parcours existant :
+   *   - l'etudiant a participe : la livraison appartient a SA
+   *     candidature acceptee ;
+   *   - la livraison est validee ;
+   *   - le paiement est CONFIRMEE ou LIBEREE ;
+   *   - une seule evaluation PAR AUTEUR et par livraison
+   *     (RG-037, contrainte UNIQUE(livraison_id, evaluateur_id)).
+   *
+   * Pas de cloture de mission ici : le passage a TERMINEE reste
+   * porte par l'evaluation du client (evenement de fin de projet).
+   * Pas de recalcul de reputation non plus : la reputation
+   * concerne les etudiants uniquement.
+   */
+  async creerParEtudiant(
+    livraisonId: string,
+    etudiantId: string,
+    dto: CreateEvaluationDto,
+  ): Promise<Evaluation> {
+    const livraison = await this.livraisonsService.findOne(livraisonId);
+
+    if (livraison.candidature.etudiantId !== etudiantId) {
+      throw new ForbiddenException(
+        "Seul l'etudiant de cette candidature peut evaluer le client",
+      );
+    }
+
+    this.livraisonsService.assertLivraisonValidee(livraison);
+    await this.assertPaiementConfirme(livraison.candidatureId);
+
+    const existante = await this.repo.findOne({
+      where: { livraisonId, evaluateurId: etudiantId },
+    });
+    if (existante) {
+      throw new ConflictException(
+        'Vous avez deja evalue ce client pour cette livraison',
+      );
+    }
+
+    const evaluation = this.repo.create({
+      ...dto,
+      livraisonId,
+      evaluateurId: etudiantId,
+      evalueId: livraison.candidature.mission.clientId,
+    });
+
+    // Filet de securite si deux requetes simultanees passent la
+    // verification ci-dessus : la contrainte UNIQUE(livraison_id,
+    // evaluateur_id) rejette la seconde ecriture.
+    let saved: Evaluation;
+    try {
+      saved = await this.repo.save(evaluation);
+    } catch (error) {
+      if (
+        error instanceof QueryFailedError &&
+        (error as unknown as { code?: string }).code === '23505'
+      ) {
+        throw new ConflictException(
+          'Vous avez deja evalue ce client pour cette livraison',
+        );
+      }
+      throw error;
+    }
+
+    await this.notificationsService.creer({
+      destinataireId: livraison.candidature.mission.clientId,
+      type: TypeNotification.NOUVELLE_EVALUATION,
+      titre: 'Nouvelle évaluation',
+      message: `Un étudiant vous a laissé une note de ${dto.note}/5 pour "${livraison.candidature.mission.titre}".`,
+      lienUrl: '/tableau-de-bord/livraisons',
+    });
+
+    return saved;
+  }
+
+  /**
+   * Verification partagee : le paiement lie a la candidature doit etre
+   * CONFIRMEE ou LIBEREE avant toute evaluation (client -> etudiant ou
+   * etudiant -> client).
+   */
+  private async assertPaiementConfirme(candidatureId: string): Promise<void> {
+    const paiement = await this.transactionsRepo.findOne({
+      where: [
+        {
+          candidatureId,
+          statut: StatutTransaction.CONFIRMEE,
+        },
+        {
+          candidatureId,
+          statut: StatutTransaction.LIBEREE,
+        },
+      ],
+    });
+    if (!paiement) {
+      throw new BadRequestException(
+        "Vous devez d'abord effectuer le paiement avant d'évaluer le projet.",
+      );
+    }
+  }
+
   async findByEtudiant(etudiantId: string): Promise<Evaluation[]> {
     return this.repo.find({
       where: { evalueId: etudiantId },
       order: { dateEvaluation: 'DESC' },
     });
+  }
+
+  async modifier(
+    id: string,
+    evaluateurId: string,
+    dto: CreateEvaluationDto,
+  ): Promise<Evaluation> {
+    const evaluation = await this.repo.findOne({ where: { id } });
+    if (!evaluation) {
+      throw new NotFoundException('Evaluation introuvable');
+    }
+    if (evaluation.evaluateurId !== evaluateurId) {
+      throw new ForbiddenException(
+        'Vous ne pouvez modifier que vos propres evaluations',
+      );
+    }
+
+    evaluation.note = dto.note;
+    evaluation.commentaire = dto.commentaire;
+    return this.repo.save(evaluation);
   }
 }
