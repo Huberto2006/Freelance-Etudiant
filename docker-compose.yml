@@ -46,6 +46,8 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-2d}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET requis dans .env}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?ADMIN_EMAIL requis dans .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD requis dans .env}
       FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL requis dans .env}
       CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN requis dans .env}
       SMTP_HOST: ${SMTP_HOST:-}
@@ -124,3 +126,8 @@ services:
 volumes:
   postgres_data:
   uploads_data:
+
+networks:
+  default:
+    name: kianja_net
+    external: true

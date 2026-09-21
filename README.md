@@ -52,6 +52,8 @@ Sur le serveur, depuis la racine du projet :
 cd /opt/kianja
 chmod 600 .env
 docker compose version
+docker network inspect kianja_net >/dev/null 2>&1 || \
+  docker network create --subnet=10.232.0.0/16 kianja_net
 sudo ss -ltnp 'sport = :3210'
 docker compose config --quiet
 docker compose up -d --build --wait --wait-timeout 240
@@ -59,6 +61,10 @@ docker compose ps
 curl --fail http://127.0.0.1:3210/healthz
 curl --fail -I http://127.0.0.1:3210/
 ```
+
+Tous les services Compose utilisent le réseau Docker externe `kianja_net`.
+Comme il est déclaré `external`, Compose le réutilise mais ne le crée et ne le
+supprime pas.
 
 Si le port 3210 a été pris entre-temps, choisir un autre port libre dans
 `APP_HTTP_PORT` **et** dans le `proxy_pass` de
@@ -70,6 +76,16 @@ Ne pas copier le `.env` dans les sous-projets : Compose injecte les variables
 nécessaires à chaque service. Les fichiers `.env` et les uploads locaux sont
 exclus des images. Sur une nouvelle base, le catalogue sera vide : aucun compte
 de démonstration ni administrateur avec mot de passe public n'est créé.
+
+Le seeder est volontairement manuel. Après le premier déploiement, créer ou
+réinitialiser le compte administrateur avec les valeurs `ADMIN_EMAIL` et
+`ADMIN_PASSWORD` du `.env` :
+
+```bash
+docker compose run --rm backend node dist/database/seeds/run-seed.js
+```
+
+Cette commande crée aussi les données et comptes de démonstration du seeder.
 
 ## Configurer les emails et MVola
 
