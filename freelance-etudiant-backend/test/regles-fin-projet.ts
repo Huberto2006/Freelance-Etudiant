@@ -44,6 +44,7 @@ import type { ReputationService } from '../src/modules/reputation/reputation.ser
 import type { EmailService } from '../src/modules/email/email.service';
 import type { UsersService } from '../src/modules/users/users.service';
 import type { MvolaService } from '../src/modules/paiements/mvola.service';
+import type { MoyensPaiementService } from '../src/modules/moyens-paiement/moyens-paiement.service';
 
 import { StatutCandidature } from '../src/common/enums/statut-candidature.enum';
 import { StatutLivraison } from '../src/common/enums/statut-livraison.enum';
@@ -361,12 +362,18 @@ const mvolaFaux = {
   verifierStatut: async () => 'completed',
 } as unknown as MvolaService;
 
+// Aucun moyen de paiement dans ce scenario : le service doit tolerer
+// une dependance inactive (aucun snapshot n'est alors copie).
+const moyensPaiementFaux = {} as unknown as MoyensPaiementService;
+
 const missionsService = new MissionsService(
   depotMissions as unknown as Repository<Mission>,
 );
 
 const candidaturesService = new CandidaturesService(
   depotCandidatures as unknown as Repository<Candidature>,
+  null as unknown as any,
+  null as unknown as any,
   null as unknown as any,
   missionsService,
   notificationsFaux,
@@ -380,6 +387,7 @@ const paiementsService = new PaiementsService(
   mvolaFaux,
   emailFaux,
   usersFaux,
+  moyensPaiementFaux,
 );
 
 const livraisonsService = new LivraisonsService(

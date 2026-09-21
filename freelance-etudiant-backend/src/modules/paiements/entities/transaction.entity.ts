@@ -9,10 +9,12 @@ import {
 } from 'typeorm';
 import { Candidature } from '../../candidatures/entities/candidature.entity';
 import { Utilisateur } from '../../users/entities/utilisateur.entity';
+import { MoyenPaiement } from '../../moyens-paiement/entities/moyen-paiement.entity';
 import {
   MethodePaiement,
   StatutTransaction,
 } from '../../../common/enums/statut-transaction.enum';
+import { TypeMoyenPaiement } from '../../moyens-paiement/enums/type-moyen-paiement.enum';
 
 /**
  * Table Transaction : modelise un paiement de mission via mobile money
@@ -108,6 +110,64 @@ export class Transaction {
 
   @CreateDateColumn({ name: 'date_creation', type: 'timestamptz' })
   dateCreation: Date;
+
+  // ============================================================
+  // SNAPSHOT DES COORDONNEES UTILISEES AU MOMENT DU PAIEMENT
+  // (RG-PAY) : copie figee du moyen de paiement de l'etudiant
+  // beneficiaire. Si l'etudiant modifie ensuite son numero, les
+  // paiements PASSES continuent d'afficher les coordonnees d'ORIGINE.
+  // Colonnes nulles : retro-compatibilite des transactions
+  // anterieures a cette fonctionnalite.
+  // ============================================================
+
+  /** Moyen de paiement choisi lors de la creation (trace facultative). */
+  @ManyToOne(() => MoyenPaiement, { onDelete: 'RESTRICT', nullable: true })
+  @JoinColumn({ name: 'moyen_paiement_id' })
+  moyenPaiement?: MoyenPaiement | null;
+
+  @Column({ name: 'moyen_paiement_id', type: 'uuid', nullable: true })
+  moyenPaiementId?: string | null;
+
+  @Column({
+    name: 'type_moyen_paiement',
+    type: 'enum',
+    enum: TypeMoyenPaiement,
+    enumName: 'moyens_paiement_type_enum',
+    nullable: true,
+  })
+  typeMoyenPaiement?: TypeMoyenPaiement | null;
+
+  @Column({
+    name: 'operateur_paiement',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
+  operateurPaiement?: string | null;
+
+  @Column({
+    name: 'nom_banque_paiement',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  nomBanquePaiement?: string | null;
+
+  @Column({
+    name: 'numero_paiement',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
+  numeroPaiement?: string | null;
+
+  @Column({
+    name: 'nom_titulaire_paiement',
+    type: 'varchar',
+    length: 150,
+    nullable: true,
+  })
+  nomTitulairePaiement?: string | null;
 
   @Column({ name: 'date_confirmation', type: 'timestamptz', nullable: true })
   dateConfirmation?: Date;

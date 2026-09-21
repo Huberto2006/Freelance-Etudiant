@@ -23,7 +23,6 @@ import { useEffect, useState } from "react";
 
 import {
   useAuth,
-  roleLabel,
 } from "@/lib/auth-context";
 
 import {
@@ -67,8 +66,9 @@ const ICONS: Record<
 
   Paiements: Wallet,
   "Mes paiements": Wallet,
+  "Moyens de paiement": Wallet,
 
-  Évaluations: Star,
+  "Évaluations": Star,
   Evaluations: Star,
   "Mes évaluations": Star,
 
@@ -250,7 +250,8 @@ export function Sidebar({
 
   const parametres =
     autresItems.find(
-      (item) => item.label === "Paramètres",
+      (item) =>
+        item.label === "Paramètres",
     );
 
   /*
@@ -679,12 +680,12 @@ export function Sidebar({
               <span className="block text-base font-semibold tracking-tight">
                 Kianja
               </span>
+
               <span className="block text-[9px] text-white/55">
                 Freelances étudiants
               </span>
             </span>
           )}
-
         </Link>
 
         {/* Bouton réduire */}
@@ -732,8 +733,6 @@ export function Sidebar({
           py-4
         "
       >
-        {/* Principal */}
-
         {renderSection(
           "PRINCIPAL",
           principal,
@@ -748,14 +747,10 @@ export function Sidebar({
           trouver,
         )}
 
-        {/* Mon activité */}
-
         {renderSection(
           "MON ACTIVITÉ",
           activite,
         )}
-
-        {/* Communauté */}
 
         {renderSection(
           "COMMUNAUTÉ",
@@ -767,7 +762,6 @@ export function Sidebar({
             {renderItem(parametres)}
           </div>
         )}
-
       </nav>
 
       {/* =====================================================
@@ -856,6 +850,7 @@ export function Sidebar({
               <span className="block truncate">
                 Mon profil
               </span>
+
               <span className="block truncate text-[10px] font-normal text-white/50">
                 {utilisateur.nom}
               </span>

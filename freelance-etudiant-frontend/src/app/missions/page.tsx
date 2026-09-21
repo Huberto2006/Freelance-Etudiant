@@ -178,10 +178,12 @@ function MissionsContent() {
     const nouvelOnglet = ongletDepuisUrl(searchParams);
     const nouveauxFiltres = filtresDepuisUrl(searchParams);
 
-    setOnglet(nouvelOnglet);
-    setFiltresAvances(nouveauxFiltres);
-
     const timer = window.setTimeout(() => {
+      // setState différé d'un tick (react-hooks/set-state-in-effect) :
+      // la synchronisation URL -> etat n'appartient pas au corps synchrone
+      // de l'effet.
+      setOnglet(nouvelOnglet);
+      setFiltresAvances(nouveauxFiltres);
       rechercher(nouvelOnglet, nouveauxFiltres);
     }, 0);
 

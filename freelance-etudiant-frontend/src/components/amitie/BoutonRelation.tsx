@@ -46,7 +46,10 @@ export function BoutonRelation({
   const { utilisateur } = useAuth();
 
   const [relations, setRelations] = useState<RelationsAmitie | null>(null);
-  const [chargement, setChargement] = useState(false);
+  // En mode autonome (statut non fourni), le chargement demarre a true :
+  // l'effet de chargement n'a alors pas besoin d'un setState synchrone
+  // (react-hooks/set-state-in-effect) ; il est remis a false dans finally.
+  const [chargement, setChargement] = useState(statut === undefined);
   const [actionEnCours, setActionEnCours] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 
@@ -67,8 +70,6 @@ export function BoutonRelation({
     }
 
     let annule = false;
-
-    setChargement(true);
 
     chargerRelationsAmitie()
       .then((donnees) => {

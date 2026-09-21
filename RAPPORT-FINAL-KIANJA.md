@@ -381,3 +381,150 @@ vérification s'est donc faite par analyse de code + builds, cf. § Tests).
 Synthèse : **63 CONFIRMÉES · 2 PARTIELLEMENT IMPLÉMENTÉES (RG-064, RG-065) ·
 1 NON IMPLÉMENTÉE (RG-063) · 3 points en [DÉCISION MÉTIER NÉCESSAIRE]**
 (RG-063 limite de membres, RG-064 expiration, RG-065 suppression).
+
+---
+
+## Fichiers modifiés
+
+Backend (`freelance-etudiant-backend`) :
+
+- `src/common/enums/statut-invitation-groupe.enum.ts` — statut `ANNULEE` (RG-064)
+- `src/modules/groupes/groupes.controller.ts` — RG-060/061/062/064
+- `src/modules/groupes/groupes.service.ts` — RG-060 (findOne), RG-061/062/064
+- `src/modules/candidatures/candidatures.controller.ts` — RG-067 (PATCH/DELETE)
+- `src/modules/candidatures/candidatures.service.ts` — RG-067 (modifier/annuler,
+  transitions conditionnelles, garde groupe/chef)
+- `src/modules/evaluations/evaluations.controller.ts` — RG-065/066 (PATCH 2 rôles,
+  POST evaluation-client)
+- `src/modules/evaluations/evaluations.service.ts` — RG-065 (modifier),
+  RG-066 (creerParEtudiant, assertPaiementConfirme partagé)
+- `src/modules/evaluations/entities/evaluation.entity.ts` — index composite
+- `src/common/services/verification-cible.service.ts` — **nouveau** (RG-068)
+- `src/common/common.module.ts` — **nouveau** (RG-068)
+- `src/modules/commentaires/commentaires.module.ts`, `commentaires.service.ts` — RG-068
+- `src/modules/reactions-contenu/reactions-contenu.module.ts`,
+  `reactions-contenu.service.ts` — RG-068
+- `src/modules/favoris/favoris.module.ts`, `favoris.service.ts` — RG-068
+- `src/database/migrations/1801000000000-AddCancelledGroupInvitationStatus.ts` — **nouveau**
+- `src/database/migrations/1802000000000-EvaluationBidirectionnelle.ts` — **nouveau**
+
+Frontend (`freelance-etudiant-frontend`) :
+
+- `src/app/tableau-de-bord/livraisons/page.tsx` — RG-065 (édition pour les deux
+  rôles ; un bloc d'évaluation mal inséré cassait `tsc`, il a été rétabli au
+  bon endroit), RG-066 (bloc « Évaluer le client », paiements reçus)
+- `src/app/publications/page.tsx` — **nouveau** (RG-054)
+- `src/app/tableau-de-bord/mes-publications/page.tsx` — **nouveau** (RG-054)
+- `src/app/tableau-de-bord/groupes/[id]/page.tsx` — RG-061/062/064 UI
+- `src/app/tableau-de-bord/groupes/invitations/[id]/page.tsx` — **nouveau** (RG-064)
+- `src/app/tableau-de-bord/groupes/page.tsx`,
+  `src/app/tableau-de-bord/candidatures/page.tsx` — RG-067 UI
+- `src/components/groupes/DiscussionGroupe.tsx` — **nouveau** (réutilise Socket.IO existant)
+- `src/lib/nav-links.ts`, `src/lib/format.ts`, `src/lib/types.ts` — liens/labels/types
+- `src/components/layout/NavbarPublique.tsx`, `Navbar.tsx`, `Footer.tsx` — liens Publications
+- `src/components/ui/CarteMission.tsx`, `CarteService.tsx` — réutilisés dans /publications
+
+(Des ajustements d'identité visuelle Kianja effectués en début de mission sur
+les pages auth/accueil sont également présents dans le dépôt de travail :
+aucune modification structurelle.)
+
+---
+
+## Migrations créées
+
+| Migration | Justification |
+|-----------|---------------|
+| `1801000000000-AddCancelledGroupInvitationStatus` | RG-064 : ajoute la valeur `'annulee'` au type enum PostgreSQL `invitations_groupes_statut_enum` (irréversible : PostgreSQL ne permet pas de retirer une valeur d'enum) |
+| `1802000000000-EvaluationBidirectionnelle` | RG-066 : remplace `UNIQUE(livraison_id)` par `UNIQUE(livraison_id, evaluateur_id)` — RG-037 préservé par auteur, parcours inverse rendu possible |
+
+Exécution : `npm run migration:run` (aucune exécution automatique ;
+`synchronize: false` partout — le glob `src/database/migrations/*` charge
+automatiquement les deux nouveaux fichiers).
+
+---
+
+## Routes/API ajoutées ou modifiées
+
+| Méthode + route | Règle | Modification |
+|-----------------|-------|--------------|
+| `GET /groupes/:id` | RG-060 | comportement durci : 403 si non membre (route inchangée) |
+| `POST /groupes/:id/quitter` | RG-061 | ajoutée |
+| `DELETE /groupes/:id/membres/:etudiantId` | RG-062 | ajoutée |
+| `PATCH /groupes/:id/chef` | RG-062 | ajoutée |
+| `GET /groupes/:id/invitations` | RG-064 | ajoutée (chef) |
+| `GET /groupes/invitations/:invitationId` | RG-064 | ajoutée (destinataire) |
+| `DELETE /groupes/invitations/:invitationId` | RG-064 | ajoutée (chef, EN_ATTENTE uniquement) |
+| `POST /groupes/invitations/:id/accepter` · `/refuser` | RG-064 | inchangées (statuts contrôlés) |
+| `PATCH /candidatures/:id` | RG-067 | ajoutée (propriétaire, EN_ATTENTE, date limite re-vérifiée) |
+| `DELETE /candidatures/:id` | RG-067 | ajoutée (propriétaire, EN_ATTENTE) |
+| `PATCH /evaluations/:id` | RG-065 | modifiée : rôles CLIENT + ETUDIANT (propriété inchangée) |
+| `POST /livraisons/:livraisonId/evaluation-client` | RG-066 | ajoutée (étudiant) |
+| `POST /commentaires`, `POST /reactions-contenu`, `POST /favoris` | RG-068 | surface inchangée, validation de cible ajoutée en amont |
+
+---
+
+## Tests effectués
+
+| Commande | Résultat |
+|----------|----------|
+| Backend `npm run build` (nest build) | ✅ 0 erreur |
+| Frontend `npx tsc --noEmit` | ✅ 0 erreur (après correction d'un bloc d'évaluation mal inséré qui faisait échouer la compilation) |
+| Frontend `npm run lint` (eslint) | ✅ 0 erreur, 7 avertissements préexistants (`<img>` next/image, variables inutilisées, deps useMemo) — non bloquants |
+| Frontend `npm run build` (next build) | ✅ succès — `/publications` et `/tableau-de-bord/mes-publications` compilées |
+
+Corrections de lint réalisées pour atteindre 0 erreur (5 erreurs
+`react-hooks/set-state-in-effect` préexistantes dans des pages produites
+durant cette mission) :
+
+- `missions/page.tsx` et `services/page.tsx` : synchronisation URL → état
+  différée d'un tick (dans le `setTimeout` déjà présent) ;
+- `mes-services/page.tsx` : réinitialisation du formulaire par ajustement
+  d'état pendant le rendu (clé `serviceId`, pattern officiel react.dev) et
+  chargement différé d'un tick ;
+- `components/amitie/BoutonRelation.tsx` : état `chargement` initialisé à
+  `true` en mode autonome, plus de setState synchrone dans l'effet.
+
+Tests automatisés backend : **aucune infrastructure de tests n'existe dans le
+projet** (aucun `*.spec.ts`, aucun runner configuré dans `package.json`).
+Conformément à la consigne (« ajouter/adapter les tests si une infrastructure
+de test existe »), aucune suite n'a été créée de toutes pièces ; la
+vérification s'est faite par analyse du code réel et par les builds. La mise
+en place d'une infrastructure (Jest) reste à décider avec l'équipe.
+
+Vérifications de parcours (analyse statique ciblée) : RG-060 (findOne +
+contournements via messagerie/invitations), RG-061/062/064 (transitions de
+statut), RG-067 (courses concurrentes via UPDATE/DELETE conditionnels),
+RG-066 (chaîne livraison → candidature → paiement → anti-doublon DB),
+RG-068 (les 3 modules), RG-054 (endpoints publics + pages).
+
+---
+
+## Règles encore non implémentées
+
+- **RG-063** — limite maximale de membres d'un groupe : aucune valeur métier
+  n'existe dans le projet ; non implémentée volontairement.
+- **RG-064 (expiration automatique)** — aucune durée métier n'existe ; seule
+  l'annulation par le chef est implémentée.
+- **RG-065 (suppression d'une évaluation)** — non implémentée : contredirait
+  RG-007 (« enregistrement de confiance permanent », relations RESTRICT).
+
+Tout le reste (65 des 68 règles, y compris les parties confirmées de RG-064
+et RG-065) est implémenté avec garantie backend.
+
+---
+
+## Décisions métier encore nécessaires
+
+1. **[DÉCISION MÉTIER NÉCESSAIRE] RG-063** — nombre maximal de membres d'un
+   groupe (aucune valeur dans le code, les constantes ou le cahier des
+   charges). Une fois décidée, elle s'ajoute à un seul point :
+   `GroupesService.inviter()`.
+2. **[DÉCISION MÉTIER NÉCESSAIRE] RG-064** — durée d'expiration automatique
+   des invitations (si retenue : s'inspirer du cron existant
+   `ExpirationMissionsService` + nouveau statut `EXPIREE`).
+3. **[DÉCISION MÉTIER NÉCESSAIRE] RG-065** — autoriser ou non la suppression
+   d'une évaluation, en conflit potentiel avec RG-007 (permanence). Si oui :
+   suppression logique à définir (aucun pattern `deletedAt` n'existe dans ce
+   module).
+
+FIN DU RAPPORT.

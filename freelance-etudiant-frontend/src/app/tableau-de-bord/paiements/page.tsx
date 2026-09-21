@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Wallet, X } from "lucide-react";
+import {
+  Wallet,
+  X,
+  Copy,
+  Check,
+  Smartphone,
+  Building2,
+} from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
@@ -44,6 +51,57 @@ const toneParStatut: Record<
 };
 
 // ============================================================
+// TYPES MOYENS DE PAIEMENT
+// ============================================================
+
+type TypeMoyenPaiement =
+  | "MVOLA"
+  | "ORANGE_MONEY"
+  | "AIRTEL_MONEY"
+  | "BANQUE";
+
+type MoyenPaiement = {
+  id: string;
+  type: TypeMoyenPaiement;
+  operateur: string | null;
+  nomBanque: string | null;
+  numero: string;
+  nomTitulaire: string;
+  principal: boolean;
+  actif: boolean;
+};
+
+// ============================================================
+// LIBELLES DES MOYENS DE PAIEMENT
+// ============================================================
+
+const typeMoyenPaiementLabel: Record<
+  TypeMoyenPaiement,
+  string
+> = {
+  MVOLA: "MVola",
+  ORANGE_MONEY: "Orange Money",
+  AIRTEL_MONEY: "Airtel Money",
+  BANQUE: "Compte bancaire",
+};
+
+// ============================================================
+// ICONE D'UN MOYEN DE PAIEMENT
+// ============================================================
+
+function IconeMoyenPaiement({
+  type,
+}: {
+  type: TypeMoyenPaiement;
+}) {
+  if (type === "BANQUE") {
+    return <Building2 size={18} />;
+  }
+
+  return <Smartphone size={18} />;
+}
+
+// ============================================================
 // CARTE D'UNE TRANSACTION
 // ============================================================
 
@@ -56,12 +114,13 @@ function CarteTransaction({
 }) {
   const [verification, setVerification] =
     useState(false);
+
   const [messageVerification, setMessageVerification] =
     useState<string | null>(null);
 
-  // Paiement en ligne MVola encore en attente : le statut reel est
-  // verifie par le BACKEND aupres du fournisseur (jamais par le
-  // frontend, qui ne fait que demander la verification).
+  // Paiement MVola encore en attente :
+  // le frontend demande au backend de vérifier le statut réel
+  // auprès du fournisseur.
   const verifiable =
     transaction.provider === "mvola" &&
     transaction.statut === "en_attente" &&
@@ -69,12 +128,15 @@ function CarteTransaction({
 
   async function verifier() {
     if (!onVerifie) return;
+
     setVerification(true);
     setMessageVerification(null);
+
     try {
       const maj = await api.post<Transaction>(
         `/paiements/${transaction.id}/verifier`,
       );
+
       setMessageVerification(
         maj.statut === "confirmee"
           ? "Paiement confirmé par MVola."
@@ -82,12 +144,13 @@ function CarteTransaction({
             ? "Paiement refusé par MVola."
             : "MVola n'a pas encore confirmé le paiement. Réessayez après avoir validé la demande USSD.",
       );
+
       onVerifie();
     } catch (err) {
       setMessageVerification(
         err instanceof ApiError
           ? err.message
-          : "Verification impossible pour le moment.",
+          : "Vérification impossible pour le moment.",
       );
     } finally {
       setVerification(false);
@@ -99,13 +162,16 @@ function CarteTransaction({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-display font-medium">
-            {transaction.candidature?.mission?.titre ?? "Mission"}
+            {transaction.candidature?.mission?.titre ??
+              "Mission"}
           </p>
 
           <p className="mt-0.5 font-mono text-xs text-ink-soft/70">
             {methodePaiementLabel[transaction.methode]} · réf.{" "}
             {transaction.reference}
-            {transaction.provider === "mvola" ? " · en ligne" : ""}
+            {transaction.provider === "mvola"
+              ? " · en ligne"
+              : ""}
           </p>
         </div>
 
@@ -147,6 +213,159 @@ function CarteTransaction({
 }
 
 // ============================================================
+// CARTE D'UN MOYEN DE PAIEMENT
+// ============================================================
+
+function CarteMoyenPaiement({
+  moyen,
+  selectionne,
+  onSelectionner,
+}: {
+  moyen: MoyenPaiement;
+  selectionne: boolean;
+  onSelectionner: () => void;
+}) {
+  const [copie, setCopie] = useState(false);
+
+  async function copierNumero(e: React.MouseEvent) {
+    e.stopPropagation();
+
+    try {
+      await navigator.clipboard.writeText(moyen.numero);
+
+      setCopie(true);
+
+      window.setTimeout(() => {
+        setCopie(false);
+      }, 1800);
+    } catch {
+      setCopie(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onSelectionner}
+      className={`
+        w-full rounded-xl border p-4 text-left
+        transition-all
+        ${
+          selectionne
+            ? "border-ocre bg-ocre/10 ring-1 ring-ocre/30"
+            : "border-ink/10 bg-paper-light hover:border-ink/20 hover:bg-paper"
+        }
+      `}
+    >
+      <div className="flex items-start gap-3">
+        <div
+          className={`
+            flex h-9 w-9 shrink-0 items-center justify-center
+            rounded-lg
+            ${
+              selectionne
+                ? "bg-ocre text-paper-light"
+                : "bg-ink/5 text-ink-soft"
+            }
+          `}
+        >
+          <IconeMoyenPaiement type={moyen.type} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="font-display font-medium">
+                {typeMoyenPaiementLabel[moyen.type]}
+              </p>
+
+              {moyen.type === "BANQUE" &&
+                moyen.nomBanque && (
+                  <p className="mt-0.5 text-xs text-ink-soft">
+                    {moyen.nomBanque}
+                  </p>
+                )}
+
+              {moyen.type !== "BANQUE" &&
+                moyen.operateur && (
+                  <p className="mt-0.5 text-xs text-ink-soft">
+                    {moyen.operateur}
+                  </p>
+                )}
+            </div>
+
+            {moyen.principal && (
+              <Tag tone="ocre">Principal</Tag>
+            )}
+          </div>
+
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="font-mono text-sm font-medium">
+                {moyen.numero}
+              </p>
+
+              <p className="mt-0.5 text-xs text-ink-soft">
+                Titulaire : {moyen.nomTitulaire}
+              </p>
+            </div>
+
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                void copierNumero(e);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+
+                  void navigator.clipboard
+                    .writeText(moyen.numero)
+                    .then(() => {
+                      setCopie(true);
+
+                      window.setTimeout(() => {
+                        setCopie(false);
+                      }, 1800);
+                    })
+                    .catch(() => {
+                      setCopie(false);
+                    });
+                }
+              }}
+              className="
+                inline-flex shrink-0 items-center gap-1.5
+                rounded-lg border border-ink/10
+                px-2.5 py-1.5
+                text-xs text-ink-soft
+                transition-colors
+                hover:bg-ink/5 hover:text-ink
+              "
+              aria-label={`Copier le numéro ${moyen.numero}`}
+            >
+              {copie ? (
+                <>
+                  <Check size={14} />
+                  Copié
+                </>
+              ) : (
+                <>
+                  <Copy size={14} />
+                  Copier
+                </>
+              )}
+            </span>
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// ============================================================
 // FORMULAIRE DE DÉCLARATION D'UN PAIEMENT
 // ============================================================
 
@@ -159,10 +378,8 @@ function FormulairePaiement({
   onEnvoye: () => void;
   onFermer: () => void;
 }) {
-  // Le montant n'est PAS modifiable : le prix convenu a l'acceptation de
-  // la candidature (prixPropose) est la source de verite, recalculee et
-  // appliquee par le backend. Un montant editable laisserait croire que
-  // le client peut payer un autre prix.
+  // Le montant n'est PAS modifiable.
+  // prixPropose reste la source de vérité côté backend.
   const montant = String(candidature.prixPropose);
 
   const [methode, setMethode] =
@@ -170,20 +387,126 @@ function FormulairePaiement({
 
   const [telephone, setTelephone] = useState("");
   const [reference, setReference] = useState("");
-  const [envoi, setEnvoi] = useState(false);
-  const [erreur, setErreur] = useState<string | null>(
-    null,
-  );
 
-  // MVola = paiement en ligne reel (le debit est demande via l'API
-  // MVola) ; virement = declaration manuelle verifiee par un admin.
+  const [
+    moyensPaiement,
+    setMoyensPaiement,
+  ] = useState<MoyenPaiement[]>([]);
+
+  const [
+    moyenPaiementId,
+    setMoyenPaiementId,
+  ] = useState("");
+
+  const [chargementMoyens, setChargementMoyens] =
+    useState(true);
+
+  const [
+    erreurMoyens,
+    setErreurMoyens,
+  ] = useState<string | null>(null);
+
+  const [envoi, setEnvoi] = useState(false);
+
+  const [erreur, setErreur] =
+    useState<string | null>(null);
+
+  // ==========================================================
+  // CHARGER LES MOYENS DE PAIEMENT
+  // ==========================================================
+
+  useEffect(() => {
+    let actif = true;
+
+    async function chargerMoyens() {
+      setChargementMoyens(true);
+      setErreurMoyens(null);
+      setMoyensPaiement([]);
+      setMoyenPaiementId("");
+
+      try {
+        const moyens = await api.get<MoyenPaiement[]>(
+          `/candidatures/${candidature.id}/moyens-paiement`,
+        );
+
+        if (!actif) return;
+
+        const moyensActifs = moyens.filter(
+          (moyen) => moyen.actif,
+        );
+
+        setMoyensPaiement(moyensActifs);
+
+        // Le principal est sélectionné automatiquement.
+        const principal =
+          moyensActifs.find(
+            (moyen) => moyen.principal,
+          ) ?? moyensActifs[0];
+
+        if (principal) {
+          setMoyenPaiementId(principal.id);
+        }
+      } catch (err) {
+        if (!actif) return;
+
+        setErreurMoyens(
+          err instanceof ApiError
+            ? err.message
+            : "Impossible de charger les moyens de paiement de l'étudiant.",
+        );
+      } finally {
+        if (actif) {
+          setChargementMoyens(false);
+        }
+      }
+    }
+
+    void chargerMoyens();
+
+    return () => {
+      actif = false;
+    };
+  }, [candidature.id]);
+
+  // ==========================================================
+  // MOYEN SÉLECTIONNÉ
+  // ==========================================================
+
+  const moyenSelectionne =
+    moyensPaiement.find(
+      (moyen) => moyen.id === moyenPaiementId,
+    ) ?? null;
+
+  // ==========================================================
+  // MÉTHODE DE PAIEMENT
+  // ==========================================================
+
   const paiementMvola = methode === "mvola";
+
+  // ==========================================================
+  // SOUMISSION
+  // ==========================================================
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    setEnvoi(true);
     setErreur(null);
+
+    if (!moyenPaiementId) {
+      setErreur(
+        "Sélectionnez le moyen de paiement de l'étudiant.",
+      );
+      return;
+    }
+
+    if (!moyenSelectionne) {
+      setErreur(
+        "Le moyen de paiement sélectionné n'est plus disponible.",
+      );
+      return;
+    }
+
+    setEnvoi(true);
 
     try {
       await api.post(
@@ -193,11 +516,13 @@ function FormulairePaiement({
               montant: Number(montant),
               methode,
               telephoneDebite: telephone,
+              moyenPaiementId,
             }
           : {
               montant: Number(montant),
               methode,
               reference,
+              moyenPaiementId,
             },
       );
 
@@ -213,8 +538,16 @@ function FormulairePaiement({
     }
   }
 
+  // ==========================================================
+  // AFFICHAGE
+  // ==========================================================
+
   return (
     <NoticeCard className="mb-4">
+      {/* ------------------------------------------------------
+          EN-TÊTE
+         ------------------------------------------------------ */}
+
       <div className="mb-3 flex items-center justify-between">
         <p className="font-display text-lg font-medium">
           Déclarer un paiement —{" "}
@@ -231,112 +564,278 @@ function FormulairePaiement({
         </button>
       </div>
 
+      {/* ------------------------------------------------------
+          MOYENS DE PAIEMENT DE L'ÉTUDIANT
+         ------------------------------------------------------ */}
+
+      <div className="mb-5">
+        <div className="mb-2">
+          <p className="font-display text-base font-medium">
+            Où effectuer le paiement ?
+          </p>
+
+          <p className="mt-0.5 text-xs text-ink-soft">
+            Sélectionnez le compte ou numéro de paiement
+            de l'étudiant.
+          </p>
+        </div>
+
+        {chargementMoyens && (
+          <div className="rounded-xl border border-ink/10 bg-paper-light p-4">
+            <p className="text-sm text-ink-soft">
+              Chargement des moyens de paiement…
+            </p>
+          </div>
+        )}
+
+        {!chargementMoyens &&
+          erreurMoyens && (
+            <div className="rounded-xl border border-brique/20 bg-brique/5 p-4">
+              <p className="text-sm text-brique">
+                {erreurMoyens}
+              </p>
+            </div>
+          )}
+
+        {!chargementMoyens &&
+          !erreurMoyens &&
+          moyensPaiement.length === 0 && (
+            <div className="rounded-xl border border-ocre/20 bg-ocre/5 p-4">
+              <p className="text-sm text-ink-soft">
+                Aucun moyen de paiement actif n'est
+                actuellement configuré par l'étudiant.
+              </p>
+
+              <p className="mt-1 text-xs text-ink-soft/70">
+                Le paiement ne peut pas être lancé tant
+                qu'un moyen de paiement n'est pas
+                disponible.
+              </p>
+            </div>
+          )}
+
+        {!chargementMoyens &&
+          !erreurMoyens &&
+          moyensPaiement.length > 0 && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {moyensPaiement.map((moyen) => (
+                <CarteMoyenPaiement
+                  key={moyen.id}
+                  moyen={moyen}
+                  selectionne={
+                    moyen.id === moyenPaiementId
+                  }
+                  onSelectionner={() =>
+                    setMoyenPaiementId(moyen.id)
+                  }
+                />
+              ))}
+            </div>
+          )}
+      </div>
+
+      {/* ------------------------------------------------------
+          EXPLICATION
+         ------------------------------------------------------ */}
+
       <p className="mb-4 text-sm text-ink-soft">
         {paiementMvola ? (
           <>
-            Payer en ligne via MVola : indiquez votre numero MVola,
-            une demande de confirmation vous sera envoyee par le
-            fournisseur. Le paiement est ensuite verifie par la
-            plateforme aupres de MVola.
+            Vous serez débité depuis votre numéro MVola.
+            Une demande de confirmation sera envoyée sur
+            votre téléphone. Le paiement sera ensuite
+            vérifié par la plateforme auprès de MVola.
           </>
         ) : (
           <>
-            Effectuez le virement bancaire vers le compte de la
-            plateforme, puis renseignez la reference ci-dessous pour
-            verification par un administrateur.
+            Effectuez le virement vers le compte bancaire
+            sélectionné ci-dessus, puis renseignez la
+            référence du transfert pour permettre sa
+            vérification par un administrateur.
           </>
         )}
       </p>
 
+      {/* ------------------------------------------------------
+          FORMULAIRE
+         ------------------------------------------------------ */}
+
       <form
         onSubmit={onSubmit}
-        className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end"
+        className="flex flex-col gap-4"
       >
-        <div className="w-full sm:w-40">
-          <Field label="Montant convenu (Ar)" htmlFor="montant">
-            {/* Lecture seule : le prix convenu a l'acceptation fait foi,
-                le backend refuserait tout autre montant. */}
-            <Input
-              id="montant"
-              type="number"
-              min={1}
-              required
-              readOnly
-              value={montant}
-            />
-          </Field>
-        </div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+          {/* MONTANT */}
 
-        <div className="w-full sm:w-48">
-          <Field label="Méthode" htmlFor="methode">
-            <Select
-              id="methode"
-              value={methode}
-              onChange={(e) =>
-                setMethode(
-                  e.target.value as MethodePaiement,
-                )
-              }
-            >
-              <option value="mvola">
-                MVola (paiement en ligne)
-              </option>
-              <option value="virement">
-                Virement bancaire
-              </option>
-              <option value="orange_money" disabled>
-                Orange Money (indisponible)
-              </option>
-              <option value="airtel_money" disabled>
-                Airtel Money (indisponible)
-              </option>
-            </Select>
-          </Field>
-        </div>
-
-        {paiementMvola ? (
-          <div className="w-full sm:w-56">
+          <div className="w-full sm:w-40">
             <Field
-              label="Numéro MVola"
-              htmlFor="telephone"
+              label="Montant convenu (Ar)"
+              htmlFor="montant"
             >
               <Input
-                id="telephone"
+                id="montant"
+                type="number"
+                min={1}
                 required
-                value={telephone}
-                onChange={(e) =>
-                  setTelephone(e.target.value)
-                }
-                placeholder="0341234567"
+                readOnly
+                value={montant}
               />
             </Field>
           </div>
-        ) : (
-          <div className="w-full sm:w-56">
+
+          {/* MÉTHODE */}
+
+          <div className="w-full sm:w-48">
             <Field
-              label="Référence du virement"
-              htmlFor="reference"
+              label="Méthode"
+              htmlFor="methode"
             >
-              <Input
-                id="reference"
-                required
-                value={reference}
+              <Select
+                id="methode"
+                value={methode}
                 onChange={(e) =>
-                  setReference(e.target.value)
+                  setMethode(
+                    e.target.value as MethodePaiement,
+                  )
                 }
-                placeholder="REF-123456"
-              />
+              >
+                <option value="mvola">
+                  MVola (paiement en ligne)
+                </option>
+
+                <option value="virement">
+                  Virement bancaire
+                </option>
+
+                <option
+                  value="orange_money"
+                  disabled
+                >
+                  Orange Money (indisponible)
+                </option>
+
+                <option
+                  value="airtel_money"
+                  disabled
+                >
+                  Airtel Money (indisponible)
+                </option>
+              </Select>
             </Field>
+          </div>
+
+          {/* NUMÉRO MVOLA DU CLIENT */}
+
+          {paiementMvola ? (
+            <div className="w-full sm:w-56">
+              <Field
+                label="Votre numéro MVola"
+                htmlFor="telephone"
+              >
+                <Input
+                  id="telephone"
+                  required
+                  value={telephone}
+                  onChange={(e) =>
+                    setTelephone(e.target.value)
+                  }
+                  placeholder="0341234567"
+                />
+              </Field>
+            </div>
+          ) : (
+            /* RÉFÉRENCE DU VIREMENT */
+
+            <div className="w-full sm:w-56">
+              <Field
+                label="Référence du virement"
+                htmlFor="reference"
+              >
+                <Input
+                  id="reference"
+                  required
+                  value={reference}
+                  onChange={(e) =>
+                    setReference(e.target.value)
+                  }
+                  placeholder="REF-123456"
+                />
+              </Field>
+            </div>
+          )}
+        </div>
+
+        {/* ----------------------------------------------------
+            RÉCAPITULATIF DU DESTINATAIRE
+           ---------------------------------------------------- */}
+
+        {moyenSelectionne && (
+          <div className="rounded-xl border border-ink/10 bg-ink/[0.025] p-4">
+            <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft/70">
+              Destinataire du paiement
+            </p>
+
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <div>
+                <p className="font-display font-medium">
+                  {typeMoyenPaiementLabel[
+                    moyenSelectionne.type
+                  ]}
+                  {moyenSelectionne.type ===
+                    "BANQUE" &&
+                  moyenSelectionne.nomBanque
+                    ? ` · ${moyenSelectionne.nomBanque}`
+                    : moyenSelectionne.operateur
+                      ? ` · ${moyenSelectionne.operateur}`
+                      : ""}
+                </p>
+
+                <p className="font-mono text-sm text-ink">
+                  {moyenSelectionne.numero}
+                </p>
+
+                <p className="text-xs text-ink-soft">
+                  Titulaire :{" "}
+                  {moyenSelectionne.nomTitulaire}
+                </p>
+              </div>
+
+              <p className="font-mono text-sm font-medium text-ocre-dark">
+                {formatArgent(montant)}
+              </p>
+            </div>
           </div>
         )}
 
-        <Button type="submit" disabled={envoi}>
-          {envoi
-            ? "Envoi…"
-            : paiementMvola
-              ? "Payer avec MVola"
-              : "Déclarer le paiement"}
-        </Button>
+        {/* ----------------------------------------------------
+            ACTION
+           ---------------------------------------------------- */}
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="submit"
+            disabled={
+              envoi ||
+              chargementMoyens ||
+              moyensPaiement.length === 0 ||
+              !moyenPaiementId
+            }
+          >
+            {envoi
+              ? "Envoi…"
+              : paiementMvola
+                ? "Payer avec MVola"
+                : "Déclarer le paiement"}
+          </Button>
+
+          {moyensPaiement.length === 0 &&
+            !chargementMoyens && (
+              <p className="text-xs text-ink-soft">
+                Configurez un moyen de paiement avant de
+                poursuivre.
+              </p>
+            )}
+        </div>
       </form>
 
       {erreur && (
@@ -371,8 +870,9 @@ export default function PaiementsPage() {
 
   const [chargement, setChargement] = useState(true);
 
-  // Sous-menu actif : À payer / En attente / Confirmés / Historique.
-  const [ongletPaiements, setOngletPaiements] = useState("historique");
+  // À payer / En attente / Confirmés / Historique
+  const [ongletPaiements, setOngletPaiements] =
+    useState("historique");
 
   // ==========================================================
   // CHARGER LES DONNÉES
@@ -398,12 +898,8 @@ export default function PaiementsPage() {
             .catch(() => [] as Candidature[]),
         ]);
 
-        // Un paiement existe encore ET n'a pas été annulé : la
-        // candidature n'est plus à payer. Le backend refuse en effet
-        // la création d'un second paiement tant que l'ancien n'est
-        // pas annulé ("Un paiement existe deja pour cette
-        // candidature") — on évite donc d'exposer un bouton voué à
-        // l'échec. Un paiement annulé permet une nouvelle tentative.
+        // Une candidature ayant un paiement non annulé
+        // ne doit plus apparaître dans "À payer".
         const idsAvecPaiementActif = new Set(
           mesTransactions
             .filter(
@@ -418,12 +914,8 @@ export default function PaiementsPage() {
 
         setTransactions(mesTransactions);
 
-        // Règle métier de fin de projet : une candidature est payable
-        // uniquement si la livraison correspondante a été VALIDÉE par
-        // le client (contrôle déjà effectué côté backend dans
-        // PaiementsService.creer ; ici le frontend reflète la même
-        // règle pour n'exposer le formulaire qu'au bon moment).
-        // La relation "livraison" est fournie par GET /candidatures/client.
+        // Une candidature est payable uniquement après
+        // validation de la livraison par le client.
         setCandidaturesAPayer(
           mesCandidatures.filter(
             (candidature) =>
@@ -457,10 +949,6 @@ export default function PaiementsPage() {
   // ==========================================================
   // CHARGEMENT INITIAL
   // ==========================================================
-  //
-  // Promise.resolve().then() permet de ne pas déclencher
-  // directement une mise à jour d'état dans le corps du useEffect.
-  //
 
   useEffect(() => {
     if (!utilisateur) {
@@ -474,7 +962,7 @@ export default function PaiementsPage() {
   }, [utilisateur, charger]);
 
   // ==========================================================
-  // RECHARGER APRÈS UNE ACTION UTILISATEUR
+  // RECHARGER
   // ==========================================================
 
   const recharger = async () => {
@@ -491,7 +979,7 @@ export default function PaiementsPage() {
   }
 
   // ==========================================================
-  // CALCUL DU TOTAL REÇU PAR L'ÉTUDIANT
+  // TOTAL REÇU PAR L'ÉTUDIANT
   // ==========================================================
 
   const totalRecu = transactions
@@ -506,20 +994,32 @@ export default function PaiementsPage() {
     );
 
   // ==========================================================
-  // AFFICHAGE
+  // TRANSACTIONS PAR STATUT
   // ==========================================================
 
-  const transactionsEnAttente = transactions.filter(
-    (t) => t.statut === "en_attente",
-  );
-  const transactionsConfirmees = transactions.filter(
-    (t) => t.statut === "confirmee" || t.statut === "liberee",
-  );
+  const transactionsEnAttente =
+    transactions.filter(
+      (t) => t.statut === "en_attente",
+    );
+
+  const transactionsConfirmees =
+    transactions.filter(
+      (t) =>
+        t.statut === "confirmee" ||
+        t.statut === "liberee",
+    );
+
+  // ==========================================================
+  // AFFICHAGE
+  // ==========================================================
 
   return (
     <div>
       <div className="mb-4">
-        <BoutonRetour repli="/tableau-de-bord" forcer />
+        <BoutonRetour
+          repli="/tableau-de-bord"
+          forcer
+        />
       </div>
 
       <PageHeader
@@ -529,7 +1029,7 @@ export default function PaiementsPage() {
       />
 
       {/* ======================================================
-          TOTAL POUR L'ÉTUDIANT
+          TOTAL ÉTUDIANT
          ====================================================== */}
 
       {utilisateur.role === "etudiant" && (
@@ -555,20 +1055,26 @@ export default function PaiementsPage() {
                 {
                   valeur: "a_payer",
                   label: "À payer",
-                  compte: candidaturesAPayer.length,
+                  compte:
+                    candidaturesAPayer.length,
                 },
               ]
             : []),
+
           {
             valeur: "en_attente",
             label: "En attente",
-            compte: transactionsEnAttente.length,
+            compte:
+              transactionsEnAttente.length,
           },
+
           {
             valeur: "confirmes",
             label: "Confirmés",
-            compte: transactionsConfirmees.length,
+            compte:
+              transactionsConfirmees.length,
           },
+
           {
             valeur: "historique",
             label: "Historique",
@@ -580,7 +1086,7 @@ export default function PaiementsPage() {
       />
 
       {/* ======================================================
-          MISSIONS À PAYER POUR LE CLIENT
+          MISSIONS À PAYER
          ====================================================== */}
 
       {utilisateur.role === "client" &&
@@ -640,18 +1146,23 @@ export default function PaiementsPage() {
           </div>
         )}
 
+      {/* ======================================================
+          AUCUNE MISSION À PAYER
+         ====================================================== */}
+
       {utilisateur.role === "client" &&
         ongletPaiements === "a_payer" &&
         candidaturesAPayer.length === 0 && (
           <NoticeCard className="mb-6">
             <p className="text-sm text-ink-soft/70">
-              Aucune mission en attente de paiement pour le moment.
+              Aucune mission en attente de paiement
+              pour le moment.
             </p>
           </NoticeCard>
         )}
 
       {/* ======================================================
-          TRANSACTIONS (selon le sous-menu actif)
+          TRANSACTIONS
          ====================================================== */}
 
       {ongletPaiements !== "a_payer" && (
@@ -680,11 +1191,14 @@ export default function PaiementsPage() {
               );
             }
 
-            if (transactionsAffichees.length === 0) {
+            if (
+              transactionsAffichees.length === 0
+            ) {
               return (
                 <NoticeCard>
                   <p className="text-sm text-ink-soft/70">
-                    Aucun paiement dans cette catégorie.
+                    Aucun paiement dans cette
+                    catégorie.
                   </p>
                 </NoticeCard>
               );
@@ -692,13 +1206,15 @@ export default function PaiementsPage() {
 
             return (
               <div className="grid gap-3 sm:grid-cols-2">
-                {transactionsAffichees.map((transaction) => (
-                  <CarteTransaction
-                    key={transaction.id}
-                    transaction={transaction}
-                    onVerifie={recharger}
-                  />
-                ))}
+                {transactionsAffichees.map(
+                  (transaction) => (
+                    <CarteTransaction
+                      key={transaction.id}
+                      transaction={transaction}
+                      onVerifie={recharger}
+                    />
+                  ),
+                )}
               </div>
             );
           })()}

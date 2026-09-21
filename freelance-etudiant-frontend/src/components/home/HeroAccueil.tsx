@@ -51,7 +51,7 @@ export function HeroAccueil({
   }
 
   return (
-    <section className="relative overflow-hidden rounded-xl border border-ink/15">
+    <section className="relative overflow-hidden">
       {/* Image de fond */}
       <div
         className="absolute inset-0 bg-cover bg-center"

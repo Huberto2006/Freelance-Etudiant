@@ -8,6 +8,7 @@ import { CandidaturesModule } from '../candidatures/candidatures.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { MvolaService } from './mvola.service';
 import { UsersModule } from '../users/users.module';
+import { MoyensPaiementModule } from '../moyens-paiement/moyens-paiement.module';
 
 @Module({
   imports: [
@@ -19,6 +20,10 @@ import { UsersModule } from '../users/users.module';
     CandidaturesModule,
     NotificationsModule,
     UsersModule,
+    // RG-PAY : verification (propriete/actif) du moyen de paiement
+    // attache a une transaction et liste securisee des coordonnees du
+    // beneficiaire. Aucune dependance inverse : pas de cycle.
+    MoyensPaiementModule,
   ],
   providers: [PaiementsService, MvolaService],
   controllers: [PaiementsController],

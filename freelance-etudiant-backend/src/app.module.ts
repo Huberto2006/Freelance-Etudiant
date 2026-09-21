@@ -27,6 +27,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { ReactionsModule } from './modules/reactions/reactions.module';
 import { FavorisModule } from './modules/favoris/favoris.module';
 import { PaiementsModule } from './modules/paiements/paiements.module';
+import { MoyensPaiementModule } from './modules/moyens-paiement/moyens-paiement.module';
 import { DemandesServiceModule } from './modules/demandes-service/demandes-service.module';
 import { CommentairesModule } from './modules/commentaires/commentaires.module';
 import { ReactionsContenuModule } from './modules/reactions-contenu/reactions-contenu.module';
@@ -93,6 +94,7 @@ import { HealthController } from './health.controller';
     ReactionsModule,
     FavorisModule,
     PaiementsModule,
+    MoyensPaiementModule,
     DemandesServiceModule,
     CommentairesModule,
     ReactionsContenuModule,

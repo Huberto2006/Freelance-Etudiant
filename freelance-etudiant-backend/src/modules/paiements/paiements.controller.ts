@@ -125,6 +125,52 @@ export class PaiementsController {
     return this.paiementsService.findByEtudiant(user.id);
   }
 
+  /**
+   * RG-PAY : coordonnees de l'etudiant beneficiaire lorsque le paiement
+   * est reellement du. Route securisee (JAMAIS de route publique par
+   * etudiant) : le client doit posseder la mission ET la livraison
+   * correspondante doit etre validee.
+   * Declaree AVANT 'paiements/:id/...' pour eviter tout masquage.
+   */
+  @Roles(Role.CLIENT, Role.ADMIN)
+  @Get('candidatures/:candidatureId/moyens-paiement')
+  @ApiOperation({
+    summary:
+      "Coordonnees de paiement de l'etudiant beneficiaire (livraison validee requise)",
+  })
+  async moyensPaiementCandidature(
+    @Param('candidatureId') candidatureId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.paiementsService.moyensPourCandidature(
+      candidatureId,
+      user.id,
+      user.role === Role.ADMIN,
+    );
+  }
+
+  /**
+   * RG-PAY : coordonnees associees a un paiement existant. Seul le
+   * client proprietaire de la transaction (ou un administrateur) y a
+   * acces : changer l'identifiant dans l'URL renvoie 403.
+   */
+  @Roles(Role.CLIENT, Role.ADMIN)
+  @Get('paiements/:id/moyens-paiement')
+  @ApiOperation({
+    summary:
+      "Coordonnees de paiement de l'etudiant beneficiaire pour un paiement existant",
+  })
+  async moyensPaiementTransaction(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.paiementsService.moyensPourPaiement(
+      id,
+      user.id,
+      user.role === Role.ADMIN,
+    );
+  }
+
   @Roles(Role.ADMIN)
   @Get('paiements')
   @ApiOperation({ summary: 'Lister tous les paiements (filtrable par statut)' })
