@@ -97,6 +97,13 @@ npm run migration:run
 
 ### 4. Données de démonstration (optionnel)
 
+Le compte administrateur est créé automatiquement au démarrage du conteneur de
+production. En développement, il peut être créé seul avec :
+
+```bash
+npm run seed:admin
+```
+
 Rejoue le scénario de l'exemple du cahier des charges (Lanja, UI/UX
 Designer, et une mission Next.js/NestJS/PostgreSQL) :
 

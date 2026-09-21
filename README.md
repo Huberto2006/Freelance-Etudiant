@@ -77,15 +77,18 @@ nécessaires à chaque service. Les fichiers `.env` et les uploads locaux sont
 exclus des images. Sur une nouvelle base, le catalogue sera vide : aucun compte
 de démonstration ni administrateur avec mot de passe public n'est créé.
 
-Le seeder est volontairement manuel. Après le premier déploiement, créer ou
-réinitialiser le compte administrateur avec les valeurs `ADMIN_EMAIL` et
-`ADMIN_PASSWORD` du `.env` :
+Après les migrations et avant chaque démarrage de l'API, le conteneur crée ou
+synchronise automatiquement le compte administrateur avec les valeurs
+`ADMIN_EMAIL` et `ADMIN_PASSWORD` du `.env`. Aucun compte de démonstration
+n'est ajouté par cette étape.
+
+Pour relancer uniquement cette opération manuellement :
 
 ```bash
-docker compose run --rm backend node dist/database/seeds/run-seed.js
+docker compose exec backend node dist/database/seeds/run-admin-seed.js
 ```
 
-Cette commande crée aussi les données et comptes de démonstration du seeder.
+Le seeder complet de démonstration reste disponible séparément dans le backend.
 
 ## Configurer les emails et MVola
 

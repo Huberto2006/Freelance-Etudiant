@@ -6,5 +6,8 @@ set -eu
 node node_modules/typeorm/cli.js migration:run \
   -d dist/database/data-source.js --transaction each
 
-exec "$@"
+# Le compte admin est garanti avant l'ouverture de l'API. Ce seed ne crée
+# aucune donnée de démonstration et peut être rejoué sans produire de doublon.
+node dist/database/seeds/run-admin-seed.js
 
+exec "$@"
