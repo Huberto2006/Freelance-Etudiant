@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import * as bcrypt from 'bcrypt';
 import { AppModule } from '../../app.module';
@@ -17,7 +18,7 @@ import { Mission } from '../../modules/missions/entities/mission.entity';
  * Comptes créés/réinitialisés :
  *
  * Admin :
- *   admin@kianja.mg / MotDePasse123!
+ *   ADMIN_EMAIL / ADMIN_PASSWORD (variables d'environnement obligatoires)
  *
  * Étudiante :
  *   lanja@emit.mg / MotDePasse123!
@@ -31,6 +32,19 @@ import { Mission } from '../../modules/missions/entities/mission.entity';
  *   npm run seed
  */
 async function runSeed() {
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminEmail) {
+    throw new Error('ADMIN_EMAIL est requis pour exécuter le seed.');
+  }
+
+  if (!adminPassword || adminPassword.length < 12) {
+    throw new Error(
+      'ADMIN_PASSWORD est requis et doit contenir au moins 12 caractères.',
+    );
+  }
+
   const app = await NestFactory.createApplicationContext(AppModule);
 
   const usersService = app.get(UsersService);
@@ -43,33 +57,34 @@ async function runSeed() {
   // MOT DE PASSE COMMUN DU SEED
   // ============================================================
 
-  const motDePasse = 'MotDePasse123!';
+  const motDePasseDemo = 'MotDePasse123!';
 
-  // Le mot de passe en clair n'est jamais enregistré en base.
-  const motDePasseHache = await bcrypt.hash(motDePasse, 12);
+  // Les mots de passe en clair ne sont jamais enregistrés en base.
+  const motDePasseDemoHache = await bcrypt.hash(motDePasseDemo, 12);
+  const adminPasswordHache = await bcrypt.hash(adminPassword, 12);
 
   // ============================================================
   // ADMINISTRATEUR
   // ============================================================
 
-  const adminExistant = await usersService.findByEmail('admin@kianja.mg');
+  const adminExistant = await usersService.findByEmail(adminEmail);
 
   if (!adminExistant) {
     await usersService.create({
       nom: 'Administrateur EMIT',
-      email: 'admin@kianja.mg',
-      motDePasse: motDePasseHache,
+      email: adminEmail,
+      motDePasse: adminPasswordHache,
       role: Role.ADMIN,
       emailVerifie: true,
       estActif: true,
       estSuspendu: false,
     });
 
-    console.log('Admin créé : admin@kianja.mg / MotDePasse123!');
+    console.log(`Admin créé : ${adminEmail}`);
   } else {
     // L'utilisateur existe déjà.
     // On réinitialise son mot de passe avec bcrypt.
-    adminExistant.motDePasse = motDePasseHache;
+    adminExistant.motDePasse = adminPasswordHache;
 
     adminExistant.role = Role.ADMIN;
     adminExistant.emailVerifie = true;
@@ -94,7 +109,7 @@ async function runSeed() {
     lanja = await usersService.create({
       nom: 'Lanja Rakoto',
       email: 'lanja@emit.mg',
-      motDePasse: motDePasseHache,
+      motDePasse: motDePasseDemoHache,
       role: Role.ETUDIANT,
       emailVerifie: true,
       estActif: true,
@@ -105,7 +120,7 @@ async function runSeed() {
   } else {
     // Le compte existe déjà.
     // On réinitialise son mot de passe avec le hash bcrypt.
-    lanja.motDePasse = motDePasseHache;
+    lanja.motDePasse = motDePasseDemoHache;
 
     lanja.role = Role.ETUDIANT;
     lanja.emailVerifie = true;
@@ -193,7 +208,7 @@ async function runSeed() {
     client = await usersService.create({
       nom: 'CISCO Fianarantsoa',
       email: 'client@exemple.mg',
-      motDePasse: motDePasseHache,
+      motDePasse: motDePasseDemoHache,
       role: Role.CLIENT,
       emailVerifie: true,
       estActif: true,
@@ -204,7 +219,7 @@ async function runSeed() {
   } else {
     // Le compte existe déjà.
     // On réinitialise son mot de passe avec bcrypt.
-    client.motDePasse = motDePasseHache;
+    client.motDePasse = motDePasseDemoHache;
 
     client.role = Role.CLIENT;
     client.emailVerifie = true;
@@ -282,8 +297,8 @@ async function runSeed() {
   console.log('Comptes de démonstration :');
   console.log('');
   console.log('ADMIN');
-  console.log('  admin@kianja.mg');
-  console.log('  MotDePasse123!');
+  console.log(`  ${adminEmail}`);
+  console.log('  Mot de passe défini par ADMIN_PASSWORD');
   console.log('');
   console.log('ÉTUDIANTE');
   console.log('  lanja@emit.mg');

@@ -104,8 +104,11 @@ Designer, et une mission Next.js/NestJS/PostgreSQL) :
 npm run seed
 ```
 
-Comptes créés (mot de passe `MotDePasse123!`) :
-- `admin@emit.mg` (admin)
+Le compte admin utilise `ADMIN_EMAIL` et `ADMIN_PASSWORD` définis dans `.env`.
+Le seeder refuse de démarrer si ces variables sont absentes ou si le mot de
+passe admin contient moins de 12 caractères.
+
+Autres comptes créés (mot de passe `MotDePasse123!`) :
 - `lanja@emit.mg` (étudiante)
 - `client@exemple.mg` (client)
 
