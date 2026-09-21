@@ -11,6 +11,7 @@ import { ClientProfile } from '../../modules/clients/entities/client-profile.ent
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ServiceOffert } from '../../modules/services/entities/service.entity';
 import { Mission } from '../../modules/missions/entities/mission.entity';
+import { seedAdmin } from './admin.seed';
 
 /**
  * Seed de démonstration Kianja.
@@ -32,19 +33,6 @@ import { Mission } from '../../modules/missions/entities/mission.entity';
  *   npm run seed
  */
 async function runSeed() {
-  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const adminPassword = process.env.ADMIN_PASSWORD;
-
-  if (!adminEmail) {
-    throw new Error('ADMIN_EMAIL est requis pour exécuter le seed.');
-  }
-
-  if (!adminPassword || adminPassword.length < 12) {
-    throw new Error(
-      'ADMIN_PASSWORD est requis et doit contenir au moins 12 caractères.',
-    );
-  }
-
   const app = await NestFactory.createApplicationContext(AppModule);
 
   const usersService = app.get(UsersService);
@@ -61,42 +49,16 @@ async function runSeed() {
 
   // Les mots de passe en clair ne sont jamais enregistrés en base.
   const motDePasseDemoHache = await bcrypt.hash(motDePasseDemo, 12);
-  const adminPasswordHache = await bcrypt.hash(adminPassword, 12);
 
   // ============================================================
   // ADMINISTRATEUR
   // ============================================================
 
-  const adminExistant = await usersService.findByEmail(adminEmail);
-
-  if (!adminExistant) {
-    await usersService.create({
-      nom: 'Administrateur EMIT',
-      email: adminEmail,
-      motDePasse: adminPasswordHache,
-      role: Role.ADMIN,
-      emailVerifie: true,
-      estActif: true,
-      estSuspendu: false,
-    });
-
-    console.log(`Admin créé : ${adminEmail}`);
-  } else {
-    // L'utilisateur existe déjà.
-    // On réinitialise son mot de passe avec bcrypt.
-    adminExistant.motDePasse = adminPasswordHache;
-
-    adminExistant.role = Role.ADMIN;
-    adminExistant.emailVerifie = true;
-    adminExistant.estActif = true;
-    adminExistant.estSuspendu = false;
-
-    await usersService.save(adminExistant);
-
-    console.log(
-      'Admin existant mis à jour : mot de passe bcrypt + compte actif.',
-    );
-  }
+  const { email: adminEmail, created: adminCree } =
+    await seedAdmin(usersService);
+  console.log(
+    `Admin ${adminCree ? 'créé' : 'synchronisé'} : ${adminEmail}`,
+  );
 
   // ============================================================
   // ÉTUDIANTE LANJA
