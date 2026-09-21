@@ -97,8 +97,8 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
       icon: Settings,
       liens: [
         {
-          href: "/tableau-de-bord/paiements",
-          label: "Paiements",
+          href: "/tableau-de-bord/parametres/paiements",
+          label: "Moyens de paiement",
         },
 
         {

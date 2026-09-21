@@ -76,9 +76,17 @@ function FormulaireService({
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState("");
 
-  useEffect(() => {
+  // Réinitialisation du formulaire lors du passage d'un service à un autre
+  // (édition) ou du retour en création : ajustement de l'état PENDANT le
+  // rendu, déclenché par l'identifiant stable du service (pattern officiel
+  // react.dev "You Might Not Need an Effect", en remplacement d'un setState
+  // synchrone dans un effet — react-hooks/set-state-in-effect).
+  const [dernierServiceId, setDernierServiceId] = useState(serviceId);
+
+  if (dernierServiceId !== serviceId) {
+    setDernierServiceId(serviceId);
     setFormulaire(initialValues);
-  }, [initialValues]);
+  }
 
   const modifierChamp = (
     champ: keyof FormulaireServiceData,
@@ -341,7 +349,15 @@ export default function MesServicesPage() {
   }, []);
 
   useEffect(() => {
-    chargerServices();
+    // Chargement différé d'un tick (react-hooks/set-state-in-effect),
+    // même convention que les pages missions/services.
+    const timer = window.setTimeout(() => {
+      void chargerServices();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [chargerServices]);
 
   const categoriesDisponibles = Array.from(

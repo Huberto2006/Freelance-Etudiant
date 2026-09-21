@@ -4,6 +4,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   Matches,
   Min,
   ValidateIf,
@@ -36,7 +37,7 @@ export class CreerPaiementDto {
       'mvola = paiement en ligne reel (via l\'API MVola). virement = declaration manuelle d\'un transfert hors plateforme, verifiee par un administrateur. orange_money / airtel_money : indisponible (pas d\'API self-service pour Madagascar).',
   })
   @IsEnum(MethodePaiement)
-  methode: MethodePaiement;
+  methode!: MethodePaiement;
 
   /**
    * Reference du transfert : obligatoire pour une declaration manuelle
@@ -50,6 +51,21 @@ export class CreerPaiementDto {
   @IsString()
   @IsNotEmpty()
   reference?: string;
+
+  /**
+   * Moyen de paiement de l'ETUDIANT beneficiaire (optionnel) : les
+   * coordonnees sont copiees en snapshot dans la transaction au moment
+   * de la creation. Le backend verifie que le moyen appartient bien a
+   * l'etudiant de la candidature et qu'il est actif.
+   */
+  @ApiPropertyOptional({
+    example: '018e2b4c-...',
+    description:
+      "Identifiant du moyen de paiement de l'etudiant beneficiaire (MVola / Orange Money / Airtel Money / compte bancaire). Verifie cote backend : propriete + actif.",
+  })
+  @IsOptional()
+  @IsUUID()
+  moyenPaiementId?: string;
 
   /**
    * Numero MVola du payeur : obligatoire pour le paiement en ligne
