@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -13,29 +14,14 @@ import {
   User,
 } from "lucide-react";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
-import {
-  useAuth,
-  roleLabel,
-} from "@/lib/auth-context";
-
-import {
-  navigationParRole,
-} from "@/lib/nav-links";
-
+import { useAuth, roleLabel } from "@/lib/auth-context";
+import { navigationParRole } from "@/lib/nav-links";
 import { getFileUrl } from "@/lib/api";
 
 import { Button } from "@/components/ui/Button";
 import { BasculeTheme } from "@/components/ui/BasculeTheme";
-import { SelecteurTheme } from "@/components/ui/SelecteurTheme";
 import { MessagesLink } from "@/components/ui/MessagesLink";
 import { NotificationBell } from "@/components/ui/NotificationBell";
-import { ThemeCondition } from "@/components/ui/ThemeCondition";
 
 type NavbarProps = {
   /**
@@ -86,10 +72,6 @@ export function Navbar({
    * ==========================================================
    * PAGES SANS NAVBAR
    * ==========================================================
-   *
-   * Ces pages possèdent leur propre interface.
-   *
-  * Toutes les pages du segment d'authentification
    */
 
   const estPageAuth = [
@@ -104,9 +86,6 @@ export function Navbar({
    * ==========================================================
    * BASCULE SITE / DASHBOARD
    * ==========================================================
-   *
-   * Dashboard → Site
-   * Site      → Dashboard
    */
 
   const hrefBascule =
@@ -121,7 +100,7 @@ export function Navbar({
 
   /*
    * ==========================================================
-   * NAVIGATION
+   * NAVIGATION PAR RÔLE
    * ==========================================================
    */
 
@@ -140,16 +119,16 @@ export function Navbar({
   const itemParametres =
     groupes.find(
       (item) =>
-        item.label ===
-        "Paramètres",
+        item.label === "Paramètres",
     );
 
   const liensParametres =
     (itemParametres?.liens ?? []).filter(
       (link) =>
-        !["Paiements", "Favoris"].includes(
-          link.label,
-        ),
+        ![
+          "Paiements",
+          "Favoris",
+        ].includes(link.label),
     );
 
   const hrefParametres =
@@ -229,12 +208,8 @@ export function Navbar({
 
   /*
    * ==========================================================
-   * PAGES CONNEXION / INSCRIPTION
+   * PAGES AUTHENTIFICATION
    * ==========================================================
-   *
-   * Important :
-   * Le return null est placé après tous les hooks React.
-   * Cela évite les erreurs liées aux règles des hooks.
    */
 
   if (estPageAuth) {
@@ -465,6 +440,13 @@ export function Navbar({
             >
               <Search size={18} />
             </Link>
+
+            {/* ==============================================
+                MODE SOMBRE
+                ACCESSIBLE À TOUS
+                ============================================== */}
+
+            <BasculeTheme />
 
             {/* ==============================================
                 UTILISATEUR CONNECTÉ
@@ -744,9 +726,7 @@ export function Navbar({
 
                     <Link
                       href="/tableau-de-bord/profil"
-                      onClick={
-                        closeMenus
-                      }
+                      onClick={closeMenus}
                       role="menuitem"
                       className="
                         flex
@@ -855,25 +835,6 @@ export function Navbar({
                     ) : null}
 
                     {/* ==========================================
-                        APPARENCE
-                        ========================================== */}
-
-                    <ThemeCondition>
-                      <div
-                        className="
-                          border-t
-                          border-ink/10
-                          px-4
-                          py-3
-                        "
-                      >
-                        <SelecteurTheme
-                          variante="compact"
-                        />
-                      </div>
-                    </ThemeCondition>
-
-                    {/* ==========================================
                         DÉCONNEXION
                         ========================================== */}
 
@@ -920,8 +881,6 @@ export function Navbar({
                   gap-2
                 "
               >
-                <BasculeTheme />
-
                 <Link href="/connexion">
                   <Button
                     variant="ghost"
