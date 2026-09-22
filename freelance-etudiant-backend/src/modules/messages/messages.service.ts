@@ -11,6 +11,13 @@ import { Message } from './entities/message.entity';
 import { MessageGroupeLecture } from './entities/message-groupe-lecture.entity';
 import { EnvoyerMessageDto } from './dto/envoyer-message.dto';
 import { EnvoyerMessageGroupeDto } from './dto/envoyer-message-groupe.dto';
+import {
+  CompteurNonLus,
+  ConversationGroupe,
+  ConversationIndividuelle,
+  ConversationResume,
+  TypeConversation,
+} from './interfaces/conversation-resume.interface';
 
 import { CandidaturesService } from '../candidatures/candidatures.service';
 import { AmitieService } from '../amitie/amitie.service';
@@ -270,16 +277,25 @@ export class MessagesService {
    *
    * Retourne :
    *
-   * 1. les conversations ayant déjà des messages
+   * 1. les conversations individuelles ayant déjà des messages
    *
    * 2. les contacts issus de candidatures acceptées
    *    même s'il n'existe encore aucun message
    *
    * 3. les admins comme contacts disponibles
+   *
+   * 4. les conversations de groupe : UNE entrée par groupe dont
+   *    l'utilisateur est membre actif (regle membres_groupes,
+   *    identique a GroupesService.verifierMembreActif) ; un groupe
+   *    sans message apparait avec dernierMessage = null.
+   *
+   * Chaque entree porte un champ `type` (INDIVIDUEL | GROUPE) ;
+   * les entrees individuelles conservent integralement le format
+   * Message historique pour compatibilite avec le frontend existant.
    */
   async findMesConversations(
     userId: string,
-  ): Promise<Message[]> {
+  ): Promise<ConversationResume[]> {
     /*
      * Messages existants.
      */
@@ -446,7 +462,7 @@ export class MessagesService {
      * Les messages supprimés logiquement sont d'abord masqués (contenu
      * remplacé par un tombstone « Message supprimé »).
      */
-    return messages
+    const individuellesTriees = messages
       .map((message) => this.masquerSupprime(message))
       .sort(
         (a, b) => {
@@ -467,6 +483,59 @@ export class MessagesService {
           return dateB - dateA;
         },
       );
+
+    /*
+     * Enrichissement des entrees individuelles : le format historique
+     * (Message) est conserve, on ajoute le discriminant de type et
+     * l'interlocuteur pour la liste de conversations.
+     */
+    const conversationsIndividuelles: ConversationIndividuelle[] =
+      individuellesTriees.map((message) => {
+        const autre =
+          message.expediteurId === userId
+            ? message.destinataire
+            : message.expediteur;
+
+        return {
+          ...message,
+          type: TypeConversation.INDIVIDUEL,
+          utilisateurId: autre?.id ?? message.destinataireId ?? '',
+          nom: autre?.nom ?? '',
+        };
+      });
+
+    /*
+     * Conversations de groupe : une entree par groupe dont l'utilisateur
+     * est membre actif, avec son dernier message et son nombre de non lus.
+     */
+    const conversationsGroupes =
+      await this.conversationsGroupeResume(userId);
+
+    /*
+     * Fusion des deux types, triee par activite recente (dernier message
+     * de groupe ou date d'envoi individuel). Les entrees sans activite
+     * (groupe sans message, conversation individuelle virtuelle) restent
+     * en fin de liste.
+     */
+    return [
+      ...conversationsIndividuelles,
+      ...conversationsGroupes,
+    ].sort((a, b) => {
+      const dateA = dateDerniereActivite(a);
+      const dateB = dateDerniereActivite(b);
+
+      if (dateA === null && dateB === null) {
+        return 0;
+      }
+      if (dateA === null) {
+        return 1;
+      }
+      if (dateB === null) {
+        return -1;
+      }
+
+      return dateB - dateA;
+    });
   }
 
   /**
@@ -476,8 +545,20 @@ export class MessagesService {
    *
    * Les messages supprimes logiquement ne comptent pas comme non lus :
    * leur contenu n'est plus visible.
+   *
+   * total = individuels + groupes (voir compterNonLusDetaille).
    */
   async compterNonLus(userId: string): Promise<number> {
+    const detail = await this.compterNonLusDetaille(userId);
+    return detail.total;
+  }
+
+  /**
+   * Compteur detaille des messages non lus : individuels, groupes et
+   * total. `total` reste individuels + groupes (contrat historique du
+   * badge MessagesLink, qui reste retrocompatible).
+   */
+  async compterNonLusDetaille(userId: string): Promise<CompteurNonLus> {
     /*
      * Messages individuels (comportement existant, inchangé).
      */
@@ -495,19 +576,38 @@ export class MessagesService {
      * message_groupe_lectures. L'auteur n'est jamais destinataire non lu
      * de son propre message.
      */
-    const groupe = await this.compterNonLusGroupes(userId);
+    const nonLusParGroupe = await this.compterNonLusParGroupe(userId);
 
-    return individuels + groupe;
+    const groupes = [...nonLusParGroupe.values()].reduce(
+      (somme, total) => somme + total,
+      0,
+    );
+
+    return {
+      total: individuels + groupes,
+      individuels,
+      groupes,
+    };
   }
 
   /**
-   * Compteur limite aux messages de groupe (voir compterNonLus).
-   * Seuls les groupes dont l'utilisateur est membre actif sont comptes.
+   * Compteur de messages non lus GROUPES par groupeId.
+   *
+   * Reutilise exactement la regle existante (ancienne compterNonLusGroupes,
+   * etendue par un GROUP BY) :
+   * - message de groupe non supprime, ecrit par un autre membre ;
+   * - l'utilisateur doit etre membre actif (ligne dans membres_groupes) ;
+   * - pas de lecture enregistree dans message_groupe_lectures.
+   *
+   * Le champ estLu persiste n'est PAS utilise pour les groupes : il reste
+   * reserve au fonctionnement individuel.
    */
-  private async compterNonLusGroupes(userId: string): Promise<number> {
+  private async compterNonLusParGroupe(
+    userId: string,
+  ): Promise<Map<string, number>> {
     const lignes = await this.repo.query(
       `
-      SELECT COUNT(*)::int AS total
+      SELECT m.groupe_id, COUNT(*)::int AS total
       FROM messages m
       WHERE m.groupe_id IS NOT NULL
         AND m.est_supprime = false
@@ -524,11 +624,112 @@ export class MessagesService {
           WHERE l.message_id = m.id
             AND l.utilisateur_id = $1
         )
+      GROUP BY m.groupe_id
       `,
       [userId],
     );
 
-    return Number(lignes[0]?.total ?? 0);
+    return new Map(
+      lignes.map((ligne: { groupe_id: string; total: number }) => [
+        ligne.groupe_id as string,
+        Number(ligne.total ?? 0),
+      ]),
+    );
+  }
+
+  /**
+   * ========================================================
+   * RESUME DES CONVERSATIONS DE GROUPE
+   * ========================================================
+   *
+   * Une entree par groupe dont l'utilisateur est membre actif.
+   * La regle d'appartenance est la MEME que
+   * GroupesService.verifierMembreActif : une ligne dans
+   * membres_groupes. Un ancien membre (ligne supprimee au depart)
+   * n'obtient donc PAS d'entree pour son ancien groupe.
+   *
+   * Performances : une seule requete groupee recupere groupe, nom,
+   * nombre de membres et identifiant du dernier message (LEFT JOIN
+   * LATERAL, evite le N+1). Les derniers messages sont ensuite charges
+   * en une seule requete via In() ; les non lus par groupe proviennent
+   * de compterNonLusParGroupe (une requete GROUP BY).
+   *
+   * Un groupe sans message apparait avec dernierMessage = null :
+   * aucun message artificiel n'est cree.
+   */
+  private async conversationsGroupeResume(
+    userId: string,
+  ): Promise<ConversationGroupe[]> {
+    const lignes = (await this.repo.query(
+      `
+      SELECT
+        g.id AS groupe_id,
+        g.nom AS nom,
+        (
+          SELECT COUNT(*)::int
+          FROM membres_groupes mg2
+          WHERE mg2.groupe_id = g.id
+        ) AS nombre_membres,
+        m.id AS dernier_message_id
+      FROM groupes g
+      JOIN membres_groupes mg
+        ON mg.groupe_id = g.id
+       AND mg.etudiant_id = $1
+      LEFT JOIN LATERAL (
+        SELECT id
+        FROM messages m2
+        WHERE m2.groupe_id = g.id
+        ORDER BY m2.date_envoi DESC
+        LIMIT 1
+      ) m ON TRUE
+      ORDER BY g.nom ASC
+      `,
+      [userId],
+    )) as Array<{
+      groupe_id: string;
+      nom: string;
+      nombre_membres: number;
+      dernier_message_id: string | null;
+    }>;
+
+    if (lignes.length === 0) {
+      return [];
+    }
+
+    /*
+     * Chargement en une requete des derniers messages (avec expediteur),
+     * puis masquage du contenu des messages supprimes logiquement :
+     * meme convention que les conversations individuelles.
+     */
+    const idsDerniersMessages = lignes
+      .map((ligne) => ligne.dernier_message_id)
+      .filter((id): id is string => Boolean(id));
+
+    const derniersMessages = new Map<string, Message>();
+
+    if (idsDerniersMessages.length > 0) {
+      const messages = await this.repo.find({
+        where: { id: In(idsDerniersMessages) },
+        relations: ['expediteur'],
+      });
+
+      for (const message of messages) {
+        derniersMessages.set(message.id, this.masquerSupprime(message));
+      }
+    }
+
+    const nonLusParGroupe = await this.compterNonLusParGroupe(userId);
+
+    return lignes.map((ligne) => ({
+      type: TypeConversation.GROUPE,
+      groupeId: ligne.groupe_id,
+      nom: ligne.nom,
+      nombreMembres: Number(ligne.nombre_membres ?? 0),
+      dernierMessage: ligne.dernier_message_id
+        ? derniersMessages.get(ligne.dernier_message_id) ?? null
+        : null,
+      nonLus: nonLusParGroupe.get(ligne.groupe_id) ?? 0,
+    }));
   }
 
   /**
@@ -912,4 +1113,26 @@ export class MessagesService {
       });
     }
   }
+}
+
+/**
+ * Date de derniere activite d'une ligne de conversation, utilisee pour
+ * trier la liste fusionnee (individuels + groupes) de GET /messages :
+ * - conversation individuelle : dateEnvoi de son dernier message ;
+ * - conversation de groupe : dateEnvoi du dernier message du groupe,
+ *   ou null si le groupe n'a encore aucun message (place en fin de liste).
+ */
+function dateDerniereActivite(
+  conversation: ConversationResume,
+): number | null {
+  if (conversation.type === TypeConversation.GROUPE) {
+    const dernier = conversation.dernierMessage?.dateEnvoi;
+    if (!dernier) {
+      return null;
+    }
+    return dernier instanceof Date ? dernier.getTime() : new Date(dernier).getTime();
+  }
+
+  const date = conversation.dateEnvoi;
+  return date instanceof Date ? date.getTime() : new Date(date).getTime();
 }

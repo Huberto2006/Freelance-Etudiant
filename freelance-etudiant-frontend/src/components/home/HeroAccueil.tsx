@@ -88,7 +88,7 @@ export function HeroAccueil({
       <div className="relative mx-auto max-w-2xl px-5 py-12 text-center sm:px-10 sm:py-16">
         {/* Badge */}
         <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-ocre-dark/30 bg-ocre/10 px-3.5 py-1 font-mono text-[11px] uppercase tracking-[0.2em] text-ocre-dark">
-          Kianja · Marketplace des étudiants de l&apos;EMIT
+          Kianja · Marketplace des étudiants freelances
         </p>
 
         {/* Titre */}
@@ -99,7 +99,7 @@ export function HeroAccueil({
 
         {/* Description */}
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
-          La marketplace qui connecte les étudiants de l&apos;EMIT avec les
+          La marketplace qui connecte les étudiants freelances avec les
           clients à la recherche de talents. Trouvez un profil qualifié, publiez un
           besoin ou proposez vos compétences.
         </p>
@@ -338,7 +338,7 @@ export function HeroAccueil({
                     </h3>
 
                     <p className="mt-1 text-xs leading-relaxed text-ink-soft">
-                      Trouvez les talents de l&apos;EMIT, publiez vos missions et suivez la réalisation de vos projets.
+                      Trouvez des talents étudiants, publiez vos missions et suivez la réalisation de vos projets.
                     </p>
                   </div>
 

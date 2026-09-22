@@ -25,6 +25,7 @@ import {
   Send,
   Star,
   User,
+  Users,
   X,
 } from "lucide-react";
 import { clsx } from "clsx";
@@ -34,7 +35,12 @@ import { api, ApiError, getFileUrl } from "@/lib/api";
 import { useSocket } from "@/lib/socket-context";
 import { formatArgent, formatDate, statutMissionLabel } from "@/lib/format";
 
-import type { MessageAvecUtilisateurs } from "@/lib/message-types";
+import type {
+  CompteurNonLus,
+  ConversationIndividuelle,
+  ConversationResume,
+  MessageAvecUtilisateurs,
+} from "@/lib/message-types";
 import type {
   ClientProfile,
   EtudiantProfile,
@@ -79,6 +85,33 @@ interface PieceJointeConversation {
   auteur: string;
   dateEnvoi: string;
 }
+
+/**
+ * Ligne de la liste des conversations (individuelle OU de groupe),
+ * dérivée des données réelles renvoyées par GET /messages.
+ */
+interface LigneConversation {
+  /** Clé unique de ligne (`<contactId>` ou `groupe-<groupeId>`). */
+  cle: string;
+  type: "INDIVIDUEL" | "GROUPE";
+  /** ContactId (individuel) ou groupeId (groupe). */
+  id: string;
+  nom: string;
+  photoUrl?: string | null;
+  role?: Role | null;
+  /** Groupes uniquement. */
+  nombreMembres?: number;
+  dernierContenu: string;
+  dernierDate: string | null;
+  dernierEstMoi: boolean;
+  conversationVide: boolean;
+  nonLus: number;
+}
+
+/** Conversation sélectionnée dans la liste (ou pointée par l'URL). */
+type SelectionConversation =
+  | { type: "INDIVIDUEL"; id: string; nom: string }
+  | { type: "GROUPE"; id: string; nom: string; nombreMembres?: number };
 
 /* =========================================================
    HELPERS D'AFFICHAGE (dates, aperçus)
@@ -157,6 +190,21 @@ function apercuMessage(message: MessageAvecUtilisateurs): string {
   return "Nouvelle conversation";
 }
 
+/**
+ * Aperçu du dernier message d'une conversation de GROUPE : préfixé du
+ * nom de l'auteur (« Marie : J'ai terminé le design ») sauf si c'est
+ * l'utilisateur lui-même. Mêmes conventions que apercuMessage.
+ */
+function apercuMessageGroupe(
+  message: MessageAvecUtilisateurs,
+  utilisateurId: string,
+): string {
+  const apercu = apercuMessage(message);
+  if (message.expediteurId === utilisateurId) return apercu;
+  const auteur = message.expediteur?.nom ?? "Membre";
+  return `${auteur} : ${apercu}`;
+}
+
 /* =========================================================
    PAGE
    ========================================================= */
@@ -200,6 +248,14 @@ function MessagesContent() {
     searchParams.get("nom");
 
   /*
+   * Conversation de groupe pointée par l'URL :
+   * /tableau-de-bord/messages?groupe=<id>&nom=<nom du groupe>
+   * (chemin « Groupes → Ouvrir la discussion »).
+   */
+  const groupeIdParam =
+    searchParams.get("groupe");
+
+  /*
    * Contact provenant de l'URL.
    *
    * Aucun setState ici.
@@ -221,6 +277,23 @@ function MessagesContent() {
       nomParam,
     ]);
 
+  const groupeDepuisUrl =
+    useMemo(() => {
+      if (!groupeIdParam) {
+        return null;
+      }
+
+      return {
+        id: groupeIdParam,
+        nom:
+          nomParam?.trim() ||
+          "Groupe",
+      };
+    }, [
+      groupeIdParam,
+      nomParam,
+    ]);
+
   /* =========================================================
      ÉTATS
      ========================================================= */
@@ -229,8 +302,19 @@ function MessagesContent() {
     conversations,
     setConversations,
   ] = useState<
-    MessageAvecUtilisateurs[]
+    ConversationResume[]
   >([]);
+
+  /*
+   * Compteur détaillé des messages non lus (GET
+   * /messages/non-lus/compteur) : alimente les compteurs des
+   * onglets Tous / Individuels / Groupes. Le badge global de la
+   * navbar (MessagesLink) reste indépendant et inchangé.
+   */
+  const [
+    compteurDetail,
+    setCompteurDetail,
+  ] = useState<CompteurNonLus | null>(null);
 
   const [
     contactSelectionne,
@@ -239,6 +323,16 @@ function MessagesContent() {
     id: string;
     nom: string;
   } | null>(null);
+
+  /*
+   * Conversation de GROUPE sélectionnée dans la liste (ou via
+   * ?groupe=<id>). Les conversations de groupe utilisent les
+   * endpoints dédiés existants (/messages/groupes/:groupeId).
+   */
+  const [
+    groupeSelectionne,
+    setGroupeSelectionne,
+  ] = useState<SelectionConversation | null>(null);
 
   const [
     fil,
@@ -318,12 +412,13 @@ function MessagesContent() {
 
   /*
    * Mobile : vue affichee (liste <-> conversation). On arrive sur la
-   * conversation si l'URL pointe deja vers un contact (?contact=...).
+   * conversation si l'URL pointe deja vers un contact (?contact=...)
+   * ou un groupe (?groupe=...).
    */
   const [
     conversationOuverteMobile,
     setConversationOuverteMobile,
-  ] = useState(Boolean(contactIdParam));
+  ] = useState(Boolean(contactIdParam || groupeIdParam));
 
   /*
    * Panneau de details (mission, profil, pieces jointes) :
@@ -346,14 +441,16 @@ function MessagesContent() {
   ] = useState<string | null>(null);
 
   /*
-   * Si l'URL change (ex. clic sur un autre lien « Contacter »), on
-   * réajuste la vue mobile pendant le rendu (patron React documenté :
-   * ajustement d'état lors d'un changement de prop), sans effet de bord.
+   * Si l'URL change (ex. clic sur un autre lien « Contacter » ou
+   * « Ouvrir la discussion » depuis un groupe), on réajuste la vue
+   * mobile pendant le rendu (patron React documenté : ajustement
+   * d'état lors d'un changement de prop), sans effet de bord.
    */
-  const [dernierContactIdUrl, setDernierContactIdUrl] = useState(contactIdParam);
-  if (contactIdParam !== dernierContactIdUrl) {
-    setDernierContactIdUrl(contactIdParam);
-    setConversationOuverteMobile(Boolean(contactIdParam));
+  const cleUrlConversation = contactIdParam ?? groupeIdParam ?? null;
+  const [derniereCleUrl, setDerniereCleUrl] = useState(cleUrlConversation);
+  if (cleUrlConversation !== derniereCleUrl) {
+    setDerniereCleUrl(cleUrlConversation);
+    setConversationOuverteMobile(Boolean(cleUrlConversation));
   }
 
   /* =========================================================
@@ -370,10 +467,6 @@ function MessagesContent() {
     contactSelectionne ??
     contactDepuisUrl;
 
-  // Mobile : conversation affichee a la place de la liste.
-  const voirConversationMobile =
-    conversationOuverteMobile && Boolean(contactActif);
-
   /* =========================================================
      CHARGER LES CONVERSATIONS
      ========================================================= */
@@ -382,7 +475,7 @@ function MessagesContent() {
     try {
       const data =
         await api.get<
-          MessageAvecUtilisateurs[]
+          ConversationResume[]
         >("/messages");
 
       setConversations(data);
@@ -402,6 +495,39 @@ function MessagesContent() {
     }
   }, []);
 
+  /*
+   * Compteur détaillé des messages non lus : total / individuels /
+   * groupes (données réelles du backend). Les valeurs alimentent les
+   * compteurs des onglets de la liste.
+   */
+  const chargerCompteur = useCallback(async () => {
+    try {
+      const data =
+        await api.get<CompteurNonLus>(
+          "/messages/non-lus/compteur",
+        );
+
+      setCompteurDetail(data);
+    } catch (error) {
+      console.error(
+        "Erreur lors du chargement du compteur de messages :",
+        error,
+      );
+    }
+  }, []);
+
+  /*
+   * Rafraîchit la liste des conversations ET le compteur détaillé.
+   * Utilisé partout où l'ancien code ne rafraîchissait que la liste :
+   * les onglets restent ainsi synchronisés avec les données réelles.
+   */
+  const rafraichirDonnees = useCallback(async () => {
+    await Promise.all([
+      chargerConversations(),
+      chargerCompteur(),
+    ]);
+  }, [chargerConversations, chargerCompteur]);
+
   /* =========================================================
      CHARGEMENT INITIAL
      ========================================================= */
@@ -413,7 +539,7 @@ function MessagesContent() {
       try {
         const data =
           await api.get<
-            MessageAvecUtilisateurs[]
+            ConversationResume[]
           >("/messages");
 
         if (!cancelled) {
@@ -441,11 +567,36 @@ function MessagesContent() {
     }
 
     void chargerInitial();
+    void chargerCompteur();
 
     return () => {
       cancelled = true;
     };
   }, []);
+
+  /* =========================================================
+     CONVERSATIONS INDIVIDUELLES (sous-ensemble typé)
+     ========================================================= */
+
+  /*
+   * GET /messages renvoie un tableau discriminé (ConversationResume) :
+   * une entrée INDIVIDUEL a la forme d'un Message (expediteur,
+   * destinataire, estSupprime, ...), une entrée GROUPE a une forme
+   * différente (groupeId, nombreMembres, dernierMessage, ...).
+   *
+   * La liste de contacts individuels ci-dessous ne concerne que les
+   * conversations INDIVIDUEL : ce filtre restreint le type en
+   * conséquence et évite d'accéder à des champs qui n'existent pas
+   * sur les entrées GROUPE.
+   */
+  const conversationsIndividuelles = useMemo(
+    () =>
+      conversations.filter(
+        (conversation): conversation is ConversationIndividuelle =>
+          conversation.type === "INDIVIDUEL",
+      ),
+    [conversations],
+  );
 
   /* =========================================================
      CONSTRUCTION DES CONTACTS (liste des conversations)
@@ -466,7 +617,7 @@ function MessagesContent() {
 
     const map = new Map<string, ContactConversation>();
 
-    for (const message of conversations) {
+    for (const message of conversationsIndividuelles) {
       const autre =
         message.expediteurId === utilisateur.id
           ? message.destinataire
@@ -524,7 +675,7 @@ function MessagesContent() {
      * messages). Totalement indépendant du compteur de
      * notifications 🔔.
      */
-    for (const message of conversations) {
+    for (const message of conversationsIndividuelles) {
       if (
         message.destinataireId === utilisateur.id &&
         !message.estLu
@@ -537,7 +688,7 @@ function MessagesContent() {
     }
 
     return Array.from(map.values());
-  }, [conversations, utilisateur, contactDepuisUrl]);
+  }, [conversationsIndividuelles, utilisateur, contactDepuisUrl]);
 
   /* =========================================================
      RECHERCHE + ONGLETS (filtrage client-side)
@@ -925,7 +1076,7 @@ function MessagesContent() {
       }
     }
 
-    for (const message of conversations) {
+    for (const message of conversationsIndividuelles) {
       if (message.expediteurId === contactActif.id && message.expediteur) {
         return message.expediteur;
       }
@@ -935,7 +1086,7 @@ function MessagesContent() {
     }
 
     return null;
-  }, [utilisateur, contactActif, fil, conversations]);
+  }, [utilisateur, contactActif, fil, conversationsIndividuelles]);
 
   const autreUtilisateurId = autreUtilisateur?.id ?? null;
   const autreUtilisateurRole = autreUtilisateur?.role ?? null;
@@ -957,7 +1108,7 @@ function MessagesContent() {
     }
 
     if (utilisateur && contactActif) {
-      for (const message of conversations) {
+      for (const message of conversationsIndividuelles) {
         const implique =
           message.expediteurId === contactActif.id ||
           message.destinataireId === contactActif.id;
@@ -969,7 +1120,7 @@ function MessagesContent() {
     }
 
     return null;
-  }, [fil, conversations, utilisateur, contactActif]);
+  }, [fil, conversationsIndividuelles, utilisateur, contactActif]);
 
   // Seule la mission correspondant au contexte courant est affichée.
   const missionAffichee =
@@ -1313,6 +1464,14 @@ function MessagesContent() {
   function fermerConversationMobile() {
     setConversationOuverteMobile(false);
   }
+
+  /*
+   * Vue mobile actuellement affichée : la conversation (true) ou la
+   * liste des conversations (false). Simple alias de lecture sur
+   * `conversationOuverteMobile`, utilisé dans le JSX ci-dessous pour
+   * savoir quelle colonne afficher en dessous du point de rupture lg.
+   */
+  const voirConversationMobile = conversationOuverteMobile;
 
   /* =========================================================
      AFFICHAGE

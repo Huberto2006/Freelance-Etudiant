@@ -19,7 +19,7 @@ const AVANTAGES = [
     icon: GraduationCap,
     titre: "Des talents étudiants qualifiés",
     texte:
-      "Des étudiants de l'EMIT formés aux standards actuels, aux compétences validées et notés par leurs clients après chaque livraison.",
+      "Des étudiants formés aux standards actuels, aux compétences validées et notés par leurs clients après chaque livraison.",
   },
   {
     icon: Rocket,

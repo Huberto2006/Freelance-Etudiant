@@ -17,7 +17,7 @@ export interface CategorieAccueil {
 
 /**
  * Grille des catégories d'expertise : met en relation les domaines
- * de formation de l'EMIT avec les besoins des clients.
+ * de formation des étudiants avec les besoins des clients.
  */
 export function SectionCategories({
   categories,
