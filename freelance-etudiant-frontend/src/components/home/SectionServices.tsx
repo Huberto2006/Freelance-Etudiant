@@ -30,7 +30,7 @@ export function SectionServices({ services }: { services: ServiceOffert[] }) {
         icon={Wrench}
         eyebrow="Compétences étudiantes · Prestations"
         titre="Services prêts à l&apos;emploi"
-        sousTitre="Explorez les prestations directes proposées par les talents de l'EMIT : développement, graphisme, rédaction et plus."
+        sousTitre="Explorez les prestations directes proposées par les talents étudiants : développement, graphisme, rédaction et plus."
         lienHref="/services"
         lienLabel="Voir tous les services"
       />
@@ -42,7 +42,7 @@ export function SectionServices({ services }: { services: ServiceOffert[] }) {
               <Wrench size={20} aria-hidden="true" />
             </span>
             <p className="max-w-md text-sm text-ink-soft">
-              Aucun service n&apos;est encore publié. Étudiants de l&apos;EMIT : publiez votre premier service pour être visible auprès des clients.
+              Aucun service n&apos;est encore publié. Étudiants : publiez votre premier service pour être visible auprès des clients.
             </p>
             <Link
               href="/inscription"
@@ -63,7 +63,7 @@ export function SectionServices({ services }: { services: ServiceOffert[] }) {
 
           <div className="mt-6 flex flex-col items-center justify-between gap-3 rounded-xl border border-ink/10 bg-paper-light px-5 py-3.5 text-center sm:flex-row sm:text-left">
             <p className="text-xs text-ink-soft">
-              Vous êtes étudiant à l&apos;EMIT et vous souhaitez proposer vos services ?
+              Vous êtes étudiant et vous souhaitez proposer vos services ?
             </p>
             <Link
               href="/inscription"

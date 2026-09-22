@@ -44,14 +44,23 @@ export class MessagesController {
   }
 
   @Get('non-lus/compteur')
-  @ApiOperation({ summary: 'Compter mes messages non lus' })
+  @ApiOperation({
+    summary:
+      'Compter mes messages non lus (total, individuels, groupes)',
+  })
   async compteur(@CurrentUser() user: AuthenticatedUser) {
-    const total = await this.messagesService.compterNonLus(user.id);
-    return { total };
+    /*
+     * { total, individuels, groupes } : total reste individuels +
+     * groupes, contrat historique conserve (badge MessagesLink).
+     */
+    return this.messagesService.compterNonLusDetaille(user.id);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Lister mes conversations' })
+  @ApiOperation({
+    summary:
+      "Lister mes conversations (individuelles et de groupes dont je suis membre actif)",
+  })
   async mesConversations(@CurrentUser() user: AuthenticatedUser) {
     return this.messagesService.findMesConversations(user.id);
   }

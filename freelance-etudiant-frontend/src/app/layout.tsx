@@ -21,9 +21,9 @@ import { NavbarConditionnelle } from "@/components/layout/NavbarConditionnelle";
 import { FooterConditionnel } from "@/components/layout/FooterConditionnel";
 
 export const metadata: Metadata = {
-  title: "Kianja — Freelances etudiants x Clients | EMIT Fianarantsoa",
+  title: "Kianja — Freelances etudiants x Clients",
   description:
-    "La place de marche qui connecte les etudiants freelances de l'EMIT Fianarantsoa aux clients qui ont besoin de leurs competences.",
+    "La place de marche qui connecte les etudiants freelances aux clients qui ont besoin de leurs competences.",
 };
 
 /**

@@ -26,11 +26,11 @@ export function Footer() {
 
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-ink-soft">
             La place de marche qui connecte les étudiants freelances aux
-            clients, à Fianarantsoa et au-delà.
+            clients, partout à Madagascar et au-delà.
           </p>
 
           <p className="mt-4 font-mono text-xs text-ink-soft/60">
-            Projet L3 Informatique — EMIT Fianarantsoa
+            Projet L3 Informatique — plateforme Freelance Étudiant
           </p>
         </div>
 

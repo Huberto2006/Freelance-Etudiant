@@ -18,7 +18,7 @@ const ETAPES_CLIENT: EtapeFonctionnement[] = [
   },
   {
     titre: "Recevez des candidatures",
-    detail: "Comparez les profils, les portfolios et les propositions des étudiants de l'EMIT.",
+    detail: "Comparez les profils, les portfolios et les propositions des étudiants.",
   },
   {
     titre: "Choisissez votre étudiant",
@@ -41,7 +41,7 @@ const ETAPES_CLIENT: EtapeFonctionnement[] = [
 const ETAPES_ETUDIANT: EtapeFonctionnement[] = [
   {
     titre: "Créez votre profil",
-    detail: "Indiquez votre filière EMIT, votre spécialité et vos compétences clés.",
+    detail: "Indiquez votre filière, votre spécialité et vos compétences clés.",
   },
   {
     titre: "Présentez vos services",

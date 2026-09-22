@@ -28,7 +28,7 @@ const PILIERS_CLIENT: Pilier[] = [
   {
     titre: "Trouver des étudiants",
     description:
-      "Explorez le catalogue de compétences, filtrez par filière ou domaine, et sélectionnez les meilleurs talents de l'EMIT.",
+      "Explorez le catalogue de compétences, filtrez par filière ou domaine, et sélectionnez les meilleurs talents étudiants.",
   },
   {
     titre: "Suivre leurs projets",
@@ -99,7 +99,7 @@ export function SectionAudiences({
 
           <p className="mt-3 text-sm leading-relaxed text-ink-soft">
             Entreprises, startups, associations ou particuliers : accédez aux
-            futurs diplômés de l&apos;EMIT Fianarantsoa pour donner vie à vos projets
+            futurs diplômés pour donner vie à vos projets
             avec un excellent rapport qualité-prix.
           </p>
 
@@ -185,7 +185,7 @@ export function SectionAudiences({
           </div>
 
           <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-            Étudiants de l&apos;EMIT : mettez en pratique vos acquis académiques,
+            Étudiants : mettez en pratique vos acquis académiques,
             générez des revenus durant votre cursus et démarrez votre carrière
             avec une expérience concrète et vérifiée.
           </p>

@@ -35,3 +35,51 @@ export interface MessageAvecUtilisateurs {
   supprimeParId?: string | null;
   dateEnvoi: string;
 }
+
+/* =========================================================
+   CONVERSATIONS (contrat backend ÉTAPE 3 — GET /messages)
+   ========================================================= */
+
+/**
+ * Discriminant des deux formes de conversation du système de
+ * messagerie Kianja (une seule table messages côté backend).
+ */
+export type TypeConversation = "INDIVIDUEL" | "GROUPE";
+
+/**
+ * Entrée de conversation individuelle renvoyée par GET /messages :
+ * le format Message historique est conservé, enrichi du discriminant
+ * et de l'interlocuteur.
+ */
+export interface ConversationIndividuelle extends MessageAvecUtilisateurs {
+  type: "INDIVIDUEL";
+  utilisateurId: string;
+  nom: string;
+}
+
+/**
+ * Entrée de conversation de groupe renvoyée par GET /messages :
+ * une seule entrée par groupe dont l'utilisateur est membre actif.
+ * Un groupe sans message a dernierMessage = null (aucun message
+ * artificiel n'est créé côté backend).
+ */
+export interface ConversationGroupeResume {
+  type: "GROUPE";
+  groupeId: string;
+  nom: string;
+  nombreMembres: number;
+  dernierMessage: MessageAvecUtilisateurs | null;
+  nonLus: number;
+}
+
+export type ConversationResume =
+  | ConversationIndividuelle
+  | ConversationGroupeResume;
+
+/** Compteur détaillé (GET /messages/non-lus/compteur). */
+export interface CompteurNonLus {
+  /** individuels + groupes (contrat historique du badge MessagesLink). */
+  total: number;
+  individuels: number;
+  groupes: number;
+}
