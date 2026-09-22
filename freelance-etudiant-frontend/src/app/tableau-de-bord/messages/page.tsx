@@ -33,14 +33,20 @@ import { clsx } from "clsx";
 import { roleLabel, useAuth } from "@/lib/auth-context";
 import { api, ApiError, getFileUrl } from "@/lib/api";
 import { useSocket } from "@/lib/socket-context";
-import { formatArgent, formatDate, statutMissionLabel } from "@/lib/format";
+import {
+  formatArgent,
+  formatDate,
+  statutMissionLabel,
+} from "@/lib/format";
 
 import type {
   CompteurNonLus,
+  ConversationGroupeResume,
   ConversationIndividuelle,
   ConversationResume,
   MessageAvecUtilisateurs,
 } from "@/lib/message-types";
+
 import type {
   ClientProfile,
   EtudiantProfile,
@@ -51,55 +57,26 @@ import type {
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Field";
+
 import {
   PieceJointeAffichage,
   SelecteurPieceJointe,
   type PieceJointeValeur,
 } from "@/components/ui/PieceJointe";
+
 import { Skeleton } from "@/components/ui/Skeleton";
 
 /* =========================================================
    TYPES LOCAUX
    ========================================================= */
 
-/**
- * Ligne de la liste des conversations : dérivée des messages réels
- * renvoyés par GET /messages (aucune donnée fabriquée).
- */
-interface ContactConversation {
-  id: string;
-  nom: string;
-  photoUrl?: string | null;
-  role?: Role | null;
-  dernierContenu: string;
-  dernierDate: string | null;
-  dernierEstMoi: boolean;
-  conversationVide: boolean;
-  nonLus: number;
-}
-
-/** Pièce jointe partagée dans la conversation ouverte. */
-interface PieceJointeConversation {
-  url: string;
-  nom: string | null;
-  auteur: string;
-  dateEnvoi: string;
-}
-
-/**
- * Ligne de la liste des conversations (individuelle OU de groupe),
- * dérivée des données réelles renvoyées par GET /messages.
- */
 interface LigneConversation {
-  /** Clé unique de ligne (`<contactId>` ou `groupe-<groupeId>`). */
   cle: string;
   type: "INDIVIDUEL" | "GROUPE";
-  /** ContactId (individuel) ou groupeId (groupe). */
   id: string;
   nom: string;
   photoUrl?: string | null;
   role?: Role | null;
-  /** Groupes uniquement. */
   nombreMembres?: number;
   dernierContenu: string;
   dernierDate: string | null;
@@ -108,16 +85,34 @@ interface LigneConversation {
   nonLus: number;
 }
 
-/** Conversation sélectionnée dans la liste (ou pointée par l'URL). */
 type SelectionConversation =
-  | { type: "INDIVIDUEL"; id: string; nom: string }
-  | { type: "GROUPE"; id: string; nom: string; nombreMembres?: number };
+  | {
+      type: "INDIVIDUEL";
+      id: string;
+      nom: string;
+    }
+  | {
+      type: "GROUPE";
+      id: string;
+      nom: string;
+      nombreMembres?: number;
+    };
+
+interface PieceJointeConversation {
+  url: string;
+  nom: string | null;
+  auteur: string;
+  dateEnvoi: string;
+}
+
+type MessageSocket = MessageAvecUtilisateurs & {
+  groupeId?: string | null;
+};
 
 /* =========================================================
-   HELPERS D'AFFICHAGE (dates, aperçus)
+   HELPERS
    ========================================================= */
 
-/** Heure d'un message (ex. « 14:32 »). */
 function formaterHeure(date: string): string {
   try {
     return new Intl.DateTimeFormat("fr-FR", {
@@ -129,80 +124,127 @@ function formaterHeure(date: string): string {
   }
 }
 
-/**
- * Date compacte pour la liste des conversations :
- * « 14:32 » aujourd'hui, « Hier », « 12 sept. » (année si différente).
- */
 function formaterDateListe(date: string): string {
   const jour = new Date(date);
-  if (Number.isNaN(jour.getTime())) return "";
+
+  if (Number.isNaN(jour.getTime())) {
+    return "";
+  }
 
   const aujourdhui = new Date();
+
   if (jour.toDateString() === aujourdhui.toDateString()) {
     return formaterHeure(date);
   }
 
   const hier = new Date(aujourdhui);
+
   hier.setDate(aujourdhui.getDate() - 1);
+
   if (jour.toDateString() === hier.toDateString()) {
     return "Hier";
   }
 
-  const memeAnnee = jour.getFullYear() === aujourdhui.getFullYear();
+  const memeAnnee =
+    jour.getFullYear() === aujourdhui.getFullYear();
+
   try {
     return new Intl.DateTimeFormat("fr-FR", {
       day: "numeric",
       month: "short",
-      ...(memeAnnee ? {} : { year: "numeric" }),
+      ...(memeAnnee
+        ? {}
+        : {
+            year: "numeric",
+          }),
     }).format(jour);
   } catch {
     return "";
   }
 }
 
-/** Étiquette de séparation par jour dans le fil (ex. « lundi 12 septembre »). */
 function formaterJourSeparateur(date: string): string {
   const jour = new Date(date);
-  if (Number.isNaN(jour.getTime())) return "";
 
-  const memeAnnee = jour.getFullYear() === new Date().getFullYear();
+  if (Number.isNaN(jour.getTime())) {
+    return "";
+  }
+
+  const memeAnnee =
+    jour.getFullYear() === new Date().getFullYear();
+
   try {
     return new Intl.DateTimeFormat("fr-FR", {
       weekday: "long",
       day: "numeric",
       month: "long",
-      ...(memeAnnee ? {} : { year: "numeric" }),
+      ...(memeAnnee
+        ? {}
+        : {
+            year: "numeric",
+          }),
     }).format(jour);
   } catch {
     return "";
   }
 }
 
-function estMemeJournee(a: string, b: string): boolean {
-  return new Date(a).toDateString() === new Date(b).toDateString();
+function estMemeJournee(
+  a: string,
+  b: string,
+): boolean {
+  return (
+    new Date(a).toDateString() ===
+    new Date(b).toDateString()
+  );
 }
 
-/** Aperçu du dernier message pour la liste des conversations. */
-function apercuMessage(message: MessageAvecUtilisateurs): string {
-  if (message.estSupprime) return "Message supprimé";
-  if (message.contenu?.trim()) return message.contenu.trim();
-  if (message.pieceJointeUrl) return "Pièce jointe";
+function apercuMessage(
+  message: MessageAvecUtilisateurs,
+): string {
+  if (message.estSupprime) {
+    return "Message supprimé";
+  }
+
+  if (message.contenu?.trim()) {
+    return message.contenu.trim();
+  }
+
+  if (message.pieceJointeUrl) {
+    return "Pièce jointe";
+  }
+
   return "Nouvelle conversation";
 }
 
-/**
- * Aperçu du dernier message d'une conversation de GROUPE : préfixé du
- * nom de l'auteur (« Marie : J'ai terminé le design ») sauf si c'est
- * l'utilisateur lui-même. Mêmes conventions que apercuMessage.
- */
 function apercuMessageGroupe(
   message: MessageAvecUtilisateurs,
   utilisateurId: string,
 ): string {
   const apercu = apercuMessage(message);
-  if (message.expediteurId === utilisateurId) return apercu;
-  const auteur = message.expediteur?.nom ?? "Membre";
+
+  if (message.expediteurId === utilisateurId) {
+    return apercu;
+  }
+
+  const auteur =
+    message.expediteur?.nom ?? "Membre";
+
   return `${auteur} : ${apercu}`;
+}
+
+/*
+ * roleLabel est une fonction :
+ * roleLabel(role)
+ */
+function afficherRole(
+  role?: Role | null,
+): string {
+  if (!role) {
+    return "Utilisateur Kianja";
+  }
+
+  return roleLabel(role);
 }
 
 /* =========================================================
@@ -215,7 +257,11 @@ export default function MessagesPage() {
       fallback={
         <div className="flex h-[calc(100dvh-8rem)] min-h-[560px] items-center justify-center md:h-[calc(100dvh-9rem)]">
           <div className="flex items-center gap-2 text-sm text-ink-soft">
-            <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+            <Loader2
+              size={16}
+              className="animate-spin"
+              aria-hidden="true"
+            />
             Chargement des conversations…
           </div>
         </div>
@@ -233,84 +279,71 @@ export default function MessagesPage() {
 function MessagesContent() {
   const { utilisateur } = useAuth();
   const { socket } = useSocket();
-
-  const searchParams =
-    useSearchParams();
+  const searchParams = useSearchParams();
 
   /* =========================================================
-     PARAMÈTRES URL
+     URL
      ========================================================= */
 
   const contactIdParam =
     searchParams.get("contact");
 
-  const nomParam =
-    searchParams.get("nom");
-
-  /*
-   * Conversation de groupe pointée par l'URL :
-   * /tableau-de-bord/messages?groupe=<id>&nom=<nom du groupe>
-   * (chemin « Groupes → Ouvrir la discussion »).
-   */
   const groupeIdParam =
     searchParams.get("groupe");
 
+  const nomParam =
+    searchParams.get("nom");
+
+  const contactDepuisUrl = useMemo(() => {
+    if (!contactIdParam) {
+      return null;
+    }
+
+    return {
+      id: contactIdParam,
+      nom:
+        nomParam?.trim() ||
+        "Utilisateur",
+    };
+  }, [
+    contactIdParam,
+    nomParam,
+  ]);
+
   /*
-   * Contact provenant de l'URL.
-   *
-   * Aucun setState ici.
+   * IMPORTANT :
+   * On déclare explicitement nombreMembres comme propriété
+   * optionnelle pour éviter l'erreur TypeScript.
    */
-  const contactDepuisUrl =
-    useMemo(() => {
-      if (!contactIdParam) {
-        return null;
-      }
+  const groupeDepuisUrl = useMemo<{
+    id: string;
+    nom: string;
+    nombreMembres?: number;
+  } | null>(() => {
+    if (!groupeIdParam) {
+      return null;
+    }
 
-      return {
-        id: contactIdParam,
-        nom:
-          nomParam?.trim() ||
-          "Utilisateur",
-      };
-    }, [
-      contactIdParam,
-      nomParam,
-    ]);
-
-  const groupeDepuisUrl =
-    useMemo(() => {
-      if (!groupeIdParam) {
-        return null;
-      }
-
-      return {
-        id: groupeIdParam,
-        nom:
-          nomParam?.trim() ||
-          "Groupe",
-      };
-    }, [
-      groupeIdParam,
-      nomParam,
-    ]);
+    return {
+      id: groupeIdParam,
+      nom:
+        nomParam?.trim() ||
+        "Groupe",
+    };
+  }, [
+    groupeIdParam,
+    nomParam,
+  ]);
 
   /* =========================================================
-     ÉTATS
+     ETATS
      ========================================================= */
 
   const [
     conversations,
     setConversations,
-  ] = useState<
-    ConversationResume[]
-  >([]);
+  ] = useState<ConversationResume[]>([]);
 
-  /*
-   * Compteur détaillé des messages non lus (GET
-   * /messages/non-lus/compteur) : alimente les compteurs des
-   * onglets Tous / Individuels / Groupes. Le badge global de la
-   * navbar (MessagesLink) reste indépendant et inchangé.
-   */
   const [
     compteurDetail,
     setCompteurDetail,
@@ -324,22 +357,17 @@ function MessagesContent() {
     nom: string;
   } | null>(null);
 
-  /*
-   * Conversation de GROUPE sélectionnée dans la liste (ou via
-   * ?groupe=<id>). Les conversations de groupe utilisent les
-   * endpoints dédiés existants (/messages/groupes/:groupeId).
-   */
   const [
     groupeSelectionne,
     setGroupeSelectionne,
-  ] = useState<SelectionConversation | null>(null);
+  ] = useState<SelectionConversation | null>(
+    null,
+  );
 
   const [
     fil,
     setFil,
-  ] = useState<
-    MessageAvecUtilisateurs[]
-  >([]);
+  ] = useState<MessageAvecUtilisateurs[]>([]);
 
   const [
     nouveauMessage,
@@ -349,7 +377,9 @@ function MessagesContent() {
   const [
     pieceJointe,
     setPieceJointe,
-  ] = useState<PieceJointeValeur | null>(null);
+  ] = useState<PieceJointeValeur | null>(
+    null,
+  );
 
   const [
     chargement,
@@ -371,184 +401,241 @@ function MessagesContent() {
     setEnvoi,
   ] = useState(false);
 
-  /*
-   * Erreur specifique a l'envoi du message en cours, distincte de
-   * `erreur` (chargement des conversations / suppression) : affichee
-   * au plus pres du champ de saisie pour rester claire pour
-   * l'utilisateur, sans se confondre avec les autres erreurs de la
-   * page.
-   */
   const [
     erreurEnvoi,
     setErreurEnvoi,
   ] = useState<string | null>(null);
 
-  /*
-   * Ref du formulaire d'envoi : permet a `Enter` (via onKeyDown sur le
-   * textarea) de declencher exactement le meme chemin de soumission
-   * que le clic sur le bouton "Envoyer" (form.requestSubmit()),
-   * pour eviter toute logique d'envoi dupliquee.
-   */
-  const formEnvoiRef = useRef<HTMLFormElement>(null);
+  const formEnvoiRef =
+    useRef<HTMLFormElement>(null);
 
-  /*
-   * Verrou synchrone anti-double-envoi : plus fiable qu'un test sur
-   * le seul state `envoi` en cas d'appuis tres rapproches (l'etat
-   * React ne se met a jour qu'au prochain rendu).
-   */
-  const envoiEnCoursRef = useRef(false);
+  const envoiEnCoursRef =
+    useRef(false);
 
-  // Zone defilante des messages : pour rester en bas du fil.
-  const zoneMessagesRef = useRef<HTMLDivElement>(null);
+  const zoneMessagesRef =
+    useRef<HTMLDivElement>(null);
 
-  // Champ de saisie : pour ajuster sa hauteur a son contenu.
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef =
+    useRef<HTMLTextAreaElement>(null);
 
-  // Onglet actif de la liste : Toutes / Non lues.
-  const [ongletMessages, setOngletMessages] = useState("toutes");
+  const [
+    ongletMessages,
+    setOngletMessages,
+  ] = useState<
+    "toutes" | "non_lus"
+  >("toutes");
 
-  // Recherche client-side dans la liste des conversations.
-  const [recherche, setRecherche] = useState("");
+  const [
+    recherche,
+    setRecherche,
+  ] = useState("");
 
-  /*
-   * Mobile : vue affichee (liste <-> conversation). On arrive sur la
-   * conversation si l'URL pointe deja vers un contact (?contact=...)
-   * ou un groupe (?groupe=...).
-   */
   const [
     conversationOuverteMobile,
     setConversationOuverteMobile,
-  ] = useState(Boolean(contactIdParam || groupeIdParam));
+  ] = useState(
+    Boolean(
+      contactIdParam ||
+        groupeIdParam,
+    ),
+  );
 
-  /*
-   * Panneau de details (mission, profil, pieces jointes) :
-   * - xl+        : colonne de droite, masquable via le bouton menu ;
-   * - en dessous : panneau lateral affiche en superposition.
-   */
-  const [panneauVisible, setPanneauVisible] = useState(true);
-  const [detailsOuverts, setDetailsOuverts] = useState(false);
+  const [
+    panneauVisible,
+    setPanneauVisible,
+  ] = useState(true);
 
-  // Contexte de mission lie a la conversation (GET /missions/:id public).
-  const [mission, setMission] = useState<Mission | null>(null);
+  const [
+    detailsOuverts,
+    setDetailsOuverts,
+  ] = useState(false);
 
-  // Fiches publiques du correspondant (note, universite, entreprise…).
-  const [profilEtudiant, setProfilEtudiant] = useState<EtudiantProfile | null>(null);
-  const [profilClient, setProfilClient] = useState<ClientProfile | null>(null);
+  const [
+    mission,
+    setMission,
+  ] = useState<Mission | null>(null);
+
+  const [
+    profilEtudiant,
+    setProfilEtudiant,
+  ] = useState<EtudiantProfile | null>(
+    null,
+  );
+
+  const [
+    profilClient,
+    setProfilClient,
+  ] = useState<ClientProfile | null>(
+    null,
+  );
 
   const [
     messageEnSuppression,
     setMessageEnSuppression,
-  ] = useState<string | null>(null);
-
-  /*
-   * Si l'URL change (ex. clic sur un autre lien « Contacter » ou
-   * « Ouvrir la discussion » depuis un groupe), on réajuste la vue
-   * mobile pendant le rendu (patron React documenté : ajustement
-   * d'état lors d'un changement de prop), sans effet de bord.
-   */
-  const cleUrlConversation = contactIdParam ?? groupeIdParam ?? null;
-  const [derniereCleUrl, setDerniereCleUrl] = useState(cleUrlConversation);
-  if (cleUrlConversation !== derniereCleUrl) {
-    setDerniereCleUrl(cleUrlConversation);
-    setConversationOuverteMobile(Boolean(cleUrlConversation));
-  }
+  ] = useState<string | null>(
+    null,
+  );
 
   /* =========================================================
-     CONTACT ACTIF
+     CONVERSATION ACTIVE
      ========================================================= */
 
+  const cleUrlConversation =
+    contactIdParam ??
+    groupeIdParam ??
+    null;
+
+  const [
+    derniereCleUrl,
+    setDerniereCleUrl,
+  ] = useState(
+    cleUrlConversation,
+  );
+
+  if (
+    cleUrlConversation !==
+    derniereCleUrl
+  ) {
+    setDerniereCleUrl(
+      cleUrlConversation,
+    );
+
+    setConversationOuverteMobile(
+      Boolean(cleUrlConversation),
+    );
+  }
+
   /*
-   * Pas besoin de useEffect + setState.
-   *
-   * Le contact actif est simplement dérivé de l'état
-   * et des paramètres URL.
+   * Si un groupe est sélectionné, on ne conserve pas
+   * un ancien contact provenant de l'URL.
    */
   const contactActif =
     contactSelectionne ??
-    contactDepuisUrl;
-
-  /* =========================================================
-     CHARGER LES CONVERSATIONS
-     ========================================================= */
-
-  const chargerConversations = useCallback(async () => {
-    try {
-      const data =
-        await api.get<
-          ConversationResume[]
-        >("/messages");
-
-      setConversations(data);
-
-      setErreur(null);
-    } catch (error) {
-      console.error(
-        "Erreur lors du chargement des messages :",
-        error,
-      );
-
-      setErreur(
-        error instanceof ApiError
-          ? error.message
-          : "Impossible de charger les conversations.",
-      );
-    }
-  }, []);
+    (!groupeSelectionne
+      ? contactDepuisUrl
+      : null);
 
   /*
-   * Compteur détaillé des messages non lus : total / individuels /
-   * groupes (données réelles du backend). Les valeurs alimentent les
-   * compteurs des onglets de la liste.
+   * On ne récupère depuis la sélection que les groupes.
+   * Cela permet à TypeScript de connaître nombreMembres.
    */
-  const chargerCompteur = useCallback(async () => {
-    try {
-      const data =
-        await api.get<CompteurNonLus>(
-          "/messages/non-lus/compteur",
+  const groupeActif =
+    groupeSelectionne?.type ===
+    "GROUPE"
+      ? groupeSelectionne
+      : !contactSelectionne
+        ? groupeDepuisUrl
+        : null;
+
+  /*
+   * Conversation active = INDIVIDUEL ou GROUPE.
+   */
+  const conversationActive =
+    contactActif
+      ? {
+          type: "INDIVIDUEL" as const,
+          id: contactActif.id,
+          nom: contactActif.nom,
+        }
+      : groupeActif
+        ? {
+            type: "GROUPE" as const,
+            id: groupeActif.id,
+            nom: groupeActif.nom,
+            nombreMembres:
+              groupeActif.nombreMembres,
+          }
+        : null;
+
+  /* =========================================================
+     CHARGEMENT DES CONVERSATIONS
+     ========================================================= */
+
+  const chargerConversations =
+    useCallback(async () => {
+      try {
+        const data =
+          await api.get<ConversationResume[]>(
+            "/messages",
+          );
+
+        setConversations(data);
+        setErreur(null);
+      } catch (error) {
+        console.error(
+          "Erreur chargement conversations :",
+          error,
         );
 
-      setCompteurDetail(data);
-    } catch (error) {
-      console.error(
-        "Erreur lors du chargement du compteur de messages :",
-        error,
-      );
-    }
-  }, []);
+        setErreur(
+          error instanceof ApiError
+            ? error.message
+            : "Impossible de charger les conversations.",
+        );
+      }
+    }, []);
 
-  /*
-   * Rafraîchit la liste des conversations ET le compteur détaillé.
-   * Utilisé partout où l'ancien code ne rafraîchissait que la liste :
-   * les onglets restent ainsi synchronisés avec les données réelles.
-   */
-  const rafraichirDonnees = useCallback(async () => {
-    await Promise.all([
-      chargerConversations(),
-      chargerCompteur(),
+  const chargerCompteur =
+    useCallback(async () => {
+      try {
+        const data =
+          await api.get<CompteurNonLus>(
+            "/messages/non-lus/compteur",
+          );
+
+        setCompteurDetail(data);
+      } catch (error) {
+        console.error(
+          "Erreur compteur messages :",
+          error,
+        );
+      }
+    }, []);
+
+  const rafraichirDonnees =
+    useCallback(async () => {
+      await Promise.all([
+        chargerConversations(),
+        chargerCompteur(),
+      ]);
+    }, [
+      chargerConversations,
+      chargerCompteur,
     ]);
-  }, [chargerConversations, chargerCompteur]);
-
-  /* =========================================================
-     CHARGEMENT INITIAL
-     ========================================================= */
 
   useEffect(() => {
     let cancelled = false;
 
     async function chargerInitial() {
       try {
-        const data =
-          await api.get<
-            ConversationResume[]
-          >("/messages");
+        const [
+          conversationsData,
+          compteurData,
+        ] = await Promise.all([
+          api.get<ConversationResume[]>(
+            "/messages",
+          ),
+          api.get<CompteurNonLus>(
+            "/messages/non-lus/compteur",
+          ),
+        ]);
 
-        if (!cancelled) {
-          setConversations(data);
-          setErreur(null);
+        if (cancelled) {
+          return;
         }
+
+        setConversations(
+          conversationsData,
+        );
+
+        setCompteurDetail(
+          compteurData,
+        );
+
+        setErreur(null);
       } catch (error) {
         console.error(
-          "Erreur lors du chargement initial des messages :",
+          "Erreur chargement initial :",
           error,
         );
 
@@ -567,7 +654,6 @@ function MessagesContent() {
     }
 
     void chargerInitial();
-    void chargerCompteur();
 
     return () => {
       cancelled = true;
@@ -575,344 +661,681 @@ function MessagesContent() {
   }, []);
 
   /* =========================================================
-     CONVERSATIONS INDIVIDUELLES (sous-ensemble typé)
+     TYPES DE CONVERSATIONS
      ========================================================= */
 
-  /*
-   * GET /messages renvoie un tableau discriminé (ConversationResume) :
-   * une entrée INDIVIDUEL a la forme d'un Message (expediteur,
-   * destinataire, estSupprime, ...), une entrée GROUPE a une forme
-   * différente (groupeId, nombreMembres, dernierMessage, ...).
-   *
-   * La liste de contacts individuels ci-dessous ne concerne que les
-   * conversations INDIVIDUEL : ce filtre restreint le type en
-   * conséquence et évite d'accéder à des champs qui n'existent pas
-   * sur les entrées GROUPE.
-   */
-  const conversationsIndividuelles = useMemo(
-    () =>
-      conversations.filter(
-        (conversation): conversation is ConversationIndividuelle =>
-          conversation.type === "INDIVIDUEL",
-      ),
-    [conversations],
-  );
-
-  /* =========================================================
-     CONSTRUCTION DES CONTACTS (liste des conversations)
-     ========================================================= */
-
-  /*
-   * Dérivé des messages réels renvoyés par GET /messages (triés du
-   * plus récent au plus ancien par le backend) : la première
-   * occurrence d'un contact porte donc son message le plus récent.
-   *
-   * Les conversations « virtuelles » (contacts issus d'une candidature
-   * acceptée, sans message envoyé) affichent « Nouvelle conversation ».
-   */
-  const contacts = useMemo<ContactConversation[]>(() => {
-    if (!utilisateur) {
-      return [];
-    }
-
-    const map = new Map<string, ContactConversation>();
-
-    for (const message of conversationsIndividuelles) {
-      const autre =
-        message.expediteurId === utilisateur.id
-          ? message.destinataire
-          : message.expediteur;
-
-      if (!autre) {
-        continue;
-      }
-
-      if (map.has(autre.id)) {
-        continue;
-      }
-
-      map.set(autre.id, {
-        id: autre.id,
-        nom: autre.nom,
-        photoUrl: autre.photoUrl ?? null,
-        role: autre.role ?? null,
-        dernierContenu: apercuMessage(message),
-        dernierDate: message.dateEnvoi,
-        dernierEstMoi:
-          message.expediteurId === utilisateur.id,
-        conversationVide:
-          !message.contenu?.trim() &&
-          !message.estSupprime &&
-          !message.pieceJointeUrl,
-        nonLus: 0,
-      });
-    }
-
-    /*
-     * Si l'URL contient un contact qui n'est
-     * pas encore présent dans les conversations,
-     * on l'ajoute également.
-     */
-    if (
-      contactDepuisUrl &&
-      !map.has(contactDepuisUrl.id)
-    ) {
-      map.set(contactDepuisUrl.id, {
-        id: contactDepuisUrl.id,
-        nom: contactDepuisUrl.nom,
-        photoUrl: null,
-        role: null,
-        dernierContenu: "Nouvelle conversation",
-        dernierDate: null,
-        dernierEstMoi: false,
-        conversationVide: true,
-        nonLus: 0,
-      });
-    }
-
-    /*
-     * Indicateurs de MESSAGES non lus (champ estLu de la table
-     * messages). Totalement indépendant du compteur de
-     * notifications 🔔.
-     */
-    for (const message of conversationsIndividuelles) {
-      if (
-        message.destinataireId === utilisateur.id &&
-        !message.estLu
-      ) {
-        const ligne = map.get(message.expediteurId);
-        if (ligne) {
-          ligne.nonLus += 1;
-        }
-      }
-    }
-
-    return Array.from(map.values());
-  }, [conversationsIndividuelles, utilisateur, contactDepuisUrl]);
-
-  /* =========================================================
-     RECHERCHE + ONGLETS (filtrage client-side)
-     ========================================================= */
-
-  const rechercheNormalisee = recherche.trim().toLowerCase();
-
-  const contactsFiltres = useMemo(() => {
-    if (!rechercheNormalisee) {
-      return contacts;
-    }
-
-    return contacts.filter(
-      (contact) =>
-        contact.nom.toLowerCase().includes(rechercheNormalisee) ||
-        contact.dernierContenu.toLowerCase().includes(rechercheNormalisee),
+  const conversationsIndividuelles =
+    useMemo(
+      () =>
+        conversations.filter(
+          (
+            conversation,
+          ): conversation is ConversationIndividuelle =>
+            conversation.type ===
+            "INDIVIDUEL",
+        ),
+      [conversations],
     );
-  }, [contacts, rechercheNormalisee]);
 
-  // Onglet « Non lues » : uniquement les contacts avec des messages non lus.
-  const contactsAffiches =
-    ongletMessages === "non_lus"
-      ? contactsFiltres.filter(
-          (contact) => contact.nonLus > 0,
-        )
-      : contactsFiltres;
-
-  const compteNonLus = contacts.filter(
-    (contact) => contact.nonLus > 0,
-  ).length;
-
-  /* =========================================================
-     CHARGER UNE CONVERSATION
-     ========================================================= */
-
-  async function chargerFil(
-    contactId: string,
-  ): Promise<MessageAvecUtilisateurs[]> {
-    setChargementFil(true);
-    setErreur(null);
-
-    try {
-      const data =
-        await api.get<
-          MessageAvecUtilisateurs[]
-        >(
-          `/messages/conversation/${contactId}`,
-        );
-
-      setFil(data);
-
-      return data;
-    } catch (error) {
-      console.error(
-        "Erreur lors du chargement de la conversation :",
-        error,
-      );
-
-      setErreur(
-        error instanceof ApiError
-          ? error.message
-          : "Impossible de charger cette conversation.",
-      );
-
-      return [];
-    } finally {
-      setChargementFil(false);
-    }
-  }
+  const conversationsGroupes =
+    useMemo(
+      () =>
+        conversations.filter(
+          (
+            conversation,
+          ): conversation is ConversationGroupeResume =>
+            conversation.type ===
+            "GROUPE",
+        ),
+      [conversations],
+    );
 
   /* =========================================================
-     MARQUER LES MESSAGES RECUS COMME LUS (systeme MESSAGES)
+     CONSTRUCTION DES LIGNES
      ========================================================= */
 
-  /*
-   * Marque comme lus les messages recus d'une conversation
-   * ouverte, via l'endpoint existant PATCH /messages/:id/lu.
-   *
-   * Cette action appartient exclusivement a la MESSAGERIE :
-   * elle ne modifie AUCUNE notification (les deux etats
-   * "message lu" et "notification lue" restent independants).
-   */
-  const marquerFilCommeLu = useCallback(
-    async (messages: MessageAvecUtilisateurs[]) => {
-      if (!utilisateur) {
-        return;
-      }
+  const lignesConversations =
+    useMemo<LigneConversation[]>(
+      () => {
+        if (!utilisateur) {
+          return [];
+        }
 
-      const nonLus = messages.filter(
-        (message) =>
-          message.destinataireId ===
-            utilisateur.id && !message.estLu,
-      );
+        const lignes: LigneConversation[] =
+          [];
 
-      if (nonLus.length === 0) {
-        return;
-      }
+        /*
+         * INDIVIDUELS
+         */
 
-      try {
-        await Promise.all(
-          nonLus.map((message) =>
-            api.patch(`/messages/${message.id}/lu`),
-          ),
+        const contactsMap =
+          new Map<
+            string,
+            LigneConversation
+          >();
+
+        for (
+          const message of conversationsIndividuelles
+        ) {
+          const autre =
+            message.expediteurId ===
+            utilisateur.id
+              ? message.destinataire
+              : message.expediteur;
+
+          if (!autre) {
+            continue;
+          }
+
+          if (
+            contactsMap.has(
+              autre.id,
+            )
+          ) {
+            continue;
+          }
+
+          contactsMap.set(
+            autre.id,
+            {
+              cle: autre.id,
+              type: "INDIVIDUEL",
+              id: autre.id,
+              nom:
+                autre.nom?.trim() ||
+                "Utilisateur",
+              photoUrl:
+                autre.photoUrl ??
+                null,
+              role:
+                autre.role ??
+                null,
+              dernierContenu:
+                apercuMessage(
+                  message,
+                ),
+              dernierDate:
+                message.dateEnvoi,
+              dernierEstMoi:
+                message.expediteurId ===
+                utilisateur.id,
+              conversationVide:
+                !message.contenu?.trim() &&
+                !message.estSupprime &&
+                !message.pieceJointeUrl,
+              nonLus: 0,
+            },
+          );
+        }
+
+        /*
+         * Contact demandé via URL
+         */
+
+        if (
+          contactDepuisUrl &&
+          !contactsMap.has(
+            contactDepuisUrl.id,
+          )
+        ) {
+          contactsMap.set(
+            contactDepuisUrl.id,
+            {
+              cle: contactDepuisUrl.id,
+              type: "INDIVIDUEL",
+              id: contactDepuisUrl.id,
+              nom:
+                contactDepuisUrl.nom,
+              photoUrl: null,
+              role: null,
+              dernierContenu:
+                "Nouvelle conversation",
+              dernierDate: null,
+              dernierEstMoi: false,
+              conversationVide: true,
+              nonLus: 0,
+            },
+          );
+        }
+
+        /*
+         * Messages individuels non lus
+         */
+
+        for (
+          const message of conversationsIndividuelles
+        ) {
+          if (
+            message.destinataireId ===
+              utilisateur.id &&
+            !message.estLu
+          ) {
+            const ligne =
+              contactsMap.get(
+                message.expediteurId,
+              );
+
+            if (ligne) {
+              ligne.nonLus += 1;
+            }
+          }
+        }
+
+        lignes.push(
+          ...contactsMap.values(),
         );
 
         /*
-         * Mise a jour locale du fil (estLu -> true).
+         * GROUPES
          */
-        setFil((prev) =>
-          prev.map((message) =>
-            message.estLu
-              ? message
-              : { ...message, estLu: true },
-          ),
-        );
+
+        for (
+          const groupe of conversationsGroupes
+        ) {
+          const dernier =
+            groupe.dernierMessage;
+
+          lignes.push({
+            cle: `groupe-${groupe.groupeId}`,
+            type: "GROUPE",
+            id: groupe.groupeId,
+            nom: groupe.nom,
+            photoUrl: null,
+            role: null,
+            nombreMembres:
+              typeof groupe.nombreMembres ===
+              "number"
+                ? groupe.nombreMembres
+                : undefined,
+            dernierContenu: dernier
+              ? apercuMessageGroupe(
+                  dernier,
+                  utilisateur.id,
+                )
+              : "Aucun message",
+            dernierDate:
+              dernier?.dateEnvoi ??
+              null,
+            dernierEstMoi:
+              dernier?.expediteurId ===
+              utilisateur.id,
+            conversationVide:
+              !dernier,
+            nonLus:
+              typeof groupe.nonLus ===
+              "number"
+                ? groupe.nonLus
+                : 0,
+          });
+        }
 
         /*
-         * Rafraichit les indicateurs non-lus de la
-         * liste de contacts (systeme messages uniquement).
+         * Groupe demandé directement par URL
          */
-        await chargerConversations();
-      } catch (error) {
-        console.error(
-          "Erreur lors du marquage des messages comme lus :",
-          error,
-        );
-      }
-    },
-    [utilisateur, chargerConversations],
-  );
 
-  /*
-   * Marque un seul message recu comme lu (utilise quand un
-   * message arrive en temps reel dans la conversation deja
-   * ouverte : l'utilisateur le voit, il est donc lu).
-   */
-  const marquerMessageRecuCommeLu = useCallback(
-    async (message: MessageAvecUtilisateurs) => {
+        if (
+          groupeDepuisUrl &&
+          !lignes.some(
+            (ligne) =>
+              ligne.type ===
+                "GROUPE" &&
+              ligne.id ===
+                groupeDepuisUrl.id,
+          )
+        ) {
+          lignes.push({
+            cle: `groupe-${groupeDepuisUrl.id}`,
+            type: "GROUPE",
+            id: groupeDepuisUrl.id,
+            nom:
+              groupeDepuisUrl.nom,
+            photoUrl: null,
+            role: null,
+            nombreMembres:
+              groupeDepuisUrl.nombreMembres,
+            dernierContenu:
+              "Aucun message",
+            dernierDate: null,
+            dernierEstMoi: false,
+            conversationVide: true,
+            nonLus: 0,
+          });
+        }
+
+        /*
+         * Tri par dernier message
+         */
+
+        lignes.sort((a, b) => {
+          if (
+            !a.dernierDate &&
+            !b.dernierDate
+          ) {
+            return 0;
+          }
+
+          if (!a.dernierDate) {
+            return 1;
+          }
+
+          if (!b.dernierDate) {
+            return -1;
+          }
+
+          return (
+            new Date(
+              b.dernierDate,
+            ).getTime() -
+            new Date(
+              a.dernierDate,
+            ).getTime()
+          );
+        });
+
+        return lignes;
+      },
+      [
+        conversationsIndividuelles,
+        conversationsGroupes,
+        utilisateur,
+        contactDepuisUrl,
+        groupeDepuisUrl,
+      ],
+    );
+
+  /* =========================================================
+     RECHERCHE + ONGLET
+     ========================================================= */
+
+  const rechercheNormalisee =
+    recherche
+      .trim()
+      .toLowerCase();
+
+  const lignesFiltrees =
+    useMemo(() => {
+      let resultat =
+        lignesConversations;
+
+      if (rechercheNormalisee) {
+        resultat =
+          resultat.filter(
+            (ligne) =>
+              ligne.nom
+                .toLowerCase()
+                .includes(
+                  rechercheNormalisee,
+                ) ||
+              ligne.dernierContenu
+                .toLowerCase()
+                .includes(
+                  rechercheNormalisee,
+                ),
+          );
+      }
+
       if (
-        !utilisateur ||
-        message.destinataireId !== utilisateur.id ||
-        message.estLu
+        ongletMessages ===
+        "non_lus"
       ) {
-        return;
+        resultat =
+          resultat.filter(
+            (ligne) =>
+              ligne.nonLus > 0,
+          );
       }
 
-      try {
-        await api.patch(`/messages/${message.id}/lu`);
+      return resultat;
+    }, [
+      lignesConversations,
+      rechercheNormalisee,
+      ongletMessages,
+    ]);
 
-        setFil((prev) =>
-          prev.map((item) =>
-            item.id === message.id
-              ? { ...item, estLu: true }
-              : item,
-          ),
-        );
+  const compteToutes =
+    lignesConversations.length;
 
-        void chargerConversations();
-      } catch (error) {
-        console.error(
-          "Erreur lors du marquage du message comme lu :",
-          error,
-        );
-      }
-    },
-    [utilisateur, chargerConversations],
-  );
+  const compteNonLus =
+    compteurDetail?.total ??
+    lignesConversations.reduce(
+      (total, ligne) =>
+        total + ligne.nonLus,
+      0,
+    );
 
   /* =========================================================
-     CHANGEMENT DE CONTACT
+     CHARGEMENT FIL INDIVIDUEL
      ========================================================= */
 
-  /*
-   * Ici, le changement vient d'une interaction utilisateur.
-   * Il est donc parfaitement approprié de mettre à jour
-   * l'état dans le handler.
-   */
+  const chargerFil =
+    useCallback(
+      async (
+        contactId: string,
+      ): Promise<
+        MessageAvecUtilisateurs[]
+      > => {
+        setChargementFil(true);
+        setErreur(null);
+
+        try {
+          const data =
+            await api.get<
+              MessageAvecUtilisateurs[]
+            >(
+              `/messages/conversation/${contactId}`,
+            );
+
+          setFil(data);
+
+          return data;
+        } catch (error) {
+          console.error(
+            "Erreur conversation individuelle :",
+            error,
+          );
+
+          setErreur(
+            error instanceof ApiError
+              ? error.message
+              : "Impossible de charger cette conversation.",
+          );
+
+          return [];
+        } finally {
+          setChargementFil(false);
+        }
+      },
+      [],
+    );
+
+  /* =========================================================
+     CHARGEMENT FIL GROUPE
+     ========================================================= */
+
+  const chargerFilGroupe =
+    useCallback(
+      async (
+        groupeId: string,
+      ): Promise<
+        MessageAvecUtilisateurs[]
+      > => {
+        setChargementFil(true);
+        setErreur(null);
+
+        try {
+          const data =
+            await api.get<
+              MessageAvecUtilisateurs[]
+            >(
+              `/messages/groupes/${groupeId}`,
+            );
+
+          setFil(data);
+
+          return data;
+        } catch (error) {
+          console.error(
+            "Erreur conversation groupe :",
+            error,
+          );
+
+          setErreur(
+            error instanceof ApiError
+              ? error.message
+              : "Impossible de charger la discussion du groupe.",
+          );
+
+          return [];
+        } finally {
+          setChargementFil(false);
+        }
+      },
+      [],
+    );
+
+  /* =========================================================
+     MARQUER INDIVIDUEL COMME LU
+     ========================================================= */
+
+  const marquerFilCommeLu =
+    useCallback(
+      async (
+        messages: MessageAvecUtilisateurs[],
+      ) => {
+        if (!utilisateur) {
+          return;
+        }
+
+        const nonLus =
+          messages.filter(
+            (message) =>
+              message.destinataireId ===
+                utilisateur.id &&
+              !message.estLu,
+          );
+
+        if (
+          nonLus.length === 0
+        ) {
+          return;
+        }
+
+        try {
+          await Promise.all(
+            nonLus.map(
+              (message) =>
+                api.patch(
+                  `/messages/${message.id}/lu`,
+                ),
+            ),
+          );
+
+          setFil((precedent) =>
+            precedent.map(
+              (message) =>
+                message.estLu
+                  ? message
+                  : {
+                      ...message,
+                      estLu: true,
+                    },
+            ),
+          );
+
+          await rafraichirDonnees();
+        } catch (error) {
+          console.error(
+            "Erreur marquage individuel lu :",
+            error,
+          );
+        }
+      },
+      [
+        utilisateur,
+        rafraichirDonnees,
+      ],
+    );
+
+  /* =========================================================
+     MARQUER GROUPE COMME LU
+     ========================================================= */
+
+  const marquerGroupeCommeLu =
+    useCallback(
+      async (
+        groupeId: string,
+      ) => {
+        try {
+          await api.patch(
+            `/messages/groupes/${groupeId}/lu`,
+          );
+
+          setFil((precedent) =>
+            precedent.map(
+              (message) => ({
+                ...message,
+                estLu: true,
+              }),
+            ),
+          );
+
+          await rafraichirDonnees();
+        } catch (error) {
+          console.error(
+            "Erreur marquage groupe lu :",
+            error,
+          );
+        }
+      },
+      [rafraichirDonnees],
+    );
+
+  /* =========================================================
+     MARQUER UN MESSAGE RECU
+     ========================================================= */
+
+  const marquerMessageRecuCommeLu =
+    useCallback(
+      async (
+        message: MessageAvecUtilisateurs,
+      ) => {
+        if (
+          !utilisateur ||
+          message.destinataireId !==
+            utilisateur.id ||
+          message.estLu
+        ) {
+          return;
+        }
+
+        try {
+          await api.patch(
+            `/messages/${message.id}/lu`,
+          );
+
+          setFil((precedent) =>
+            precedent.map(
+              (item) =>
+                item.id ===
+                message.id
+                  ? {
+                      ...item,
+                      estLu: true,
+                    }
+                  : item,
+            ),
+          );
+
+          void rafraichirDonnees();
+        } catch (error) {
+          console.error(
+            "Erreur marquage message lu :",
+            error,
+          );
+        }
+      },
+      [
+        utilisateur,
+        rafraichirDonnees,
+      ],
+    );
+
+  /* =========================================================
+     SELECTION INDIVIDUELLE
+     ========================================================= */
+
   function selectionnerContact(
     contact: {
       id: string;
       nom: string;
     },
   ) {
-    setContactSelectionne(contact);
-    setErreurEnvoi(null);
-    setConversationOuverteMobile(true);
+    setContactSelectionne(
+      contact,
+    );
 
-    /*
-     * Ouvrir la conversation = voir les messages recus :
-     * on les marque donc comme lus via l'endpoint
-     * PATCH /messages/:id/lu (responsabilite MESSAGERIE
-     * uniquement -- aucune notification n'est modifiee ici,
-     * le compteur 🔔 reste independant).
-     */
-    void chargerFil(contact.id).then((filCharge) =>
-      marquerFilCommeLu(filCharge),
+    setGroupeSelectionne(
+      null,
+    );
+
+    setErreurEnvoi(null);
+
+    setConversationOuverteMobile(
+      true,
+    );
+
+    void chargerFil(
+      contact.id,
+    ).then(
+      marquerFilCommeLu,
     );
   }
 
   /* =========================================================
-     CONTACT DEPUIS URL
+     SELECTION GROUPE
      ========================================================= */
 
-  /*
-   * Si ?contact=... est présent et qu'aucun contact
-   * n'a été sélectionné manuellement, on charge sa
-   * conversation directement.
-   *
-   * IMPORTANT :
-   * ce useEffect ne fait PAS setContactActif().
-   *
-   * Il ne fait que déclencher une requête réseau.
-   */
+  function selectionnerGroupe(
+    groupe: LigneConversation,
+  ) {
+    if (
+      groupe.type !==
+      "GROUPE"
+    ) {
+      return;
+    }
+
+    const selection: SelectionConversation =
+      {
+        type: "GROUPE",
+        id: groupe.id,
+        nom: groupe.nom,
+        nombreMembres:
+          typeof groupe.nombreMembres ===
+          "number"
+            ? groupe.nombreMembres
+            : undefined,
+      };
+
+    setGroupeSelectionne(
+      selection,
+    );
+
+    setContactSelectionne(
+      null,
+    );
+
+    setErreurEnvoi(null);
+
+    setConversationOuverteMobile(
+      true,
+    );
+
+    void chargerFilGroupe(
+      groupe.id,
+    ).then(() =>
+      marquerGroupeCommeLu(
+        groupe.id,
+      ),
+    );
+  }
+
+  /* =========================================================
+     OUVERTURE DEPUIS URL — INDIVIDUEL
+     ========================================================= */
+
   useEffect(() => {
     if (
       !contactDepuisUrl ||
-      contactSelectionne
+      contactSelectionne ||
+      groupeSelectionne
     ) {
       return;
     }
 
     let cancelled = false;
 
-    async function chargerContactUrl() {
+    async function chargerDepuisUrl() {
       setChargementFil(true);
       setErreur(null);
 
@@ -924,20 +1347,18 @@ function MessagesContent() {
             `/messages/conversation/${contactDepuisUrl?.id}`,
           );
 
-        if (!cancelled) {
-          setFil(data);
-
-          /*
-           * Conversation ouverte via l'URL (?contact=...) :
-           * les messages recus affiches sont marques comme
-           * lus (systeme messages, independant des
-           * notifications).
-           */
-          void marquerFilCommeLu(data);
+        if (cancelled) {
+          return;
         }
+
+        setFil(data);
+
+        void marquerFilCommeLu(
+          data,
+        );
       } catch (error) {
         console.error(
-          "Erreur lors du chargement du contact depuis l'URL :",
+          "Erreur contact URL :",
           error,
         );
 
@@ -955,7 +1376,7 @@ function MessagesContent() {
       }
     }
 
-    void chargerContactUrl();
+    void chargerDepuisUrl();
 
     return () => {
       cancelled = true;
@@ -963,187 +1384,413 @@ function MessagesContent() {
   }, [
     contactDepuisUrl,
     contactSelectionne,
+    groupeSelectionne,
     marquerFilCommeLu,
   ]);
 
   /* =========================================================
-     TEMPS RÉEL — NOUVEAUX MESSAGES (Socket.IO)
+     OUVERTURE DEPUIS URL — GROUPE
      ========================================================= */
 
-  /*
-   * Ecoute les messages poussés par le serveur (destinataire OU
-   * expéditeur, pour la synchronisation multi-onglets).
-   *
-   * Dédoublonnage par id : l'expéditeur reçoit son propre message en
-   * écho via Socket.IO alors qu'il l'a déjà ajouté localement via le
-   * rechargement REST qui suit l'envoi (voir `envoyer()` ci-dessous).
-   */
   useEffect(() => {
-    if (!socket || !utilisateur) return;
-
-    function onNouveauMessage(
-      message: MessageAvecUtilisateurs,
+    if (
+      !groupeDepuisUrl ||
+      groupeSelectionne ||
+      contactSelectionne
     ) {
-      const autreId =
-        message.expediteurId === utilisateur?.id
-          ? message.destinataireId
-          : message.expediteurId;
+      return;
+    }
 
-      if (contactActif?.id === autreId) {
-        setFil((prev) =>
-          prev.some((m) => m.id === message.id)
-            ? prev
-            : [...prev, message],
+    let cancelled = false;
+
+    async function chargerGroupeDepuisUrl() {
+      setChargementFil(true);
+      setErreur(null);
+
+      try {
+        const data =
+          await api.get<
+            MessageAvecUtilisateurs[]
+          >(
+            `/messages/groupes/${groupeDepuisUrl?.id}`,
+          );
+
+        if (cancelled) {
+          return;
+        }
+
+        setFil(data);
+
+        try {
+          await api.patch(
+            `/messages/groupes/${groupeDepuisUrl?.id}/lu`,
+          );
+
+          if (!cancelled) {
+            setFil((precedent) =>
+              precedent.map(
+                (message) => ({
+                  ...message,
+                  estLu: true,
+                }),
+              ),
+            );
+          }
+
+          void rafraichirDonnees();
+        } catch (error) {
+          console.error(
+            "Erreur marquage groupe URL :",
+            error,
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Erreur groupe URL :",
+          error,
         );
 
-        /*
-         * Message recu dans la conversation deja ouverte :
-         * l'utilisateur le voit immediatement, il est donc
-         * lu. Marquage cote MESSAGERIE uniquement (PATCH
-         * /messages/:id/lu) -- aucune notification n'est
-         * creée ni modifiee ici, et le badge 🔔 n'est PAS
-         * decremente : il ne s'effacera que lorsque la
-         * notification correspondante sera lue.
-         */
-        void marquerMessageRecuCommeLu(message);
-      }
-
-      // Rafraîchit la liste des contacts (aperçu du dernier message,
-      // ordre) sans bloquer l'affichage du fil ci-dessus.
-      void chargerConversations();
-    }
-
-    socket.on("message:nouveau", onNouveauMessage);
-
-    return () => {
-      socket.off("message:nouveau", onNouveauMessage);
-    };
-  }, [
-    socket,
-    utilisateur,
-    contactActif,
-    marquerMessageRecuCommeLu,
-    chargerConversations,
-  ]);
-
-  /*
-   * Suppression logique poussée par le serveur (événement
-   * `message:supprime` émis par le backend aux deux participants) :
-   * le message devient un tombstone « Message supprimé » dans le fil.
-   */
-  useEffect(() => {
-    if (!socket) return;
-
-    function onMessageSupprime(payload: { id: string }) {
-      setFil((prev) =>
-        prev.map((message) =>
-          message.id === payload.id
-            ? {
-                ...message,
-                estSupprime: true,
-                contenu: "",
-                pieceJointeUrl: null,
-                pieceJointeNom: null,
-              }
-            : message,
-        ),
-      );
-    }
-
-    socket.on("message:supprime", onMessageSupprime);
-
-    return () => {
-      socket.off("message:supprime", onMessageSupprime);
-    };
-  }, [socket]);
-
-  /* =========================================================
-     CORRESPONDANT (photo, rôle) DÉRIVÉ DES MESSAGES RÉELS
-     ========================================================= */
-
-  const autreUtilisateur = useMemo(() => {
-    if (!utilisateur || !contactActif) {
-      return null;
-    }
-
-    // Le fil est prioritaire, puis la liste des conversations.
-    for (const message of fil) {
-      if (message.expediteurId === contactActif.id && message.expediteur) {
-        return message.expediteur;
-      }
-      if (message.destinataireId === contactActif.id && message.destinataire) {
-        return message.destinataire;
-      }
-    }
-
-    for (const message of conversationsIndividuelles) {
-      if (message.expediteurId === contactActif.id && message.expediteur) {
-        return message.expediteur;
-      }
-      if (message.destinataireId === contactActif.id && message.destinataire) {
-        return message.destinataire;
-      }
-    }
-
-    return null;
-  }, [utilisateur, contactActif, fil, conversationsIndividuelles]);
-
-  const autreUtilisateurId = autreUtilisateur?.id ?? null;
-  const autreUtilisateurRole = autreUtilisateur?.role ?? null;
-
-  /* =========================================================
-     CONTEXTE DE MISSION DE LA CONVERSATION (données réelles)
-     ========================================================= */
-
-  /*
-   * Un message peut être rattaché à une mission (missionId) :
-   * le contexte affiché est celui de la mission la plus récemment
-   * mentionnée dans la conversation. Le détail est chargé via
-   * l'endpoint public existant GET /missions/:id.
-   */
-  const missionIdActif = useMemo(() => {
-    for (let i = fil.length - 1; i >= 0; i--) {
-      const id = fil[i]?.missionId;
-      if (id) return id;
-    }
-
-    if (utilisateur && contactActif) {
-      for (const message of conversationsIndividuelles) {
-        const implique =
-          message.expediteurId === contactActif.id ||
-          message.destinataireId === contactActif.id;
-
-        if (implique && message.missionId) {
-          return message.missionId;
+        if (!cancelled) {
+          setErreur(
+            error instanceof ApiError
+              ? error.message
+              : "Impossible de charger cette discussion de groupe.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setChargementFil(false);
         }
       }
     }
 
-    return null;
-  }, [fil, conversationsIndividuelles, utilisateur, contactActif]);
+    void chargerGroupeDepuisUrl();
 
-  // Seule la mission correspondant au contexte courant est affichée.
-  const missionAffichee =
-    mission && mission.id === missionIdActif ? mission : null;
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    groupeDepuisUrl,
+    groupeSelectionne,
+    contactSelectionne,
+    rafraichirDonnees,
+  ]);
+
+  /* =========================================================
+     SOCKET.IO
+     ========================================================= */
 
   useEffect(() => {
-    if (!missionIdActif) return;
+    if (
+      !socket ||
+      !utilisateur
+    ) {
+      return;
+    }
+
+    function onNouveauMessage(
+      message: MessageSocket,
+    ) {
+      /*
+       * GROUPE
+       */
+
+      if (
+        message.groupeId
+      ) {
+        if (
+          conversationActive?.type ===
+            "GROUPE" &&
+          conversationActive.id ===
+            message.groupeId
+        ) {
+          setFil(
+            (precedent) =>
+              precedent.some(
+                (item) =>
+                  item.id ===
+                  message.id,
+              )
+                ? precedent
+                : [
+                    ...precedent,
+                    message,
+                  ],
+          );
+
+          void api
+            .patch(
+              `/messages/groupes/${message.groupeId}/lu`,
+            )
+            .then(() =>
+              rafraichirDonnees(),
+            )
+            .catch((error) =>
+              console.error(
+                "Erreur marquage groupe socket :",
+                error,
+              ),
+            );
+        }
+
+        void rafraichirDonnees();
+
+        return;
+      }
+
+      /*
+       * INDIVIDUEL
+       */
+
+      const autreId =
+        message.expediteurId ===
+        utilisateur?.id
+          ? message.destinataireId
+          : message.expediteurId;
+
+      if (
+        conversationActive?.type ===
+          "INDIVIDUEL" &&
+        conversationActive.id ===
+          autreId
+      ) {
+        setFil(
+          (precedent) =>
+            precedent.some(
+              (item) =>
+                item.id ===
+                message.id,
+            )
+              ? precedent
+              : [
+                  ...precedent,
+                  message,
+                ],
+        );
+
+        void marquerMessageRecuCommeLu(
+          message,
+        );
+      }
+
+      void rafraichirDonnees();
+    }
+
+    socket.on(
+      "message:nouveau",
+      onNouveauMessage,
+    );
+
+    return () => {
+      socket.off(
+        "message:nouveau",
+        onNouveauMessage,
+      );
+    };
+  }, [
+    socket,
+    utilisateur,
+    conversationActive,
+    marquerMessageRecuCommeLu,
+    rafraichirDonnees,
+  ]);
+
+  /* =========================================================
+     SOCKET — SUPPRESSION
+     ========================================================= */
+
+  useEffect(() => {
+    if (!socket) {
+      return;
+    }
+
+    function onMessageSupprime(
+      payload: {
+        id: string;
+      },
+    ) {
+      setFil((precedent) =>
+        precedent.map(
+          (message) =>
+            message.id ===
+            payload.id
+              ? {
+                  ...message,
+                  estSupprime: true,
+                  contenu: "",
+                  pieceJointeUrl:
+                    null,
+                  pieceJointeNom:
+                    null,
+                }
+              : message,
+        ),
+      );
+    }
+
+    socket.on(
+      "message:supprime",
+      onMessageSupprime,
+    );
+
+    return () => {
+      socket.off(
+        "message:supprime",
+        onMessageSupprime,
+      );
+    };
+  }, [socket]);
+
+  /* =========================================================
+     CORRESPONDANT INDIVIDUEL
+     ========================================================= */
+
+  const autreUtilisateur =
+    useMemo(() => {
+      if (
+        !utilisateur ||
+        !contactActif
+      ) {
+        return null;
+      }
+
+      for (
+        const message of fil
+      ) {
+        if (
+          message.expediteurId ===
+            contactActif.id &&
+          message.expediteur
+        ) {
+          return message.expediteur;
+        }
+
+        if (
+          message.destinataireId ===
+            contactActif.id &&
+          message.destinataire
+        ) {
+          return message.destinataire;
+        }
+      }
+
+      for (
+        const message of conversationsIndividuelles
+      ) {
+        if (
+          message.expediteurId ===
+            contactActif.id &&
+          message.expediteur
+        ) {
+          return message.expediteur;
+        }
+
+        if (
+          message.destinataireId ===
+            contactActif.id &&
+          message.destinataire
+        ) {
+          return message.destinataire;
+        }
+      }
+
+      return null;
+    }, [
+      utilisateur,
+      contactActif,
+      fil,
+      conversationsIndividuelles,
+    ]);
+
+  const autreUtilisateurId =
+    autreUtilisateur?.id ??
+    null;
+
+  const autreUtilisateurRole =
+    autreUtilisateur?.role ??
+    null;
+
+  /* =========================================================
+     MISSION
+     ========================================================= */
+
+  const missionIdActif =
+    useMemo(() => {
+      if (
+        conversationActive?.type !==
+        "INDIVIDUEL"
+      ) {
+        return null;
+      }
+
+      for (
+        let i =
+          fil.length - 1;
+        i >= 0;
+        i--
+      ) {
+        const id =
+          fil[i]?.missionId;
+
+        if (id) {
+          return id;
+        }
+      }
+
+      for (
+        const message of conversationsIndividuelles
+      ) {
+        const implique =
+          message.expediteurId ===
+            contactActif?.id ||
+          message.destinataireId ===
+            contactActif?.id;
+
+        if (
+          implique &&
+          message.missionId
+        ) {
+          return message.missionId;
+        }
+      }
+
+      return null;
+    }, [
+      conversationActive,
+      fil,
+      conversationsIndividuelles,
+      contactActif,
+    ]);
+
+  const missionAffichee =
+    mission &&
+    mission.id ===
+      missionIdActif
+      ? mission
+      : null;
+
+  useEffect(() => {
+    if (!missionIdActif) {
+      setMission(null);
+      return;
+    }
 
     let cancelled = false;
 
     async function chargerMission() {
       try {
-        const data = await api.get<Mission>(
-          `/missions/${missionIdActif}`,
-          { auth: false },
-        );
+        const data =
+          await api.get<Mission>(
+            `/missions/${missionIdActif}`,
+            {
+              auth: false,
+            },
+          );
 
         if (!cancelled) {
           setMission(data);
         }
       } catch {
-        // Mission inaccessible (supprimée, droits…) : aucun contexte
-        // de mission n'est affiché, la conversation reste utilisable.
         if (!cancelled) {
           setMission(null);
         }
@@ -1158,39 +1805,63 @@ function MessagesContent() {
   }, [missionIdActif]);
 
   /* =========================================================
-     FICHE PUBLIQUE DU CORRESPONDANT (note, université…)
+     PROFIL INDIVIDUEL
      ========================================================= */
 
   useEffect(() => {
     let cancelled = false;
 
     async function chargerProfil() {
-      const id = autreUtilisateurId;
-      if (!id) return;
+      if (!autreUtilisateurId) {
+        return;
+      }
 
       try {
-        if (autreUtilisateurRole === "etudiant") {
-          const data = await api.get<EtudiantProfile>(
-            `/etudiants/${id}`,
-            { auth: false },
-          );
+        const role =
+          autreUtilisateurRole
+            ? String(
+                autreUtilisateurRole,
+              ).toLowerCase()
+            : "";
+
+        if (
+          role ===
+          "etudiant"
+        ) {
+          const data =
+            await api.get<EtudiantProfile>(
+              `/etudiants/${autreUtilisateurId}`,
+              {
+                auth: false,
+              },
+            );
 
           if (!cancelled) {
             setProfilEtudiant(data);
+            setProfilClient(null);
           }
-        } else if (autreUtilisateurRole === "client") {
-          const data = await api.get<ClientProfile>(
-            `/clients/${id}`,
-            { auth: false },
-          );
+        } else if (
+          role ===
+          "client"
+        ) {
+          const data =
+            await api.get<ClientProfile>(
+              `/clients/${autreUtilisateurId}`,
+              {
+                auth: false,
+              },
+            );
 
           if (!cancelled) {
             setProfilClient(data);
+            setProfilEtudiant(null);
           }
         }
       } catch {
-        // Fiche publique indisponible : l'interface reste basée sur
-        // les informations déjà connues (nom, rôle, photo).
+        if (!cancelled) {
+          setProfilEtudiant(null);
+          setProfilClient(null);
+        }
       }
     }
 
@@ -1199,63 +1870,114 @@ function MessagesContent() {
     return () => {
       cancelled = true;
     };
-  }, [autreUtilisateurId, autreUtilisateurRole]);
+  }, [
+    autreUtilisateurId,
+    autreUtilisateurRole,
+  ]);
 
-  // Seule la fiche correspondant au correspondant courant est affichée.
   const profilEtudiantAffiche =
     profilEtudiant &&
-    profilEtudiant.utilisateurId === autreUtilisateurId
+    profilEtudiant.utilisateurId ===
+      autreUtilisateurId
       ? profilEtudiant
       : null;
 
   const profilClientAffiche =
     profilClient &&
-    profilClient.utilisateurId === autreUtilisateurId
+    profilClient.utilisateurId ===
+      autreUtilisateurId
       ? profilClient
       : null;
 
-  // Lien « Voir le profil » selon le rôle réel du correspondant.
   const profilHref =
-    autreUtilisateurRole === "etudiant" && autreUtilisateurId
+    autreUtilisateurRole &&
+    String(
+      autreUtilisateurRole,
+    ).toLowerCase() ===
+      "etudiant" &&
+    autreUtilisateurId
       ? `/etudiants/${autreUtilisateurId}`
-      : autreUtilisateurRole === "client" && autreUtilisateurId
+      : autreUtilisateurRole &&
+          String(
+            autreUtilisateurRole,
+          ).toLowerCase() ===
+            "client" &&
+          autreUtilisateurId
         ? `/clients/${autreUtilisateurId}`
         : null;
 
   /* =========================================================
-     PIÈCES JOINTES DE LA CONVERSATION (du plus récent au plus ancien)
+     PIECES JOINTES
      ========================================================= */
 
-  const piecesJointes = useMemo<PieceJointeConversation[]>(() => {
-    if (!utilisateur) return [];
+  const piecesJointes =
+    useMemo<
+      PieceJointeConversation[]
+    >(() => {
+      if (!utilisateur) {
+        return [];
+      }
 
-    const liste: PieceJointeConversation[] = [];
-    const urlsVues = new Set<string>();
+      const liste: PieceJointeConversation[] =
+        [];
 
-    for (let i = fil.length - 1; i >= 0; i--) {
-      const message = fil[i];
+      const urlsVues =
+        new Set<string>();
 
-      if (!message?.pieceJointeUrl || message.estSupprime) continue;
-      if (urlsVues.has(message.pieceJointeUrl)) continue;
+      for (
+        let i =
+          fil.length - 1;
+        i >= 0;
+        i--
+      ) {
+        const message =
+          fil[i];
 
-      urlsVues.add(message.pieceJointeUrl);
+        if (
+          !message?.pieceJointeUrl ||
+          message.estSupprime
+        ) {
+          continue;
+        }
 
-      liste.push({
-        url: message.pieceJointeUrl,
-        nom: message.pieceJointeNom ?? null,
-        auteur:
-          message.expediteurId === utilisateur.id
-            ? "Vous"
-            : message.expediteur?.nom ?? contactActif?.nom ?? "",
-        dateEnvoi: message.dateEnvoi,
-      });
-    }
+        if (
+          urlsVues.has(
+            message.pieceJointeUrl,
+          )
+        ) {
+          continue;
+        }
 
-    return liste;
-  }, [fil, utilisateur, contactActif]);
+        urlsVues.add(
+          message.pieceJointeUrl,
+        );
+
+        liste.push({
+          url: message.pieceJointeUrl,
+          nom:
+            message.pieceJointeNom ??
+            null,
+          auteur:
+            message.expediteurId ===
+            utilisateur.id
+              ? "Vous"
+              : message.expediteur?.nom ??
+                conversationActive?.nom ??
+                "",
+          dateEnvoi:
+            message.dateEnvoi,
+        });
+      }
+
+      return liste;
+    }, [
+      fil,
+      utilisateur,
+      conversationActive,
+    ]);
 
   /* =========================================================
-     ENVOYER UN MESSAGE
+     ENVOI
      ========================================================= */
 
   async function envoyer(
@@ -1263,149 +1985,171 @@ function MessagesContent() {
   ) {
     e.preventDefault();
 
-    /*
-     * Le contenu n'est nettoye (trim) qu'ici, au moment de l'envoi :
-     * `nouveauMessage` conserve tous les retours a la ligne saisis
-     * par l'utilisateur (Shift+Enter) pendant la redaction. `.trim()`
-     * ne retire que les espaces/retours a la ligne en debut et fin,
-     * jamais les lignes vides internes.
-     */
-    const contenu = nouveauMessage.trim();
+    const contenu =
+      nouveauMessage.trim();
 
-    /*
-     * Verrou synchrone (ref) en plus du state `envoi` : protege
-     * contre des appuis tres rapides sur Enter avant meme que React
-     * n'ait re-rendu avec `envoi = true`. Bloque aussi les messages
-     * vides ou constitues uniquement d'espaces/retours a la ligne.
-     */
     if (
-      !contactActif ||
+      !conversationActive ||
       !contenu ||
       envoiEnCoursRef.current
     ) {
       return;
     }
 
-    envoiEnCoursRef.current = true;
+    envoiEnCoursRef.current =
+      true;
+
     setEnvoi(true);
     setErreurEnvoi(null);
 
     try {
-      await api.post(
-        "/messages",
-        {
-          destinataireId:
-            contactActif.id,
-
-          contenu,
-
-          pieceJointeUrl:
-            pieceJointe?.url,
-
-          pieceJointeNom:
-            pieceJointe?.nom,
-        },
-      );
-
-      // Le champ n'est vide qu'apres confirmation du succes de l'envoi.
-      setNouveauMessage("");
-      setPieceJointe(null);
-
-      /*
-       * Recharge la conversation après envoi.
-       */
-      const data =
-        await api.get<
-          MessageAvecUtilisateurs[]
-        >(
-          `/messages/conversation/${contactActif.id}`,
+      if (
+        conversationActive.type ===
+        "GROUPE"
+      ) {
+        await api.post(
+          `/messages/groupes/${conversationActive.id}`,
+          {
+            contenu,
+            pieceJointeUrl:
+              pieceJointe?.url,
+            pieceJointeNom:
+              pieceJointe?.nom,
+          },
         );
 
-      setFil(data);
+        setNouveauMessage("");
+        setPieceJointe(null);
 
-      /*
-       * Recharge également la liste des contacts.
-       */
-      await chargerConversations();
+        const data =
+          await api.get<
+            MessageAvecUtilisateurs[]
+          >(
+            `/messages/groupes/${conversationActive.id}`,
+          );
+
+        setFil(data);
+
+        await rafraichirDonnees();
+      } else {
+        await api.post(
+          "/messages",
+          {
+            destinataireId:
+              conversationActive.id,
+            contenu,
+            pieceJointeUrl:
+              pieceJointe?.url,
+            pieceJointeNom:
+              pieceJointe?.nom,
+          },
+        );
+
+        setNouveauMessage("");
+        setPieceJointe(null);
+
+        const data =
+          await api.get<
+            MessageAvecUtilisateurs[]
+          >(
+            `/messages/conversation/${conversationActive.id}`,
+          );
+
+        setFil(data);
+
+        await rafraichirDonnees();
+      }
     } catch (error) {
       console.error(
-        "Erreur lors de l'envoi du message :",
+        "Erreur envoi message :",
         error,
       );
 
-      /*
-       * Le texte saisi (`nouveauMessage`) n'est pas touche ici : il
-       * reste dans le champ pour que l'utilisateur puisse reessayer
-       * sans tout retaper.
-       */
       setErreurEnvoi(
         error instanceof ApiError
           ? error.message
           : "Impossible d'envoyer le message. Vérifiez votre connexion et réessayez.",
       );
     } finally {
-      envoiEnCoursRef.current = false;
+      envoiEnCoursRef.current =
+        false;
+
       setEnvoi(false);
     }
   }
 
   /* =========================================================
-     CLAVIER — CHAMP DE SAISIE DU MESSAGE
+     CLAVIER
      ========================================================= */
 
-  /*
-   * - Enter seul       -> envoie le message (jamais de saut de ligne).
-   * - Shift+Enter      -> comportement natif du textarea : nouvelle
-   *                        ligne, n'envoie jamais le message.
-   * - Composition IME  -> une touche Enter utilisee pour valider une
-   *                        composition (saisie chinois/japonais/…)
-   *                        ne doit pas declencher l'envoi.
-   *
-   * L'envoi passe par `form.requestSubmit()`, qui declenche le meme
-   * `onSubmit={envoyer}` que le clic sur le bouton : un seul chemin
-   * de soumission, donc aucun risque de double logique d'envoi.
-   */
   function gererToucheTextarea(
     e: React.KeyboardEvent<HTMLTextAreaElement>,
   ) {
-    if (e.key !== "Enter") {
+    if (
+      e.key !== "Enter"
+    ) {
       return;
     }
 
-    if (e.shiftKey || e.nativeEvent.isComposing) {
+    if (
+      e.shiftKey ||
+      e.nativeEvent.isComposing
+    ) {
       return;
     }
 
     e.preventDefault();
+
     formEnvoiRef.current?.requestSubmit();
   }
 
-  /**
-   * Suppression logique d'un message (RG : seul l'expéditeur peut
-   * supprimer son propre message ; le backend transforme le contenu
-   * en tombstone « Message supprimé », jamais de suppression physique).
-   */
-  async function supprimerMessage(messageId: string) {
-    if (messageEnSuppression) return;
+  /* =========================================================
+     SUPPRESSION
+     ========================================================= */
 
-    setMessageEnSuppression(messageId);
+  async function supprimerMessage(
+    messageId: string,
+  ) {
+    if (
+      messageEnSuppression
+    ) {
+      return;
+    }
+
+    setMessageEnSuppression(
+      messageId,
+    );
+
     setErreur(null);
 
     try {
-      await api.delete(`/messages/${messageId}`);
+      await api.delete(
+        `/messages/${messageId}`,
+      );
 
       setFil((precedent) =>
-        precedent.map((m) =>
-          m.id === messageId
-            ? { ...m, estSupprime: true, contenu: "Message supprimé" }
-            : m,
+        precedent.map(
+          (message) =>
+            message.id ===
+            messageId
+              ? {
+                  ...message,
+                  estSupprime: true,
+                  contenu:
+                    "Message supprimé",
+                  pieceJointeUrl:
+                    null,
+                  pieceJointeNom:
+                    null,
+                }
+              : message,
         ),
       );
 
-      await chargerConversations();
+      await rafraichirDonnees();
     } catch (error) {
       console.error(
-        "Erreur lors de la suppression du message :",
+        "Erreur suppression message :",
         error,
       );
 
@@ -1415,73 +2159,91 @@ function MessagesContent() {
           : "Impossible de supprimer ce message.",
       );
     } finally {
-      setMessageEnSuppression(null);
+      setMessageEnSuppression(
+        null,
+      );
     }
   }
 
   /* =========================================================
-     ERGONOMIE — DÉFILEMENT ET CHAMP DE SAISIE
+     SCROLL
      ========================================================= */
 
-  // Rester en bas du fil à l'ouverture et à l'arrivée d'un message.
   useEffect(() => {
-    const zone = zoneMessagesRef.current;
-    if (!zone) return;
+    const zone =
+      zoneMessagesRef.current;
 
-    zone.scrollTop = zone.scrollHeight;
-  }, [fil, chargementFil, contactActif?.id]);
+    if (!zone) {
+      return;
+    }
 
-  // Le champ de saisie s'ajuste à son contenu (max 140px).
+    zone.scrollTop =
+      zone.scrollHeight;
+  }, [
+    fil,
+    chargementFil,
+    conversationActive?.id,
+  ]);
+
+  /* =========================================================
+     TEXTAREA
+     ========================================================= */
+
   useEffect(() => {
-    const element = textareaRef.current;
-    if (!element) return;
+    const element =
+      textareaRef.current;
 
-    element.style.height = "auto";
-    element.style.height = `${Math.min(element.scrollHeight, 140)}px`;
+    if (!element) {
+      return;
+    }
+
+    element.style.height =
+      "auto";
+
+    element.style.height = `${Math.min(
+      element.scrollHeight,
+      140,
+    )}px`;
   }, [nouveauMessage]);
 
   /* =========================================================
-     NAVIGATION PANNEAU DE DÉTAILS / VUE MOBILE
+     PANNEAU
      ========================================================= */
 
-  /*
-   * Bouton menu de l'en-tête :
-   * - xl+  : affiche/masque la colonne de droite ;
-   * - < xl : ouvre le panneau en superposition.
-   */
   function gererBoutonMenu() {
     if (
-      typeof window !== "undefined" &&
-      window.matchMedia("(min-width: 1280px)").matches
+      typeof window !==
+        "undefined" &&
+      window.matchMedia(
+        "(min-width: 1280px)",
+      ).matches
     ) {
-      setPanneauVisible((precedent) => !precedent);
+      setPanneauVisible(
+        (precedent) =>
+          !precedent,
+      );
     } else {
-      setDetailsOuverts(true);
+      setDetailsOuverts(
+        true,
+      );
     }
   }
 
-  // Retour à la liste des conversations (mobile uniquement).
   function fermerConversationMobile() {
-    setConversationOuverteMobile(false);
+    setConversationOuverteMobile(
+      false,
+    );
   }
 
-  /*
-   * Vue mobile actuellement affichée : la conversation (true) ou la
-   * liste des conversations (false). Simple alias de lecture sur
-   * `conversationOuverteMobile`, utilisé dans le JSX ci-dessous pour
-   * savoir quelle colonne afficher en dessous du point de rupture lg.
-   */
-  const voirConversationMobile = conversationOuverteMobile;
+  const voirConversationMobile =
+    conversationOuverteMobile;
 
   /* =========================================================
-     AFFICHAGE
+     RENDU
      ========================================================= */
 
   return (
     <div className="flex h-[calc(100dvh-8rem)] min-h-[560px] flex-col overflow-hidden md:h-[calc(100dvh-9rem)]">
-      {/* =====================================================
-          ERREUR GLOBALE
-          ===================================================== */}
 
       {erreur && (
         <div
@@ -1492,28 +2254,25 @@ function MessagesContent() {
         </div>
       )}
 
-      {/* =====================================================
-          GRILLE : LISTE | CONVERSATION | DÉTAILS
-          ===================================================== */}
-
       <div className="flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-ink/10 bg-paper-light shadow-sm">
+
         {/* =================================================
-            COLONNE GAUCHE — LISTE DES CONVERSATIONS
+            LISTE
             ================================================= */}
 
         <aside
           className={clsx(
             "w-full shrink-0 flex-col border-r border-ink/10 bg-paper lg:flex lg:w-[320px]",
-            voirConversationMobile ? "hidden" : "flex",
+            voirConversationMobile
+              ? "hidden"
+              : "flex",
           )}
         >
-          {/* En-tête */}
           <div className="flex items-center gap-2.5 border-b border-ink/10 px-4 py-4">
-            <span
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary"
-              aria-hidden="true"
-            >
-              <MessageCircle size={18} />
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+              <MessageCircle
+                size={18}
+              />
             </span>
 
             <div className="min-w-0 flex-1">
@@ -1522,15 +2281,18 @@ function MessagesContent() {
               </h1>
 
               <p className="text-xs text-ink-soft">
-                {compteNonLus > 0
-                  ? `${compteNonLus} conversation${compteNonLus > 1 ? "s" : ""} avec des non lus`
-                  : `${contacts.length} conversation${contacts.length > 1 ? "s" : ""}`}
+                {compteNonLus >
+                0
+                  ? `${compteNonLus} message${compteNonLus > 1 ? "s" : ""} non lu${compteNonLus > 1 ? "s" : ""}`
+                  : `${compteToutes} conversation${compteToutes > 1 ? "s" : ""}`}
               </p>
             </div>
           </div>
 
-          {/* Recherche */}
-          {contacts.length > 0 && (
+          {/* RECHERCHE */}
+
+          {compteToutes >
+            0 && (
             <div className="px-3 pt-3">
               <div className="relative">
                 <Search
@@ -1538,10 +2300,18 @@ function MessagesContent() {
                   className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
                   aria-hidden="true"
                 />
+
                 <Input
                   type="search"
-                  value={recherche}
-                  onChange={(e) => setRecherche(e.target.value)}
+                  value={
+                    recherche
+                  }
+                  onChange={(e) =>
+                    setRecherche(
+                      e.target
+                        .value,
+                    )
+                  }
                   placeholder="Rechercher…"
                   aria-label="Rechercher une conversation"
                   className="w-full rounded-full border-ink/20 bg-paper-light py-2 pl-9 pr-3 text-sm"
@@ -1550,75 +2320,124 @@ function MessagesContent() {
             </div>
           )}
 
-          {/* Onglets : Toutes / Non lues */}
-          {contacts.length > 0 && (
+          {/* ONGLETS */}
+
+          {compteToutes >
+            0 && (
             <div
               className="flex gap-2 px-3 pb-3 pt-2.5"
               role="tablist"
               aria-label="Filtrer les conversations"
             >
               {[
-                { valeur: "toutes", label: "Toutes", compte: contacts.length },
-                { valeur: "non_lus", label: "Non lues", compte: compteNonLus },
-              ].map((onglet) => {
-                const estActif = ongletMessages === onglet.valeur;
+                {
+                  valeur:
+                    "toutes" as const,
+                  label:
+                    "Toutes",
+                  compte:
+                    compteToutes,
+                },
+                {
+                  valeur:
+                    "non_lus" as const,
+                  label:
+                    "Non lues",
+                  compte:
+                    compteNonLus,
+                },
+              ].map(
+                (onglet) => {
+                  const estActif =
+                    ongletMessages ===
+                    onglet.valeur;
 
-                return (
-                  <button
-                    key={onglet.valeur}
-                    type="button"
-                    role="tab"
-                    aria-selected={estActif}
-                    onClick={() => setOngletMessages(onglet.valeur)}
-                    className={clsx(
-                      "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-colors",
-                      estActif
-                        ? "border-ink bg-ink text-paper-light"
-                        : "border-ink/20 bg-paper-light text-ink-soft hover:border-ink/50 hover:text-ink",
-                    )}
-                  >
-                    {onglet.label}
-
-                    <span
-                      className={clsx(
-                        "rounded-full px-1.5 py-px text-[10px] leading-none",
+                  return (
+                    <button
+                      key={
+                        onglet.valeur
+                      }
+                      type="button"
+                      role="tab"
+                      aria-selected={
                         estActif
-                          ? "bg-paper-light/20 text-paper-light"
-                          : "bg-ink/10 text-ink-soft",
+                      }
+                      onClick={() =>
+                        setOngletMessages(
+                          onglet.valeur,
+                        )
+                      }
+                      className={clsx(
+                        "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-colors",
+                        estActif
+                          ? "border-ink bg-ink text-paper-light"
+                          : "border-ink/20 bg-paper-light text-ink-soft hover:border-ink/50 hover:text-ink",
                       )}
                     >
-                      {onglet.compte}
-                    </span>
-                  </button>
-                );
-              })}
+                      {
+                        onglet.label
+                      }
+
+                      <span
+                        className={clsx(
+                          "rounded-full px-1.5 py-px text-[10px] leading-none",
+                          estActif
+                            ? "bg-paper-light/20 text-paper-light"
+                            : "bg-ink/10 text-ink-soft",
+                        )}
+                      >
+                        {
+                          onglet.compte
+                        }
+                      </span>
+                    </button>
+                  );
+                },
+              )}
             </div>
           )}
 
-          {/* Liste défilante */}
+          {/* LISTE */}
+
           <div className="min-h-0 flex-1 overflow-y-auto">
             {chargement ? (
-              <div className="space-y-2 p-3" aria-hidden="true">
-                {[0, 1, 2, 3].map((index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-3 rounded-xl border border-ink/5 bg-paper-light p-3"
-                  >
-                    <Skeleton rond className="h-11 w-11" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-3.5 w-28" />
-                      <Skeleton className="h-3 w-full" />
+              <div
+                className="space-y-2 p-3"
+                aria-hidden="true"
+              >
+                {[
+                  0,
+                  1,
+                  2,
+                  3,
+                ].map(
+                  (index) => (
+                    <div
+                      key={
+                        index
+                      }
+                      className="flex items-center gap-3 rounded-xl border border-ink/5 bg-paper-light p-3"
+                    >
+                      <Skeleton
+                        rond
+                        className="h-11 w-11"
+                      />
+
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-3.5 w-28" />
+                        <Skeleton className="h-3 w-full" />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </div>
-            ) : contacts.length === 0 ? (
+            ) : compteToutes ===
+              0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-                <span
-                  className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-primary"
-                  aria-hidden="true"
-                >
-                  <MessageCircle size={22} />
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-primary">
+                  <MessageCircle
+                    size={22}
+                  />
                 </span>
 
                 <p className="text-sm font-medium text-ink">
@@ -1626,13 +2445,12 @@ function MessagesContent() {
                 </p>
 
                 <p className="text-xs leading-relaxed text-ink-soft/80">
-                  La messagerie est disponible après l&apos;acceptation
-                  d&apos;une candidature entre un client et un étudiant.
-                  Le contact apparaît automatiquement ici, même si aucun
-                  message n&apos;a encore été envoyé.
+                  Les conversations individuelles et les groupes dont
+                  vous êtes membre apparaîtront ici.
                 </p>
               </div>
-            ) : contactsAffiches.length === 0 ? (
+            ) : lignesFiltrees.length ===
+              0 ? (
               <div className="flex h-full items-center justify-center p-6 text-center">
                 <p className="text-sm text-ink-soft">
                   {recherche.trim()
@@ -1642,104 +2460,168 @@ function MessagesContent() {
               </div>
             ) : (
               <ul className="flex flex-col">
-                {contactsAffiches.map((contact) => {
-                  const estSelectionne =
-                    contactActif?.id === contact.id;
+                {lignesFiltrees.map(
+                  (ligne) => {
+                    const estSelectionne =
+                      conversationActive?.type ===
+                        ligne.type &&
+                      conversationActive.id ===
+                        ligne.id;
 
-                  return (
-                    <li key={contact.id}>
-                      <button
-                        type="button"
-                        onClick={() => selectionnerContact(contact)}
-                        aria-current={estSelectionne ? "true" : undefined}
-                        className={clsx(
-                          "flex w-full cursor-pointer items-center gap-3 border-b border-ink/5 px-4 py-3 text-left transition-colors",
-                          estSelectionne
-                            ? "bg-primary-soft"
-                            : "hover:bg-ink/[0.04]",
-                        )}
+                    return (
+                      <li
+                        key={
+                          ligne.cle
+                        }
                       >
-                        <span className="relative shrink-0">
-                          <Avatar
-                            nom={contact.nom}
-                            photoUrl={contact.photoUrl}
-                            size={44}
-                          />
-
-                          {contact.nonLus > 0 && (
-                            <span
-                              className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brique px-1 font-mono text-[9px] font-bold leading-none text-paper-light ring-2 ring-paper"
-                              title={`${contact.nonLus} message(s) non lu(s)`}
-                              aria-label={`${contact.nonLus} message(s) non lu(s)`}
-                            >
-                              {contact.nonLus > 9 ? "9+" : contact.nonLus}
-                            </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            ligne.type ===
+                            "GROUPE"
+                              ? selectionnerGroupe(
+                                  ligne,
+                                )
+                              : selectionnerContact(
+                                  {
+                                    id: ligne.id,
+                                    nom: ligne.nom,
+                                  },
+                                )
+                          }
+                          aria-current={
+                            estSelectionne
+                              ? "true"
+                              : undefined
+                          }
+                          className={clsx(
+                            "flex w-full cursor-pointer items-center gap-3 border-b border-ink/5 px-4 py-3 text-left transition-colors",
+                            estSelectionne
+                              ? "bg-primary-soft"
+                              : "hover:bg-ink/[0.04]",
                           )}
-                        </span>
+                        >
+                          <span className="relative shrink-0">
+                            {ligne.type ===
+                            "GROUPE" ? (
+                              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-soft text-primary">
+                                <Users
+                                  size={20}
+                                />
+                              </span>
+                            ) : (
+                              <Avatar
+                                nom={
+                                  ligne.nom
+                                }
+                                photoUrl={
+                                  ligne.photoUrl
+                                }
+                                size={
+                                  44
+                                }
+                              />
+                            )}
 
-                        <span className="min-w-0 flex-1">
-                          <span className="flex items-baseline justify-between gap-2">
+                            {ligne.nonLus >
+                              0 && (
+                              <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brique px-1 font-mono text-[9px] font-bold leading-none text-paper-light ring-2 ring-paper">
+                                {ligne.nonLus >
+                                9
+                                  ? "9+"
+                                  : ligne.nonLus}
+                              </span>
+                            )}
+                          </span>
+
+                          <span className="min-w-0 flex-1">
+                            <span className="flex items-baseline justify-between gap-2">
+                              <span
+                                className={clsx(
+                                  "flex min-w-0 items-center gap-1.5 truncate text-sm text-ink",
+                                  ligne.nonLus >
+                                    0
+                                    ? "font-semibold"
+                                    : "font-medium",
+                                )}
+                              >
+                                <span className="truncate">
+                                  {
+                                    ligne.nom
+                                  }
+                                </span>
+
+                                {ligne.type ===
+                                  "GROUPE" && (
+                                  <Users
+                                    size={
+                                      12
+                                    }
+                                    className="shrink-0 text-primary"
+                                    aria-label="Groupe"
+                                  />
+                                )}
+                              </span>
+
+                              {ligne.dernierDate &&
+                                !ligne.conversationVide && (
+                                  <span className="shrink-0 text-[10px] font-mono text-ink-soft/60">
+                                    {formaterDateListe(
+                                      ligne.dernierDate,
+                                    )}
+                                  </span>
+                                )}
+                            </span>
+
                             <span
                               className={clsx(
-                                "truncate text-sm text-ink",
-                                contact.nonLus > 0
-                                  ? "font-semibold"
-                                  : "font-medium",
+                                "mt-0.5 block truncate text-xs",
+                                ligne.nonLus >
+                                  0
+                                  ? "text-ink-soft"
+                                  : "text-ink-soft/70",
                               )}
                             >
-                              {contact.nom}
+                              {ligne.type ===
+                                "GROUPE" &&
+                              ligne.nombreMembres !=
+                                null
+                                ? `${ligne.nombreMembres} membre${ligne.nombreMembres > 1 ? "s" : ""} · `
+                                : ""}
+
+                              {ligne.conversationVide
+                                ? "Nouvelle conversation"
+                                : `${ligne.dernierEstMoi ? "Vous : " : ""}${ligne.dernierContenu}`}
                             </span>
-
-                            {contact.dernierDate &&
-                              !contact.conversationVide && (
-                                <span className="shrink-0 text-[10px] font-mono text-ink-soft/60">
-                                  {formaterDateListe(contact.dernierDate)}
-                                </span>
-                              )}
                           </span>
-
-                          <span
-                            className={clsx(
-                              "mt-0.5 block truncate text-xs",
-                              contact.nonLus > 0
-                                ? "text-ink-soft"
-                                : "text-ink-soft/70",
-                            )}
-                          >
-                            {contact.conversationVide
-                              ? "Nouvelle conversation"
-                              : `${contact.dernierEstMoi ? "Vous : " : ""}${contact.dernierContenu}`}
-                          </span>
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
+                        </button>
+                      </li>
+                    );
+                  },
+                )}
               </ul>
             )}
           </div>
         </aside>
 
         {/* =================================================
-            COLONNE CENTRALE — CONVERSATION
+            CONVERSATION
             ================================================= */}
 
         <section
           className={clsx(
             "min-w-0 flex-1 flex-col bg-paper-light lg:flex",
-            voirConversationMobile ? "flex" : "hidden",
+            voirConversationMobile
+              ? "flex"
+              : "hidden",
           )}
         >
-          {!contactActif ? (
-            /*
-             * Aucune conversation sélectionnée : état d'accueil.
-             */
+          {!conversationActive ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-              <span
-                className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary"
-                aria-hidden="true"
-              >
-                <MessageCircle size={26} />
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary">
+                <MessageCircle
+                  size={26}
+                />
               </span>
 
               <p className="font-display text-lg font-semibold text-ink">
@@ -1747,48 +2629,80 @@ function MessagesContent() {
               </p>
 
               <p className="max-w-sm text-sm text-ink-soft/80">
-                Choisissez un contact dans la liste pour afficher vos
-                échanges.
+                Choisissez un contact ou un groupe dans la liste.
               </p>
             </div>
           ) : (
             <>
-              {/* En-tête de conversation */}
+              {/* HEADER */}
+
               <header className="flex items-center gap-3 border-b border-ink/10 bg-paper-light px-4 py-3">
                 <button
                   type="button"
-                  onClick={fermerConversationMobile}
+                  onClick={
+                    fermerConversationMobile
+                  }
                   aria-label="Retour à la liste des conversations"
                   className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink lg:hidden"
                 >
-                  <ArrowLeft size={18} />
+                  <ArrowLeft
+                    size={18}
+                  />
                 </button>
 
-                <Avatar
-                  nom={contactActif.nom}
-                  photoUrl={autreUtilisateur?.photoUrl}
-                  size={40}
-                  href={profilHref ?? undefined}
-                  className="hidden sm:inline-flex"
-                />
+                {conversationActive.type ===
+                "GROUPE" ? (
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+                    <Users
+                      size={20}
+                    />
+                  </span>
+                ) : (
+                  <Avatar
+                    nom={
+                      conversationActive.nom
+                    }
+                    photoUrl={
+                      autreUtilisateur?.photoUrl
+                    }
+                    size={40}
+                    href={
+                      profilHref ??
+                      undefined
+                    }
+                    className="hidden sm:inline-flex"
+                  />
+                )}
 
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-display text-base font-semibold leading-tight text-ink">
-                    {contactActif.nom}
+                    {
+                      conversationActive.nom
+                    }
                   </p>
 
                   <p className="text-xs text-ink-soft">
-                    {autreUtilisateur
-                      ? roleLabel(autreUtilisateur.role ?? "client")
-                      : "Utilisateur Kianja"}
+                    {conversationActive.type ===
+                    "GROUPE"
+                      ? conversationActive.nombreMembres !=
+                        null
+                        ? `${conversationActive.nombreMembres} membre${conversationActive.nombreMembres > 1 ? "s" : ""}`
+                        : "Groupe Kianja"
+                      : autreUtilisateur
+                        ? afficherRole(
+                            autreUtilisateur.role,
+                          )
+                        : "Utilisateur Kianja"}
                   </p>
                 </div>
 
                 <button
                   type="button"
-                  onClick={gererBoutonMenu}
+                  onClick={
+                    gererBoutonMenu
+                  }
                   aria-label="Détails de la conversation"
-                  title="Détails de la conversation (mission, profil, pièces jointes)"
+                  title="Détails de la conversation"
                   className={clsx(
                     "inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors",
                     panneauVisible
@@ -1796,53 +2710,73 @@ function MessagesContent() {
                       : "text-ink-soft hover:bg-ink/5 hover:text-ink",
                   )}
                 >
-                  <MoreVertical size={18} />
+                  <MoreVertical
+                    size={18}
+                  />
                 </button>
               </header>
 
-              {/* Bandeau contexte mission (données réelles) */}
-              {missionAffichee && (
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-ink/10 bg-paper px-4 py-2.5 text-xs">
-                  <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-ink-soft">
-                    <Briefcase size={13} aria-hidden="true" />
-                    Mission
-                  </span>
+              {/* MISSION INDIVIDUELLE */}
 
-                  <Link
-                    href={`/missions/${missionAffichee.id}`}
-                    className="max-w-full truncate font-medium text-ink underline-offset-2 hover:underline"
-                  >
-                    {missionAffichee.titre}
-                  </Link>
-
-                  <span className="text-ink-soft">
-                    Statut&nbsp;:{" "}
-                    <span className="font-medium text-ink">
-                      {statutMissionLabel[missionAffichee.statut] ??
-                        missionAffichee.statut}
+              {conversationActive.type ===
+                "INDIVIDUEL" &&
+                missionAffichee && (
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-ink/10 bg-paper px-4 py-2.5 text-xs">
+                    <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-ink-soft">
+                      <Briefcase
+                        size={13}
+                        aria-hidden="true"
+                      />
+                      Mission
                     </span>
-                  </span>
 
-                  <span className="text-ink-soft">
-                    Budget&nbsp;:{" "}
-                    <span className="font-medium text-ink">
-                      {formatArgent(missionAffichee.budget)}
+                    <Link
+                      href={`/missions/${missionAffichee.id}`}
+                      className="max-w-full truncate font-medium text-ink underline-offset-2 hover:underline"
+                    >
+                      {
+                        missionAffichee.titre
+                      }
+                    </Link>
+
+                    <span className="text-ink-soft">
+                      Statut:&nbsp;
+                      <span className="font-medium text-ink">
+                        {statutMissionLabel[
+                          missionAffichee.statut
+                        ] ??
+                          missionAffichee.statut}
+                      </span>
                     </span>
-                  </span>
 
-                  <Link
-                    href={`/missions/${missionAffichee.id}`}
-                    className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/30 bg-primary-soft px-2.5 py-1 font-medium text-primary transition-colors hover:border-primary/60"
-                  >
-                    Voir la mission
-                    <ExternalLink size={12} aria-hidden="true" />
-                  </Link>
-                </div>
-              )}
+                    <span className="text-ink-soft">
+                      Budget:&nbsp;
+                      <span className="font-medium text-ink">
+                        {formatArgent(
+                          missionAffichee.budget,
+                        )}
+                      </span>
+                    </span>
 
-              {/* Fil des messages */}
+                    <Link
+                      href={`/missions/${missionAffichee.id}`}
+                      className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/30 bg-primary-soft px-2.5 py-1 font-medium text-primary transition-colors hover:border-primary/60"
+                    >
+                      Voir la mission
+                      <ExternalLink
+                        size={12}
+                        aria-hidden="true"
+                      />
+                    </Link>
+                  </div>
+                )}
+
+              {/* FIL */}
+
               <div
-                ref={zoneMessagesRef}
+                ref={
+                  zoneMessagesRef
+                }
                 className="min-h-0 flex-1 space-y-1.5 overflow-y-auto bg-paper px-4 py-4"
               >
                 {chargementFil ? (
@@ -1850,12 +2784,25 @@ function MessagesContent() {
                     <Loader2
                       size={16}
                       className="animate-spin"
-                      aria-hidden="true"
                     />
                     Chargement de la conversation…
                   </div>
-                ) : fil.length === 0 ? (
+                ) : fil.length ===
+                  0 ? (
                   <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-ink/5 text-ink-soft">
+                      {conversationActive.type ===
+                      "GROUPE" ? (
+                        <Users
+                          size={20}
+                        />
+                      ) : (
+                        <MessageCircle
+                          size={20}
+                        />
+                      )}
+                    </span>
+
                     <p className="text-sm text-ink-soft">
                       Aucun message dans cette conversation.
                     </p>
@@ -1865,172 +2812,256 @@ function MessagesContent() {
                     </p>
                   </div>
                 ) : (
-                  fil.map((message, index) => {
-                    const estMoi =
-                      message.expediteurId === utilisateur?.id;
+                  fil.map(
+                    (
+                      message,
+                      index,
+                    ) => {
+                      const estMoi =
+                        message.expediteurId ===
+                        utilisateur?.id;
 
-                    const nouveauJour =
-                      index === 0 ||
-                      !estMemeJournee(
-                        fil[index - 1].dateEnvoi,
-                        message.dateEnvoi,
-                      );
+                      const nouveauJour =
+                        index ===
+                          0 ||
+                        !estMemeJournee(
+                          fil[
+                            index -
+                              1
+                          ].dateEnvoi,
+                          message.dateEnvoi,
+                        );
 
-                    return (
-                      <div key={message.id}>
-                        {nouveauJour && (
-                          <div className="flex justify-center py-2">
-                            <span className="rounded-full bg-ink/5 px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-ink-soft/70">
-                              {formaterJourSeparateur(message.dateEnvoi)}
-                            </span>
-                          </div>
-                        )}
-
+                      return (
                         <div
-                          className={clsx(
-                            "group flex w-full items-end gap-2",
-                            estMoi ? "justify-end" : "justify-start",
-                          )}
+                          key={
+                            message.id
+                          }
                         >
-                          {!estMoi && (
-                            <Avatar
-                              nom={
-                                message.expediteur?.nom ?? contactActif.nom
-                              }
-                              photoUrl={
-                                message.expediteur?.photoUrl ??
-                                autreUtilisateur?.photoUrl
-                              }
-                              size={26}
-                              className="mb-1 hidden shrink-0 sm:inline-flex"
-                            />
+                          {nouveauJour && (
+                            <div className="flex justify-center py-2">
+                              <span className="rounded-full bg-ink/5 px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-ink-soft/70">
+                                {formaterJourSeparateur(
+                                  message.dateEnvoi,
+                                )}
+                              </span>
+                            </div>
                           )}
 
                           <div
                             className={clsx(
-                              "relative max-w-[85%] rounded-2xl px-3.5 py-2 text-sm shadow-sm sm:max-w-[70%]",
+                              "group flex w-full items-end gap-2",
                               estMoi
-                                ? "rounded-br-md bg-primary text-paper-light"
-                                : "rounded-bl-md border border-ink/10 bg-paper-light text-ink",
+                                ? "justify-end"
+                                : "justify-start",
                             )}
                           >
-                            {message.estSupprime ? (
-                              <p
-                                className={clsx(
-                                  "text-xs italic",
-                                  estMoi
-                                    ? "text-paper-light/70"
-                                    : "text-ink-soft/70",
-                                )}
-                              >
-                                Message supprimé
-                              </p>
-                            ) : (
-                              <>
-                                {message.contenu && (
-                                  <p className="whitespace-pre-wrap break-words">
-                                    {message.contenu}
-                                  </p>
-                                )}
-
-                                {message.pieceJointeUrl && (
-                                  <div
-                                    className={clsx(
-                                      message.contenu ? "mt-2" : "",
-                                      estMoi &&
-                                        "[&_a]:border-paper-light/40 [&_a]:bg-paper-light/10 [&_a]:text-paper-light [&_a:hover]:bg-paper-light/20",
-                                    )}
-                                  >
-                                    <PieceJointeAffichage
-                                      url={message.pieceJointeUrl}
-                                      nom={message.pieceJointeNom}
-                                    />
-                                  </div>
-                                )}
-                              </>
+                            {!estMoi && (
+                              <Avatar
+                                nom={
+                                  message.expediteur
+                                    ?.nom ??
+                                  conversationActive.nom
+                                }
+                                photoUrl={
+                                  message
+                                    .expediteur
+                                    ?.photoUrl
+                                }
+                                size={
+                                  26
+                                }
+                                className="mb-1 hidden shrink-0 sm:inline-flex"
+                              />
                             )}
 
                             <div
                               className={clsx(
-                                "mt-1 flex items-center justify-end gap-1 text-[10px] font-mono leading-none",
+                                "relative max-w-[85%] rounded-2xl px-3.5 py-2 text-sm shadow-sm sm:max-w-[70%]",
                                 estMoi
-                                  ? "text-paper-light/70"
-                                  : "text-ink-soft/60",
+                                  ? "rounded-br-md bg-primary text-paper-light"
+                                  : "rounded-bl-md border border-ink/10 bg-paper-light text-ink",
                               )}
                             >
-                              <span>
-                                {formaterHeure(message.dateEnvoi)}
-                              </span>
+                              {/* AUTEUR GROUPE */}
+
+                              {conversationActive.type ===
+                                "GROUPE" &&
+                                !estMoi &&
+                                message.expediteur
+                                  ?.nom && (
+                                  <p className="mb-1 text-[10px] font-semibold text-primary">
+                                    {
+                                      message.expediteur
+                                        .nom
+                                    }
+                                  </p>
+                                )}
+
+                              {message.estSupprime ? (
+                                <p
+                                  className={clsx(
+                                    "text-xs italic",
+                                    estMoi
+                                      ? "text-paper-light/70"
+                                      : "text-ink-soft/70",
+                                  )}
+                                >
+                                  Message supprimé
+                                </p>
+                              ) : (
+                                <>
+                                  {message.contenu && (
+                                    <p className="whitespace-pre-wrap break-words">
+                                      {
+                                        message.contenu
+                                      }
+                                    </p>
+                                  )}
+
+                                  {message.pieceJointeUrl && (
+                                    <div
+                                      className={clsx(
+                                        message.contenu
+                                          ? "mt-2"
+                                          : "",
+                                        estMoi &&
+                                          "[&_a]:border-paper-light/40 [&_a]:bg-paper-light/10 [&_a]:text-paper-light [&_a:hover]:bg-paper-light/20",
+                                      )}
+                                    >
+                                      <PieceJointeAffichage
+                                        url={
+                                          message.pieceJointeUrl
+                                        }
+                                        nom={
+                                          message.pieceJointeNom
+                                        }
+                                      />
+                                    </div>
+                                  )}
+                                </>
+                              )}
+
+                              <div
+                                className={clsx(
+                                  "mt-1 flex items-center justify-end gap-1 text-[10px] font-mono leading-none",
+                                  estMoi
+                                    ? "text-paper-light/70"
+                                    : "text-ink-soft/60",
+                                )}
+                              >
+                                <span>
+                                  {formaterHeure(
+                                    message.dateEnvoi,
+                                  )}
+                                </span>
+
+                                {estMoi &&
+                                  !message.estSupprime &&
+                                  (message.estLu ? (
+                                    <CheckCheck
+                                      size={
+                                        13
+                                      }
+                                      aria-label="Message lu"
+                                    />
+                                  ) : (
+                                    <Check
+                                      size={
+                                        13
+                                      }
+                                      aria-label="Message envoyé"
+                                    />
+                                  ))}
+                              </div>
 
                               {estMoi &&
-                                !message.estSupprime &&
-                                (message.estLu ? (
-                                  <CheckCheck
-                                    size={13}
-                                    aria-label="Message lu"
-                                  />
-                                ) : (
-                                  <Check
-                                    size={13}
-                                    aria-label="Message envoyé"
-                                  />
-                                ))}
+                                !message.estSupprime && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      supprimerMessage(
+                                        message.id,
+                                      )
+                                    }
+                                    disabled={
+                                      messageEnSuppression ===
+                                      message.id
+                                    }
+                                    aria-label="Supprimer ce message"
+                                    className="absolute -right-2 -top-2 hidden h-5 w-5 cursor-pointer items-center justify-center rounded-full border border-ink/15 bg-paper text-[10px] text-ink-soft opacity-0 transition-opacity hover:border-brique/50 hover:text-brique group-hover:flex group-hover:opacity-100"
+                                  >
+                                    ×
+                                  </button>
+                                )}
                             </div>
-
-                            {estMoi && !message.estSupprime && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  supprimerMessage(message.id)
-                                }
-                                disabled={
-                                  messageEnSuppression === message.id
-                                }
-                                aria-label="Supprimer ce message"
-                                className="absolute -right-2 -top-2 hidden h-5 w-5 cursor-pointer items-center justify-center rounded-full border border-ink/15 bg-paper text-[10px] text-ink-soft opacity-0 transition-opacity hover:border-brique/50 hover:text-brique group-hover:flex group-hover:opacity-100"
-                              >
-                                ×
-                              </button>
-                            )}
                           </div>
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    },
+                  )
                 )}
               </div>
 
-              {/* Zone de saisie (fixe en bas de la conversation) */}
+              {/* SAISIE */}
+
               <form
-                ref={formEnvoiRef}
+                ref={
+                  formEnvoiRef
+                }
                 onSubmit={envoyer}
                 className="border-t border-ink/10 bg-paper-light px-4 py-3"
               >
                 <div className="flex items-end gap-2">
                   <SelecteurPieceJointe
                     compact
-                    valeur={pieceJointe}
-                    onChange={setPieceJointe}
-                    disabled={envoi}
+                    valeur={
+                      pieceJointe
+                    }
+                    onChange={
+                      setPieceJointe
+                    }
+                    disabled={
+                      envoi
+                    }
                   />
 
                   <Textarea
-                    ref={textareaRef}
-                    rows={1}
-                    value={nouveauMessage}
-                    onChange={(e) =>
-                      setNouveauMessage(e.target.value)
+                    ref={
+                      textareaRef
                     }
-                    onKeyDown={gererToucheTextarea}
-                    placeholder="Écrivez votre message…"
+                    rows={1}
+                    value={
+                      nouveauMessage
+                    }
+                    onChange={(e) =>
+                      setNouveauMessage(
+                        e.target
+                          .value,
+                      )
+                    }
+                    onKeyDown={
+                      gererToucheTextarea
+                    }
+                    placeholder={
+                      conversationActive.type ===
+                      "GROUPE"
+                        ? "Écrivez au groupe…"
+                        : "Écrivez votre message…"
+                    }
                     aria-label="Votre message"
                     className="max-h-[140px] min-h-[40px] flex-1 resize-none rounded-2xl py-2"
-                    disabled={envoi}
+                    disabled={
+                      envoi
+                    }
                   />
 
                   <button
                     type="submit"
-                    disabled={envoi || !nouveauMessage.trim()}
+                    disabled={
+                      envoi ||
+                      !nouveauMessage.trim()
+                    }
                     aria-label="Envoyer le message"
                     className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-paper-light shadow-sm transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                   >
@@ -2038,17 +3069,23 @@ function MessagesContent() {
                       <Loader2
                         size={17}
                         className="animate-spin"
-                        aria-hidden="true"
                       />
                     ) : (
-                      <Send size={16} aria-hidden="true" />
+                      <Send
+                        size={16}
+                      />
                     )}
                   </button>
                 </div>
 
                 {erreurEnvoi && (
-                  <p role="alert" className="mt-2 text-xs text-brique">
-                    {erreurEnvoi}
+                  <p
+                    role="alert"
+                    className="mt-2 text-xs text-brique"
+                  >
+                    {
+                      erreurEnvoi
+                    }
                   </p>
                 )}
 
@@ -2061,169 +3098,330 @@ function MessagesContent() {
         </section>
 
         {/* =================================================
-            COLONNE DROITE — DÉTAILS (mission, profil, PJ)
+            PANNEAU DROIT
             ================================================= */}
 
-        {contactActif && panneauVisible && (
-          <aside className="hidden w-[330px] shrink-0 flex-col gap-4 overflow-y-auto border-l border-ink/10 bg-paper p-4 xl:flex">
-            <PanneauDetailsConversation
-              contact={contactActif}
-              autreUtilisateur={autreUtilisateur}
-              profilEtudiant={profilEtudiantAffiche}
-              profilClient={profilClientAffiche}
-              profilHref={profilHref}
-              missionAffichee={missionAffichee}
-              piecesJointes={piecesJointes}
-              utilisateurId={utilisateur?.id ?? null}
-            />
-          </aside>
-        )}
+        {conversationActive &&
+          panneauVisible && (
+            <aside className="hidden w-[330px] shrink-0 flex-col gap-4 overflow-y-auto border-l border-ink/10 bg-paper p-4 xl:flex">
+              <PanneauDetailsConversation
+                conversation={
+                  conversationActive
+                }
+                autreUtilisateur={
+                  autreUtilisateur
+                }
+                profilEtudiant={
+                  profilEtudiantAffiche
+                }
+                profilClient={
+                  profilClientAffiche
+                }
+                profilHref={
+                  profilHref
+                }
+                missionAffichee={
+                  missionAffichee
+                }
+                piecesJointes={
+                  piecesJointes
+                }
+              />
+            </aside>
+          )}
       </div>
 
-      {/* =====================================================
-          PANNEAU DE DÉTAILS EN SUPERPOSITION (< xl)
-          ===================================================== */}
+      {/* =================================================
+          PANNEAU MOBILE
+          ================================================= */}
 
-      {contactActif && detailsOuverts && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Détails de la conversation"
-          className="fixed inset-0 z-50 flex justify-end bg-ink/50 xl:hidden"
-          onClick={() => setDetailsOuverts(false)}
-        >
+      {conversationActive &&
+        detailsOuverts && (
           <div
-            className="flex h-full w-full max-w-sm flex-col border-l border-ink/10 bg-paper shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Détails de la conversation"
+            className="fixed inset-0 z-50 flex justify-end bg-ink/50 xl:hidden"
+            onClick={() =>
+              setDetailsOuverts(
+                false,
+              )
+            }
           >
-            <div className="flex items-center justify-between border-b border-ink/10 px-4 py-3">
-              <h2 className="font-display text-base font-semibold text-ink">
-                Détails de la conversation
-              </h2>
+            <div
+              className="flex h-full w-full max-w-sm flex-col border-l border-ink/10 bg-paper shadow-xl"
+              onClick={(e) =>
+                e.stopPropagation()
+              }
+            >
+              <div className="flex items-center justify-between border-b border-ink/10 px-4 py-3">
+                <h2 className="font-display text-base font-semibold text-ink">
+                  Détails de la conversation
+                </h2>
 
-              <button
-                type="button"
-                onClick={() => setDetailsOuverts(false)}
-                aria-label="Fermer les détails"
-                className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink"
-              >
-                <X size={18} />
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDetailsOuverts(
+                      false,
+                    )
+                  }
+                  aria-label="Fermer les détails"
+                  className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink"
+                >
+                  <X
+                    size={18}
+                  />
+                </button>
+              </div>
 
-            <div className="flex-1 space-y-4 overflow-y-auto p-4">
-              <PanneauDetailsConversation
-                contact={contactActif}
-                autreUtilisateur={autreUtilisateur}
-                profilEtudiant={profilEtudiantAffiche}
-                profilClient={profilClientAffiche}
-                profilHref={profilHref}
-                missionAffichee={missionAffichee}
-                piecesJointes={piecesJointes}
-                utilisateurId={utilisateur?.id ?? null}
-              />
+              <div className="flex-1 space-y-4 overflow-y-auto p-4">
+                <PanneauDetailsConversation
+                  conversation={
+                    conversationActive
+                  }
+                  autreUtilisateur={
+                    autreUtilisateur
+                  }
+                  profilEtudiant={
+                    profilEtudiantAffiche
+                  }
+                  profilClient={
+                    profilClientAffiche
+                  }
+                  profilHref={
+                    profilHref
+                  }
+                  missionAffichee={
+                    missionAffichee
+                  }
+                  piecesJointes={
+                    piecesJointes
+                  }
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }
 
 /* =========================================================
-   PANNEAU DE DÉTAILS (mission · correspondant · pièces jointes)
+   PANNEAU DETAILS
    ========================================================= */
 
-/*
- * N'affiche QUE des données réelles : une section absente signifie
- * simplement que la donnée n'existe pas (aucune conversation liée à
- * une mission, aucune pièce jointe partagée…).
- */
 function PanneauDetailsConversation({
-  contact,
+  conversation,
   autreUtilisateur,
   profilEtudiant,
   profilClient,
   profilHref,
   missionAffichee,
   piecesJointes,
-  utilisateurId,
 }: {
-  contact: { id: string; nom: string };
+  conversation: SelectionConversation;
+
   autreUtilisateur: NonNullable<
     MessageAvecUtilisateurs["expediteur"]
   > | null;
-  profilEtudiant: EtudiantProfile | null;
-  profilClient: ClientProfile | null;
+
+  profilEtudiant:
+    | EtudiantProfile
+    | null;
+
+  profilClient:
+    | ClientProfile
+    | null;
+
   profilHref: string | null;
-  missionAffichee: Mission | null;
-  piecesJointes: PieceJointeConversation[];
-  utilisateurId: string | null;
+
+  missionAffichee:
+    | Mission
+    | null;
+
+  piecesJointes:
+    PieceJointeConversation[];
 }) {
   const noteEtudiant =
-    profilEtudiant?.noteMoyenne != null
-      ? Number(profilEtudiant.noteMoyenne)
+    profilEtudiant?.noteMoyenne !=
+    null
+      ? Number(
+          profilEtudiant.noteMoyenne,
+        )
       : null;
 
-  const missionClientNom = missionAffichee?.client
-    ? missionAffichee.client.utilisateur?.id === utilisateurId
-      ? "Vous"
-      : missionAffichee.client.utilisateur?.nom ?? null
-    : null;
+  /* =========================================================
+     GROUPE
+     ========================================================= */
+
+  if (
+    conversation.type ===
+    "GROUPE"
+  ) {
+    return (
+      <>
+        <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
+          <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft">
+            <Users
+              size={13}
+              aria-hidden="true"
+            />
+            Groupe
+          </h3>
+
+          <div className="flex items-center gap-3">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+              <Users
+                size={22}
+              />
+            </span>
+
+            <div className="min-w-0">
+              <p className="truncate font-display text-sm font-semibold text-ink">
+                {
+                  conversation.nom
+                }
+              </p>
+
+              <p className="text-xs text-ink-soft">
+                {conversation.nombreMembres !=
+                null
+                  ? `${conversation.nombreMembres} membre${conversation.nombreMembres > 1 ? "s" : ""}`
+                  : "Groupe Kianja"}
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-3 text-xs leading-relaxed text-ink-soft/80">
+            Discussion réservée aux membres actifs de ce groupe.
+          </p>
+        </section>
+
+        {piecesJointes.length >
+          0 && (
+          <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
+            <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft">
+              <FileText
+                size={13}
+              />
+              Pièces jointes (
+              {
+                piecesJointes.length
+              }
+              )
+            </h3>
+
+            <ul className="space-y-2">
+              {piecesJointes.map(
+                (piece) => (
+                  <li
+                    key={
+                      piece.url
+                    }
+                    className="rounded-lg border border-ink/10 bg-paper p-2.5"
+                  >
+                    <PieceJointeAffichage
+                      url={
+                        piece.url
+                      }
+                      nom={
+                        piece.nom
+                      }
+                    />
+
+                    <p className="mt-1.5 text-[10px] font-mono text-ink-soft/60">
+                      {
+                        piece.auteur
+                      }{" "}
+                      ·{" "}
+                      {formaterDateListe(
+                        piece.dateEnvoi,
+                      )}
+                    </p>
+                  </li>
+                ),
+              )}
+            </ul>
+          </section>
+        )}
+      </>
+    );
+  }
+
+  /* =========================================================
+     INDIVIDUEL
+     ========================================================= */
 
   return (
     <>
       {missionAffichee && (
         <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
           <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft">
-            <Briefcase size={13} aria-hidden="true" />
+            <Briefcase
+              size={13}
+            />
             Mission liée
           </h3>
 
           {missionAffichee.imageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={getFileUrl(missionAffichee.imageUrl) ?? ""}
+              src={
+                getFileUrl(
+                  missionAffichee.imageUrl,
+                ) ?? ""
+              }
               alt=""
               className="mb-3 h-28 w-full rounded-lg border border-ink/10 object-cover"
             />
           )}
 
           <p className="font-display text-sm font-semibold leading-snug text-ink">
-            {missionAffichee.titre}
+            {
+              missionAffichee.titre
+            }
           </p>
 
           <dl className="mt-3 space-y-2 text-xs">
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-ink-soft/70">Statut</dt>
+              <dt className="text-ink-soft/70">
+                Statut
+              </dt>
+
               <dd className="font-medium text-ink">
-                {statutMissionLabel[missionAffichee.statut] ??
-                  missionAffichee.statut}
+                {
+                  statutMissionLabel[
+                    missionAffichee.statut
+                  ] ??
+                  missionAffichee.statut
+                }
               </dd>
             </div>
 
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-ink-soft/70">Budget</dt>
+              <dt className="text-ink-soft/70">
+                Budget
+              </dt>
+
               <dd className="font-medium text-ink">
-                {formatArgent(missionAffichee.budget)}
+                {formatArgent(
+                  missionAffichee.budget,
+                )}
               </dd>
             </div>
 
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-ink-soft/70">Date limite</dt>
+              <dt className="text-ink-soft/70">
+                Date limite
+              </dt>
+
               <dd className="font-medium text-ink">
-                {formatDate(missionAffichee.dateLimite)}
+                {formatDate(
+                  missionAffichee.dateLimite,
+                )}
               </dd>
             </div>
-
-            {missionClientNom && (
-              <div className="flex items-center justify-between gap-2">
-                <dt className="text-ink-soft/70">Client</dt>
-                <dd className="max-w-[60%] truncate font-medium text-ink">
-                  {missionClientNom}
-                </dd>
-              </div>
-            )}
           </dl>
 
           <Button
@@ -2233,89 +3431,146 @@ function PanneauDetailsConversation({
             className="mt-3 w-full justify-center gap-1.5"
           >
             Voir la mission
-            <ExternalLink size={13} aria-hidden="true" />
+            <ExternalLink
+              size={13}
+            />
           </Button>
         </section>
       )}
 
       <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
         <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft">
-          <User size={13} aria-hidden="true" />
+          <User
+            size={13}
+          />
           Correspondant
         </h3>
 
         <div className="flex items-center gap-3">
           <Avatar
-            nom={contact.nom}
-            photoUrl={autreUtilisateur?.photoUrl}
+            nom={
+              conversation.nom
+            }
+            photoUrl={
+              autreUtilisateur?.photoUrl
+            }
             size={48}
           />
 
           <div className="min-w-0">
             <p className="truncate font-display text-sm font-semibold text-ink">
-              {contact.nom}
+              {
+                conversation.nom
+              }
             </p>
 
             <p className="text-xs text-ink-soft">
               {autreUtilisateur
-                ? roleLabel(autreUtilisateur.role ?? "client")
+                ? afficherRole(
+                    autreUtilisateur.role,
+                  )
                 : "Utilisateur Kianja"}
             </p>
 
-            {noteEtudiant != null && !Number.isNaN(noteEtudiant) && (
-              <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-ink-soft">
-                <Star size={12} className="text-ocre" aria-hidden="true" />
-                {noteEtudiant.toFixed(1)}/5
-              </p>
-            )}
+            {noteEtudiant !=
+              null &&
+              !Number.isNaN(
+                noteEtudiant,
+              ) && (
+                <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-ink-soft">
+                  <Star
+                    size={12}
+                    className="text-ocre"
+                  />
+
+                  {noteEtudiant.toFixed(
+                    1,
+                  )}
+                  /5
+                </p>
+              )}
           </div>
         </div>
 
         {profilEtudiant?.universite && (
           <p className="mt-2.5 text-xs text-ink-soft/80">
-            Université&nbsp;: {profilEtudiant.universite}
+            Université:&nbsp;
+            {
+              profilEtudiant.universite
+            }
           </p>
         )}
 
         {profilClient?.nomEntreprise && (
           <p className="mt-2.5 text-xs text-ink-soft/80">
-            Entreprise&nbsp;: {profilClient.nomEntreprise}
+            Entreprise:&nbsp;
+            {
+              profilClient.nomEntreprise
+            }
           </p>
         )}
 
         {profilHref && (
           <Button
-            href={profilHref}
+            href={
+              profilHref
+            }
             variant="ghost"
             size="sm"
             className="mt-3 w-full justify-center gap-1.5"
           >
             Voir le profil
-            <ExternalLink size={13} aria-hidden="true" />
+            <ExternalLink
+              size={13}
+            />
           </Button>
         )}
       </section>
 
-      {piecesJointes.length > 0 && (
+      {piecesJointes.length >
+        0 && (
         <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
           <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft">
-            <FileText size={13} aria-hidden="true" />
-            Pièces jointes ({piecesJointes.length})
+            <FileText
+              size={13}
+            />
+            Pièces jointes (
+            {
+              piecesJointes.length
+            }
+            )
           </h3>
 
           <ul className="space-y-2">
-            {piecesJointes.map((piece) => (
-              <li
-                key={piece.url}
-                className="rounded-lg border border-ink/10 bg-paper p-2.5"
-              >
-                <PieceJointeAffichage url={piece.url} nom={piece.nom} />
+            {piecesJointes.map(
+              (piece) => (
+                <li
+                  key={
+                    piece.url
+                  }
+                  className="rounded-lg border border-ink/10 bg-paper p-2.5"
+                >
+                  <PieceJointeAffichage
+                    url={
+                      piece.url
+                    }
+                    nom={
+                      piece.nom
+                    }
+                  />
 
-                <p className="mt-1.5 text-[10px] font-mono text-ink-soft/60">
-                  {piece.auteur} · {formaterDateListe(piece.dateEnvoi)}
-                </p>
-              </li>
-            ))}
+                  <p className="mt-1.5 text-[10px] font-mono text-ink-soft/60">
+                    {
+                      piece.auteur
+                    }{" "}
+                    ·{" "}
+                    {formaterDateListe(
+                      piece.dateEnvoi,
+                    )}
+                  </p>
+                </li>
+              ),
+            )}
           </ul>
         </section>
       )}

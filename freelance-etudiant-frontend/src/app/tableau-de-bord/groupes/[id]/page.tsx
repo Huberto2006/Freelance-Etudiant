@@ -1,13 +1,25 @@
 "use client";
 
 import { use, useEffect, useMemo, useState } from "react";
-import { Check, Crown, Loader2, Search, UserPlus, Users, X } from "lucide-react";
+import {
+  Check,
+  Crown,
+  Loader2,
+  MessageCircle,
+  Search,
+  UserPlus,
+  Users,
+  X,
+} from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import type { EtudiantProfile, Groupe, InvitationGroupe } from "@/lib/types";
-import { formatDate, roleMembreGroupeLabel, statutInvitationGroupeLabel } from "@/lib/format";
-import { DiscussionGroupe } from "@/components/groupes/DiscussionGroupe";
+import {
+  formatDate,
+  roleMembreGroupeLabel,
+  statutInvitationGroupeLabel,
+} from "@/lib/format";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -32,9 +44,10 @@ export default function GroupeDetailPage({
    *
    * GET /groupes/:id ne charge pas la relation membres.etudiant.utilisateur
    * (uniquement membres.etudiant) : le nom et la photo des membres ne sont
-   * donc pas disponibles directement depuis le détail du groupe. On
-   * réutilise l'annuaire public des étudiants, qui lui charge bien
-   * utilisateur, pour résoudre ces informations d'affichage.
+   * donc pas disponibles directement depuis le détail du groupe.
+   *
+   * On réutilise l'annuaire public des étudiants pour résoudre
+   * les informations d'affichage.
    */
   const [annuaire, setAnnuaire] = useState<EtudiantProfile[]>([]);
 
@@ -74,7 +87,10 @@ export default function GroupeDetailPage({
     async function chargerAnnuaire() {
       try {
         const data = await api.get<EtudiantProfile[]>("/etudiants");
-        if (!cancelled) setAnnuaire(data);
+
+        if (!cancelled) {
+          setAnnuaire(data);
+        }
       } catch {
         // L'affichage retombe alors sur un nom générique.
       }
@@ -89,27 +105,38 @@ export default function GroupeDetailPage({
 
   const annuaireParId = useMemo(() => {
     const map = new Map<string, EtudiantProfile>();
+
     for (const etudiant of annuaire) {
       map.set(etudiant.utilisateurId, etudiant);
     }
+
     return map;
   }, [annuaire]);
 
   function nomEtudiant(etudiantId: string): string {
-    return annuaireParId.get(etudiantId)?.utilisateur?.nom ?? "Étudiant";
+    return (
+      annuaireParId.get(etudiantId)?.utilisateur?.nom ?? "Étudiant"
+    );
   }
 
-  function photoEtudiant(etudiantId: string): string | null | undefined {
+  function photoEtudiant(
+    etudiantId: string,
+  ): string | null | undefined {
     return annuaireParId.get(etudiantId)?.utilisateur?.photoUrl;
   }
 
   const monMembre = groupe?.membres?.find(
     (m) => m.etudiantId === utilisateur?.id,
   );
+
   const estChef = monMembre?.role === "chef";
 
   useEffect(() => {
-    if (!estChef) return;
+    if (!estChef) {
+      setInvitations([]);
+      return;
+    }
+
     api
       .get<InvitationGroupe[]>(`/groupes/${id}/invitations`)
       .then(setInvitations)
@@ -122,12 +149,15 @@ export default function GroupeDetailPage({
   ) {
     setActionEnCours(cle);
     setErreur(null);
+
     try {
       await action();
       await charger();
     } catch (error) {
       setErreur(
-        error instanceof ApiError ? error.message : "Action impossible.",
+        error instanceof ApiError
+          ? error.message
+          : "Action impossible.",
       );
     } finally {
       setActionEnCours(null);
@@ -147,7 +177,11 @@ export default function GroupeDetailPage({
   if (chargement) {
     return (
       <p className="flex items-center gap-2 text-sm text-ink-soft">
-        <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+        <Loader2
+          size={16}
+          className="animate-spin"
+          aria-hidden="true"
+        />
         Chargement du groupe…
       </p>
     );
@@ -156,7 +190,10 @@ export default function GroupeDetailPage({
   if (!groupe) {
     return (
       <div>
-        <BoutonRetour repli="/tableau-de-bord/groupes" className="mb-6" />
+        <BoutonRetour
+          repli="/tableau-de-bord/groupes"
+          className="mb-6"
+        />
 
         <NoticeCard>
           <div className="flex flex-col items-center gap-3 py-6 text-center">
@@ -166,10 +203,16 @@ export default function GroupeDetailPage({
             >
               <Users size={22} />
             </span>
+
             <p className="text-sm text-brique">
               {erreur ?? "Ce groupe est introuvable."}
             </p>
-            <Button variant="secondary" size="sm" href="/tableau-de-bord/groupes">
+
+            <Button
+              variant="secondary"
+              size="sm"
+              href="/tableau-de-bord/groupes"
+            >
               Retour à mes groupes
             </Button>
           </div>
@@ -182,9 +225,16 @@ export default function GroupeDetailPage({
 
   return (
     <div>
-      <BoutonRetour repli="/tableau-de-bord/groupes" className="mb-6" />
+      <BoutonRetour
+        repli="/tableau-de-bord/groupes"
+        className="mb-6"
+      />
 
-      <PageHeader icon={Users} eyebrow="Espace étudiant" title={groupe.nom} />
+      <PageHeader
+        icon={Users}
+        eyebrow="Espace étudiant"
+        title={groupe.nom}
+      />
 
       {erreur && (
         <NoticeCard className="mb-6">
@@ -197,19 +247,63 @@ export default function GroupeDetailPage({
           ===================================================== */}
       <NoticeCard className="mb-6">
         {groupe.description && (
-          <p className="text-sm text-ink-soft">{groupe.description}</p>
+          <p className="text-sm text-ink-soft">
+            {groupe.description}
+          </p>
         )}
 
         <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-xs text-ink-soft/70">
-          <p>Mission : {groupe.mission?.titre ?? "Aucune"}</p>
+          <p>
+            Mission : {groupe.mission?.titre ?? "Aucune"}
+          </p>
+
           {groupe.dateCreation && (
-            <p>Créé le {formatDate(groupe.dateCreation)}</p>
+            <p>
+              Créé le {formatDate(groupe.dateCreation)}
+            </p>
           )}
         </div>
       </NoticeCard>
 
+      {/* =====================================================
+          DISCUSSION
+          ===================================================== */}
+
       {membres.length >= 2 && (
-        <DiscussionGroupe groupeId={groupe.id} nombreMembres={membres.length} />
+        <NoticeCard className="mb-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <span
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rice/10 text-rice"
+                aria-hidden="true"
+              >
+                <MessageCircle size={20} />
+              </span>
+
+              <div>
+                <h2 className="font-display text-lg font-semibold">
+                  Discussion du groupe
+                </h2>
+
+                <p className="mt-1 text-sm text-ink-soft">
+                  Retrouvez les messages du groupe dans votre espace
+                  de messagerie.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              href={`/tableau-de-bord/messages?groupeId=${encodeURIComponent(
+                groupe.id,
+              )}`}
+              size="sm"
+              className="gap-2"
+            >
+              <MessageCircle size={15} aria-hidden="true" />
+              Ouvrir la discussion
+            </Button>
+          </div>
+        </NoticeCard>
       )}
 
       {/* =====================================================
@@ -257,68 +351,106 @@ export default function GroupeDetailPage({
 
               <p className="flex-1 truncate text-sm font-medium">
                 {nomEtudiant(membre.etudiantId)}
+
                 {membre.etudiantId === utilisateur?.id && (
-                  <span className="ml-1 text-ink-soft/60">(vous)</span>
+                  <span className="ml-1 text-ink-soft/60">
+                    (vous)
+                  </span>
                 )}
               </p>
 
-              <Tag tone={membre.role === "chef" ? "ocre" : "ink"}>
+              <Tag
+                tone={
+                  membre.role === "chef"
+                    ? "ocre"
+                    : "ink"
+                }
+              >
                 {membre.role === "chef" && (
-                  <Crown size={11} className="mr-1 inline" aria-hidden="true" />
+                  <Crown
+                    size={11}
+                    className="mr-1 inline"
+                    aria-hidden="true"
+                  />
                 )}
+
                 {roleMembreGroupeLabel[membre.role]}
               </Tag>
 
-              {estChef && membre.etudiantId !== utilisateur?.id && (
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={actionEnCours !== null}
-                    onClick={() => {
-                      if (!confirmer("Transférer le rôle de chef à cet étudiant ?")) return;
-                      void executerAction(
-                        `chef-${membre.etudiantId}`,
-                        async () => {
-                          await api.patch(`/groupes/${groupe.id}/chef`, {
-                            etudiantId: membre.etudiantId,
-                          });
-                        },
-                      );
-                    }}
-                  >
-                    Chef
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={actionEnCours !== null}
-                    onClick={() => {
-                      if (!confirmer("Retirer cet étudiant du groupe ?")) return;
-                      void executerAction(
-                        `retirer-${membre.etudiantId}`,
-                        async () => {
-                          await api.delete(
-                            `/groupes/${groupe.id}/membres/${membre.etudiantId}`,
-                          );
-                        },
-                      );
-                    }}
-                  >
-                    Retirer
-                  </Button>
-                </div>
-              )}
+              {estChef &&
+                membre.etudiantId !== utilisateur?.id && (
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={actionEnCours !== null}
+                      onClick={() => {
+                        if (
+                          !confirmer(
+                            "Transférer le rôle de chef à cet étudiant ?",
+                          )
+                        ) {
+                          return;
+                        }
+
+                        void executerAction(
+                          `chef-${membre.etudiantId}`,
+                          async () => {
+                            await api.patch(
+                              `/groupes/${groupe.id}/chef`,
+                              {
+                                etudiantId:
+                                  membre.etudiantId,
+                              },
+                            );
+                          },
+                        );
+                      }}
+                    >
+                      Chef
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={actionEnCours !== null}
+                      onClick={() => {
+                        if (
+                          !confirmer(
+                            "Retirer cet étudiant du groupe ?",
+                          )
+                        ) {
+                          return;
+                        }
+
+                        void executerAction(
+                          `retirer-${membre.etudiantId}`,
+                          async () => {
+                            await api.delete(
+                              `/groupes/${groupe.id}/membres/${membre.etudiantId}`,
+                            );
+                          },
+                        );
+                      }}
+                    >
+                      Retirer
+                    </Button>
+                  </div>
+                )}
             </li>
           ))}
         </ul>
       </NoticeCard>
 
+      {/* =====================================================
+          INVITATIONS ENVOYÉES
+          ===================================================== */}
       {estChef && (
         <NoticeCard className="mb-6">
           <h2 className="font-display text-lg font-semibold">
             Invitations envoyées
           </h2>
+
           {invitations.length === 0 ? (
             <p className="mt-2 text-sm text-ink-soft/70">
               Aucune invitation envoyée.
@@ -326,28 +458,49 @@ export default function GroupeDetailPage({
           ) : (
             <ul className="mt-3 flex flex-col divide-y divide-ink/10">
               {invitations.map((invitation) => (
-                <li key={invitation.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                <li
+                  key={invitation.id}
+                  className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+                >
                   <p className="flex-1 text-sm">
                     {nomEtudiant(invitation.inviteId)}
+
                     <span className="ml-2 text-xs text-ink-soft/70">
-                      {statutInvitationGroupeLabel[invitation.statut]} · {formatDate(invitation.dateCreation)}
+                      {statutInvitationGroupeLabel[
+                        invitation.statut
+                      ]}{" "}
+                      · {formatDate(invitation.dateCreation)}
                     </span>
                   </p>
+
                   {invitation.statut === "en_attente" && (
                     <Button
                       size="sm"
                       variant="ghost"
                       disabled={actionEnCours !== null}
                       onClick={() => {
-                        if (!confirmer("Annuler cette invitation ?")) return;
+                        if (
+                          !confirmer(
+                            "Annuler cette invitation ?",
+                          )
+                        ) {
+                          return;
+                        }
+
                         void executerAction(
                           `invitation-${invitation.id}`,
                           async () => {
-                            await api.delete(`/groupes/invitations/${invitation.id}`);
+                            await api.delete(
+                              `/groupes/invitations/${invitation.id}`,
+                            );
+
                             setInvitations((courantes) =>
                               courantes.map((courante) =>
                                 courante.id === invitation.id
-                                  ? { ...courante, statut: "annulee" }
+                                  ? {
+                                      ...courante,
+                                      statut: "annulee",
+                                    }
                                   : courante,
                               ),
                             );
@@ -365,14 +518,22 @@ export default function GroupeDetailPage({
         </NoticeCard>
       )}
 
+      {/* =====================================================
+          QUITTER LE GROUPE
+          ===================================================== */}
       {monMembre && monMembre.role !== "chef" && (
         <Button
           variant="ghost"
           disabled={actionEnCours !== null}
           onClick={() => {
-            if (!confirmer("Quitter ce groupe ?")) return;
+            if (!confirmer("Quitter ce groupe ?")) {
+              return;
+            }
+
             void executerAction("quitter", async () => {
-              await api.post(`/groupes/${groupe.id}/quitter`);
+              await api.post(
+                `/groupes/${groupe.id}/quitter`,
+              );
             });
           }}
           className="mb-6"
@@ -388,7 +549,9 @@ export default function GroupeDetailPage({
         <PanneauInvitation
           groupeId={groupe.id}
           annuaire={annuaire}
-          membresActuels={membres.map((m) => m.etudiantId)}
+          membresActuels={membres.map(
+            (m) => m.etudiantId,
+          )}
           moiId={utilisateur?.id}
         />
       )}
@@ -397,10 +560,11 @@ export default function GroupeDetailPage({
 }
 
 /**
- * Panneau d'invitation : sélection d'un étudiant parmi l'annuaire public
- * (GET /etudiants), seule API existante permettant de rechercher des
- * étudiants. Aucun champ de recherche par nom n'existe côté backend : le
- * filtrage se fait donc côté client sur la liste déjà chargée.
+ * Panneau d'invitation : sélection d'un étudiant parmi
+ * l'annuaire public.
+ *
+ * GET /etudiants permet de récupérer les étudiants.
+ * Le filtrage par nom se fait côté client.
  */
 function PanneauInvitation({
   groupeId,
@@ -414,18 +578,32 @@ function PanneauInvitation({
   moiId?: string;
 }) {
   const [recherche, setRecherche] = useState("");
-  const [envoiPourId, setEnvoiPourId] = useState<string | null>(null);
-  const [invitesEnvoyes, setInvitesEnvoyes] = useState<Set<string>>(new Set());
+  const [envoiPourId, setEnvoiPourId] =
+    useState<string | null>(null);
+  const [invitesEnvoyes, setInvitesEnvoyes] =
+    useState<Set<string>>(new Set());
   const [erreur, setErreur] = useState<string | null>(null);
 
   const candidats = annuaire.filter((etudiant) => {
-    if (etudiant.utilisateurId === moiId) return false;
-    if (membresActuels.includes(etudiant.utilisateurId)) return false;
-    if (invitesEnvoyes.has(etudiant.utilisateurId)) return false;
+    if (etudiant.utilisateurId === moiId) {
+      return false;
+    }
+
+    if (membresActuels.includes(etudiant.utilisateurId)) {
+      return false;
+    }
+
+    if (invitesEnvoyes.has(etudiant.utilisateurId)) {
+      return false;
+    }
 
     if (recherche.trim()) {
-      const nom = etudiant.utilisateur?.nom?.toLowerCase() ?? "";
-      return nom.includes(recherche.trim().toLowerCase());
+      const nom =
+        etudiant.utilisateur?.nom?.toLowerCase() ?? "";
+
+      return nom.includes(
+        recherche.trim().toLowerCase(),
+      );
     }
 
     return true;
@@ -436,13 +614,27 @@ function PanneauInvitation({
     setEnvoiPourId(etudiantId);
 
     try {
-      await api.post(`/groupes/${groupeId}/invitations`, { etudiantId });
-      setInvitesEnvoyes((prev) => new Set(prev).add(etudiantId));
+      await api.post(
+        `/groupes/${groupeId}/invitations`,
+        {
+          etudiantId,
+        },
+      );
+
+      setInvitesEnvoyes(
+        (prev) =>
+          new Set(prev).add(etudiantId),
+      );
     } catch (err) {
-      console.error("Erreur lors de l'envoi de l'invitation :", err);
+      console.error(
+        "Erreur lors de l'envoi de l'invitation :",
+        err,
+      );
 
       setErreur(
-        err instanceof ApiError ? err.message : "Erreur inattendue.",
+        err instanceof ApiError
+          ? err.message
+          : "Erreur inattendue.",
       );
     } finally {
       setEnvoiPourId(null);
@@ -455,7 +647,11 @@ function PanneauInvitation({
         Inviter un étudiant
       </h3>
 
-      {erreur && <p className="mt-2 text-sm text-brique">{erreur}</p>}
+      {erreur && (
+        <p className="mt-2 text-sm text-brique">
+          {erreur}
+        </p>
+      )}
 
       <div className="relative mt-4">
         <Search
@@ -463,9 +659,12 @@ function PanneauInvitation({
           className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
           aria-hidden="true"
         />
+
         <Input
           value={recherche}
-          onChange={(e) => setRecherche(e.target.value)}
+          onChange={(e) =>
+            setRecherche(e.target.value)
+          }
           placeholder="Rechercher un étudiant par nom…"
           aria-label="Rechercher un étudiant"
           className="pl-9"
@@ -479,7 +678,8 @@ function PanneauInvitation({
           </p>
         ) : (
           candidats.map((etudiant) => {
-            const enCours = envoiPourId === etudiant.utilisateurId;
+            const enCours =
+              envoiPourId === etudiant.utilisateurId;
 
             return (
               <li
@@ -487,27 +687,45 @@ function PanneauInvitation({
                 className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
               >
                 <Avatar
-                  nom={etudiant.utilisateur?.nom ?? "Étudiant"}
-                  photoUrl={etudiant.utilisateur?.photoUrl}
+                  nom={
+                    etudiant.utilisateur?.nom ??
+                    "Étudiant"
+                  }
+                  photoUrl={
+                    etudiant.utilisateur?.photoUrl
+                  }
                   size={32}
                 />
 
                 <p className="flex-1 truncate text-sm">
-                  {etudiant.utilisateur?.nom ?? "Étudiant"}
+                  {etudiant.utilisateur?.nom ??
+                    "Étudiant"}
                 </p>
 
                 <Button
                   size="sm"
                   variant="ghost"
                   disabled={enCours}
-                  onClick={() => inviter(etudiant.utilisateurId)}
+                  onClick={() =>
+                    inviter(
+                      etudiant.utilisateurId,
+                    )
+                  }
                   className="gap-1.5"
                 >
                   {enCours ? (
-                    <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+                    <Loader2
+                      size={14}
+                      className="animate-spin"
+                      aria-hidden="true"
+                    />
                   ) : (
-                    <UserPlus size={14} aria-hidden="true" />
+                    <UserPlus
+                      size={14}
+                      aria-hidden="true"
+                    />
                   )}
+
                   Inviter
                 </Button>
               </li>
@@ -517,9 +735,14 @@ function PanneauInvitation({
 
         {invitesEnvoyes.size > 0 && (
           <li className="flex items-center gap-2 pt-3 text-xs text-rice">
-            <Check size={13} aria-hidden="true" />
+            <Check
+              size={13}
+              aria-hidden="true"
+            />
+
             {invitesEnvoyes.size} invitation
-            {invitesEnvoyes.size > 1 ? "s" : ""} envoyée
+            {invitesEnvoyes.size > 1 ? "s" : ""}{" "}
+            envoyée
             {invitesEnvoyes.size > 1 ? "s" : ""}.
           </li>
         )}
