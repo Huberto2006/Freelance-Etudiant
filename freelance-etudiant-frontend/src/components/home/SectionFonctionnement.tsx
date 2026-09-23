@@ -109,7 +109,7 @@ function Parcours({
 
 export function SectionFonctionnement() {
   return (
-    <section id="fonctionnement" className="mt-16 scroll-mt-24 sm:mt-20">
+    <section id="fonctionnement" className="mx-auto max-w-6xl px-4 pb-8 sm:px-5 sm:pb-12">
       <SectionTitre
         icon={ArrowRightLeft}
         eyebrow="Processus simplifié"

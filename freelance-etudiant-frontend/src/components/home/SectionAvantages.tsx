@@ -43,7 +43,7 @@ const AVANTAGES = [
 
 export function SectionAvantages() {
   return (
-    <section id="avantages" className="mt-16 scroll-mt-24 sm:mt-20">
+    <section id="avantages" className="mx-auto max-w-6xl px-4 pb-8 sm:px-5 sm:pb-12">
       <SectionTitre
         icon={ShieldCheck}
         eyebrow="Garanties & Valeurs"

@@ -17,7 +17,7 @@ export function SectionMissions({ missions }: { missions: Mission[] }) {
   const recentes = missions.slice(0, 6);
 
   return (
-    <section id="missions" className="mt-16 scroll-mt-24 sm:mt-20">
+    <section id="missions" className="mx-auto max-w-6xl px-4 pb-8 sm:px-5 sm:pb-12">
       <SectionTitre
         icon={BriefcaseBusiness}
         eyebrow="Besoins des clients · Opportunités"
