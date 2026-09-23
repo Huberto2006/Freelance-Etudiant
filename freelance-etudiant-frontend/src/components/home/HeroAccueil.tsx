@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { BriefcaseBusiness, GraduationCap, Search } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  GraduationCap,
+  Search,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { useAuth, roleLabel } from "@/lib/auth-context";
@@ -27,8 +31,11 @@ export function HeroAccueil({
 }) {
   const router = useRouter();
   const { utilisateur, chargement } = useAuth();
+
   const [recherche, setRecherche] = useState("");
-  const [cibleRecherche, setCibleRecherche] = useState<"services" | "missions">("services");
+  const [cibleRecherche, setCibleRecherche] = useState<
+    "services" | "missions"
+  >("services");
 
   function lancerRecherche(e: React.FormEvent) {
     e.preventDefault();
@@ -41,98 +48,259 @@ export function HeroAccueil({
           ? `/missions?q=${encodeURIComponent(motsCles)}`
           : "/missions",
       );
-    } else {
-      router.push(
-        motsCles
-          ? `/services?q=${encodeURIComponent(motsCles)}`
-          : "/services",
-      );
+      return;
     }
+
+    router.push(
+      motsCles
+        ? `/services?q=${encodeURIComponent(motsCles)}`
+        : "/services",
+    );
   }
 
   return (
-    <section className="relative overflow-hidden">
-      {/* Image de fond */}
+    <section className="relative isolate overflow-hidden bg-paper-light">
+      {/* =========================================================
+          IMAGE DE FOND
+          L'image reste dans le section et conserve son ratio naturel.
+          Elle n'est pas recadrée par bg-cover.
+          ========================================================= */}
       <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage: "url('/images/hero-kianja.png')",
-        }}
+        className="
+          pointer-events-none
+          absolute
+          inset-x-0
+          top-0
+          z-0
+          w-full
+        "
+        aria-hidden="true"
+      >
+        <img
+          src="/images/hero-kianja.png"
+          alt=""
+          className="
+            block
+            h-auto
+            w-full
+            max-w-none
+          "
+        />
+      </div>
+
+      {/* =========================================================
+          OVERLAY
+          Permet de garder le texte lisible sans cacher complètement
+          l'image.
+          ========================================================= */}
+      <div
+        className="
+          pointer-events-none
+          absolute
+          inset-0
+          z-10
+          bg-gradient-to-b
+          from-paper-light/10
+          via-paper-light/100
+          to-paper-light
+        "
         aria-hidden="true"
       />
 
-      {/* Overlay pour garder une bonne lisibilité */}
+      {/* =========================================================
+          HALO DÉCORATIF DROIT
+          ========================================================= */}
       <div
-        className="absolute inset-0 bg-paper-light/20 backdrop-blur-[1px]"
+        className="
+          pointer-events-none
+          absolute
+          -right-24
+          -top-28
+          z-10
+          h-72
+          w-72
+          rounded-full
+          bg-ocre/15
+          blur-3xl
+        "
         aria-hidden="true"
       />
 
-      {/* Voile légèrement plus dense au centre */}
+      {/* =========================================================
+          HALO DÉCORATIF GAUCHE
+          ========================================================= */}
       <div
-        className="absolute inset-0 bg-gradient-to-b from-paper-light/70 via-paper-light/85 to-paper-light/95"
+        className="
+          pointer-events-none
+          absolute
+          -bottom-32
+          -left-24
+          z-10
+          h-72
+          w-72
+          rounded-full
+          bg-bleu/10
+          blur-3xl
+        "
         aria-hidden="true"
       />
 
-      {/* Halo décoratif */}
+      {/* =========================================================
+          CONTENU
+          ========================================================= */}
       <div
-        className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-ocre/15 blur-3xl"
-        aria-hidden="true"
-      />
-
-      <div
-        className="pointer-events-none absolute -bottom-32 -left-24 h-72 w-72 rounded-full bg-bleu/10 blur-3xl"
-        aria-hidden="true"
-      />
-
-      {/* Contenu */}
-      <div className="relative mx-auto max-w-2xl px-5 py-12 text-center sm:px-10 sm:py-16">
-        {/* Badge */}
-        <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-ocre-dark/30 bg-ocre/10 px-3.5 py-1 font-mono text-[11px] uppercase tracking-[0.2em] text-ocre-dark">
+        className="
+          relative
+          z-20
+          mx-auto
+          max-w-2xl
+          px-5
+          py-12
+          text-center
+          sm:px-10
+          sm:py-16
+        "
+      >
+        {/* =======================================================
+            BADGE
+            ======================================================= */}
+        <p
+          className="
+            mb-5
+            inline-flex
+            items-center
+            gap-2
+            rounded-full
+            border
+            border-ocre-dark/30
+            bg-ocre/10
+            px-3.5
+            py-1
+            font-mono
+            text-[11px]
+            uppercase
+            tracking-[0.2em]
+            text-ocre-dark
+          "
+        >
           Kianja · Marketplace des étudiants freelances
         </p>
 
-        {/* Titre */}
-        <h1 className="font-display text-4xl font-semibold leading-tight sm:text-5xl">
+        {/* =======================================================
+            TITRE
+            ======================================================= */}
+        <h1
+          className="
+            font-display
+            text-4xl
+            font-semibold
+            leading-tight
+            sm:text-5xl
+          "
+        >
           Les besoins des clients.{" "}
-          <span className="text-ocre-dark">Les compétences des étudiants.</span>
+          <span className="text-ocre-dark">
+            Les compétences des étudiants.
+          </span>
         </h1>
 
-        {/* Description */}
-        <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
-          La marketplace qui connecte les étudiants freelances avec les
-          clients à la recherche de talents. Trouvez un profil qualifié, publiez un
-          besoin ou proposez vos compétences.
+        {/* =======================================================
+            DESCRIPTION
+            ======================================================= */}
+        <p
+          className="
+            mx-auto
+            mt-4
+            max-w-xl
+            text-base
+            leading-relaxed
+            text-ink-soft
+          "
+        >
+          La marketplace qui connecte les étudiants freelances avec
+          les clients à la recherche de talents. Trouvez un profil
+          qualifié, publiez un besoin ou proposez vos compétences.
         </p>
 
-        {/* Commutateur de recherche (Services ou Missions) */}
-        <div className="mx-auto mt-6 inline-flex rounded-full border border-ink/15 bg-paper-light/90 p-1 shadow-xs backdrop-blur-sm">
+        {/* =======================================================
+            COMMUTATEUR DE RECHERCHE
+            ======================================================= */}
+        <div
+          className="
+            mx-auto
+            mt-6
+            inline-flex
+            rounded-full
+            border
+            border-ink/15
+            bg-paper-light/90
+            p-1
+            shadow-xs
+            backdrop-blur-sm
+          "
+        >
+          {/* Services étudiants */}
           <button
             type="button"
             onClick={() => setCibleRecherche("services")}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-medium transition-colors ${
-              cibleRecherche === "services"
-                ? "bg-bleu text-white shadow-xs"
-                : "text-ink-soft hover:text-ink"
-            }`}
+            className={`
+              inline-flex
+              items-center
+              gap-1.5
+              rounded-full
+              px-3.5
+              py-1
+              text-xs
+              font-medium
+              transition-colors
+              ${
+                cibleRecherche === "services"
+                  ? "bg-bleu text-white shadow-xs"
+                  : "text-ink-soft hover:text-ink"
+              }
+            `}
           >
-            <GraduationCap size={14} aria-hidden="true" />
+            <GraduationCap
+              size={14}
+              aria-hidden="true"
+            />
+
             <span>Services étudiants</span>
           </button>
+
+          {/* Missions clients */}
           <button
             type="button"
             onClick={() => setCibleRecherche("missions")}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-medium transition-colors ${
-              cibleRecherche === "missions"
-                ? "bg-bleu text-white shadow-xs"
-                : "text-ink-soft hover:text-ink"
-            }`}
+            className={`
+              inline-flex
+              items-center
+              gap-1.5
+              rounded-full
+              px-3.5
+              py-1
+              text-xs
+              font-medium
+              transition-colors
+              ${
+                cibleRecherche === "missions"
+                  ? "bg-bleu text-white shadow-xs"
+                  : "text-ink-soft hover:text-ink"
+              }
+            `}
           >
-            <BriefcaseBusiness size={14} aria-hidden="true" />
+            <BriefcaseBusiness
+              size={14}
+              aria-hidden="true"
+            />
+
             <span>Missions clients</span>
           </button>
         </div>
 
-        {/* Recherche */}
+        {/* =======================================================
+            RECHERCHE
+            ======================================================= */}
         <form
           onSubmit={lancerRecherche}
           role="search"
@@ -216,13 +384,25 @@ export function HeroAccueil({
               className="sm:hidden"
               aria-hidden="true"
             />
+
             <span>Rechercher</span>
           </Button>
         </form>
 
-        {/* Suggestions */}
+        {/* =======================================================
+            SUGGESTIONS
+            ======================================================= */}
         {suggestions.length > 0 && (
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          <div
+            className="
+              mt-4
+              flex
+              flex-wrap
+              items-center
+              justify-center
+              gap-2
+            "
+          >
             <span className="text-xs text-ink-soft">
               Domaines populaires :
             </span>
@@ -232,8 +412,12 @@ export function HeroAccueil({
                 key={suggestion.valeur}
                 href={
                   cibleRecherche === "missions"
-                    ? `/missions?categorie=${encodeURIComponent(suggestion.valeur)}`
-                    : `/services?categorie=${encodeURIComponent(suggestion.valeur)}`
+                    ? `/missions?categorie=${encodeURIComponent(
+                        suggestion.valeur,
+                      )}`
+                    : `/services?categorie=${encodeURIComponent(
+                        suggestion.valeur,
+                      )}`
                 }
                 className="
                   rounded-full
@@ -257,23 +441,50 @@ export function HeroAccueil({
           </div>
         )}
 
-        {/* Appels à l'action : les deux parcours, traités à égalité */}
+        {/* =======================================================
+            APPELS À L'ACTION
+            ======================================================= */}
         {!chargement && (
           <div className="mt-8">
             {utilisateur ? (
-              <div className="rounded-xl border border-ink/10 bg-paper-light/80 p-4 shadow-xs backdrop-blur-md">
+              /* =================================================
+                 UTILISATEUR CONNECTÉ
+                 ================================================= */
+              <div
+                className="
+                  rounded-xl
+                  border
+                  border-ink/10
+                  bg-paper-light/80
+                  p-4
+                  shadow-xs
+                  backdrop-blur-md
+                "
+              >
                 <p className="text-xs text-ink-soft">
                   Connecté en tant que{" "}
-                  <span className="font-semibold text-ink">{utilisateur.nom}</span>{" "}
+                  <span className="font-semibold text-ink">
+                    {utilisateur.nom}
+                  </span>{" "}
                   ({roleLabel(utilisateur.role)})
                 </p>
 
-                <div className="mt-3 flex flex-wrap justify-center gap-2.5">
+                <div
+                  className="
+                    mt-3
+                    flex
+                    flex-wrap
+                    justify-center
+                    gap-2.5
+                  "
+                >
                   <Button
                     variant="primary"
                     size="sm"
                     className="h-9 px-4 text-xs"
-                    onClick={() => router.push("/tableau-de-bord")}
+                    onClick={() =>
+                      router.push("/tableau-de-bord")
+                    }
                   >
                     Accéder à mon tableau de bord
                   </Button>
@@ -284,15 +495,22 @@ export function HeroAccueil({
                         variant="secondary"
                         size="sm"
                         className="h-9 px-3 text-xs"
-                        onClick={() => router.push("/tableau-de-bord/mes-missions")}
+                        onClick={() =>
+                          router.push(
+                            "/tableau-de-bord/mes-missions",
+                          )
+                        }
                       >
                         Publier une mission
                       </Button>
+
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-9 px-3 text-xs"
-                        onClick={() => router.push("/services")}
+                        onClick={() =>
+                          router.push("/services")
+                        }
                       >
                         Trouver un étudiant
                       </Button>
@@ -303,15 +521,22 @@ export function HeroAccueil({
                         variant="secondary"
                         size="sm"
                         className="h-9 px-3 text-xs"
-                        onClick={() => router.push("/missions")}
+                        onClick={() =>
+                          router.push("/missions")
+                        }
                       >
                         Trouver une mission
                       </Button>
+
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-9 px-3 text-xs"
-                        onClick={() => router.push("/tableau-de-bord/mes-services")}
+                        onClick={() =>
+                          router.push(
+                            "/tableau-de-bord/mes-services",
+                          )
+                        }
                       >
                         Gérer mes services
                       </Button>
@@ -320,25 +545,98 @@ export function HeroAccueil({
                 </div>
               </div>
             ) : (
-              <div className="mx-auto grid w-full max-w-xl grid-cols-1 gap-4 text-left sm:grid-cols-2">
-                {/* CÔTÉ CLIENT */}
-                <div className="flex flex-col justify-between rounded-xl border border-ink/10 bg-paper-light/85 p-5 shadow-xs backdrop-blur-sm transition hover:border-bleu/30 hover:shadow-md">
+              /* =================================================
+                 UTILISATEUR NON CONNECTÉ
+                 ================================================= */
+              <div
+                className="
+                  mx-auto
+                  grid
+                  w-full
+                  max-w-xl
+                  grid-cols-1
+                  gap-4
+                  text-left
+                  sm:grid-cols-2
+                "
+              >
+                {/* =================================================
+                   CÔTÉ CLIENT
+                   ================================================= */}
+                <div
+                  className="
+                    flex
+                    flex-col
+                    justify-between
+                    rounded-xl
+                    border
+                    border-ink/10
+                    bg-paper-light/85
+                    p-5
+                    shadow-xs
+                    backdrop-blur-sm
+                    transition
+                    hover:border-bleu/30
+                    hover:shadow-md
+                  "
+                >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-bleu/10 text-bleu-dark">
-                        <BriefcaseBusiness size={15} aria-hidden="true" />
+                      <span
+                        className="
+                          flex
+                          h-7
+                          w-7
+                          items-center
+                          justify-center
+                          rounded-lg
+                          bg-bleu/10
+                          text-bleu-dark
+                        "
+                      >
+                        <BriefcaseBusiness
+                          size={15}
+                          aria-hidden="true"
+                        />
                       </span>
-                      <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.15em] text-bleu-dark">
+
+                      <span
+                        className="
+                          font-mono
+                          text-[11px]
+                          font-semibold
+                          uppercase
+                          tracking-[0.15em]
+                          text-bleu-dark
+                        "
+                      >
                         Côté client
                       </span>
                     </div>
 
-                    <h3 className="mt-2.5 font-display text-base font-semibold text-ink">
+                    <h3
+                      className="
+                        mt-2.5
+                        font-display
+                        text-base
+                        font-semibold
+                        text-ink
+                      "
+                    >
                       Vous avez un besoin ?
                     </h3>
 
-                    <p className="mt-1 text-xs leading-relaxed text-ink-soft">
-                      Trouvez des talents étudiants, publiez vos missions et suivez la réalisation de vos projets.
+                    <p
+                      className="
+                        mt-1
+                        text-xs
+                        leading-relaxed
+                        text-ink-soft
+                      "
+                    >
+                      Trouvez des talents étudiants, publiez vos
+                      missions et suivez la réalisation de vos
+                      projets.
                     </p>
                   </div>
 
@@ -346,8 +644,15 @@ export function HeroAccueil({
                     <Button
                       variant="primary"
                       size="sm"
-                      className="h-9 w-full justify-center text-xs"
-                      onClick={() => router.push("/services")}
+                      className="
+                        h-9
+                        w-full
+                        justify-center
+                        text-xs
+                      "
+                      onClick={() =>
+                        router.push("/services")
+                      }
                     >
                       Trouver un étudiant
                     </Button>
@@ -355,32 +660,98 @@ export function HeroAccueil({
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="h-9 w-full justify-center text-xs"
-                      onClick={() => router.push("/missions")}
+                      className="
+                        h-9
+                        w-full
+                        justify-center
+                        text-xs
+                      "
+                      onClick={() =>
+                        router.push("/missions")
+                      }
                     >
                       Publier une mission
                     </Button>
                   </div>
                 </div>
 
-                {/* CÔTÉ ÉTUDIANT */}
-                <div className="flex flex-col justify-between rounded-xl border border-ink/10 bg-paper-light/85 p-5 shadow-xs backdrop-blur-sm transition hover:border-ocre/30 hover:shadow-md">
+                {/* =================================================
+                   CÔTÉ ÉTUDIANT
+                   ================================================= */}
+                <div
+                  className="
+                    flex
+                    flex-col
+                    justify-between
+                    rounded-xl
+                    border
+                    border-ink/10
+                    bg-paper-light/85
+                    p-5
+                    shadow-xs
+                    backdrop-blur-sm
+                    transition
+                    hover:border-ocre/30
+                    hover:shadow-md
+                  "
+                >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-ocre/10 text-ocre-dark">
-                        <GraduationCap size={15} aria-hidden="true" />
+                      <span
+                        className="
+                          flex
+                          h-7
+                          w-7
+                          items-center
+                          justify-center
+                          rounded-lg
+                          bg-ocre/10
+                          text-ocre-dark
+                        "
+                      >
+                        <GraduationCap
+                          size={15}
+                          aria-hidden="true"
+                        />
                       </span>
-                      <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.15em] text-ocre-dark">
+
+                      <span
+                        className="
+                          font-mono
+                          text-[11px]
+                          font-semibold
+                          uppercase
+                          tracking-[0.15em]
+                          text-ocre-dark
+                        "
+                      >
                         Côté étudiant
                       </span>
                     </div>
 
-                    <h3 className="mt-2.5 font-display text-base font-semibold text-ink">
+                    <h3
+                      className="
+                        mt-2.5
+                        font-display
+                        text-base
+                        font-semibold
+                        text-ink
+                      "
+                    >
                       Vous avez des compétences ?
                     </h3>
 
-                    <p className="mt-1 text-xs leading-relaxed text-ink-soft">
-                      Proposez vos services, candidatez aux missions ouvertes et développez votre réputation professionnelle.
+                    <p
+                      className="
+                        mt-1
+                        text-xs
+                        leading-relaxed
+                        text-ink-soft
+                      "
+                    >
+                      Proposez vos services, candidatez aux
+                      missions ouvertes et développez votre
+                      réputation professionnelle.
                     </p>
                   </div>
 
@@ -388,8 +759,15 @@ export function HeroAccueil({
                     <Button
                       variant="primary"
                       size="sm"
-                      className="h-9 w-full justify-center text-xs"
-                      onClick={() => router.push("/missions")}
+                      className="
+                        h-9
+                        w-full
+                        justify-center
+                        text-xs
+                      "
+                      onClick={() =>
+                        router.push("/missions")
+                      }
                     >
                       Trouver une mission
                     </Button>
@@ -397,8 +775,15 @@ export function HeroAccueil({
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="h-9 w-full justify-center text-xs"
-                      onClick={() => router.push("/inscription")}
+                      className="
+                        h-9
+                        w-full
+                        justify-center
+                        text-xs
+                      "
+                      onClick={() =>
+                        router.push("/inscription")
+                      }
                     >
                       Proposer mes services
                     </Button>
@@ -409,16 +794,50 @@ export function HeroAccueil({
           </div>
         )}
 
-        {/* Statistiques */}
+        {/* =======================================================
+            STATISTIQUES
+            ======================================================= */}
         {stats && stats.length > 0 && (
-          <div className="mx-auto mt-9 grid max-w-lg grid-cols-2 gap-3 border-t border-ink/10 pt-6 sm:grid-cols-3">
+          <div
+            className="
+              mx-auto
+              mt-9
+              grid
+              max-w-lg
+              grid-cols-2
+              gap-3
+              border-t
+              border-ink/10
+              pt-6
+              sm:grid-cols-3
+            "
+          >
             {stats.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="font-display text-xl font-semibold text-ink">
+              <div
+                key={stat.label}
+                className="text-center"
+              >
+                <p
+                  className="
+                    font-display
+                    text-xl
+                    font-semibold
+                    text-ink
+                  "
+                >
                   {stat.valeur}
                 </p>
 
-                <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wider text-ink-soft">
+                <p
+                  className="
+                    mt-0.5
+                    font-mono
+                    text-[10px]
+                    uppercase
+                    tracking-wider
+                    text-ink-soft
+                  "
+                >
                   {stat.label}
                 </p>
               </div>

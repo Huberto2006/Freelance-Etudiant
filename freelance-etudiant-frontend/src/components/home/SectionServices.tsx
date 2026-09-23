@@ -25,7 +25,7 @@ export function SectionServices({ services }: { services: ServiceOffert[] }) {
     .slice(0, 8);
 
   return (
-    <section id="services" className="mt-16 scroll-mt-24 sm:mt-20">
+    <section id="services" className="mx-auto max-w-6xl px-4 pb-8 sm:px-5 sm:pb-12">
       <SectionTitre
         icon={Wrench}
         eyebrow="Compétences étudiantes · Prestations"

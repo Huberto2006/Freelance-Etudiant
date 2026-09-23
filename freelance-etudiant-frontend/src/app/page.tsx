@@ -95,7 +95,7 @@ export default function PageAccueil() {
       ];
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-8 sm:px-5 sm:pb-12">
+    <div className="mx-auto">
       {/* 1. Hero : recherche bilatérale, métriques vivantes et accès direct */}
       <HeroAccueil suggestions={suggestions} stats={stats} />
 

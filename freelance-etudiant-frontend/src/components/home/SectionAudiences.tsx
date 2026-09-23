@@ -65,7 +65,7 @@ export function SectionAudiences({
   services?: ServiceOffert[];
 }) {
   return (
-    <section id="audiences" className="mt-16 scroll-mt-24 sm:mt-20">
+    <section id="audiences" className="mx-auto max-w-6xl px-4 pb-8 sm:px-5 sm:pb-12">
       <SectionTitre
         icon={Layers}
         eyebrow="Une marketplace bilatérale"
