@@ -32,6 +32,152 @@ export class EtudiantProfile {
   })
   niveauEtude!: string | null;
 
+  /**
+   * Filiere de formation (ex. Informatique, Gestion). Optionnel,
+   * demande dans l'etape Formation du questionnaire etudiant.
+   */
+  @Column({
+    name: 'filiere',
+    type: 'varchar',
+    length: 150,
+    nullable: true,
+  })
+  filiere!: string | null;
+
+  /**
+   * Annee d'etude en cours (ex. "L1", "M2"). Optionnel.
+   */
+  @Column({
+    name: 'annee_etude',
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+  })
+  anneeEtude!: string | null;
+
+  /**
+   * Ville de residence (ex. Fianarantsoa). Optionnel.
+   */
+  @Column({
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  ville!: string | null;
+
+  /**
+   * Numero de telephone. Optionnel, jamais affiche publiquement sans
+   * consentement de l'etudiant (usage de mise en relation).
+   */
+  @Column({
+    type: 'varchar',
+    length: 30,
+    nullable: true,
+  })
+  telephone!: string | null;
+
+  /**
+   * Specialites / domaines d'intervention principaux (distinct des
+   * competences techniques detaillees). Optionnel.
+   */
+  @Column({
+    type: 'text',
+    array: true,
+    default: () => "'{}'",
+  })
+  specialites!: string[];
+
+  /**
+   * Experience professionnelle en annees. Optionnel (0 par defaut).
+   */
+  @Column({
+    name: 'experience',
+    type: 'int',
+    default: 0,
+  })
+  experience!: number;
+
+  /**
+   * Mode d'exercice du freelance (ex. temps partiel, mission ponctuelle,
+   * temps plein). Optionnel, libre.
+   */
+  @Column({
+    name: 'type_freelance',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
+  typeFreelance!: string | null;
+
+  /**
+   * Statut de disponibilite detaille (ex. "disponible", "occupe",
+   * "en mission", "indisponible"). Complement de la colonne
+   * disponibilite (boolean) existante, qui reste inchangee.
+   */
+  @Column({
+    name: 'statut_disponibilite',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
+  statutDisponibilite!: string | null;
+
+  /**
+   * Fourchette de tarifs (en Ariary par heure). Complement optionnel de
+   * tarifHoraire ; le couple min/max reste nullable.
+   */
+  @Column({
+    name: 'tarif_minimum',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
+  tarifMinimum?: number;
+
+  @Column({
+    name: 'tarif_maximum',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
+  tarifMaximum?: number;
+
+  // ---- Liens externes / portfolio ----
+
+  @Column({
+    name: 'github_url',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
+  githubUrl!: string | null;
+
+  @Column({
+    name: 'gitlab_url',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
+  gitlabUrl!: string | null;
+
+  @Column({
+    name: 'linkedin_url',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
+  linkedinUrl!: string | null;
+
+  @Column({
+    name: 'site_web',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
+  siteWeb!: string | null;
+
   @Column({
     type: 'varchar',
     length: 150,
