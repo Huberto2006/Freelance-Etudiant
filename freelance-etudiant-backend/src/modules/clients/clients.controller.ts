@@ -39,7 +39,20 @@ export class ClientsController {
   @Get(':id')
   @ApiOperation({ summary: "Consulter la fiche publique d'un client" })
   async findOne(@Param('id') id: string) {
-    return this.clientsService.findByUtilisateurId(id);
+    const profil = await this.clientsService.findByUtilisateurId(id);
+
+    /*
+     * Sanitisation de la fiche publique :
+     * - telephone : coordonnee privee, reservee au proprietaire
+     *   (GET /clients/me) et a la mise en relation ;
+     * - profil.utilisateur.email : donnee privee jamais exposee publiquement.
+     */
+    const { telephone, utilisateur, ...profilPublic } = profil;
+    const utilisateurPublic = utilisateur
+      ? { id: utilisateur.id, nom: utilisateur.nom, role: utilisateur.role, photoUrl: utilisateur.photoUrl }
+      : undefined;
+
+    return { ...profilPublic, utilisateur: utilisateurPublic };
   }
 }
 
