@@ -63,6 +63,21 @@ export class EtudiantsService {
       );
     }
 
+    // Coherence entre le tarif horaire et la fourchette min/max (etape
+    // Tarification du questionnaire) : le tarif horaire affiche doit
+    // rester dans la fourchette annoncee quand celle-ci est renseignee.
+    const tarifHoraire = dto.tarifHoraire ?? profil.tarifHoraire;
+    if (tarifHoraire != null && tarifMin != null && Number(tarifHoraire) < Number(tarifMin)) {
+      throw new BadRequestException(
+        'Le tarif horaire ne peut pas etre inferieur au tarif minimum',
+      );
+    }
+    if (tarifHoraire != null && tarifMax != null && Number(tarifHoraire) > Number(tarifMax)) {
+      throw new BadRequestException(
+        'Le tarif horaire ne peut pas etre superieur au tarif maximum',
+      );
+    }
+
     Object.assign(profil, dto);
     const sauvegarde = await this.repo.save(profil);
 

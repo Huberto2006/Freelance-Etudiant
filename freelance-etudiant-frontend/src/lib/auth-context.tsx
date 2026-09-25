@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiError, getToken, setToken, setRefreshToken, clearTokens, setOnSessionExpired } from "./api";
-import type { AuthResponse, ReponseInscription, Role, Utilisateur } from "./types";
+import type { AuthResponse, CompletionProfil, ReponseInscription, Role, Utilisateur } from "./types";
 
 interface RegisterPayload {
   nom: string;
@@ -26,6 +26,13 @@ interface RegisterPayload {
 interface AuthContextValue {
   utilisateur: Utilisateur | null;
   chargement: boolean;
+  /**
+   * État de complétion du profil (calculé côté serveur), rafraîchi en
+   * même temps que `utilisateur`. Null pour les rôles sans questionnaire
+   * (client, admin) tant que leur parcours n'existe pas, ou avant le
+   * premier chargement.
+   */
+  completionProfil: CompletionProfil | null;
   connecter: (email: string, motDePasse: string) => Promise<void>;
   inscrire: (payload: RegisterPayload) => Promise<ReponseInscription>;
   deconnecter: () => void;
@@ -37,18 +44,37 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [utilisateur, setUtilisateur] = useState<Utilisateur | null>(null);
   const [chargement, setChargement] = useState(true);
+  const [completionProfil, setCompletionProfil] =
+    useState<CompletionProfil | null>(null);
   const router = useRouter();
 
   const rafraichirProfil = useCallback(async () => {
     const token = getToken();
     if (!token) {
       setUtilisateur(null);
+      setCompletionProfil(null);
       setChargement(false);
       return;
     }
     try {
       const moi = await api.get<Utilisateur>("/users/me");
       setUtilisateur(moi);
+
+      // Seul le parcours étudiant existe pour l'instant (ÉTAPE G) : on ne
+      // charge la complétion que pour ce rôle, pour ne rien changer au
+      // comportement des clients/admins.
+      if (moi.role === "etudiant") {
+        try {
+          const completion = await api.get<CompletionProfil>(
+            "/users/me/profile-completion",
+          );
+          setCompletionProfil(completion);
+        } catch {
+          setCompletionProfil(null);
+        }
+      } else {
+        setCompletionProfil(null);
+      }
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         // La requete a deja tente un rafraichissement : echec final,
@@ -56,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearTokens();
       }
       setUtilisateur(null);
+      setCompletionProfil(null);
     } finally {
       setChargement(false);
     }
@@ -109,12 +136,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const deconnecter = useCallback(() => {
     clearTokens();
     setUtilisateur(null);
+    setCompletionProfil(null);
     router.push("/");
   }, [router]);
 
   const value = useMemo(
-    () => ({ utilisateur, chargement, connecter, inscrire, deconnecter, rafraichirProfil }),
-    [utilisateur, chargement, connecter, inscrire, deconnecter, rafraichirProfil],
+    () => ({
+      utilisateur,
+      chargement,
+      completionProfil,
+      connecter,
+      inscrire,
+      deconnecter,
+      rafraichirProfil,
+    }),
+    [
+      utilisateur,
+      chargement,
+      completionProfil,
+      connecter,
+      inscrire,
+      deconnecter,
+      rafraichirProfil,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

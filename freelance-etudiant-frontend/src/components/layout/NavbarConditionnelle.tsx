@@ -31,6 +31,12 @@ function pageAuthActive(pathname: string): boolean {
     "/mot-de-passe-oublie",
     "/reinitialiser-mot-de-passe",
     "/verification-email",
+    // Questionnaire de complétion de profil étudiant (ÉTAPE G) : écran
+    // volontairement sans navigation, affiché uniquement après
+    // l'inscription d'un nouvel étudiant tant que son profil n'est pas
+    // complet (cf. app/completer-profil/layout.tsx, qui gère lui-même
+    // son propre en-tête minimal).
+    "/completer-profil",
   ].includes(pathname);
 }
 

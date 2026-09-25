@@ -6,10 +6,14 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   CheckCircle2,
+  Clock,
+  Globe,
   Globe2,
   GraduationCap,
   Languages,
+  Link2,
   MapPin,
+  Sparkles,
   Star,
 } from "lucide-react";
 
@@ -34,6 +38,23 @@ import { ReactionProfil } from "@/components/ui/ReactionProfil";
 import { FavoriBouton } from "@/components/ui/FavoriBouton";
 import { SignalerBouton } from "@/components/ui/SignalerBouton";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
+
+const LABELS_STATUT_DISPONIBILITE: Record<string, string> = {
+  disponible: "Disponible",
+  occupe: "Occupé",
+  en_mission: "En mission",
+  indisponible: "Indisponible",
+};
+
+const TONS_STATUT_DISPONIBILITE: Record<
+  string,
+  "ink" | "ocre" | "rice" | "brique" | "bleu"
+> = {
+  disponible: "rice",
+  occupe: "ocre",
+  en_mission: "bleu",
+  indisponible: "brique",
+};
 
 export default function ProfilEtudiantPage({
   params,
@@ -97,7 +118,7 @@ export default function ProfilEtudiantPage({
   if (chargement) {
     return (
       <div className="mx-auto max-w-5xl px-5 py-16">
-        <div className="rounded-2xl border border-ink/10 bg-white p-8 text-sm text-ink-soft shadow-sm">
+        <div className="rounded-2xl border border-ink/10 bg-paper-light p-8 text-sm text-ink-soft shadow-sm">
           Chargement du profil…
         </div>
       </div>
@@ -132,8 +153,8 @@ export default function ProfilEtudiantPage({
       {/* =====================================================
           EN-TÊTE CV
           ===================================================== */}
-      <header className="overflow-hidden rounded-3xl border border-ink/10 bg-white shadow-sm">
-        <div className="h-2 bg-ink" />
+      <header className="animate-in overflow-hidden rounded-3xl border border-ink/10 bg-paper-light shadow-sm">
+      <div className="h-px bg-ink/10" />
 
         <div className="p-6 sm:p-8">
           <div className="flex flex-col gap-7 lg:flex-row lg:items-start lg:justify-between">
@@ -168,9 +189,24 @@ export default function ProfilEtudiantPage({
                       "Étudiant en informatique"}
                   </span>
 
+                  {etudiant.filiere && (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span>{etudiant.filiere}</span>
+                    </>
+                  )}
+
                   <span aria-hidden="true">·</span>
 
                   <span>{universite}</span>
+
+                  {etudiant.ville && (
+                    <span className="inline-flex items-center gap-1">
+                      <span aria-hidden="true">·</span>
+                      <MapPin size={13} />
+                      {etudiant.ville}
+                    </span>
+                  )}
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -182,8 +218,21 @@ export default function ProfilEtudiantPage({
                     Étudiant
                   </Tag>
 
-                  {etudiant.disponibilite ? (
-                    <Tag>
+                  {etudiant.statutDisponibilite ? (
+                    <Tag
+                      tone={
+                        TONS_STATUT_DISPONIBILITE[
+                          etudiant.statutDisponibilite
+                        ] ?? "ink"
+                      }
+                    >
+                      <Clock size={13} className="mr-1.5 inline" />
+                      {LABELS_STATUT_DISPONIBILITE[
+                        etudiant.statutDisponibilite
+                      ] ?? etudiant.statutDisponibilite}
+                    </Tag>
+                  ) : etudiant.disponibilite ? (
+                    <Tag tone="rice">
                       <CheckCircle2
                         size={13}
                         className="mr-1.5 inline"
@@ -194,6 +243,10 @@ export default function ProfilEtudiantPage({
                     <Tag tone="ocre">
                       Indisponible
                     </Tag>
+                  )}
+
+                  {etudiant.typeFreelance && (
+                    <Tag tone="ink">{etudiant.typeFreelance}</Tag>
                   )}
                 </div>
 
@@ -217,6 +270,14 @@ export default function ProfilEtudiantPage({
                   {etudiant.tarifHoraire != null && (
                     <span>
                       {formatArgent(etudiant.tarifHoraire)}/h
+                    </span>
+                  )}
+
+                  {etudiant.experience != null && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Clock size={14} />
+                      {etudiant.experience} an
+                      {etudiant.experience > 1 ? "s" : ""} d&apos;expérience
                     </span>
                   )}
                 </div>
@@ -250,7 +311,7 @@ export default function ProfilEtudiantPage({
             =================================================== */}
         <main className="space-y-6">
           {/* À PROPOS */}
-          <section className="rounded-2xl border border-ink/10 bg-white p-6 shadow-sm">
+          <section className="animate-in delay-1 rounded-2xl border border-ink/10 bg-paper-light p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3">
               <div className="h-8 w-1 rounded-full bg-ink" />
 
@@ -278,8 +339,9 @@ export default function ProfilEtudiantPage({
 
           {/* COMPÉTENCES */}
           {(etudiant.competences.length > 0 ||
-            etudiant.langues.length > 0) && (
-            <section className="rounded-2xl border border-ink/10 bg-white p-6 shadow-sm">
+            etudiant.langues.length > 0 ||
+            (etudiant.specialites?.length ?? 0) > 0) && (
+            <section className="animate-in delay-2 rounded-2xl border border-ink/10 bg-paper-light p-6 shadow-sm">
               <div className="mb-6 flex items-center gap-3">
                 <div className="h-8 w-1 rounded-full bg-ink" />
 
@@ -335,13 +397,32 @@ export default function ProfilEtudiantPage({
                     </div>
                   </div>
                 )}
+
+                {(etudiant.specialites?.length ?? 0) > 0 && (
+                  <div className="sm:col-span-2">
+                    <div className="mb-3 flex items-center gap-2">
+                      <Sparkles size={16} />
+                      <h3 className="text-sm font-semibold">
+                        Spécialités
+                      </h3>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {(etudiant.specialites ?? []).map((specialite) => (
+                        <Tag key={specialite} tone="bleu">
+                          {specialite}
+                        </Tag>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
           )}
 
           {/* PORTFOLIO */}
           {portfolioUrls.length > 0 && (
-            <section className="rounded-2xl border border-ink/10 bg-white p-6 shadow-sm">
+            <section className="animate-in delay-3 rounded-2xl border border-ink/10 bg-paper-light p-6 shadow-sm">
               <div className="mb-6 flex items-center gap-3">
                 <div className="h-8 w-1 rounded-full bg-ink" />
 
@@ -360,9 +441,78 @@ export default function ProfilEtudiantPage({
             </section>
           )}
 
+          {/* LIENS */}
+          {(etudiant.githubUrl ||
+            etudiant.gitlabUrl ||
+            etudiant.linkedinUrl ||
+            etudiant.siteWeb) && (
+            <section className="animate-in delay-3 rounded-2xl border border-ink/10 bg-paper-light p-6 shadow-sm">
+              <div className="mb-5 flex items-center gap-3">
+                <div className="h-8 w-1 rounded-full bg-ink" />
+
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                    Présence en ligne
+                  </p>
+
+                  <h2 className="font-display text-xl font-semibold">
+                    Liens
+                  </h2>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {etudiant.githubUrl && (
+                  <a
+                    href={etudiant.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
+                  >
+                    <Link2 size={13} />
+                    GitHub
+                  </a>
+                )}
+                {etudiant.gitlabUrl && (
+                  <a
+                    href={etudiant.gitlabUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
+                  >
+                    <Link2 size={13} />
+                    GitLab
+                  </a>
+                )}
+                {etudiant.linkedinUrl && (
+                  <a
+                    href={etudiant.linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
+                  >
+                    <Link2 size={13} />
+                    LinkedIn
+                  </a>
+                )}
+                {etudiant.siteWeb && (
+                  <a
+                    href={etudiant.siteWeb}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
+                  >
+                    <Globe size={13} />
+                    Site web
+                  </a>
+                )}
+              </div>
+            </section>
+          )}
+
           {/* SERVICES */}
           {services.length > 0 && (
-            <section className="rounded-2xl border border-ink/10 bg-white p-6 shadow-sm">
+            <section className="animate-in delay-4 rounded-2xl border border-ink/10 bg-paper-light p-6 shadow-sm">
               <div className="mb-6 flex items-center gap-3">
                 <div className="h-8 w-1 rounded-full bg-ink" />
 
@@ -408,7 +558,7 @@ export default function ProfilEtudiantPage({
           )}
 
           {/* AVIS */}
-          <section className="rounded-2xl border border-ink/10 bg-white p-6 shadow-sm">
+          <section className="animate-in delay-5 rounded-2xl border border-ink/10 bg-paper-light p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="h-8 w-1 rounded-full bg-ink" />
@@ -484,7 +634,7 @@ export default function ProfilEtudiantPage({
             =================================================== */}
         <aside className="space-y-6">
           {/* DISPONIBILITÉ */}
-          <section className="rounded-2xl border border-ink/10 bg-white p-5 shadow-sm">
+          <section className="animate-in delay-1 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
               Disponibilité
             </p>
@@ -499,13 +649,23 @@ export default function ProfilEtudiantPage({
               />
 
               <span className="text-sm font-semibold">
-                {etudiant.disponibilite
-                  ? "Disponible pour des projets"
-                  : "Actuellement indisponible"}
+                {etudiant.statutDisponibilite
+                  ? LABELS_STATUT_DISPONIBILITE[
+                      etudiant.statutDisponibilite
+                    ] ?? etudiant.statutDisponibilite
+                  : etudiant.disponibilite
+                    ? "Disponible pour des projets"
+                    : "Actuellement indisponible"}
               </span>
             </div>
 
-            {etudiant.tarifHoraire != null && (
+            {etudiant.typeFreelance && (
+              <p className="mt-2 text-xs text-ink-soft/70">
+                Recherche : {etudiant.typeFreelance}
+              </p>
+            )}
+
+            {etudiant.tarifHoraire != null ? (
               <div className="mt-4 border-t border-ink/10 pt-4">
                 <p className="text-xs text-ink-soft/60">
                   Tarif horaire
@@ -519,11 +679,30 @@ export default function ProfilEtudiantPage({
                   </span>
                 </p>
               </div>
+            ) : (
+              (etudiant.tarifMinimum != null ||
+                etudiant.tarifMaximum != null) && (
+                <div className="mt-4 border-t border-ink/10 pt-4">
+                  <p className="text-xs text-ink-soft/60">
+                    Fourchette tarifaire
+                  </p>
+
+                  <p className="mt-1 font-mono text-lg font-semibold text-ocre-dark">
+                    {etudiant.tarifMinimum != null &&
+                      formatArgent(etudiant.tarifMinimum)}
+                    {etudiant.tarifMinimum != null &&
+                      etudiant.tarifMaximum != null &&
+                      " – "}
+                    {etudiant.tarifMaximum != null &&
+                      formatArgent(etudiant.tarifMaximum)}
+                  </p>
+                </div>
+              )
             )}
           </section>
 
           {/* FORMATION */}
-          <section className="rounded-2xl border border-ink/10 bg-white p-5 shadow-sm">
+          <section className="animate-in delay-2 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
               Formation
             </p>
@@ -537,7 +716,19 @@ export default function ProfilEtudiantPage({
                 <p className="text-sm font-semibold">
                   {etudiant.niveauEtude ??
                     "Formation informatique"}
+                  {etudiant.anneeEtude && (
+                    <span className="font-normal text-ink-soft">
+                      {" "}
+                      · {etudiant.anneeEtude}
+                    </span>
+                  )}
                 </p>
+
+                {etudiant.filiere && (
+                  <p className="mt-0.5 text-xs font-medium text-ink-soft">
+                    {etudiant.filiere}
+                  </p>
+                )}
 
                 <p className="mt-1 text-xs leading-5 text-ink-soft">
                   {etudiant.universite ??
@@ -548,7 +739,7 @@ export default function ProfilEtudiantPage({
           </section>
 
           {/* STATISTIQUES */}
-          <section className="rounded-2xl border border-ink/10 bg-white p-5 shadow-sm">
+          <section className="animate-in delay-3 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
               Statistiques
             </p>
@@ -578,7 +769,7 @@ export default function ProfilEtudiantPage({
                 </span>
               </div>
 
-              <div className="flex items-center justify-between py-3 last:pb-0">
+              <div className="flex items-center justify-between py-3">
                 <span className="text-xs text-ink-soft">
                   Réputation
                 </span>
@@ -587,11 +778,24 @@ export default function ProfilEtudiantPage({
                   {scoreReputation.toFixed(1)}
                 </span>
               </div>
+
+              {etudiant.experience != null && (
+                <div className="flex items-center justify-between py-3 last:pb-0">
+                  <span className="text-xs text-ink-soft">
+                    Expérience
+                  </span>
+
+                  <span className="font-mono text-sm font-semibold">
+                    {etudiant.experience} an
+                    {etudiant.experience > 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
             </div>
           </section>
 
           {/* LANGUES / INFOS */}
-          <section className="rounded-2xl border border-ink/10 bg-white p-5 shadow-sm">
+          <section className="animate-in delay-4 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
               Profil
             </p>
@@ -610,14 +814,14 @@ export default function ProfilEtudiantPage({
                 </div>
               )}
 
-              {etudiant.universite && (
+              {etudiant.ville && (
                 <div className="flex gap-2">
                   <MapPin
                     size={15}
                     className="shrink-0"
                   />
 
-                  <span>{etudiant.universite}</span>
+                  <span>{etudiant.ville}</span>
                 </div>
               )}
 

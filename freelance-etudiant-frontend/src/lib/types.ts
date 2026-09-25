@@ -44,6 +44,14 @@
 
     dateInscription: string;
 
+    /**
+     * Complétion obligatoire du profil, calculée côté backend
+     * (ProfileCompletionService). Sert de repli si l'appel dédié
+     * GET /users/me/profile-completion n'a pas encore répondu ; la
+     * valeur à jour vient toujours de ce dernier.
+     */
+    profilComplete?: boolean;
+
     profilEtudiant?: EtudiantProfile | null;
 
     profilClient?: ClientProfile | null;
@@ -74,7 +82,61 @@
 
     nombreMissionsTerminees: number;
 
+    // ==========================================================
+    // Champs du questionnaire de complétion de profil (ÉTAPE G)
+    // ==========================================================
+
+    filiere?: string | null;
+
+    anneeEtude?: string | null;
+
+    ville?: string | null;
+
+    telephone?: string | null;
+
+    specialites?: string[];
+
+    experience?: number;
+
+    typeFreelance?: string | null;
+
+    statutDisponibilite?: string | null;
+
+    tarifMinimum?: number | null;
+
+    tarifMaximum?: number | null;
+
+    githubUrl?: string | null;
+
+    gitlabUrl?: string | null;
+
+    linkedinUrl?: string | null;
+
+    siteWeb?: string | null;
+
     utilisateur?: Utilisateur;
+  }
+
+  /**
+   * Réponse de GET /users/me/profile-completion : état de complétion du
+   * profil calculé côté serveur (jamais forcé par le frontend). Utilisée
+   * par le questionnaire de complétion et par le garde du dashboard.
+   */
+  export interface EtapeCompletion {
+    etape: string;
+    terminee: boolean;
+    total: number;
+    manquants: number;
+  }
+
+  export interface CompletionProfil {
+    role: Role;
+    complete: boolean;
+    progress: number;
+    missingFields: string[];
+    missingLabels: string[];
+    nextStep: string | null;
+    etapes: EtapeCompletion[];
   }
 
   export interface ClientProfile {
