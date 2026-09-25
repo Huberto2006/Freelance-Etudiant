@@ -42,6 +42,16 @@ export default function TableauDeBordLayout({
 
   /*
    * ==========================================================
+   * QUESTIONNAIRE DE COMPLÉTION DE PROFIL (ÉTAPE G)
+   * ==========================================================
+   * Le questionnaire est facultatif : un profil étudiant incomplet ne
+   * doit JAMAIS empêcher l'accès au dashboard. `completionProfil` reste
+   * chargé par AuthProvider et sert uniquement à la bannière
+   * ProfilCompletion (incitation), pas à un blocage de route ici.
+   */
+
+  /*
+   * ==========================================================
    * FERMETURE AUTOMATIQUE DU DRAWER MOBILE
    * ==========================================================
    */

@@ -150,6 +150,33 @@ export class ProfileCompletionService {
     }
 
     const estEtudiant = role === Role.ETUDIANT;
+
+    // "Sticky" : une fois profil_complete passe a true (completion reelle
+    // du questionnaire, ou backfill pour un compte deja actif avant la
+    // mise en place de cette fonctionnalite — cf. migration
+    // GrandfatherProfilCompleteComptesExistants), on ne re-exige plus
+    // jamais le questionnaire, meme si de nouveaux champs obligatoires
+    // sont ajoutes plus tard ou si un champ est ensuite vide. Le calcul
+    // detaille ci-dessous ne sert alors qu'a un profil pas encore
+    // complete.
+    if (utilisateur.profilComplete) {
+      const definitions = estEtudiant ? ETAPES_ETUDIANT : ETAPES_CLIENT;
+      return {
+        role: role as Role,
+        complete: true,
+        progress: 100,
+        missingFields: [],
+        missingLabels: [],
+        nextStep: null,
+        etapes: definitions.map((e) => ({
+          etape: e.etape,
+          terminee: true,
+          total: e.champs.length,
+          manquants: 0,
+        })),
+      };
+    }
+
     const definitions = estEtudiant ? ETAPES_ETUDIANT : ETAPES_CLIENT;
 
     const etapes = definitions.map((etape) => {

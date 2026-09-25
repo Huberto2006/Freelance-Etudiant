@@ -279,6 +279,48 @@ body {
   }
 }
 
+/* ==========================================================================
+   ANIMATIONS D'ENTRÉE — utilitaires partagés par toutes les pages
+   ==========================================================================
+   .animate-in       : apparition + léger glissement vers le haut (en-têtes,
+                        cartes, sections).
+   .animate-in-fade   : simple fondu (écrans de chargement, éléments neutres).
+   .delay-1 à .delay-6 : décalage en cascade pour enchaîner plusieurs blocs
+                        (ex. sections d'une page, cartes d'une grille).
+   Neutralisées automatiquement par la règle prefers-reduced-motion ci-dessus.
+   ========================================================================== */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-in {
+  animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-in-fade {
+  animation: fade-in 0.4s ease both;
+}
+
+.delay-1 { animation-delay: 60ms; }
+.delay-2 { animation-delay: 120ms; }
+.delay-3 { animation-delay: 180ms; }
+.delay-4 { animation-delay: 240ms; }
+.delay-5 { animation-delay: 300ms; }
+.delay-6 { animation-delay: 360ms; }
+
 /* --- Carte "notice punaisee" : le motif signature de l'interface --- */
 .notice-card {
   position: relative;

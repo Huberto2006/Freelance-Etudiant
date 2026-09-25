@@ -65,7 +65,7 @@ export function ProfilCompletion({
       )}
 
       <Link
-        href="/tableau-de-bord/profil"
+        href={complet ? "/tableau-de-bord/profil" : "/completer-profil"}
         className="self-start"
         aria-label={complet ? "Voir mon profil" : "Compléter mon profil"}
       >
