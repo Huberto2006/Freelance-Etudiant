@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -19,6 +20,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Role } from '../../common/enums/role.enum';
 import { Public } from '../../common/decorators/public.decorator';
+import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
 
 @ApiTags('Missions')
 @Controller('missions')
@@ -33,10 +35,17 @@ export class MissionsController {
   }
 
   @Public()
+  @UseGuards(OptionalAuthGuard)
   @Get(':id')
-  @ApiOperation({ summary: "Consulter le detail d'une mission" })
-  async findOne(@Param('id') id: string) {
-    return this.missionsService.findOne(id);
+  @ApiOperation({
+    summary:
+      "Consulter le detail d'une mission (les missions privees ne sont visibles que de leurs participants)",
+  })
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user?: AuthenticatedUser,
+  ) {
+    return this.missionsService.findOnePublic(id, user);
   }
 
   @UseGuards(RolesGuard)
@@ -66,7 +75,7 @@ export class MissionsController {
   @Patch(':id')
   @ApiOperation({ summary: 'Editer une de mes missions' })
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: UpdateMissionDto,
   ) {
@@ -78,7 +87,10 @@ export class MissionsController {
   @ApiBearerAuth()
   @Delete(':id')
   @ApiOperation({ summary: 'Supprimer une de mes missions' })
-  async remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     await this.missionsService.remove(id, user.id);
     return { message: 'Mission supprimee' };
   }

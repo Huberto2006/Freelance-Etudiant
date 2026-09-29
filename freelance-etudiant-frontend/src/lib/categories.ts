@@ -79,6 +79,49 @@ export const CATEGORIES_REPERENTIEL: CategorieService[] = [
   },
 ];
 
+/**
+ * Cle de comparaison d'une categorie : sans accents, sans casse. A utiliser
+ * pour TOUTE comparaison de categories cote client (filtre du catalogue) :
+ * "Développement" et "Developpement" designent la meme categorie.
+ */
+export function cleCategorie(valeur: string): string {
+  return valeur
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+/** Valeur de repli proposee dans les formulaires (categorie non listee). */
+export const CATEGORIE_AUTRE = "Autre";
+
+/**
+ * Options de categorie pour les formulaires mission et service : le
+ * referentiel + "Autre". Si la valeur courante (annonce a modifier) n'est
+ * pas dans la liste, elle est ajoutee pour que l'edition ne perde jamais la
+ * categorie existante ni ne bloque sur « categorie obligatoire ».
+ */
+export function optionsCategories(
+  valeurCourante?: string,
+): Array<{ valeur: string; libelle: string }> {
+  const options = [
+    ...CATEGORIES_REPERENTIEL.map(({ valeur, libelle }) => ({
+      valeur,
+      libelle,
+    })),
+    { valeur: CATEGORIE_AUTRE, libelle: "Autre" },
+  ];
+  const courante = valeurCourante?.trim();
+  if (
+    courante &&
+    !options.some((o) => cleCategorie(o.valeur) === cleCategorie(courante))
+  ) {
+    options.push({ valeur: courante, libelle: libelleCategorie(courante) });
+  }
+  return options;
+}
+
 /** Corrige les accents des libelles saisis en texte libre. */
 const CORRECTIONS_LIBELLES: Record<string, string> = {
   developpement: "Développement",
@@ -94,6 +137,9 @@ const CORRECTIONS_LIBELLES: Record<string, string> = {
   montage: "Montage vidéo",
   data: "Data",
   administratif: "Administratif",
+  multimedia: "Multimédia",
+  "multimédia": "Multimédia",
+  autre: "Autre",
 };
 
 /**
@@ -102,7 +148,9 @@ const CORRECTIONS_LIBELLES: Record<string, string> = {
  * lettre.
  */
 export function libelleCategorie(valeur: string): string {
-  const corrige = CORRECTIONS_LIBELLES[valeur.trim().toLowerCase()];
+  const corrige =
+    CORRECTIONS_LIBELLES[valeur.trim().toLowerCase()] ??
+    CORRECTIONS_LIBELLES[cleCategorie(valeur)];
   if (corrige) return corrige;
   return valeur.charAt(0).toUpperCase() + valeur.slice(1);
 }

@@ -40,7 +40,9 @@ export class DemandesServiceService {
   ): Promise<DemandeService> {
     const service = await this.servicesService.findOne(serviceId);
 
-    if (!service.disponible) {
+    // Un service archive ou masque par la moderation n'est plus
+    // commandable, meme si son drapeau `disponible` est reste a true.
+    if (!service.disponible || service.estArchive || !service.estModere) {
       throw new BadRequestException("Ce service n'est plus disponible");
     }
     if (service.etudiant?.utilisateurId === clientId) {

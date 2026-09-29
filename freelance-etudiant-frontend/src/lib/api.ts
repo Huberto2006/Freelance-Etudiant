@@ -27,13 +27,117 @@ export function getApiOrigin(): string {
 }
 
 /**
- * Transforme un chemin relatif renvoye par l'API (ex. "/uploads/profiles/x.jpg")
- * en URL absolue exploitable dans un <img src>.
+ * Origine servant les fichiers /uploads. Par defaut celle de l'API ; peut
+ * etre surchargee par NEXT_PUBLIC_FILES_URL (ex. CDN ou domaine dedie), ce
+ * qui evite de casser les images quand NEXT_PUBLIC_API_URL est relative.
  */
-export function getFileUrl(path?: string | null): string | null {
+const FILES_ORIGIN = (() => {
+  const dedie = process.env.NEXT_PUBLIC_FILES_URL;
+  if (dedie) {
+    try {
+      return new URL(dedie).origin;
+    } catch {
+      /* valeur invalide : repli sur l'origine de l'API */
+    }
+  }
+  return API_ORIGIN;
+})();
+
+let avertissementFichiersAffiche = false;
+
+/** Signale (une fois, en console) une origine de fichiers manifestement fausse. */
+function avertirSiOrigineFichiersSuspecte(): void {
+  if (avertissementFichiersAffiche || typeof window === "undefined") return;
+  avertissementFichiersAffiche = true;
+  try {
+    const hoteFichiers = FILES_ORIGIN ? new URL(FILES_ORIGIN).hostname : "";
+    const hotePage = window.location.hostname;
+    const locale = (h: string) => h === "localhost" || h === "127.0.0.1";
+    if (hoteFichiers && locale(hoteFichiers) && !locale(hotePage)) {
+      console.warn(
+        "[Kianja] Les images pointent vers " +
+          FILES_ORIGIN +
+          " alors que le site est servi depuis " +
+          hotePage +
+          ". Definissez NEXT_PUBLIC_API_URL (ou NEXT_PUBLIC_FILES_URL) au BUILD.",
+      );
+    }
+  } catch {
+    /* sans importance */
+  }
+}
+
+export function getFileUrl(
+  path?: string | null,
+): string | null {
   if (!path) return null;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  return `${API_ORIGIN}${path}`;
+
+  const valeur = path.trim();
+
+  if (!valeur) return null;
+
+  avertirSiOrigineFichiersSuspecte();
+
+  // URL absolue
+  if (
+    valeur.startsWith("http://") ||
+    valeur.startsWith("https://") ||
+    valeur.startsWith("data:")
+  ) {
+    return valeur;
+  }
+
+  /*
+   * URL protocolaire sans domaine.
+   * Exemple : //cdn.example.com/image.jpg
+   */
+  if (valeur.startsWith("//")) {
+    if (typeof window !== "undefined") {
+      return `${window.location.protocol}${valeur}`;
+    }
+
+    return `https:${valeur}`;
+  }
+
+  /*
+   * Chemin relatif.
+   *
+   * API_BASE_URL :
+   * https://kianja.arato.mg/api/v1
+   *
+   * API_ORIGIN :
+   * https://kianja.arato.mg
+   */
+  const chemin = valeur.startsWith("/")
+    ? valeur
+    : `/${valeur}`;
+
+  /*
+   * Si le backend renvoie déjà :
+   *
+   * /api/v1/uploads/document/xxx.jpg
+   *
+   * on retire /api/v1 car les fichiers statiques
+   * sont servis depuis l'origine du serveur.
+   */
+  const apiPrefix = new URL(
+    API_BASE_URL,
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "http://localhost",
+  ).pathname.replace(/\/+$/, "");
+
+  if (
+    apiPrefix &&
+    apiPrefix !== "/" &&
+    chemin.startsWith(`${apiPrefix}/`)
+  ) {
+    return `${FILES_ORIGIN}${chemin.slice(
+      apiPrefix.length,
+    )}`;
+  }
+
+  return `${FILES_ORIGIN}${chemin}`;
 }
 
 const TOKEN_KEY = "kianja_access_token";

@@ -1,31 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { createElement } from "react";
 import { Star, Timer } from "lucide-react";
 
 import type { ServiceOffert } from "@/lib/types";
 import { formatArgent } from "@/lib/format";
 import { getFileUrl } from "@/lib/api";
-import { iconePourCategorie, libelleCategorie } from "@/lib/categories";
+import { libelleCategorie } from "@/lib/categories";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { FavoriBouton } from "@/components/ui/FavoriBouton";
 import { Tag } from "@/components/ui/Notice";
-
-/**
- * Visuel de couverture de repli quand un service n'a pas d'image :
- * degrade doux de la palette + icone representative de la categorie.
- * createElement evite de creer un composant a chaque rendu.
- */
-function VisuelCategorie({ categorie }: { categorie: string }) {
-  return createElement(iconePourCategorie(categorie), {
-    size: 38,
-    className:
-      "text-ocre-dark/50 transition-transform duration-300 group-hover:scale-110",
-    "aria-hidden": true,
-  });
-}
+import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
 
 /**
  * Carte catalogue d'un service propose par un etudiant, a la maniere des
@@ -56,18 +42,12 @@ export function CarteService({
         className="relative block h-32 overflow-hidden rounded-t-[15px] border-b border-ink/10 sm:h-36"
         aria-label={service.titre}
       >
-        {image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={image}
-            alt=""
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-          />
-        ) : (
-          <span className="flex h-full w-full items-center justify-center bg-paper">
-            <VisuelCategorie categorie={service.categorie} />
-          </span>
-        )}
+        <ImageAvecRepli
+          src={image}
+          alt=""
+          categorie={service.categorie}
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+        />
 
         <span className="absolute left-3 top-3 flex flex-wrap gap-1.5">
           {afficherType && (

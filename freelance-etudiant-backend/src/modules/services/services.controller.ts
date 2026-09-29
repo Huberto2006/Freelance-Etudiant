@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -19,6 +20,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Role } from '../../common/enums/role.enum';
 import { Public } from '../../common/decorators/public.decorator';
+import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
 
 @ApiTags('Services')
 @Controller('services')
@@ -33,10 +35,17 @@ export class ServicesController {
   }
 
   @Public()
+  @UseGuards(OptionalAuthGuard)
   @Get(':id')
-  @ApiOperation({ summary: "Consulter le detail d'un service" })
-  async findOne(@Param('id') id: string) {
-    return this.servicesService.findOne(id);
+  @ApiOperation({
+    summary:
+      "Consulter le detail d'un service (masque/archive : visible de son proprietaire seulement)",
+  })
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user?: AuthenticatedUser,
+  ) {
+    return this.servicesService.findOnePublic(id, user);
   }
 
   @UseGuards(RolesGuard)
@@ -66,7 +75,7 @@ export class ServicesController {
   @Patch(':id')
   @ApiOperation({ summary: 'Editer un de mes services' })
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: UpdateServiceDto,
   ) {
@@ -78,7 +87,10 @@ export class ServicesController {
   @ApiBearerAuth()
   @Patch(':id/archiver')
   @ApiOperation({ summary: 'Archiver un de mes services (suppression logique reversible)' })
-  async archiver(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async archiver(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.servicesService.archiver(id, user.id);
   }
 
@@ -87,7 +99,10 @@ export class ServicesController {
   @ApiBearerAuth()
   @Patch(':id/restaurer')
   @ApiOperation({ summary: 'Restaurer un service archive' })
-  async restaurer(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async restaurer(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.servicesService.restaurer(id, user.id);
   }
 
@@ -99,7 +114,10 @@ export class ServicesController {
     summary:
       'Supprimer un de mes services (refuse si le service a des commandes : archivez-le)',
   })
-  async remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     await this.servicesService.remove(id, user.id);
     return { message: 'Service supprime' };
   }

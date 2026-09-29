@@ -201,6 +201,13 @@
 
     imageUrl?: string | null;
 
+    /**
+     * Fausse pour une mission privee creee automatiquement lors de
+     * l'acceptation d'une commande de service (RGds3) : elle n'apparait
+     * jamais dans le panneau d'affichage public ni dans « Mes publications ».
+     */
+    estModere?: boolean;
+
     clientId: string;
 
     /**
@@ -238,6 +245,11 @@
     livraison?: Livraison | null;
 
     dateCandidature: string;
+
+    /** Non nul : candidature deposee au nom d'un groupe (etudiantId = chef). */
+    groupeId?: string | null;
+
+    groupe?: Groupe | null;
   }
 
   export type RoleMembreGroupe = "chef" | "membre";

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -10,6 +11,9 @@ import { ServiceOffert } from './entities/service.entity';
 import { DemandeService } from '../demandes-service/entities/demande-service.entity';
 import { CreateServiceDto, UpdateServiceDto } from './dto/service.dto';
 import { FiltrerServicesDto } from './dto/filtrer-services.dto';
+import { Role } from '../../common/enums/role.enum';
+import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
+import { projeterService } from '../../common/utils/projection-publique.util';
 
 @Injectable()
 export class ServicesService {
@@ -35,7 +39,7 @@ export class ServicesService {
    * competences, tranche de prix.
    * RG10 : seuls les services disponibles (et moderes) sont retournes.
    */
-  async findAll(filtres: FiltrerServicesDto): Promise<ServiceOffert[]> {
+  async findAll(filtres: FiltrerServicesDto) {
     const query = this.repo
       .createQueryBuilder('service')
       .leftJoinAndSelect('service.etudiant', 'etudiant')
@@ -68,7 +72,16 @@ export class ServicesService {
     if (filtres.prixMax !== undefined) {
       query.andWhere('service.prix <= :prixMax', { prixMax: filtres.prixMax });
     }
-    return query.orderBy('service.dateCreation', 'DESC').getMany();
+    const limite = filtres.limite ?? 100;
+    const page = filtres.page ?? 1;
+    const services = await query
+      .orderBy('service.dateCreation', 'DESC')
+      .take(limite)
+      .skip((page - 1) * limite)
+      .getMany();
+
+    // Projection publique : jamais d'email, de telephone ni de compte.
+    return services.map(projeterService);
   }
 
   async findOne(id: string): Promise<ServiceOffert> {
@@ -78,6 +91,42 @@ export class ServicesService {
     });
     if (!service) {
       throw new NotFoundException('Service introuvable');
+    }
+    return service;
+  }
+
+  /**
+   * Detail PUBLIC d'un service (GET /services/:id). Un service archive,
+   * indisponible (masque) ou non modere n'existe pas pour le public (404) ;
+   * son proprietaire et les admins continuent de le consulter.
+   */
+  async findOnePublic(id: string, viewer?: AuthenticatedUser | null) {
+    const service = await this.findOne(id);
+
+    const visiblePubliquement =
+      service.disponible && !service.estArchive && service.estModere;
+    const autorise =
+      visiblePubliquement ||
+      (!!viewer &&
+        (viewer.role === Role.ADMIN || viewer.id === service.etudiantId));
+    if (!autorise) {
+      throw new NotFoundException('Service introuvable');
+    }
+    return projeterService(service);
+  }
+
+  /** Charge un service sans relations et verifie qu'il appartient a l'etudiant. */
+  private async trouverPourProprietaire(
+    id: string,
+    etudiantId: string,
+    messageInterdit: string,
+  ): Promise<ServiceOffert> {
+    const service = await this.repo.findOne({ where: { id } });
+    if (!service) {
+      throw new NotFoundException('Service introuvable');
+    }
+    if (service.etudiantId !== etudiantId) {
+      throw new ForbiddenException(messageInterdit);
     }
     return service;
   }
@@ -94,10 +143,16 @@ export class ServicesService {
     etudiantId: string,
     dto: UpdateServiceDto,
   ): Promise<ServiceOffert> {
-    const service = await this.findOne(id);
-    if (service.etudiantId !== etudiantId) {
-      throw new ForbiddenException(
-        'Vous ne pouvez modifier que vos propres services',
+    const service = await this.trouverPourProprietaire(
+      id,
+      etudiantId,
+      'Vous ne pouvez modifier que vos propres services',
+    );
+    // Un service archive ne peut pas etre republie par simple bascule :
+    // il doit d'abord etre restaure (sinon il redevenait commandable).
+    if (service.estArchive && dto.disponible === true) {
+      throw new BadRequestException(
+        'Ce service est archive : restaurez-le avant de le republier.',
       );
     }
     Object.assign(service, dto);
@@ -117,12 +172,11 @@ export class ServicesService {
    * conserve.
    */
   async archiver(id: string, etudiantId: string): Promise<ServiceOffert> {
-    const service = await this.findOne(id);
-    if (service.etudiantId !== etudiantId) {
-      throw new ForbiddenException(
-        'Vous ne pouvez archiver que vos propres services',
-      );
-    }
+    const service = await this.trouverPourProprietaire(
+      id,
+      etudiantId,
+      'Vous ne pouvez archiver que vos propres services',
+    );
     service.estArchive = true;
     service.disponible = false;
     return this.repo.save(service);
@@ -134,11 +188,13 @@ export class ServicesService {
    * republier via la bascule existante).
    */
   async restaurer(id: string, etudiantId: string): Promise<ServiceOffert> {
-    const service = await this.findOne(id);
-    if (service.etudiantId !== etudiantId) {
-      throw new ForbiddenException(
-        'Vous ne pouvez restaurer que vos propres services',
-      );
+    const service = await this.trouverPourProprietaire(
+      id,
+      etudiantId,
+      'Vous ne pouvez restaurer que vos propres services',
+    );
+    if (!service.estArchive) {
+      throw new ConflictException("Ce service n'est pas archive.");
     }
     service.estArchive = false;
     return this.repo.save(service);
@@ -156,12 +212,11 @@ export class ServicesService {
    * definitivement sans casser aucune donnee.
    */
   async remove(id: string, etudiantId: string): Promise<void> {
-    const service = await this.findOne(id);
-    if (service.etudiantId !== etudiantId) {
-      throw new ForbiddenException(
-        'Vous ne pouvez supprimer que vos propres services',
-      );
-    }
+    const service = await this.trouverPourProprietaire(
+      id,
+      etudiantId,
+      'Vous ne pouvez supprimer que vos propres services',
+    );
 
     const nombreDemandes = await this.demandesRepo.count({
       where: { serviceId: id },
