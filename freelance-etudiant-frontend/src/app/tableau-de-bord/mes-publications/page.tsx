@@ -114,14 +114,19 @@ export default function MesPublicationsPage() {
 
   const items = useMemo<PublicationItem[]>(() => {
     let resultat: PublicationItem[] = [
-      ...missions.map(
-        (m): PublicationItem => ({
-          type: "mission",
-          id: m.id,
-          date: m.dateCreation,
-          mission: m,
-        }),
-      ),
+      // Les missions privees nees d'une commande de service (RGds3,
+      // estModere = false) ne sont pas des « publications » : elles ne
+      // sont jamais publiques et se suivent depuis les livraisons/commandes.
+      ...missions
+        .filter((m) => m.estModere !== false)
+        .map(
+          (m): PublicationItem => ({
+            type: "mission",
+            id: m.id,
+            date: m.dateCreation,
+            mission: m,
+          }),
+        ),
       ...services.map(
         (s): PublicationItem => ({
           type: "service",
@@ -145,6 +150,31 @@ export default function MesPublicationsPage() {
           titre.toLowerCase().includes(motsCles) ||
           description.toLowerCase().includes(motsCles)
         );
+      });
+    }
+
+    const competence = filtres.competence?.trim().toLowerCase();
+    if (competence) {
+      resultat = resultat.filter((item) => {
+        const competences =
+          item.type === "mission"
+            ? item.mission.competencesRequises
+            : item.service.competences;
+        return competences?.some((c) => c.toLowerCase().includes(competence));
+      });
+    }
+
+    const budgetMin = filtres.budgetMin ? Number(filtres.budgetMin) : undefined;
+    const budgetMax = filtres.budgetMax ? Number(filtres.budgetMax) : undefined;
+    if (budgetMin !== undefined || budgetMax !== undefined) {
+      resultat = resultat.filter((item) => {
+        const valeur =
+          item.type === "mission"
+            ? Number(item.mission.budget)
+            : Number(item.service.prix);
+        if (budgetMin !== undefined && valeur < budgetMin) return false;
+        if (budgetMax !== undefined && valeur > budgetMax) return false;
+        return true;
       });
     }
 
@@ -273,7 +303,10 @@ export default function MesPublicationsPage() {
                     item.type === "mission" ? (
                       <div key={`m-${item.id}`} className="flex flex-col gap-2">
                         <CarteMission mission={item.mission} />
-                        <Link href={LIEN_GERER_MISSIONS} className="self-start">
+                        <Link
+                          href={`${LIEN_GERER_MISSIONS}?editer=${item.mission.id}`}
+                          className="self-start"
+                        >
                           <Button variant="ghost" size="sm" className="gap-1.5 text-xs">
                             <Pencil size={13} />
                             Modifier
@@ -388,7 +421,7 @@ function CarteServiceGeree({
           <Tag tone="ocre">Masqué</Tag>
         )}
 
-        <Link href={LIEN_GERER_SERVICES}>
+        <Link href={`${LIEN_GERER_SERVICES}?editer=${service.id}`}>
           <Button variant="ghost" size="sm" className="gap-1.5 text-xs">
             <Pencil size={13} />
             Modifier

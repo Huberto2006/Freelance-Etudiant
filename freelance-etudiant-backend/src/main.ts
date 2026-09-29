@@ -48,6 +48,15 @@ async function bootstrap() {
    */
   app.useStaticAssets(join(process.cwd(), "uploads"), {
     prefix: "/uploads/",
+    setHeaders: (res) => {
+      // Empeche le navigateur de deviner un autre type que celui declare
+      // (defense XSS sur les fichiers envoyes par les utilisateurs).
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      // Les images sont affichees depuis le front (origine differente
+      // possible) : sans cet en-tete, un helmet() place avant ce bloc, ou
+      // un proxy, les bloquerait (Cross-Origin-Resource-Policy: same-origin).
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    },
   });
 
   app.use(helmet());

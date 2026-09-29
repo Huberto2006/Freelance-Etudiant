@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { BriefcaseBusiness, Check, Loader2, MoreVertical, Pencil, Plus, Search, X } from "lucide-react";
 
 import { api, ApiError, getFileUrl } from "@/lib/api";
 import type { Candidature, Mission } from "@/lib/types";
 import { SousNavigation } from "@/components/ui/SousNavigation";
-import { iconePourCategorie } from "@/lib/categories";
+import { CATEGORIE_AUTRE, cleCategorie, iconePourCategorie, optionsCategories } from "@/lib/categories";
 
 import {
   formatArgent,
@@ -20,14 +21,27 @@ import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { NoticeCard, PageHeader, StampBadge, StatCard, Tag } from "@/components/ui/Notice";
 import { SelecteurImage } from "@/components/ui/SelecteurImage";
+import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
+import { dateLimiteDepassee } from "@/lib/format";
 
 export default function MesMissionsPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-ink-soft">Chargement…</p>}>
+      <MesMissionsContent />
+    </Suspense>
+  );
+}
+
+function MesMissionsContent() {
+  const searchParams = useSearchParams();
+  const idAEditer = searchParams.get("editer");
   const [missions, setMissions] = useState<Mission[]>([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
 
   const [afficherFormulaire, setAfficherFormulaire] = useState(false);
   const [missionEnEdition, setMissionEnEdition] = useState<Mission | null>(null);
+  const [ouvertureAutoTraitee, setOuvertureAutoTraitee] = useState(false);
 
   const [missionOuverte, setMissionOuverte] = useState<string | null>(null);
 
@@ -100,14 +114,36 @@ export default function MesMissionsPage() {
     };
   }, []);
 
+  /**
+   * Supprime une mission (refuse par le backend si elle est en cours,
+   * terminee, ou a une candidature acceptee : voir MissionsService.remove).
+   */
+  const supprimer = async (mission: Mission) => {
+    const confirmation = window.confirm(
+      `Voulez-vous vraiment supprimer « ${mission.titre} » ? Cette action est definitive.`,
+    );
+    if (!confirmation) return;
+
+    try {
+      await api.delete(`/missions/${mission.id}`);
+      setMissions((anciennes) => anciennes.filter((m) => m.id !== mission.id));
+      if (missionEnEdition?.id === mission.id) setMissionEnEdition(null);
+    } catch (error) {
+      setErreur(
+        error instanceof ApiError
+          ? error.message
+          : "Impossible de supprimer cette mission.",
+      );
+    }
+  };
+
   // ==========================================================
   // CALCULS (aucun Hook ici)
   // ==========================================================
 
   const estExpiree = (mission: Mission) =>
     mission.statut === "expiree" ||
-    (mission.statut === "ouverte" &&
-      new Date(mission.dateLimite) < new Date());
+    (mission.statut === "ouverte" && dateLimiteDepassee(mission.dateLimite));
 
   const ouvertes = missions.filter(
     (m) => m.statut === "ouverte" && !estExpiree(m),
@@ -116,15 +152,33 @@ export default function MesMissionsPage() {
   const terminees = missions.filter((m) => m.statut === "terminee").length;
   const expirees = missions.filter(estExpiree).length;
 
+  // Ouvre automatiquement le formulaire d'edition quand on arrive depuis
+  // « Mes publications » avec ?editer=<id> (une seule fois, pour ne pas
+  // rouvrir le formulaire si l'utilisateur le referme).
+  useEffect(() => {
+    if (!idAEditer || ouvertureAutoTraitee || missions.length === 0) return;
+    const mission = missions.find((m) => m.id === idAEditer);
+    if (mission) {
+      setAfficherFormulaire(false);
+      setMissionEnEdition(mission);
+    }
+    setOuvertureAutoTraitee(true);
+  }, [idAEditer, missions, ouvertureAutoTraitee]);
+
   const categoriesDisponibles = Array.from(
-    new Set(missions.map((m) => m.categorie).filter(Boolean)),
+    new Map(
+      missions
+        .filter((m) => m.categorie)
+        .map((m) => [cleCategorie(m.categorie), m.categorie]),
+    ).values(),
   );
 
   const missionsFiltrees = missions.filter((mission) => {
     const texte = `${mission.titre} ${mission.categorie}`.toLowerCase();
     return (
       (!recherche.trim() || texte.includes(recherche.trim().toLowerCase())) &&
-      (!filtreCategorie || mission.categorie === filtreCategorie)
+      (!filtreCategorie ||
+        cleCategorie(mission.categorie) === cleCategorie(filtreCategorie))
     );
   });
 
@@ -338,21 +392,19 @@ export default function MesMissionsPage() {
             <div className="flex flex-col gap-4">
               {missionsAffichees.map((mission) => {
                 const image = getFileUrl(mission.imageUrl ?? null);
-                const IconeCategorie = iconePourCategorie(mission.categorie);
 
                 return (
                   <NoticeCard key={mission.id} className="group">
                     <div className="flex flex-wrap items-start gap-4">
                       {/* VIGNETTE */}
-                      <div className="hidden h-20 w-28 shrink-0 overflow-hidden rounded-lg border border-ink/10 bg-paper sm:block">
-                        {image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={image} alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
-                        ) : (
-                          <span className="flex h-full w-full items-center justify-center">
-                            <IconeCategorie size={22} className="text-ocre-dark/50" aria-hidden="true" />
-                          </span>
-                        )}
+                      <div className="h-16 w-24 shrink-0 overflow-hidden rounded-lg border border-ink/10 bg-paper sm:h-20 sm:w-28">
+                        <ImageAvecRepli
+                          src={image}
+                          alt=""
+                          categorie={mission.categorie}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                          tailleIcone={22}
+                        />
                       </div>
 
                       <div className="flex flex-1 flex-wrap items-start justify-between gap-3">
@@ -417,6 +469,18 @@ export default function MesMissionsPage() {
                                 <Pencil size={15} />
                                 Modifier
                               </button>
+
+                              {mission.statut !== "en_cours" &&
+                                mission.statut !== "terminee" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => supprimer(mission)}
+                                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-brique transition hover:bg-brique/5"
+                                  >
+                                    <X size={15} />
+                                    Supprimer
+                                  </button>
+                                )}
                             </div>
                           </details>
 
@@ -447,7 +511,10 @@ export default function MesMissionsPage() {
 
                     {missionOuverte === mission.id && (
                       <div className="mt-5 border-t border-ink/15 pt-5">
-                        <CandidaturesMission missionId={mission.id} />
+                        <CandidaturesMission
+                          missionId={mission.id}
+                          onCandidatureAcceptee={charger}
+                        />
                       </div>
                     )}
                   </NoticeCard>
@@ -478,13 +545,22 @@ function FormulaireMission({
 
   const [titre, setTitre] = useState(missionExistante?.titre ?? "");
   const [description, setDescription] = useState(missionExistante?.description ?? "");
-  const [categorie, setCategorie] = useState(missionExistante?.categorie ?? "");
+  const categorieInitiale = missionExistante?.categorie ?? "";
+  // optionsCategories(categorieInitiale) ajoute la categorie existante a la
+  // liste si elle n'est pas dans le referentiel : elle reste donc toujours
+  // selectionnable telle quelle (pas de bascule forcee vers "Autre").
+  const [categorie, setCategorie] = useState(categorieInitiale);
+  const [categoriePersonnalisee, setCategoriePersonnalisee] = useState("");
   const [budget, setBudget] = useState(
     missionExistante ? String(missionExistante.budget) : "",
   );
-  const [dateLimite, setDateLimite] = useState(
-    missionExistante ? missionExistante.dateLimite.slice(0, 10) : "",
-  );
+  // Date limite d'origine (pour ne l'envoyer au backend que si elle change :
+  // une mission dont l'echeance approche ou est passee doit rester
+  // modifiable pour tout le reste — voir MissionsService.update).
+  const dateLimiteInitiale = missionExistante
+    ? missionExistante.dateLimite.slice(0, 10)
+    : "";
+  const [dateLimite, setDateLimite] = useState(dateLimiteInitiale);
   const [competencesRequises, setCompetencesRequises] = useState(
     missionExistante?.competencesRequises.join(", ") ?? "",
   );
@@ -503,12 +579,20 @@ function FormulaireMission({
     setEnvoi(true);
 
     try {
+      const categorieFinale =
+        categorie === CATEGORIE_AUTRE
+          ? categoriePersonnalisee.trim()
+          : categorie;
+
       const payload = {
         titre: titre.trim(),
         description: description.trim(),
-        categorie: categorie.trim(),
+        categorie: categorieFinale,
         budget: Number(budget),
-        dateLimite,
+        // N'envoie la date limite que si elle a change : elle reste
+        // sinon simplement absente du PATCH, et la mission garde son
+        // echeance meme si elle est proche ou passee.
+        ...(dateLimite !== dateLimiteInitiale ? { dateLimite } : {}),
         // On n'envoie imageUrl que si elle a réellement été modifiée :
         // le PATCH backend ne modifie que les champs présents dans le
         // payload, donc omettre ce champ conserve l'image actuelle.
@@ -639,14 +723,30 @@ function FormulaireMission({
 
         <div className="grid gap-5 sm:grid-cols-3">
           <Field label="Catégorie" htmlFor="categorie">
-            <Input
+            <Select
               id="categorie"
               required
               value={categorie}
               onChange={(e) => setCategorie(e.target.value)}
-              placeholder="Développement"
               disabled={envoi}
-            />
+            >
+              <option value="">Sélectionner une catégorie</option>
+              {optionsCategories(categorieInitiale).map((option) => (
+                <option key={option.valeur} value={option.valeur}>
+                  {option.libelle}
+                </option>
+              ))}
+            </Select>
+            {categorie === CATEGORIE_AUTRE && (
+              <Input
+                className="mt-2"
+                value={categoriePersonnalisee}
+                onChange={(e) => setCategoriePersonnalisee(e.target.value)}
+                placeholder="Préciser la catégorie"
+                required
+                disabled={envoi}
+              />
+            )}
           </Field>
 
           <Field label="Budget (Ar)" htmlFor="budget">
@@ -742,7 +842,13 @@ function FormulaireMission({
    CANDIDATURES D'UNE MISSION
    ========================================================= */
 
-function CandidaturesMission({ missionId }: { missionId: string }) {
+function CandidaturesMission({
+  missionId,
+  onCandidatureAcceptee,
+}: {
+  missionId: string;
+  onCandidatureAcceptee?: () => void | Promise<void>;
+}) {
   const [candidatures, setCandidatures] = useState<Candidature[]>([]);
 
   const [chargement, setChargement] = useState(true);
@@ -836,6 +942,10 @@ function CandidaturesMission({ missionId }: { missionId: string }) {
       await api.patch(`/candidatures/${id}/accepter`);
 
       await charger();
+      // La mission passe a EN_COURS cote backend : on rafraichit la liste
+      // des missions du parent pour que son statut affiche ne reste pas
+      // "Ouverte" jusqu'au prochain rechargement de page.
+      await onCandidatureAcceptee?.();
     } catch (error) {
       console.error("Erreur lors de l'acceptation :", error);
 
@@ -913,14 +1023,26 @@ function CandidaturesMission({ missionId }: { missionId: string }) {
                 )}
 
                 <div>
-                  <p className="font-display font-medium">
+                  <p className="font-display flex items-center gap-1.5 font-medium">
                     {etudiant?.nom ?? "Étudiant"}
+                    {candidature.groupeId && (
+                      <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-normal text-ink-soft">
+                        Groupe{candidature.groupe?.nom ? ` · ${candidature.groupe.nom}` : ""}
+                      </span>
+                    )}
                   </p>
 
                   <p className="text-xs text-ink-soft/70">
                     {formatArgent(candidature.prixPropose)}
                     {" · "}
                     {candidature.delaiPropose} jours
+                    {candidature.groupeId && candidature.groupe?.membres && (
+                      <>
+                        {" · "}
+                        {candidature.groupe.membres.length} membre
+                        {candidature.groupe.membres.length > 1 ? "s" : ""}
+                      </>
+                    )}
                   </p>
                 </div>
               </div>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Archive,
   ArchiveRestore,
@@ -18,7 +19,7 @@ import {
 import { api, ApiError, getFileUrl } from "@/lib/api";
 import type { ServiceOffert } from "@/lib/types";
 import { formatArgent } from "@/lib/format";
-import { iconePourCategorie } from "@/lib/categories";
+import { cleCategorie, iconePourCategorie, optionsCategories } from "@/lib/categories";
 
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
@@ -28,14 +29,11 @@ import {
   StatCard,
   Tag,
 } from "@/components/ui/Notice";
-import { SelecteurImage } from "@/components/ui/SelecteurImage";
+import { SelecteurImages } from "@/components/ui/SelecteurImages";
+import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
 import { SousNavigation } from "@/components/ui/SousNavigation";
 
 type OngletServices = "actifs" | "archives";
-
-type ServiceOffertAvecDelai = ServiceOffert & {
-  delaiJours?: number;
-};
 
 type FormulaireServiceData = {
   titre: string;
@@ -44,7 +42,8 @@ type FormulaireServiceData = {
   prix: string;
   delaiJours: string;
   disponible: boolean;
-  imageUrl: string;
+  imagesUrls: string[];
+  competences: string;
 };
 
 const FORMULAIRE_INITIAL: FormulaireServiceData = {
@@ -54,7 +53,8 @@ const FORMULAIRE_INITIAL: FormulaireServiceData = {
   prix: "",
   delaiJours: "",
   disponible: true,
-  imageUrl: "",
+  imagesUrls: [],
+  competences: "",
 };
 
 function FormulaireService({
@@ -76,21 +76,9 @@ function FormulaireService({
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState("");
 
-  // Réinitialisation du formulaire lors du passage d'un service à un autre
-  // (édition) ou du retour en création : ajustement de l'état PENDANT le
-  // rendu, déclenché par l'identifiant stable du service (pattern officiel
-  // react.dev "You Might Not Need an Effect", en remplacement d'un setState
-  // synchrone dans un effet — react-hooks/set-state-in-effect).
-  const [dernierServiceId, setDernierServiceId] = useState(serviceId);
-
-  if (dernierServiceId !== serviceId) {
-    setDernierServiceId(serviceId);
-    setFormulaire(initialValues);
-  }
-
   const modifierChamp = (
     champ: keyof FormulaireServiceData,
-    valeur: string | boolean,
+    valeur: string | boolean | string[],
   ) => {
     setFormulaire((ancien) => ({
       ...ancien,
@@ -98,7 +86,9 @@ function FormulaireService({
     }));
   };
 
-  const soumettre = async (event: React.FormEvent<HTMLFormElement>) => {
+  const soumettre = async (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
 
     setErreur("");
@@ -128,26 +118,69 @@ function FormulaireService({
       return;
     }
 
+    const prix = Number(formulaire.prix);
+    const delai = Number(formulaire.delaiJours);
+
+    if (!Number.isFinite(prix) || prix < 0) {
+      setErreur(
+        "Le prix doit être un nombre valide supérieur ou égal à 0.",
+      );
+      return;
+    }
+
+    if (!Number.isInteger(delai) || delai < 1) {
+      setErreur(
+        "Le délai doit être un nombre entier d'au moins 1 jour.",
+      );
+      return;
+    }
+
+    if (mode === "edition" && !serviceId) {
+      setErreur(
+        "Impossible de modifier le service : identifiant manquant.",
+      );
+      return;
+    }
+
     setChargement(true);
 
     try {
-      const payload = {
+      /*
+       * Données communes aux deux opérations.
+       *
+       * IMPORTANT :
+       * `disponible` n'est pas envoyé lors de la création,
+       * car CreateServiceDto ne l'autorise pas.
+       */
+      const donneesCommunes = {
         titre: formulaire.titre.trim(),
         description: formulaire.description.trim(),
         categorie: formulaire.categorie,
-        prix: Number(formulaire.prix),
-        delai: Number(formulaire.delaiJours),
-        disponible: formulaire.disponible,
-        imagesUrls: formulaire.imageUrl ? [formulaire.imageUrl] : [],
+        prix,
+        delai,
+        imagesUrls: formulaire.imagesUrls,
+        competences: formulaire.competences
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean),
       };
 
-      const service =
-        mode === "creation"
-          ? await api.post<ServiceOffert>("/services", payload)
-          : await api.patch<ServiceOffert>(
-              `/services/${serviceId}`,
-              payload,
-            );
+      let service: ServiceOffert;
+
+      if (mode === "creation") {
+        service = await api.post<ServiceOffert>(
+          "/services",
+          donneesCommunes,
+        );
+      } else {
+        service = await api.patch<ServiceOffert>(
+          `/services/${serviceId}`,
+          {
+            ...donneesCommunes,
+            disponible: formulaire.disponible,
+          },
+        );
+      }
 
       onSuccess(service);
     } catch (error) {
@@ -204,14 +237,15 @@ function FormulaireService({
             }
             disabled={chargement}
           >
-            <option value="">Sélectionner une catégorie</option>
-            <option value="Design">Design</option>
-            <option value="Développement">Développement</option>
-            <option value="Rédaction">Rédaction</option>
-            <option value="Traduction">Traduction</option>
-            <option value="Marketing">Marketing</option>
-            <option value="Multimédia">Multimédia</option>
-            <option value="Autre">Autre</option>
+            <option value="">
+              Sélectionner une catégorie
+            </option>
+
+            {optionsCategories(formulaire.categorie).map((option) => (
+              <option key={option.valeur} value={option.valeur}>
+                {option.libelle}
+              </option>
+            ))}
           </Select>
         </Field>
 
@@ -236,7 +270,10 @@ function FormulaireService({
             min="1"
             value={formulaire.delaiJours}
             onChange={(event) =>
-              modifierChamp("delaiJours", event.target.value)
+              modifierChamp(
+                "delaiJours",
+                event.target.value,
+              )
             }
             placeholder="3"
             disabled={chargement}
@@ -244,33 +281,66 @@ function FormulaireService({
         </Field>
       </div>
 
-      <Field label="Image" htmlFor="service-image">
-        <SelecteurImage
-          valeur={formulaire.imageUrl}
-          onChange={(value) => modifierChamp("imageUrl", value ?? "")}
+      <Field label="Compétences" htmlFor="service-competences">
+        <Input
+          id="service-competences"
+          value={formulaire.competences}
+          onChange={(event) =>
+            modifierChamp("competences", event.target.value)
+          }
+          placeholder="Figma, UI/UX, Prototypage (séparées par des virgules)"
+          disabled={chargement}
         />
       </Field>
 
-      <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-ink/10 bg-paper px-4 py-3">
-        <input
-          type="checkbox"
-          checked={formulaire.disponible}
-          onChange={(event) =>
-            modifierChamp("disponible", event.target.checked)
-          }
+      <Field label="Images" htmlFor="service-images">
+        <SelecteurImages
+          valeur={formulaire.imagesUrls}
+          onChange={(urls) => modifierChamp("imagesUrls", urls)}
           disabled={chargement}
-          className="h-4 w-4"
         />
+      </Field>
 
-        <div>
+      {mode === "edition" && (
+        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-ink/10 bg-paper px-4 py-3">
+          <input
+            type="checkbox"
+            checked={formulaire.disponible}
+            onChange={(event) =>
+              modifierChamp(
+                "disponible",
+                event.target.checked,
+              )
+            }
+            disabled={chargement}
+            className="h-4 w-4"
+          />
+
+          <div>
+            <p className="text-sm font-medium text-ink">
+              Service disponible
+            </p>
+
+            <p className="text-xs text-ink-soft">
+              Les clients pourront voir et commander ce
+              service.
+            </p>
+          </div>
+        </label>
+      )}
+
+      {mode === "creation" && (
+        <div className="rounded-xl border border-ink/10 bg-ink/5 px-4 py-3">
           <p className="text-sm font-medium text-ink">
-            Service disponible
+            Publication du service
           </p>
-          <p className="text-xs text-ink-soft">
-            Les clients pourront voir et commander ce service.
+
+          <p className="mt-1 text-xs leading-5 text-ink-soft">
+            Votre service sera créé et publié selon les
+            règles de publication définies par le serveur.
           </p>
         </div>
-      </label>
+      )}
 
       <div className="flex flex-wrap justify-end gap-3">
         {onCancel && (
@@ -284,14 +354,17 @@ function FormulaireService({
           </Button>
         )}
 
-        <Button 
+        <Button
           type="submit"
-          className="flex items-center justify-center gap-2" 
+          className="flex items-center justify-center gap-2"
           disabled={chargement}
         >
           {chargement ? (
             <>
-              <Loader2 size={16} className="animate-spin" />
+              <Loader2
+                size={16}
+                className="animate-spin"
+              />
               Enregistrement...
             </>
           ) : mode === "creation" ? (
@@ -312,7 +385,21 @@ function FormulaireService({
 }
 
 export default function MesServicesPage() {
-  const [services, setServices] = useState<ServiceOffert[]>([]);
+  return (
+    <Suspense fallback={<p className="text-sm text-ink-soft">Chargement…</p>}>
+      <MesServicesContent />
+    </Suspense>
+  );
+}
+
+function MesServicesContent() {
+  const searchParams = useSearchParams();
+  const idAEditer = searchParams.get("editer");
+  const [ouvertureAutoTraitee, setOuvertureAutoTraitee] = useState(false);
+  const [services, setServices] = useState<ServiceOffert[]>(
+    [],
+  );
+
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState("");
 
@@ -320,12 +407,14 @@ export default function MesServicesPage() {
     useState<OngletServices>("actifs");
 
   const [recherche, setRecherche] = useState("");
-  const [filtreCategorie, setFiltreCategorie] = useState("");
+  const [filtreCategorie, setFiltreCategorie] =
+    useState("");
 
   const [serviceEnEdition, setServiceEnEdition] =
     useState<ServiceOffert | null>(null);
 
-  const [afficherCreation, setAfficherCreation] = useState(false);
+  const [afficherCreation, setAfficherCreation] =
+    useState(false);
 
   const chargerServices = useCallback(async () => {
     setChargement(true);
@@ -341,7 +430,9 @@ export default function MesServicesPage() {
       if (error instanceof ApiError) {
         setErreur(error.message);
       } else {
-        setErreur("Impossible de charger vos services.");
+        setErreur(
+          "Impossible de charger vos services.",
+        );
       }
     } finally {
       setChargement(false);
@@ -349,8 +440,6 @@ export default function MesServicesPage() {
   }, []);
 
   useEffect(() => {
-    // Chargement différé d'un tick (react-hooks/set-state-in-effect),
-    // même convention que les pages missions/services.
     const timer = window.setTimeout(() => {
       void chargerServices();
     }, 0);
@@ -360,12 +449,26 @@ export default function MesServicesPage() {
     };
   }, [chargerServices]);
 
+  useEffect(() => {
+    if (!idAEditer || ouvertureAutoTraitee || services.length === 0) return;
+    const service = services.find((s) => s.id === idAEditer);
+    if (service) {
+      setAfficherCreation(false);
+      setServiceEnEdition(service);
+      if (service.estArchive) setOngletServices("archives");
+    }
+    setOuvertureAutoTraitee(true);
+  }, [idAEditer, services, ouvertureAutoTraitee]);
+
   const categoriesDisponibles = Array.from(
-    new Set(
+    new Map(
       services
-        .map((service) => service.categorie)
-        .filter(Boolean),
-    ),
+        .filter((service) => service.categorie)
+        .map((service) => [
+          cleCategorie(service.categorie),
+          service.categorie,
+        ]),
+    ).values(),
   ).sort();
 
   const servicesFiltres = services.filter((service) => {
@@ -374,19 +477,24 @@ export default function MesServicesPage() {
 
     const correspondRecherche =
       !recherche.trim() ||
-      texte.includes(recherche.trim().toLowerCase());
+      texte.includes(
+        recherche.trim().toLowerCase(),
+      );
 
     const correspondCategorie =
       !filtreCategorie ||
-      service.categorie === filtreCategorie;
+      cleCategorie(service.categorie) === cleCategorie(filtreCategorie);
 
-    return correspondRecherche && correspondCategorie;
+    return (
+      correspondRecherche && correspondCategorie
+    );
   });
 
-  const servicesAffiches = servicesFiltres.filter((service) =>
-    ongletServices === "archives"
-      ? service.estArchive
-      : !service.estArchive,
+  const servicesAffiches = servicesFiltres.filter(
+    (service) =>
+      ongletServices === "archives"
+        ? service.estArchive
+        : !service.estArchive,
   );
 
   const total = services.length;
@@ -400,23 +508,49 @@ export default function MesServicesPage() {
   ).length;
 
   const masques = services.filter(
-    (service) => !service.estArchive && !service.disponible,
+    (service) =>
+      !service.estArchive &&
+      !service.disponible,
   ).length;
+
+  /*
+   * Ouvre le formulaire d'édition.
+   *
+   * On ferme également le menu <details> afin que
+   * le menu d'actions ne reste pas ouvert au-dessus
+   * du formulaire.
+   */
+  const ouvrirEdition = (
+    service: ServiceOffert,
+    event?: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    event?.currentTarget
+      .closest("details")
+      ?.removeAttribute("open");
+
+    setAfficherCreation(false);
+    setServiceEnEdition(service);
+  };
 
   const changerDisponibilite = async (
     service: ServiceOffert,
   ) => {
+    setErreur("");
+
     try {
-      const serviceMisAJour = await api.patch<ServiceOffert>(
-        `/services/${service.id}`,
-        {
-          disponible: !service.disponible,
-        },
-      );
+      const serviceMisAJour =
+        await api.patch<ServiceOffert>(
+          `/services/${service.id}`,
+          {
+            disponible: !service.disponible,
+          },
+        );
 
       setServices((anciens) =>
         anciens.map((item) =>
-          item.id === service.id ? serviceMisAJour : item,
+          item.id === service.id
+            ? serviceMisAJour
+            : item,
         ),
       );
     } catch (error) {
@@ -428,18 +562,29 @@ export default function MesServicesPage() {
     }
   };
 
-  const archiver = async (service: ServiceOffert) => {
+  const archiver = async (
+    service: ServiceOffert,
+  ) => {
+    setErreur("");
+
     try {
-      const serviceMisAJour = await api.patch<ServiceOffert>(
-        `/services/${service.id}/archiver`,
-        {},
-      );
+      const serviceMisAJour =
+        await api.patch<ServiceOffert>(
+          `/services/${service.id}/archiver`,
+          {},
+        );
 
       setServices((anciens) =>
         anciens.map((item) =>
-          item.id === service.id ? serviceMisAJour : item,
+          item.id === service.id
+            ? serviceMisAJour
+            : item,
         ),
       );
+
+      if (serviceEnEdition?.id === service.id) {
+        setServiceEnEdition(null);
+      }
     } catch (error) {
       setErreur(
         error instanceof ApiError
@@ -449,16 +594,23 @@ export default function MesServicesPage() {
     }
   };
 
-  const restaurer = async (service: ServiceOffert) => {
+  const restaurer = async (
+    service: ServiceOffert,
+  ) => {
+    setErreur("");
+
     try {
-      const serviceMisAJour = await api.patch<ServiceOffert>(
-        `/services/${service.id}/restaurer`,
-        {},
-      );
+      const serviceMisAJour =
+        await api.patch<ServiceOffert>(
+          `/services/${service.id}/restaurer`,
+          {},
+        );
 
       setServices((anciens) =>
         anciens.map((item) =>
-          item.id === service.id ? serviceMisAJour : item,
+          item.id === service.id
+            ? serviceMisAJour
+            : item,
         ),
       );
     } catch (error) {
@@ -470,19 +622,29 @@ export default function MesServicesPage() {
     }
   };
 
-  const supprimer = async (service: ServiceOffert) => {
+  const supprimer = async (
+    service: ServiceOffert,
+  ) => {
     const confirmation = window.confirm(
       `Voulez-vous vraiment supprimer « ${service.titre} » ?`,
     );
 
     if (!confirmation) return;
 
+    setErreur("");
+
     try {
       await api.delete(`/services/${service.id}`);
 
       setServices((anciens) =>
-        anciens.filter((item) => item.id !== service.id),
+        anciens.filter(
+          (item) => item.id !== service.id,
+        ),
       );
+
+      if (serviceEnEdition?.id === service.id) {
+        setServiceEnEdition(null);
+      }
     } catch (error) {
       setErreur(
         error instanceof ApiError
@@ -492,16 +654,27 @@ export default function MesServicesPage() {
     }
   };
 
-  const apresCreation = (service: ServiceOffert) => {
-    setServices((anciens) => [service, ...anciens]);
+  const apresCreation = (
+    service: ServiceOffert,
+  ) => {
+    setServices((anciens) => [
+      service,
+      ...anciens,
+    ]);
+
     setAfficherCreation(false);
+    setServiceEnEdition(null);
     setOngletServices("actifs");
   };
 
-  const apresEdition = (service: ServiceOffert) => {
+  const apresEdition = (
+    service: ServiceOffert,
+  ) => {
     setServices((anciens) =>
       anciens.map((item) =>
-        item.id === service.id ? service : item,
+        item.id === service.id
+          ? service
+          : item,
       ),
     );
 
@@ -533,11 +706,16 @@ export default function MesServicesPage() {
       {erreur && (
         <NoticeCard>
           <div className="flex items-start gap-3">
-            <X size={18} className="mt-0.5 text-brique" />
+            <X
+              size={18}
+              className="mt-0.5 text-brique"
+            />
+
             <div>
               <p className="font-medium text-ink">
                 Une erreur est survenue
               </p>
+
               <p className="mt-1 text-sm text-ink-soft">
                 {erreur}
               </p>
@@ -547,13 +725,29 @@ export default function MesServicesPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total" value={total} icon={Wrench} />
+        <StatCard
+          label="Total"
+          value={total}
+          icon={Wrench}
+        />
 
-        <StatCard label="Actifs" value={actifs} icon={Check} />
+        <StatCard
+          label="Actifs"
+          value={actifs}
+          icon={Check}
+        />
 
-        <StatCard label="Archivés" value={archives} icon={Archive} />
+        <StatCard
+          label="Archivés"
+          value={archives}
+          icon={Archive}
+        />
 
-        <StatCard label="Masqués" value={masques} icon={X} />
+        <StatCard
+          label="Masqués"
+          value={masques}
+          icon={X}
+        />
       </div>
 
       {afficherCreation && (
@@ -563,14 +757,18 @@ export default function MesServicesPage() {
               <h2 className="text-lg font-semibold text-ink">
                 Nouveau service
               </h2>
+
               <p className="mt-1 text-sm text-ink-soft">
-                Présentez clairement le service que vous proposez.
+                Présentez clairement le service que vous
+                proposez.
               </p>
             </div>
 
             <button
               type="button"
-              onClick={() => setAfficherCreation(false)}
+              onClick={() =>
+                setAfficherCreation(false)
+              }
               className="rounded-lg p-2 text-ink-soft transition hover:bg-ink/5 hover:text-ink"
               aria-label="Fermer"
             >
@@ -581,23 +779,32 @@ export default function MesServicesPage() {
           <FormulaireService
             mode="creation"
             onSuccess={apresCreation}
-            onCancel={() => setAfficherCreation(false)}
+            onCancel={() =>
+              setAfficherCreation(false)
+            }
           />
         </NoticeCard>
       )}
 
       <SousNavigation
         onglets={[
-          { valeur: "actifs", label: "Actifs" },
-          { valeur: "archives", label: "Archivés" },
+          {
+            valeur: "actifs",
+            label: "Actifs",
+          },
+          {
+            valeur: "archives",
+            label: "Archivés",
+          },
         ]}
         actif={ongletServices}
         onChanger={(valeur) =>
-          setOngletServices(valeur as OngletServices)
+          setOngletServices(
+            valeur as OngletServices,
+          )
         }
       />
 
-      {/* Filtres de l'onglet courant */}
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div className="relative">
           <Search
@@ -628,13 +835,20 @@ export default function MesServicesPage() {
           }
           aria-label="Filtrer par catégorie"
         >
-          <option value="">Toutes les catégories</option>
+          <option value="">
+            Toutes les catégories
+          </option>
 
-          {categoriesDisponibles.map((categorie) => (
-            <option key={categorie} value={categorie}>
-              {categorie}
-            </option>
-          ))}
+          {categoriesDisponibles.map(
+            (categorie) => (
+              <option
+                key={categorie}
+                value={categorie}
+              >
+                {categorie}
+              </option>
+            ),
+          )}
         </Select>
       </div>
 
@@ -649,7 +863,10 @@ export default function MesServicesPage() {
         <NoticeCard>
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-ink/5">
-              <Wrench size={20} className="text-ink-soft" />
+              <Wrench
+                size={20}
+                className="text-ink-soft"
+              />
             </div>
 
             <h3 className="font-semibold text-ink">
@@ -671,7 +888,10 @@ export default function MesServicesPage() {
               !filtreCategorie && (
                 <Button
                   className="mt-5"
-                  onClick={() => setAfficherCreation(true)}
+                  onClick={() => {
+                    setAfficherCreation(true);
+                    setServiceEnEdition(null);
+                  }}
                 >
                   <Plus size={16} />
                   Créer un service
@@ -682,13 +902,20 @@ export default function MesServicesPage() {
       ) : (
         <div className="grid gap-5 lg:grid-cols-2">
           {servicesAffiches.map((service) => {
-            const IconeCategorie = iconePourCategorie(
-              service.categorie,
+            const IconeCategorie =
+              iconePourCategorie(
+                service.categorie,
+              );
+
+            const delaiJours = Number(
+              service.delai ?? 0,
             );
-            const delaiJours = Number(service.delai ?? 0);
-            const imagePrincipale = getFileUrl(
-              service.imagesUrls?.[0] ?? null,
-            );
+
+            const imagePrincipale =
+              getFileUrl(
+                service.imagesUrls?.[0] ?? null,
+              );
+            const nombreImages = service.imagesUrls?.length ?? 0;
 
             return (
               <article
@@ -712,7 +939,6 @@ export default function MesServicesPage() {
                         </p>
                       </div>
 
-                      {/* Menu ⋮ */}
                       <details className="relative shrink-0">
                         <summary
                           className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg text-ink-soft transition hover:bg-ink/5 hover:text-ink [&::-webkit-details-marker]:hidden"
@@ -733,8 +959,11 @@ export default function MesServicesPage() {
                           {!service.estArchive && (
                             <button
                               type="button"
-                              onClick={() =>
-                                setServiceEnEdition(service)
+                              onClick={(event) =>
+                                ouvrirEdition(
+                                  service,
+                                  event,
+                                )
                               }
                               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink transition hover:bg-ink/5"
                             >
@@ -746,7 +975,9 @@ export default function MesServicesPage() {
                           {!service.estArchive && (
                             <button
                               type="button"
-                              onClick={() => supprimer(service)}
+                              onClick={() =>
+                                supprimer(service)
+                              }
                               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-brique transition hover:bg-brique/5"
                             >
                               <X size={15} />
@@ -758,11 +989,15 @@ export default function MesServicesPage() {
                     </div>
 
                     <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <Tag>{formatArgent(service.prix)}</Tag>
+                      <Tag>
+                        {formatArgent(service.prix)}
+                      </Tag>
 
                       <Tag>
                         {delaiJours} jour
-                        {delaiJours > 1 ? "s" : ""}
+                        {delaiJours > 1
+                          ? "s"
+                          : ""}
                       </Tag>
 
                       {service.estArchive ? (
@@ -776,13 +1011,19 @@ export default function MesServicesPage() {
                   </div>
                 </div>
 
-                {imagePrincipale && (
-                  <div className="mt-4 overflow-hidden rounded-xl">
-                    <img
+                {nombreImages > 0 && (
+                  <div className="relative mt-4 h-44 overflow-hidden rounded-xl">
+                    <ImageAvecRepli
                       src={imagePrincipale}
                       alt=""
-                      className="h-44 w-full object-cover"
+                      categorie={service.categorie}
+                      className="h-full w-full object-cover"
                     />
+                    {nombreImages > 1 && (
+                      <span className="absolute bottom-2 right-2 rounded-full bg-ink/70 px-2 py-0.5 text-[11px] font-medium text-paper-light">
+                        +{nombreImages - 1}
+                      </span>
+                    )}
                   </div>
                 )}
 
@@ -799,7 +1040,9 @@ export default function MesServicesPage() {
                       size="sm"
                       className="flex items-center justify-center gap-2"
                       onClick={() =>
-                        changerDisponibilite(service)
+                        changerDisponibilite(
+                          service,
+                        )
                       }
                     >
                       {service.disponible ? (
@@ -821,7 +1064,9 @@ export default function MesServicesPage() {
                       variant="ghost"
                       size="sm"
                       className="flex items-center justify-center gap-2"
-                      onClick={() => restaurer(service)}
+                      onClick={() =>
+                        restaurer(service)
+                      }
                     >
                       <ArchiveRestore size={15} />
                       Restaurer
@@ -831,7 +1076,9 @@ export default function MesServicesPage() {
                       variant="ghost"
                       size="sm"
                       className="flex items-center justify-center gap-2"
-                      onClick={() => archiver(service)}
+                      onClick={() =>
+                        archiver(service)
+                      }
                     >
                       <Archive size={15} />
                       Archiver
@@ -853,13 +1100,16 @@ export default function MesServicesPage() {
               </h2>
 
               <p className="mt-1 text-sm text-ink-soft">
-                Modifiez les informations de votre service.
+                Modifiez les informations de votre
+                service.
               </p>
             </div>
 
             <button
               type="button"
-              onClick={() => setServiceEnEdition(null)}
+              onClick={() =>
+                setServiceEnEdition(null)
+              }
               className="rounded-lg p-2 text-ink-soft transition hover:bg-ink/5 hover:text-ink"
               aria-label="Fermer"
             >
@@ -868,19 +1118,34 @@ export default function MesServicesPage() {
           </div>
 
           <FormulaireService
+            key={serviceEnEdition.id}
             mode="edition"
             serviceId={serviceEnEdition.id}
             initialValues={{
-              titre: serviceEnEdition.titre,
-              description: serviceEnEdition.description,
-              categorie: serviceEnEdition.categorie,
-              prix: String(serviceEnEdition.prix),
-              delaiJours: String(Number(serviceEnEdition.delai ?? 0)),
-              disponible: serviceEnEdition.disponible,
-              imageUrl: serviceEnEdition.imagesUrls?.[0] ?? "",
+              titre: serviceEnEdition.titre ?? "",
+              description:
+                serviceEnEdition.description ?? "",
+              categorie:
+                serviceEnEdition.categorie ?? "",
+              prix: String(
+                serviceEnEdition.prix ?? "",
+              ),
+              delaiJours: String(
+                Number(
+                  serviceEnEdition.delai ?? 0,
+                ),
+              ),
+              disponible:
+                serviceEnEdition.disponible ?? true,
+              imagesUrls: serviceEnEdition.imagesUrls ?? [],
+              competences: (
+                serviceEnEdition.competences ?? []
+              ).join(", "),
             }}
             onSuccess={apresEdition}
-            onCancel={() => setServiceEnEdition(null)}
+            onCancel={() =>
+              setServiceEnEdition(null)
+            }
           />
         </NoticeCard>
       )}

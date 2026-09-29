@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Mission } from '../missions/entities/mission.entity';
 import { EtudiantProfile } from '../etudiants/entities/etudiant-profile.entity';
 import { StatutMission } from '../../common/enums/statut-mission.enum';
+import { dateLimiteDepassee } from '../../common/utils/date-limite.util';
 
 export interface ResultatMatching {
   etudiantId: string;
@@ -27,6 +28,7 @@ export interface ResultatMatching {
  * [Next.js, NestJS, PostgreSQL] vs Etudiant maitrisant
  * [Next.js, NestJS, PostgreSQL] = Compatibilite 100%.
  */
+
 @Injectable()
 export class MatchingService {
   private static readonly POIDS_COMPETENCES = 0.7;
@@ -89,12 +91,10 @@ export class MatchingService {
       where: { estModere: true, statut: StatutMission.OUVERTE },
     });
 
-    const maintenant = new Date();
     return missions
-      // Memantique RG3 : date limite strictement passee = expiree.
-      .filter(
-        (mission) => new Date(mission.dateLimite) >= maintenant,
-      )
+      // Semantique RG3 : jour limite strictement passe = expiree (le jour
+      // limite lui-meme reste valable).
+      .filter((mission) => !dateLimiteDepassee(mission.dateLimite))
       .map((mission) => ({
         mission,
         scoreCompatibilite: this.calculerCompatibilite(mission, etudiant).scoreCompatibilite,

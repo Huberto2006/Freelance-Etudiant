@@ -11,6 +11,8 @@ import {
   formatDateCourte,
 } from "@/lib/format";
 import { libelleCategorie } from "@/lib/categories";
+import { getFileUrl } from "@/lib/api";
+import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
 import { Button } from "@/components/ui/Button";
 import { NoticeCard, Tag } from "@/components/ui/Notice";
 import { SkeletonMission } from "@/components/ui/Skeleton";
@@ -174,7 +176,19 @@ function CorpsRecommandations({
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {liste.map(({ mission, scoreCompatibilite }) => (
-        <NoticeCard key={mission.id} className="flex flex-col gap-2.5">
+        <NoticeCard key={mission.id} className="flex flex-col gap-2.5 overflow-hidden">
+          {/* Marges negatives : l'image occupe toute la largeur de la
+              carte malgre le padding par defaut de NoticeCard (p-5). */}
+          <div className="-mx-5 -mt-5 h-28 w-[calc(100%+2.5rem)] overflow-hidden">
+            <ImageAvecRepli
+              src={getFileUrl(mission.imageUrl ?? null)}
+              alt=""
+              categorie={mission.categorie}
+              className="h-full w-full object-cover"
+              tailleIcone={30}
+            />
+          </div>
+
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Tag tone="ocre">{libelleCategorie(mission.categorie)}</Tag>
 

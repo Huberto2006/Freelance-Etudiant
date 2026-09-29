@@ -16,6 +16,7 @@ import { Field, Input, Textarea } from "@/components/ui/Field";
 import { BoutonsReaction } from "@/components/ui/BoutonsReaction";
 import { SectionCommentaires } from "@/components/ui/SectionCommentaires";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
+import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
 
 export default function MissionDetailPage({
   params,
@@ -35,11 +36,15 @@ export default function MissionDetailPage({
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [succes, setSucces] = useState(false);
+  const [erreurChargement, setErreurChargement] = useState(false);
 
   useEffect(() => {
+    setChargement(true);
+    setErreurChargement(false);
     api
       .get<Mission>(`/missions/${id}`, { auth: false })
       .then(setMission)
+      .catch(() => setErreurChargement(true))
       .finally(() => setChargement(false));
   }, [id]);
 
@@ -85,7 +90,9 @@ export default function MissionDetailPage({
               <BriefcaseBusiness size={22} />
             </span>
             <p className="text-sm text-brique">
-              Cette mission est introuvable.
+              {erreurChargement
+                ? "Impossible de charger cette mission pour le moment."
+                : "Cette mission est introuvable."}
             </p>
             <Button variant="secondary" size="sm" href="/missions">
               Retour aux missions
@@ -106,12 +113,13 @@ export default function MissionDetailPage({
         <BoutonRetour repli="/missions" />
       </div>
       {mission.imageUrl && (
-        <div className="mb-6 overflow-hidden rounded-2xl border border-ink/10">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={getFileUrl(mission.imageUrl) ?? undefined}
+        <div className="mb-6 h-64 overflow-hidden rounded-2xl border border-ink/10 sm:h-80">
+          <ImageAvecRepli
+            src={getFileUrl(mission.imageUrl)}
             alt=""
-            className="max-h-96 w-full object-cover"
+            categorie={mission.categorie}
+            className="h-full w-full object-cover"
+            tailleIcone={48}
           />
         </div>
       )}

@@ -72,7 +72,7 @@ export class UploadsController {
         },
 
         filename: (req, file, cb) => {
-          const extension = extname(file.originalname);
+          const extension = extname(file.originalname).toLowerCase();
           const filename = `${randomUUID()}${extension}`;
 
           cb(null, filename);
@@ -126,6 +126,62 @@ export class UploadsController {
     );
   }
 
+  /**
+   * Image de mission ou de service : endpoint DEDIE aux images (JPG, PNG,
+   * WebP). Avant, le selecteur d'image passait par /uploads/document qui
+   * accepte aussi PDF, archives et texte. Les fichiers vont dans
+   * uploads/images ; ceux qui ne sont plus references par aucune mission
+   * ni service sont purges automatiquement (voir UploadsService).
+   */
+  @UseGuards(RolesGuard)
+  @Roles(Role.ETUDIANT, Role.CLIENT)
+  @Post('image')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          cb(null, assurerRepertoire('uploads/images'));
+        },
+
+        filename: (req, file, cb) => {
+          const extension = extname(file.originalname).toLowerCase();
+          cb(null, `${randomUUID()}${extension}`);
+        },
+      }),
+
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+
+      fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+        if (!allowedTypes.includes(file.mimetype)) {
+          return cb(
+            new BadRequestException(
+              'Format non supporté. Utilisez JPG, PNG ou WebP.',
+            ),
+            false,
+          );
+        }
+
+        return verifierExtension(
+          file,
+          ['.jpg', '.jpeg', '.png', '.webp'],
+          'Format non supporté. Utilisez JPG, PNG ou WebP.',
+          cb,
+        );
+      },
+    }),
+  )
+  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Aucune image n’a été envoyée.');
+    }
+
+    return this.uploadsService.formatImageResponse(file);
+  }
+
   @UseGuards(RolesGuard)
   @Roles(Role.ETUDIANT, Role.CLIENT)
   @Post('document')
@@ -137,7 +193,7 @@ export class UploadsController {
         },
 
         filename: (req, file, cb) => {
-          const extension = extname(file.originalname);
+          const extension = extname(file.originalname).toLowerCase();
           const filename = `${randomUUID()}${extension}`;
 
           cb(null, filename);

@@ -15,6 +15,7 @@ import {
 
 import { api, ApiError } from "@/lib/api";
 import type { Mission, ServiceOffert } from "@/lib/types";
+import { cleCategorie } from "@/lib/categories";
 
 import {
   PanneauFiltres,
@@ -95,6 +96,7 @@ function PublicationsContent() {
   const [services, setServices] = useState<ServiceOffert[]>([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [erreurPartielle, setErreurPartielle] = useState<string | null>(null);
 
   const [typeActif, setTypeActif] = useState<TypeFiltrePublication>(() =>
     typeDepuisUrl(searchParams),
@@ -139,6 +141,12 @@ function PublicationsContent() {
 
         if (resMissions.status === "rejected" && resServices.status === "rejected") {
           setErreur("Impossible de charger le catalogue de publications pour le moment.");
+        } else if (resMissions.status === "rejected") {
+          setErreurPartielle("Les missions n'ont pas pu être chargées ; seuls les services sont affichés.");
+        } else if (resServices.status === "rejected") {
+          setErreurPartielle("Les services n'ont pas pu être chargés ; seules les missions sont affichées.");
+        } else {
+          setErreurPartielle(null);
         }
       } catch (err) {
         if (annule) return;
@@ -192,13 +200,13 @@ function PublicationsContent() {
     // 2. Filtre de catégorie (si sélectionnée dans le sous-menu)
     let resultat = items;
     if (onglet.type === "categorie") {
-      const cat = onglet.valeur.toLowerCase();
+      const cat = cleCategorie(onglet.valeur);
       resultat = resultat.filter((item) => {
         const catItem =
           item.type === "mission"
             ? item.mission.categorie
             : item.service.categorie;
-        return catItem?.toLowerCase() === cat;
+        return catItem ? cleCategorie(catItem) === cat : false;
       });
     }
 
@@ -252,6 +260,28 @@ function PublicationsContent() {
     }
 
     // 6. Tri
+    // « Meilleurs » compare des grandeurs de nature differente (note sur 5
+    // des services, budget en Ariary des missions) : les normaliser entre 0
+    // et 1 (par rapport au maximum observe dans CE lot de resultats) avant
+    // de les comparer evite qu'un des deux types domine systematiquement
+    // l'autre.
+    const budgetMaximal = Math.max(
+      1,
+      ...resultat
+        .filter((item): item is Extract<PublicationItem, { type: "mission" }> => item.type === "mission")
+        .map((item) => Number(item.mission.budget) || 0),
+    );
+    const noteMaximale = Math.max(
+      1,
+      ...resultat
+        .filter((item): item is Extract<PublicationItem, { type: "service" }> => item.type === "service")
+        .map((item) => Number(item.service.etudiant?.noteMoyenne ?? 0)),
+    );
+    const scoreQualite = (item: PublicationItem): number =>
+      item.type === "service"
+        ? Number(item.service.etudiant?.noteMoyenne ?? 0) / noteMaximale
+        : Number(item.mission.budget) / budgetMaximal;
+
     return resultat.sort((a, b) => {
       if (triOption === "prix_asc") {
         const prixA =
@@ -270,15 +300,7 @@ function PublicationsContent() {
       }
 
       if (triOption === "meilleurs" || (onglet.type === "mode" && onglet.valeur === "meilleurs")) {
-        const qualiteA =
-          a.type === "service"
-            ? Number(a.service.etudiant?.noteMoyenne ?? 0) * 1000
-            : Number(a.mission.budget);
-        const qualiteB =
-          b.type === "service"
-            ? Number(b.service.etudiant?.noteMoyenne ?? 0) * 1000
-            : Number(b.mission.budget);
-        return qualiteB - qualiteA;
+        return scoreQualite(b) - scoreQualite(a);
       }
 
       // Par défaut : tri chronologique (plus récent au plus ancien)
@@ -336,6 +358,10 @@ function PublicationsContent() {
               {chargement ? "…" : `${nbServicesTotal} services proposés`}
             </span>
           </div>
+
+          {erreurPartielle && !chargement && (
+            <p className="mt-2 text-xs text-brique">{erreurPartielle}</p>
+          )}
         </div>
 
         {/* Accès direct contextuel selon le rôle */}

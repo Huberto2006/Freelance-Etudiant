@@ -18,6 +18,7 @@ import {
   type PieceJointeValeur,
 } from "@/components/ui/PieceJointe";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
+import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
 
 export default function ServiceDetailPage({
   params,
@@ -37,8 +38,11 @@ export default function ServiceDetailPage({
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [succes, setSucces] = useState(false);
+  const [erreurChargement, setErreurChargement] = useState(false);
 
   useEffect(() => {
+    setChargement(true);
+    setErreurChargement(false);
     api
       .get<ServiceOffert>(`/services/${id}`, { auth: false })
       .then((data) => {
@@ -46,6 +50,7 @@ export default function ServiceDetailPage({
         setBudgetPropose(String(data.prix));
         setDelaiSouhaite(String(data.delai));
       })
+      .catch(() => setErreurChargement(true))
       .finally(() => setChargement(false));
   }, [id]);
 
@@ -93,7 +98,9 @@ export default function ServiceDetailPage({
               <Wrench size={22} />
             </span>
             <p className="text-sm text-brique">
-              Ce service est introuvable.
+              {erreurChargement
+                ? "Impossible de charger ce service pour le moment."
+                : "Ce service est introuvable."}
             </p>
             <Button variant="secondary" size="sm" href="/services">
               Retour aux services
@@ -114,12 +121,13 @@ export default function ServiceDetailPage({
       </div>
 
       {service.imagesUrls?.[0] && (
-        <div className="mb-6 overflow-hidden rounded-2xl border border-ink/10">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={getFileUrl(service.imagesUrls[0]) ?? undefined}
+        <div className="mb-6 h-64 overflow-hidden rounded-2xl border border-ink/10 sm:h-80">
+          <ImageAvecRepli
+            src={getFileUrl(service.imagesUrls[0])}
             alt=""
-            className="max-h-96 w-full object-cover"
+            categorie={service.categorie}
+            className="h-full w-full object-cover"
+            tailleIcone={48}
           />
         </div>
       )}
@@ -127,13 +135,18 @@ export default function ServiceDetailPage({
       {service.imagesUrls && service.imagesUrls.length > 1 && (
         <div className="mb-6 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:thin]">
           {service.imagesUrls.slice(1, 5).map((image, index) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <div
               key={index}
-              src={getFileUrl(image) ?? undefined}
-              alt=""
-              className="h-20 w-28 shrink-0 rounded-lg border border-ink/10 object-cover"
-            />
+              className="h-20 w-28 shrink-0 overflow-hidden rounded-lg border border-ink/10"
+            >
+              <ImageAvecRepli
+                src={getFileUrl(image)}
+                alt=""
+                categorie={service.categorie}
+                className="h-full w-full object-cover"
+                tailleIcone={20}
+              />
+            </div>
           ))}
         </div>
       )}
