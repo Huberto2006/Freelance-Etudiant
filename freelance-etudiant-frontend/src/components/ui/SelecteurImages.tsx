@@ -90,6 +90,14 @@ export function SelecteurImages({
 
   return (
     <div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={TYPES_ACCEPTES.join(",")}
+        multiple
+        className="hidden"
+        onChange={onFichiersChoisis}
+      />
       <div className="flex flex-wrap gap-3">
         {valeur.map((url, index) => (
           <div
