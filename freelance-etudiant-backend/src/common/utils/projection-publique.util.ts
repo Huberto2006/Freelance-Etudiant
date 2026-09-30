@@ -3,6 +3,7 @@ import type { ServiceOffert } from '../../modules/services/entities/service.enti
 import type { ClientProfile } from '../../modules/clients/entities/client-profile.entity';
 import type { EtudiantProfile } from '../../modules/etudiants/entities/etudiant-profile.entity';
 import type { Utilisateur } from '../../modules/users/entities/utilisateur.entity';
+import type { Commentaire } from '../../modules/commentaires/entities/commentaire.entity';
 
 /**
  * Projections PUBLIQUES des missions et services.
@@ -82,5 +83,20 @@ export function projeterService(service: ServiceOffert) {
     etudiantId: service.etudiantId,
     dateCreation: service.dateCreation,
     etudiant: projeterEtudiant(service.etudiant),
+  };
+}
+
+export type CommentairePublic = ReturnType<typeof projeterCommentaire>;
+
+export function projeterCommentaire(commentaire: Commentaire) {
+  return {
+    id: commentaire.id,
+    contenu: commentaire.contenu,
+    auteurId: commentaire.auteurId,
+    cibleType: commentaire.cibleType,
+    cibleId: commentaire.cibleId,
+    dateCreation: commentaire.dateCreation,
+    dateModification: commentaire.dateModification,
+    auteur: projeterUtilisateur(commentaire.auteur),
   };
 }

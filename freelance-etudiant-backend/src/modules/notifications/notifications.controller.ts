@@ -1,4 +1,11 @@
-import { Controller, Delete, Get, Param, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -25,7 +32,7 @@ export class NotificationsController {
 
   @Patch(':id/lue')
   @ApiOperation({ summary: 'Marquer une notification comme lue' })
-  async marquerLue(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async marquerLue(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     await this.notificationsService.marquerLue(id, user.id);
     return { message: 'Notification marquee comme lue' };
   }
@@ -50,7 +57,7 @@ export class NotificationsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Supprimer une de mes notifications' })
-  async supprimer(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async supprimer(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     await this.notificationsService.supprimer(id, user.id);
     return { message: 'Notification supprimee' };
   }

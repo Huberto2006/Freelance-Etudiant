@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   Bell,
@@ -9,9 +9,10 @@ import {
   Trash2,
 } from "lucide-react";
 
-import { api, ApiError } from "@/lib/api";
+import { api } from "@/lib/api";
 import type { NotificationItem } from "@/lib/types";
 import { formatDateCourte } from "@/lib/format";
+import { useApiList } from "@/hooks/useApiList";
 
 import { Button } from "@/components/ui/Button";
 import {
@@ -24,67 +25,32 @@ import { SousNavigation } from "@/components/ui/SousNavigation";
 import { clsx } from "clsx";
 
 export default function NotificationsPage() {
-  const [
-    notifications,
-    setNotifications,
-  ] = useState<NotificationItem[]>([]);
+  const {
+    donnees,
+    setDonnees,
+    chargement,
+    erreur,
+  } = useApiList(() => api.get<NotificationItem[]>("/notifications"));
+  const notifications = donnees ?? [];
+
+  // setDonnees attend le state precedent OU une valeur directe (comme
+  // useState) : les mises a jour optimistes ci-dessous passent une
+  // fonction, exactement comme avec l'ancien setNotifications local.
+  const setNotifications = (
+    valeur:
+      | NotificationItem[]
+      | ((prev: NotificationItem[]) => NotificationItem[]),
+  ) => {
+    setDonnees((prev) => {
+      const base = prev ?? [];
+      return typeof valeur === "function" ? valeur(base) : valeur;
+    });
+  };
 
   // Sous-menu actif : Toutes / Non lues / Lues
   const [ongletActif, setOngletActif] = useState(
     "toutes",
   );
-
-  const [chargement, setChargement] =
-    useState(true);
-
-  const [erreur, setErreur] =
-    useState<string | null>(null);
-
-  // ==========================================================
-  // CHARGEMENT INITIAL
-  // ==========================================================
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function chargerInitial() {
-      try {
-        setErreur(null);
-
-        const data =
-          await api.get<NotificationItem[]>(
-            "/notifications",
-          );
-
-        if (!cancelled) {
-          setNotifications(data);
-        }
-      } catch (error) {
-        console.error(
-          "Erreur lors du chargement des notifications :",
-          error,
-        );
-
-        if (!cancelled) {
-          setErreur(
-            error instanceof ApiError
-              ? error.message
-              : "Impossible de charger les notifications.",
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setChargement(false);
-        }
-      }
-    }
-
-    void chargerInitial();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   // ==========================================================
   // MARQUER UNE NOTIFICATION COMME LUE

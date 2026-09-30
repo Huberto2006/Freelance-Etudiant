@@ -29,6 +29,16 @@ import type { StringValue } from "ms";
 const SALT_ROUNDS = 12;
 const RESET_PASSWORD_EXPIRE_MINUTES = 60;
 /**
+ * Hash bcrypt factice (mot de passe aleatoire, jamais utilise ailleurs)
+ * compare quand l'email n'existe pas, pour que login() prenne le meme
+ * temps qu'un email existant : sans cela, l'absence de hash a comparer
+ * ferait echouer plus vite qu'un vrai email + mauvais mot de passe,
+ * revelant par le TEMPS de reponse qu'un email n'est pas inscrit (meme
+ * categorie de risque que l'enumeration par message d'erreur, RG-AUTH2).
+ */
+const HASH_FACTICE_TEMPS_CONSTANT =
+  "$2b$12$CwTycUXWue0Thq9StjUM0uJ8u8YKqGpDpZ/W5Wm1UEeJwOr2YrLTa";
+/**
  * Verification de l'adresse email : duree de validite du jeton envoye par
  * email (le lien ne fonctionne plus au-dela) et delai minimal entre deux
  * renvois (anti-abus).
@@ -109,9 +119,29 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const utilisateur = await this.usersService.findByEmail(dto.email);
-    if (!utilisateur) {
+
+    // Defense contre l'enumeration de comptes (OWASP API2 / A07:2021) :
+    // le mot de passe est verifie AVANT toute divulgation de l'etat du
+    // compte (suspendu, email non verifie). Sans cela, un attaquant sans
+    // le bon mot de passe pouvait deja distinguer "email inexistant"
+    // ("Identifiants invalides") de "email existant mais suspendu" ou
+    // "existant mais non verifie" (messages differents), ce qui permet de
+    // reconstituer la liste des emails inscrits sur la plateforme. Un
+    // compte inexistant compare quand meme contre un hash bcrypt factice
+    // (temps constant) pour qu'un attaquant ne puisse pas non plus
+    // distinguer "email inexistant" de "mauvais mot de passe" par le
+    // temps de reponse.
+    const motDePasseValide = await bcrypt.compare(
+      dto.motDePasse,
+      utilisateur?.motDePasse ?? HASH_FACTICE_TEMPS_CONSTANT,
+    );
+    if (!utilisateur || !motDePasseValide) {
       throw new UnauthorizedException("Identifiants invalides");
     }
+
+    // A partir d'ici, le mot de passe est confirme correct : reveler
+    // l'etat du compte au legitime proprietaire ne cree plus de risque
+    // d'enumeration (il connait deja son propre email).
     if (utilisateur.estSuspendu || !utilisateur.estActif) {
       throw new UnauthorizedException("Ce compte est suspendu ou desactive");
     }
@@ -119,13 +149,6 @@ export class AuthService {
       throw new UnauthorizedException(
         "Votre adresse email n'a pas encore ete verifiee. Consultez votre boite de reception et cliquez sur le lien de verification recu a l'inscription.",
       );
-    }
-    const motDePasseValide = await bcrypt.compare(
-      dto.motDePasse,
-      utilisateur.motDePasse,
-    );
-    if (!motDePasseValide) {
-      throw new UnauthorizedException("Identifiants invalides");
     }
     return this.buildAuthResponse(
       utilisateur.id,

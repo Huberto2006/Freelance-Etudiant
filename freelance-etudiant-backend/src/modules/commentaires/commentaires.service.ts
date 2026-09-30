@@ -13,6 +13,7 @@ import { Role } from '../../common/enums/role.enum';
 import { UsersService } from '../users/users.service';
 import { CommentairesGateway } from './commentaires.gateway';
 import { VerificationCibleService } from '../../common/services/verification-cible.service';
+import { projeterCommentaire, CommentairePublic } from '../../common/utils/projection-publique.util';
 
 /**
  * Forme de la reponse de GET /commentaires/mentions-suggestions.
@@ -66,7 +67,7 @@ export class CommentairesService {
   async creer(
     auteurId: string,
     dto: CreerCommentaireDto,
-  ): Promise<Commentaire> {
+  ): Promise<CommentairePublic> {
     // RG-068 : verifier AVANT ecriture que la cible (mission ou service)
     // existe reellement et que le type est autorise. Sans cette
     // verification, un commentaire pourrait etre persiste pointant vers
@@ -121,12 +122,17 @@ export class CommentairesService {
     }
 
     const commentaireComplet = await this.findOne(saved.id);
+    const commentairePublic = projeterCommentaire(commentaireComplet);
 
+    // Diffuse en temps reel via WebSocket : la room est rejoignable sans
+    // authentification (voir CommentairesGateway), donc seule la version
+    // projetee (sans email/googleId/etat de compte) doit y circuler —
+    // jamais l'entite complete.
     this.commentairesGateway.diffuserNouveauCommentaire(
-      commentaireComplet,
+      commentairePublic,
     );
 
-    return commentaireComplet;
+    return commentairePublic;
   }
 
   async findOne(id: string): Promise<Commentaire> {
@@ -140,15 +146,21 @@ export class CommentairesService {
     return commentaire;
   }
 
+  /**
+   * Liste PUBLIQUE des commentaires d'une mission/d'un service : l'auteur
+   * est projete en liste blanche (jamais son email, son googleId ni son
+   * etat de compte, contrairement a l'entite complete chargee ci-dessous).
+   */
   async findByCible(
     cibleType: TypeCibleContenu,
     cibleId: string,
-  ): Promise<Commentaire[]> {
-    return this.repo.find({
+  ): Promise<CommentairePublic[]> {
+    const commentaires = await this.repo.find({
       where: { cibleType, cibleId },
       relations: ['auteur'],
       order: { dateCreation: 'ASC' },
     });
+    return commentaires.map(projeterCommentaire);
   }
 
   /**
@@ -158,7 +170,7 @@ export class CommentairesService {
     id: string,
     auteurId: string,
     dto: ModifierCommentaireDto,
-  ): Promise<Commentaire> {
+  ): Promise<CommentairePublic> {
     const commentaire = await this.findOne(id);
     if (commentaire.auteurId !== auteurId) {
       throw new ForbiddenException(
@@ -190,12 +202,13 @@ export class CommentairesService {
     );
 
     const commentaireModifie = await this.findOne(id);
+    const commentaireModifiePublic = projeterCommentaire(commentaireModifie);
 
     this.commentairesGateway.diffuserCommentaireModifie(
-      commentaireModifie,
+      commentaireModifiePublic,
     );
 
-    return commentaireModifie;
+    return commentaireModifiePublic;
   }
 
   /**
