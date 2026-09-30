@@ -3,7 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EtudiantProfile } from './entities/etudiant-profile.entity';
 import { UpdateEtudiantProfileDto } from './dto/update-etudiant-profile.dto';
+import { FiltrerEtudiantsDto } from './dto/filtrer-etudiants.dto';
 import { ProfileCompletionService } from '../profile-completion/profile-completion.service';
+import { projeterEtudiant } from '../../common/utils/projection-publique.util';
 
 @Injectable()
 export class EtudiantsService {
@@ -24,17 +26,44 @@ export class EtudiantsService {
     return profil;
   }
 
-  async findAll(competence?: string): Promise<EtudiantProfile[]> {
+  /**
+   * Annuaire PUBLIC des etudiants (GET /etudiants) : projection en liste
+   * blanche (jamais d'email, de telephone ni d'etat de compte) et
+   * pagination (evite qu'un script aspire tout l'annuaire en un appel).
+   */
+  async findAll(filtres: FiltrerEtudiantsDto) {
     const query = this.repo
       .createQueryBuilder('etudiant')
       .leftJoinAndSelect('etudiant.utilisateur', 'utilisateur')
       .where('utilisateur.estActif = true')
       .andWhere('utilisateur.estSuspendu = false');
 
-    if (competence) {
-      query.andWhere(':competence = ANY(etudiant.competences)', { competence });
+    if (filtres.competence) {
+      query.andWhere(':competence = ANY(etudiant.competences)', {
+        competence: filtres.competence,
+      });
     }
-    return query.orderBy('etudiant.scoreReputation', 'DESC').getMany();
+
+    const limite = filtres.limite ?? 50;
+    const page = filtres.page ?? 1;
+    const etudiants = await query
+      .orderBy('etudiant.scoreReputation', 'DESC')
+      .take(limite)
+      .skip((page - 1) * limite)
+      .getMany();
+
+    return etudiants.map(projeterEtudiant);
+  }
+
+  /**
+   * Fiche PUBLIQUE d'un etudiant (GET /etudiants/:id) : meme projection
+   * que findAll, jamais l'entite complete (voir clients.controller.ts qui
+   * appliquait deja ce filtrage — etudiants.controller.ts ne le faisait
+   * pas, exposant email/telephone/etat de compte a tout visiteur).
+   */
+  async findOnePublic(utilisateurId: string) {
+    const profil = await this.findByUtilisateurId(utilisateurId);
+    return projeterEtudiant(profil);
   }
 
   /**

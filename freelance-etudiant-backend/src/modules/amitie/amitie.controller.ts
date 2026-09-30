@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -59,7 +60,7 @@ export class AmitieController {
   @Post('demandes/:id/accepter')
   @ApiOperation({ summary: "Accepter une demande d'amitié reçue" })
   async accepter(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.amitieService.accepter(id, user);
@@ -72,7 +73,7 @@ export class AmitieController {
   @Post('demandes/:id/refuser')
   @ApiOperation({ summary: "Refuser une demande d'amitié reçue" })
   async refuser(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.amitieService.refuser(id, user);

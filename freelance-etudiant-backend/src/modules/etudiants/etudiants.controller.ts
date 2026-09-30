@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { EtudiantsService } from './etudiants.service';
 import { UpdateEtudiantProfileDto } from './dto/update-etudiant-profile.dto';
+import { FiltrerEtudiantsDto } from './dto/filtrer-etudiants.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -16,16 +17,16 @@ export class EtudiantsController {
 
   @Public()
   @Get()
-  @ApiOperation({ summary: 'Recherche/annuaire des etudiants (filtre par competence)' })
-  async findAll(@Query('competence') competence?: string) {
-    return this.etudiantsService.findAll(competence);
+  @ApiOperation({ summary: 'Recherche/annuaire des etudiants (filtre par competence, pagine)' })
+  async findAll(@Query() filtres: FiltrerEtudiantsDto) {
+    return this.etudiantsService.findAll(filtres);
   }
 
   @Public()
   @Get(':id')
-  @ApiOperation({ summary: "Consulter la fiche publique d'un etudiant" })
-  async findOne(@Param('id') id: string) {
-    return this.etudiantsService.findByUtilisateurId(id);
+  @ApiOperation({ summary: "Consulter la fiche publique d'un etudiant (projection sans donnees privees)" })
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.etudiantsService.findOnePublic(id);
   }
 
   @UseGuards(RolesGuard)

@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SignalementsService } from './signalements.service';
 import { CreateSignalementDto, TraiterSignalementDto } from './dto/signalement.dto';
@@ -35,7 +45,7 @@ export class SignalementsController {
   @Roles(Role.ADMIN)
   @Get(':id')
   @ApiOperation({ summary: "Consulter le detail d'un signalement" })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.signalementsService.findOne(id);
   }
 
@@ -43,7 +53,7 @@ export class SignalementsController {
   @Patch(':id/traiter')
   @ApiOperation({ summary: 'Traiter et cloturer un signalement (RG11)' })
   async traiter(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: TraiterSignalementDto,
   ) {

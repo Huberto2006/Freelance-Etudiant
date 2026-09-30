@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { api } from "@/lib/api";
@@ -9,38 +8,42 @@ import { formatArgent } from "@/lib/format";
 import { NoticeCard, PageHeader } from "@/components/ui/Notice";
 import { FavoriBouton } from "@/components/ui/FavoriBouton";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
+import { useApiList } from "@/hooks/useApiList";
+
+type FavorisEnrichis = {
+  favoris: Favori[];
+  missions: Record<string, Mission>;
+  services: Record<string, ServiceOffert>;
+  etudiants: Record<string, EtudiantProfile>;
+};
+
+async function chargerFavoris(): Promise<FavorisEnrichis> {
+  const liste = await api.get<Favori[]>("/favoris");
+
+  const missionsIds = liste.filter((f) => f.cibleType === "mission").map((f) => f.cibleId);
+  const servicesIds = liste.filter((f) => f.cibleType === "service").map((f) => f.cibleId);
+  const etudiantsIds = liste.filter((f) => f.cibleType === "etudiant").map((f) => f.cibleId);
+
+  const [missionsData, servicesData, etudiantsData] = await Promise.all([
+    Promise.all(missionsIds.map((id) => api.get<Mission>(`/missions/${id}`))),
+    Promise.all(servicesIds.map((id) => api.get<ServiceOffert>(`/services/${id}`))),
+    Promise.all(etudiantsIds.map((id) => api.get<EtudiantProfile>(`/etudiants/${id}`))),
+  ]);
+
+  return {
+    favoris: liste,
+    missions: Object.fromEntries(missionsData.map((m) => [m.id, m])),
+    services: Object.fromEntries(servicesData.map((s) => [s.id, s])),
+    etudiants: Object.fromEntries(etudiantsData.map((e) => [e.utilisateurId, e])),
+  };
+}
 
 export default function FavorisPage() {
-  const [favoris, setFavoris] = useState<Favori[]>([]);
-  const [missions, setMissions] = useState<Record<string, Mission>>({});
-  const [services, setServices] = useState<Record<string, ServiceOffert>>({});
-  const [etudiants, setEtudiants] = useState<Record<string, EtudiantProfile>>({});
-  const [chargement, setChargement] = useState(true);
-
-  useEffect(() => {
-    api
-      .get<Favori[]>("/favoris")
-      .then(async (liste) => {
-        setFavoris(liste);
-
-        const missionsIds = liste.filter((f) => f.cibleType === "mission").map((f) => f.cibleId);
-        const servicesIds = liste.filter((f) => f.cibleType === "service").map((f) => f.cibleId);
-        const etudiantsIds = liste.filter((f) => f.cibleType === "etudiant").map((f) => f.cibleId);
-
-        const [missionsData, servicesData, etudiantsData] = await Promise.all([
-          Promise.all(missionsIds.map((id) => api.get<Mission>(`/missions/${id}`))),
-          Promise.all(servicesIds.map((id) => api.get<ServiceOffert>(`/services/${id}`))),
-          Promise.all(etudiantsIds.map((id) => api.get<EtudiantProfile>(`/etudiants/${id}`))),
-        ]);
-
-        setMissions(Object.fromEntries(missionsData.map((m) => [m.id, m])));
-        setServices(Object.fromEntries(servicesData.map((s) => [s.id, s])));
-        setEtudiants(
-          Object.fromEntries(etudiantsData.map((e) => [e.utilisateurId, e])),
-        );
-      })
-      .finally(() => setChargement(false));
-  }, []);
+  const { donnees, chargement, erreur } = useApiList(chargerFavoris);
+  const favoris = donnees?.favoris ?? [];
+  const missions = donnees?.missions ?? {};
+  const services = donnees?.services ?? {};
+  const etudiants = donnees?.etudiants ?? {};
 
   if (chargement) {
     return <p className="mx-auto max-w-3xl px-5 py-16 text-sm text-ink-soft">Chargement…</p>;
@@ -54,7 +57,11 @@ export default function FavorisPage() {
 
       <PageHeader icon={Heart} eyebrow="Mes sauvegardes" title="Favoris" />
 
-      {favoris.length === 0 ? (
+      {erreur && (
+        <NoticeCard className="mb-4 text-sm text-brique">{erreur}</NoticeCard>
+      )}
+
+      {favoris.length === 0 && !erreur ? (
         <NoticeCard className="flex flex-col items-center gap-3 py-10 text-center">
           <Heart size={28} className="text-ink-soft/50" />
           <p className="text-sm text-ink-soft/70">

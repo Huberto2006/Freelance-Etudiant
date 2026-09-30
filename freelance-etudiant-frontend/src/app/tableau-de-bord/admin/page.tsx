@@ -1,91 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { ShieldCheck, ShieldAlert, Mail, CalendarDays } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Utilisateur } from "@/lib/types";
 import { formatDate } from "@/lib/format";
+import { useApiList } from "@/hooks/useApiList";
 import { roleLabel } from "@/lib/auth-context";
 import { Button } from "@/components/ui/Button";
 import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 export default function AdminPage() {
-  const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
-  const [chargement, setChargement] = useState(true);
-  const [erreur, setErreur] = useState<string | null>(null);
-
-  /**
-   * Recharge la liste des utilisateurs.
-   * Utilisée après une suspension ou une réactivation.
-   */
-  const charger = useCallback(async () => {
-    setChargement(true);
-    setErreur(null);
-
-    try {
-      const data = await api.get<Utilisateur[]>(
-        "/admin/utilisateurs"
-      );
-
-      setUtilisateurs(data);
-    } catch (error) {
-      console.error(
-        "Erreur lors du chargement des utilisateurs :",
-        error
-      );
-
-      setErreur(
-        "Impossible de charger la liste des utilisateurs."
-      );
-    } finally {
-      setChargement(false);
-    }
-  }, []);
-
-  /**
-   * Chargement initial.
-   *
-   * On ne fait pas appel à charger() ici car celui-ci
-   * modifie immédiatement l'état avec setChargement(true).
-   */
-  useEffect(() => {
-    let cancelled = false;
-
-    const chargerInitial = async () => {
-      try {
-        const data = await api.get<Utilisateur[]>(
-          "/admin/utilisateurs"
-        );
-
-        if (!cancelled) {
-          setUtilisateurs(data);
-          setErreur(null);
-        }
-      } catch (error) {
-        console.error(
-          "Erreur lors du chargement initial :",
-          error
-        );
-
-        if (!cancelled) {
-          setErreur(
-            "Impossible de charger la liste des utilisateurs."
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setChargement(false);
-        }
-      }
-    };
-
-    chargerInitial();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // L'ancienne version de cette page dupliquait cette meme requete deux
+  // fois (un useEffect pour le chargement initial, un charger() distinct
+  // pour le rechargement apres action) : deux copies du meme code, deja
+  // legerement divergentes (l'une gerait l'annulation, l'autre non).
+  // useApiList centralise les deux en un seul endroit.
+  const {
+    donnees,
+    chargement,
+    erreur,
+    setErreur,
+    recharger: charger,
+  } = useApiList(() => api.get<Utilisateur[]>("/admin/utilisateurs"));
+  const utilisateurs = donnees ?? [];
 
   /**
    * Suspendre un utilisateur.

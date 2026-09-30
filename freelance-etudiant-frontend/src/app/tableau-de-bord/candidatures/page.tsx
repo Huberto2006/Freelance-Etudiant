@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ClipboardList, MessageCircle, Package } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
 import type { Candidature } from "@/lib/types";
+import { useApiList } from "@/hooks/useApiList";
 import { SousNavigation } from "@/components/ui/SousNavigation";
 
 import { formatArgent, statutCandidatureLabel } from "@/lib/format";
@@ -16,57 +17,27 @@ import { Field, Input, Textarea } from "@/components/ui/Field";
 import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
 
 export default function CandidaturesPage() {
-  const [candidatures, setCandidatures] = useState<Candidature[]>([]);
+  const { donnees, setDonnees, chargement, erreur, setErreur } = useApiList(() =>
+    api.get<Candidature[]>("/candidatures/me"),
+  );
+  const candidatures = donnees ?? [];
+  const setCandidatures = (
+    valeur: Candidature[] | ((prev: Candidature[]) => Candidature[]),
+  ) => {
+    setDonnees((prev) => {
+      const base = prev ?? [];
+      return typeof valeur === "function" ? valeur(base) : valeur;
+    });
+  };
 
   // Sous-menu actif : En attente / Acceptées / Refusées
   const [ongletCandidatures, setOngletCandidatures] = useState("toutes");
 
-  const [chargement, setChargement] = useState(true);
-
-  const [erreur, setErreur] = useState<string | null>(null);
   const [editionId, setEditionId] = useState<string | null>(null);
   const [prixEdition, setPrixEdition] = useState("");
   const [delaiEdition, setDelaiEdition] = useState("");
   const [messageEdition, setMessageEdition] = useState("");
   const [actionEnCours, setActionEnCours] = useState<string | null>(null);
-
-  /*
-   * Chargement initial.
-   */
-  useEffect(() => {
-    let cancelled = false;
-
-    async function chargerInitial() {
-      try {
-        const data = await api.get<Candidature[]>("/candidatures/me");
-
-        if (!cancelled) {
-          setCandidatures(data);
-          setErreur(null);
-        }
-      } catch (error) {
-        console.error("Erreur lors du chargement des candidatures :", error);
-
-        if (!cancelled) {
-          setErreur(
-            error instanceof ApiError
-              ? error.message
-              : "Impossible de charger vos candidatures.",
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setChargement(false);
-        }
-      }
-    }
-
-    chargerInitial();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   /**
    * Récupère l'identifiant du client.

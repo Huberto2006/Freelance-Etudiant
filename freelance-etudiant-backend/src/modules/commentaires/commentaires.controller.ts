@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -72,7 +73,7 @@ export class CommentairesController {
   @Patch(':id')
   @ApiOperation({ summary: 'Modifier mon propre commentaire' })
   async modifier(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: ModifierCommentaireDto,
   ) {
@@ -83,7 +84,7 @@ export class CommentairesController {
   @ApiBearerAuth()
   @Delete(':id')
   @ApiOperation({ summary: 'Supprimer mon propre commentaire (ou moderation admin)' })
-  async supprimer(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async supprimer(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     await this.commentairesService.supprimer(id, user.id, user.role === Role.ADMIN);
     return { message: 'Commentaire supprimé' };
   }
