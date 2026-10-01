@@ -27,6 +27,7 @@ import {
 
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
+import { formatArgent } from "@/lib/format";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { MessageVide, NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
@@ -631,9 +632,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
                   <p className="mt-1 font-display text-xl font-semibold">
                     {profil?.tarifHoraire != null
-                      ? `${Number(profil.tarifHoraire).toLocaleString(
-                          "fr-FR",
-                        )} Ar`
+                      ? formatArgent(profil.tarifHoraire)
                       : "Non renseigné"}
                   </p>
 
@@ -642,11 +641,11 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                     <p className="mt-1 text-xs text-ink-soft">
                       Fourchette :{" "}
                       {profil?.tarifMinimum != null
-                        ? `${Number(profil.tarifMinimum).toLocaleString("fr-FR")} Ar`
+                        ? formatArgent(profil.tarifMinimum)
                         : "—"}{" "}
                       –{" "}
                       {profil?.tarifMaximum != null
-                        ? `${Number(profil.tarifMaximum).toLocaleString("fr-FR")} Ar`
+                        ? formatArgent(profil.tarifMaximum)
                         : "—"}
                     </p>
                   )}

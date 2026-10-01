@@ -476,12 +476,19 @@ export class LivraisonsService {
     const saved = livraison;
 
     // ============================================================
-    // RG (fin de projet) : la validation de la livraison rend le
-    // PAIEMENT obligatoire, puis l'EVALUATION obligatoire. La mission
-    // n'est PAS marquee TERMINEE ici : elle le sera uniquement apres
-    // l'evaluation (voir EvaluationsService.create), une fois les trois
-    // conditions reunies : livraison validee + paiement confirme +
-    // evaluation effectuee.
+    // RG (fin de projet, modele sequestre) : le paiement a pu etre
+    // effectue et confirme AVANT cette validation (des l'acceptation de
+    // la candidature, voir PaiementsService.creer). La validation de la
+    // livraison est donc desormais l'evenement qui LIBERE les fonds
+    // deja confirmes, le cas echeant (libererSiConfirmee ne fait rien
+    // si aucun paiement CONFIRMEE n'existe encore pour cette
+    // candidature — le client pourra alors payer apres coup, et
+    // PaiementsService.marquerConfirmee liberera immediatement puisque
+    // la livraison est deja validee a ce moment-la).
+    // La mission n'est PAS marquee TERMINEE ici : elle le sera
+    // uniquement apres l'evaluation (voir EvaluationsService.create),
+    // une fois les trois conditions reunies : livraison validee +
+    // paiement confirme + evaluation effectuee.
     // ============================================================
 
     // Notification à l'étudiant
@@ -494,12 +501,16 @@ export class LivraisonsService {
 
       titre: "Livraison validée",
 
-      message: `Votre livraison pour "${livraison.candidature.mission.titre}" a été validée. Le client va procéder au paiement.`,
+      message: `Votre livraison pour "${livraison.candidature.mission.titre}" a été validée.`,
 
       lienUrl: `/tableau-de-bord/livraisons?candidature=${encodeURIComponent(livraison.candidatureId)}`,
     });
 
-    // Paiement
+    // Libere les fonds si un paiement a deja ete confirme avant cette
+    // validation (ordre A du modele sequestre). Si aucun paiement
+    // confirme n'existe encore, cette fonction ne fait rien : la
+    // liberation se fera depuis PaiementsService.marquerConfirmee au
+    // moment ou le client paiera (ordre B).
     await this.paiementsService.libererSiConfirmee(
       livraison.candidatureId,
     );

@@ -81,8 +81,14 @@ export class PaiementsService {
   ) {}
 
   /**
-   * Création d'un paiement pour une candidature acceptée dont la livraison
-   * a été validée par le client.
+   * Création d'un paiement pour une candidature ACCEPTÉE (modèle
+   * sequestre/escrow) : le client peut payer dès l'acceptation, AVANT
+   * meme que l'etudiant ait livre. Les fonds restent au statut CONFIRMEE
+   * jusqu'a la validation de la livraison par le client, moment ou ils
+   * sont automatiquement LIBERES (voir libererSiConfirmee, appelee aussi
+   * bien ici — si la livraison est deja validee au moment de la
+   * confirmation — que depuis LivraisonsService.valider() — si le
+   * paiement a ete confirme avant la livraison).
    *
    * Deux voies :
    *
@@ -93,11 +99,19 @@ export class PaiementsService {
    *
    * 2. Virement :
    *    - déclaration manuelle d'un paiement hors plateforme ;
-   *    - le client doit sélectionner le moyen de paiement du bénéficiaire ;
    *    - le paiement reste en attente jusqu'à vérification administrative.
    *
    * Orange Money et Airtel Money ne sont pas encore disponibles comme
    * méthodes de paiement en ligne.
+   *
+   * RG-PAY-011 : quelle que soit la méthode, le moyen de paiement de
+   * l'étudiant bénéficiaire est obligatoire — c'est la seule coordonnée
+   * qui permettra ensuite de lui reverser les fonds lors de la
+   * libération. S'il n'est pas explicitement choisi, son moyen principal
+   * est utilisé automatiquement ; s'il n'en a configuré aucun, le
+   * paiement est refusé avant toute initiation (MVola) ou déclaration
+   * (virement), pour ne jamais confirmer un paiement sans destination
+   * connue.
    */
   async creer(
     candidatureId: string,
@@ -133,35 +147,11 @@ export class PaiementsService {
     this.candidaturesService.assertCandidatureAcceptee(candidature);
 
     // ============================================================
-    // REGLE FIN DE PROJET :
-    // LE PAIEMENT EST POSSIBLE UNIQUEMENT APRES VALIDATION
-    // DE LA LIVRAISON
+    // MODELE SEQUESTRE (RG-PAY-011) : le paiement est possible des que
+    // la candidature est acceptee — la validation de la livraison ne
+    // conditionne plus la CREATION du paiement, seulement la LIBERATION
+    // des fonds deja confirmes (voir libererSiConfirmee).
     // ============================================================
-
-    const livraison = await this.livraisonsRepo.findOne({
-      where: { candidatureId },
-    });
-
-    if (!livraison || livraison.statut !== StatutLivraison.VALIDEE) {
-      throw new BadRequestException(
-        "Vous devez d'abord valider la livraison avant d'effectuer le paiement.",
-      );
-    }
-
-    // ============================================================
-    // RG-PAY :
-    // POUR UNE DECLARATION MANUELLE, LE CLIENT DOIT CHOISIR
-    // LE MOYEN DE PAIEMENT DE L'ETUDIANT BENEFICIAIRE.
-    // ============================================================
-
-    if (
-      dto.methode === MethodePaiement.VIREMENT &&
-      !dto.moyenPaiementId
-    ) {
-      throw new BadRequestException(
-        "Vous devez sélectionner le moyen de paiement de l'étudiant bénéficiaire avant de déclarer le virement.",
-      );
-    }
 
     // ============================================================
     // UNE SEULE TRANSACTION ACTIVE PAR CANDIDATURE
@@ -202,14 +192,30 @@ export class PaiementsService {
     }
 
     // ============================================================
-    // SNAPSHOT DU MOYEN DE PAIEMENT BENEFICIAIRE
+    // RG-PAY-011 : SNAPSHOT DU MOYEN DE PAIEMENT BENEFICIAIRE —
+    // OBLIGATOIRE QUELLE QUE SOIT LA METHODE
     //
-    // Le moyen doit appartenir à l'étudiant bénéficiaire et être actif.
-    // Les coordonnées sont ensuite copiées dans la transaction.
+    // Sans coordonnees beneficiaire, un paiement peut etre confirme puis
+    // "libere" (changement de statut) sans que la plateforme sache ou
+    // reverser les fonds a l'etudiant. Avant ce correctif, seule la
+    // declaration manuelle (virement) l'exigeait ; un paiement MVola
+    // pouvait etre confirme sans qu'aucun moyen de paiement actif
+    // n'existe cote etudiant. Desormais :
+    //  - si le client choisit explicitement un moyen (dto.moyenPaiementId),
+    //    il est verifie (propriete + actif) comme avant ;
+    //  - sinon, le moyen PRINCIPAL actif de l'etudiant est utilise par
+    //    defaut ;
+    //  - si l'etudiant n'a configure AUCUN moyen actif, le paiement est
+    //    refuse avant toute initiation MVola ou declaration de virement.
     // ============================================================
 
-    const snapshot = await this.resoudreSnapshot(
+    const moyenPaiementId = await this.resoudreMoyenPaiementBeneficiaire(
       dto.moyenPaiementId,
+      candidature.etudiant.utilisateurId,
+    );
+
+    const snapshot = await this.resoudreSnapshot(
+      moyenPaiementId,
       candidature.etudiant.utilisateurId,
     );
 
@@ -503,6 +509,37 @@ export class PaiementsService {
    *
    * Les données sont ensuite copiées dans la transaction.
    */
+  /**
+   * RG-PAY-011 : garantit qu'un moyen de paiement beneficiaire sera
+   * toujours disponible pour la transaction. Retourne l'identifiant a
+   * utiliser (celui fourni, ou le moyen principal actif de l'etudiant),
+   * et leve une erreur explicite si l'etudiant n'a configure aucun
+   * moyen actif — avant toute initiation MVola ou declaration de
+   * virement, pour ne jamais laisser le client engager un paiement sans
+   * destination possible.
+   */
+  private async resoudreMoyenPaiementBeneficiaire(
+    moyenPaiementIdChoisi: string | undefined | null,
+    etudiantId: string,
+  ): Promise<string> {
+    if (moyenPaiementIdChoisi) {
+      return moyenPaiementIdChoisi;
+    }
+
+    const moyens =
+      await this.moyensPaiementService.listerPourClient(etudiantId);
+
+    const principal = moyens.find((moyen) => moyen.principal) ?? moyens[0];
+
+    if (!principal) {
+      throw new BadRequestException(
+        "L'étudiant bénéficiaire n'a pas encore configuré de moyen de paiement actif. Le paiement ne peut pas être effectué tant qu'il n'en a pas ajouté un dans ses paramètres.",
+      );
+    }
+
+    return principal.id;
+  }
+
   private async resoudreSnapshot(
     moyenPaiementId: string | undefined | null,
     etudiantId: string | null | undefined,
@@ -544,7 +581,7 @@ export class PaiementsService {
    * Coordonnées de l'étudiant bénéficiaire lorsque le paiement
    * est réellement dû.
    *
-   * Chaîne d'autorisation :
+   * Chaîne d'autorisation (modèle séquestre, RG-PAY-011) :
    *
    * client authentifié
    *      ↓
@@ -552,7 +589,9 @@ export class PaiementsService {
    *      ↓
    * mission appartenant au client
    *      ↓
-   * livraison validée
+   * candidature acceptée (le paiement n'attend plus la validation de
+   * la livraison : il peut être effectué dès l'acceptation, les fonds
+   * restant séquestrés jusqu'à la validation)
    *      ↓
    * moyens de paiement de l'étudiant
    */
@@ -586,21 +625,11 @@ export class PaiementsService {
       );
     }
 
-    // Les coordonnées ne sont accessibles qu'après
-    // validation de la livraison.
-    const livraison =
-      await this.livraisonsRepo.findOne({
-        where: { candidatureId },
-      });
-
-    if (
-      !livraison ||
-      livraison.statut !== StatutLivraison.VALIDEE
-    ) {
-      throw new BadRequestException(
-        "Le paiement n'est pas encore du : la livraison n'a pas ete validee.",
-      );
-    }
+    // Les coordonnées ne sont accessibles qu'une fois la candidature
+    // acceptée (déjà vérifié par le chargement ci-dessus, qui lève une
+    // 404 sinon) — le paiement n'attend plus la validation de la
+    // livraison.
+    this.candidaturesService.assertCandidatureAcceptee(candidature);
 
     const moyensPaiement =
       await this.moyensPaiementService.listerPourClient(

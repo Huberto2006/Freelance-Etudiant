@@ -770,10 +770,6 @@ function LivraisonsContent() {
             <option value="">Toutes les missions</option>
             {Array.from(new Set(candidaturesFiltrees.map((c) => c.mission?.titre ?? "Mission"))).map((mission) => <option key={mission} value={mission}>{mission}</option>)}
           </Select>
-          <Select value={filtreStatut} onChange={(event) => setFiltreStatut(event.target.value)} aria-label="Filtrer par statut">
-            <option value="">Tous les statuts</option>
-            {Object.entries(statutLivraisonLabel).map(([valeur, label]) => <option key={valeur} value={valeur}>{label}</option>)}
-          </Select>
           <Select value={filtreMethode} onChange={(event) => setFiltreMethode(event.target.value)} aria-label="Filtrer par méthode">
             <option value="">Toutes les méthodes</option>
             <option value="github">GitHub</option>

@@ -5,7 +5,7 @@ import { Heart } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Favori, Mission, ServiceOffert, EtudiantProfile } from "@/lib/types";
 import { formatArgent } from "@/lib/format";
-import { NoticeCard, PageHeader } from "@/components/ui/Notice";
+import { EtatVide, NoticeCard, PageHeader } from "@/components/ui/Notice";
 import { FavoriBouton } from "@/components/ui/FavoriBouton";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { useApiList } from "@/hooks/useApiList";
@@ -62,13 +62,10 @@ export default function FavorisPage() {
       )}
 
       {favoris.length === 0 && !erreur ? (
-        <NoticeCard className="flex flex-col items-center gap-3 py-10 text-center">
-          <Heart size={28} className="text-ink-soft/50" />
-          <p className="text-sm text-ink-soft/70">
-            Ajoutez des missions, services ou profils à vos favoris pour les
-            retrouver ici.
-          </p>
-        </NoticeCard>
+        <EtatVide icon={Heart}>
+          Ajoutez des missions, services ou profils à vos favoris pour les
+          retrouver ici.
+        </EtatVide>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {favoris.map((favori) => {

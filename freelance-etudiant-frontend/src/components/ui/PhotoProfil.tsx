@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Loader2, User as UserIcon } from "lucide-react";
 import { api, ApiError, getFileUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -25,8 +25,17 @@ export function PhotoProfil({
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [apercu, setApercu] = useState<string | null>(null);
+  // Repli sur les initiales si la photo enregistree ne charge pas (URL
+  // cassee) — meme defaut deja corrige sur les visuels de mission/service
+  // via ImageAvecRepli. Reinitialise des que la photo affichee change
+  // (ex. un nouvel apercu local remplace une photo distante cassee).
+  const [enErreur, setEnErreur] = useState(false);
 
   const photoActuelle = apercu ?? getFileUrl(utilisateur.photoUrl);
+
+  useEffect(() => {
+    setEnErreur(false);
+  }, [photoActuelle]);
   const initiales = utilisateur.nom
     .split(" ")
     .map((mot) => mot[0])
@@ -91,12 +100,14 @@ export function PhotoProfil({
           aria-label="Changer la photo de profil"
           className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border border-ink/15 bg-ocre/10 text-ocre-dark transition-opacity disabled:cursor-wait"
         >
-          {photoActuelle ? (
+          {photoActuelle && !enErreur ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={photoActuelle}
               alt={`Photo de profil de ${utilisateur.nom}`}
               className="h-full w-full object-cover"
+              onError={() => setEnErreur(true)}
+              key={photoActuelle}
             />
           ) : (
             <span className="font-display text-2xl font-semibold">
