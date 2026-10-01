@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { User as UserIcon } from "lucide-react";
@@ -25,6 +26,11 @@ export function Avatar({
   className?: string;
 }) {
   const url = getFileUrl(photoUrl);
+  // Repli sur les initiales (ou l'icône générique) si la photo ne charge
+  // pas : avant, une URL cassée affichait l'icône « image brisée » du
+  // navigateur — même défaut déjà corrigé sur les visuels de mission et
+  // de service via ImageAvecRepli, mais qui subsistait ici.
+  const [enErreur, setEnErreur] = useState(false);
   const initiales = nom
     .split(" ")
     .map((mot) => mot[0])
@@ -42,9 +48,14 @@ export function Avatar({
       style={{ width: size, height: size }}
       title={nom}
     >
-      {url ? (
+      {url && !enErreur ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={nom} className="h-full w-full object-cover" />
+        <img
+          src={url}
+          alt={nom}
+          className="h-full w-full object-cover"
+          onError={() => setEnErreur(true)}
+        />
       ) : initiales ? (
         <span
           className="font-display font-semibold leading-none"

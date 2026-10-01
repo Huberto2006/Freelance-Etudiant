@@ -914,14 +914,15 @@ export default function PaiementsPage() {
 
         setTransactions(mesTransactions);
 
-        // Une candidature est payable uniquement après
-        // validation de la livraison par le client.
+        // Modèle séquestre : une candidature est payable dès son
+        // acceptation — plus besoin d'attendre la validation de la
+        // livraison. Les fonds restent séquestrés (statut CONFIRMEE)
+        // jusqu'à cette validation, qui déclenche leur libération
+        // automatique côté backend.
         setCandidaturesAPayer(
           mesCandidatures.filter(
             (candidature) =>
               candidature.statut === "acceptee" &&
-              candidature.livraison?.statut ===
-                "validee" &&
               !idsAvecPaiementActif.has(
                 candidature.id,
               ),

@@ -1,16 +1,18 @@
 import { clsx } from "clsx";
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType, MouseEvent, ReactNode } from "react";
 import type { LucideProps } from "lucide-react";
 
 export function NoticeCard({
   children,
   className,
+  onClick,
 }: {
   children: ReactNode;
   className?: string;
+  onClick?: (event: MouseEvent<HTMLDivElement>) => void;
 }) {
   return (
-    <div className={clsx("notice-card p-5", className)}>
+    <div className={clsx("notice-card p-5", className)} onClick={onClick}>
       <span className="notice-pin" aria-hidden="true" />
       {children}
     </div>
@@ -220,6 +222,61 @@ export function PageHeader({
         <h1 className="font-display text-3xl font-semibold">{title}</h1>
       </div>
     </div>
+  );
+}
+
+/**
+ * État vide standard (liste sans résultat) : médaillon-icône + texte
+ * centré, dans une NoticeCard. Avant ce composant, ce même geste visuel
+ * (icône dans un médaillon `bg-ink/5`, texte `text-ink-soft/70`, `py-10
+ * text-center`) était réécrit à la main dans chaque page — avec de
+ * légères variations (icône nue vs médaillon, tailles différentes) qui
+ * le rendaient visuellement moins cohérent d'une page à l'autre.
+ * `MessageVide` ci-dessus reste approprié pour une simple ligne de texte
+ * dans un contexte déjà encadré (ex. sous un `SousTitreSection`) ; ce
+ * composant-ci est pour un état vide qui occupe toute la zone de liste.
+ */
+export function EtatVide({
+  icon: Icon,
+  children,
+  action,
+  className,
+}: {
+  icon: ComponentType<LucideProps>;
+  children: ReactNode;
+  /** Bouton optionnel sous le texte (ex. « Publier une mission »). */
+  action?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <NoticeCard
+      className={clsx(
+        "flex flex-col items-center gap-3 py-10 text-center",
+        className,
+      )}
+    >
+      <span
+        className="flex h-12 w-12 items-center justify-center rounded-full bg-ink/5 text-ink-soft"
+        aria-hidden="true"
+      >
+        <Icon size={22} />
+      </span>
+      <p className="text-sm text-ink-soft/70">{children}</p>
+      {action}
+    </NoticeCard>
+  );
+}
+
+/**
+ * Écran de chargement standard (page ou section en attente de données).
+ * Avant ce composant, le même `<p className="text-sm text-ink-soft">
+ * Chargement…</p>` était répété tel quel dans une vingtaine de fichiers —
+ * toute évolution (icône animée, délai avant affichage...) aurait dû être
+ * appliquée partout à la main.
+ */
+export function ChargementPage({ className }: { className?: string }) {
+  return (
+    <p className={clsx("text-sm text-ink-soft", className)}>Chargement…</p>
   );
 }
 

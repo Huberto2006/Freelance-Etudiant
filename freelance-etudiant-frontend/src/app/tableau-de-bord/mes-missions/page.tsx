@@ -3,9 +3,10 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BriefcaseBusiness, Check, Loader2, MoreVertical, Pencil, Plus, Search, X } from "lucide-react";
+import { BriefcaseBusiness, Check, Loader2, MoreVertical, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 
 import { api, ApiError, getFileUrl } from "@/lib/api";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { Candidature, Mission } from "@/lib/types";
 import { SousNavigation } from "@/components/ui/SousNavigation";
 import { CATEGORIE_AUTRE, cleCategorie, iconePourCategorie, optionsCategories } from "@/lib/categories";
@@ -114,16 +115,13 @@ function MesMissionsContent() {
     };
   }, []);
 
+  const [missionASupprimer, setMissionASupprimer] = useState<Mission | null>(null);
+
   /**
    * Supprime une mission (refuse par le backend si elle est en cours,
    * terminee, ou a une candidature acceptee : voir MissionsService.remove).
    */
   const supprimer = async (mission: Mission) => {
-    const confirmation = window.confirm(
-      `Voulez-vous vraiment supprimer « ${mission.titre} » ? Cette action est definitive.`,
-    );
-    if (!confirmation) return;
-
     try {
       await api.delete(`/missions/${mission.id}`);
       setMissions((anciennes) => anciennes.filter((m) => m.id !== mission.id));
@@ -474,10 +472,10 @@ function MesMissionsContent() {
                                 mission.statut !== "terminee" && (
                                   <button
                                     type="button"
-                                    onClick={() => supprimer(mission)}
+                                    onClick={() => setMissionASupprimer(mission)}
                                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-brique transition hover:bg-brique/5"
                                   >
-                                    <X size={15} />
+                                    <Trash2 size={15} />
                                     Supprimer
                                   </button>
                                 )}
@@ -524,6 +522,22 @@ function MesMissionsContent() {
           )}
         </>
       )}
+
+      <ConfirmDialog
+        ouvert={missionASupprimer !== null}
+        titre="Supprimer cette mission ?"
+        description={
+          missionASupprimer
+            ? `« ${missionASupprimer.titre} » sera définitivement supprimée. Cette action est irréversible.`
+            : undefined
+        }
+        libelleConfirmer="Supprimer"
+        onConfirmer={() => {
+          if (missionASupprimer) void supprimer(missionASupprimer);
+          setMissionASupprimer(null);
+        }}
+        onAnnuler={() => setMissionASupprimer(null)}
+      />
     </div>
   );
 }

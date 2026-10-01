@@ -16,6 +16,8 @@ import { useApiList } from "@/hooks/useApiList";
 
 import { Button } from "@/components/ui/Button";
 import {
+  ChargementPage,
+  EtatVide,
   NoticeCard,
   PageHeader,
 } from "@/components/ui/Notice";
@@ -272,24 +274,15 @@ export default function NotificationsPage() {
       {/* Chargement */}
 
       {chargement ? (
-        <p className="text-sm text-ink-soft">
-          Chargement…
-        </p>
+        <ChargementPage />
       ) : notificationsFiltrees.length === 0 ? (
-        <NoticeCard className="flex flex-col items-center gap-3 py-10 text-center">
-          <BellOff
-            size={28}
-            className="text-ink-soft/50"
-          />
-
-          <p className="text-sm text-ink-soft/70">
-            {ongletActif === "toutes"
-              ? "Vous n'avez pas encore de notification."
-              : ongletActif === "non_lues"
-                ? "Aucune notification non lue."
-                : "Aucune notification lue."}
-          </p>
-        </NoticeCard>
+        <EtatVide icon={BellOff}>
+          {ongletActif === "toutes"
+            ? "Vous n'avez pas encore de notification."
+            : ongletActif === "non_lues"
+              ? "Aucune notification non lue."
+              : "Aucune notification lue."}
+        </EtatVide>
       ) : (
         <div className="flex flex-col gap-3">
           {notificationsFiltrees.map(

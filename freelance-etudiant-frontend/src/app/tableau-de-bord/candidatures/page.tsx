@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ClipboardList, MessageCircle, Package } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { Candidature } from "@/lib/types";
 import { useApiList } from "@/hooks/useApiList";
 import { SousNavigation } from "@/components/ui/SousNavigation";
@@ -99,8 +100,10 @@ export default function CandidaturesPage() {
     }
   }
 
+  const [candidatureAAnnuler, setCandidatureAAnnuler] =
+    useState<Candidature | null>(null);
+
   async function annuler(candidature: Candidature) {
-    if (!window.confirm("Annuler cette candidature en attente ?")) return;
     setActionEnCours(candidature.id);
     setErreur(null);
     try {
@@ -376,7 +379,7 @@ export default function CandidaturesPage() {
                       size="sm"
                       variant="ghost"
                       disabled={actionEnCours !== null}
-                      onClick={() => void annuler(candidature)}
+                      onClick={() => setCandidatureAAnnuler(candidature)}
                       className="text-brique"
                     >
                       Annuler
@@ -392,6 +395,23 @@ export default function CandidaturesPage() {
           );
         })()
       )}
+
+      <ConfirmDialog
+        ouvert={candidatureAAnnuler !== null}
+        titre="Annuler cette candidature ?"
+        description={
+          candidatureAAnnuler
+            ? `Votre candidature pour « ${candidatureAAnnuler.mission?.titre ?? "cette mission"} » sera définitivement retirée.`
+            : undefined
+        }
+        libelleConfirmer="Annuler la candidature"
+        libelleAnnuler="Revenir"
+        onConfirmer={() => {
+          if (candidatureAAnnuler) void annuler(candidatureAAnnuler);
+          setCandidatureAAnnuler(null);
+        }}
+        onAnnuler={() => setCandidatureAAnnuler(null)}
+      />
     </div>
   );
 }

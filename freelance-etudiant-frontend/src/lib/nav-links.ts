@@ -81,6 +81,11 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
     },
 
     {
+      label: "Paiements",
+      href: "/tableau-de-bord/paiements",
+    },
+
+    {
       label: "Notifications",
       href: "/tableau-de-bord/notifications",
       icon: Bell,
