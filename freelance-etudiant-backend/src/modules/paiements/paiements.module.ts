@@ -9,13 +9,15 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { MvolaService } from './mvola.service';
 import { UsersModule } from '../users/users.module';
 import { MoyensPaiementModule } from '../moyens-paiement/moyens-paiement.module';
+import { MoyensPaiementClientModule } from '../moyens-paiement-client/moyens-paiement-client.module';
 
 @Module({
   imports: [
-    // Livraison est chargee ici (lecture seule) pour la regle metier
-    // "paiement autorise seulement apres validation de la livraison".
-    // Aucune dependance vers LivraisonsModule : LivraisonsModule importe
-    // deja PaiementsModule (liberation des fonds), on evite donc un cycle.
+    // Livraison est chargee ici (lecture seule) pour verifier si une
+    // livraison deja validee doit declencher une liberation immediate
+    // des fonds au moment de la confirmation (modele sequestre). Aucune
+    // dependance vers LivraisonsModule : LivraisonsModule importe deja
+    // PaiementsModule (liberation des fonds), on evite donc un cycle.
     TypeOrmModule.forFeature([Transaction, Livraison]),
     CandidaturesModule,
     NotificationsModule,
@@ -24,6 +26,9 @@ import { MoyensPaiementModule } from '../moyens-paiement/moyens-paiement.module'
     // attache a une transaction et liste securisee des coordonnees du
     // beneficiaire. Aucune dependance inverse : pas de cycle.
     MoyensPaiementModule,
+    // RG-PAY-012 : resolution/verification du moyen de paiement CLIENT
+    // (numero a debiter), symetrique a MoyensPaiementModule.
+    MoyensPaiementClientModule,
   ],
   providers: [PaiementsService, MvolaService],
   controllers: [PaiementsController],

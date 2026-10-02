@@ -42,7 +42,7 @@ export default function InvitationGroupePage({
             data.statut === "acceptee"
               ? api.get<Groupe>(`/groupes/${data.groupeId}`).catch(() => null)
               : Promise.resolve(null),
-            api.get<EtudiantProfile>(`/etudiants/${data.inviteurId}`, { auth: false }).catch(() => null),
+            api.get<EtudiantProfile>(`/etudiants/${data.inviteurId}`).catch(() => null),
           ]);
           if (!cancelled) {
             setGroupe(detail);

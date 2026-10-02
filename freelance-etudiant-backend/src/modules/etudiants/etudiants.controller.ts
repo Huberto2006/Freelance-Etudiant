@@ -8,23 +8,35 @@ import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interfa
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Role } from '../../common/enums/role.enum';
-import { Public } from '../../common/decorators/public.decorator';
 
+/**
+ * RG-VIS-001 : les profils etudiants ne sont PAS consultables par un
+ * visiteur anonyme. Aucune route de ce controleur n'est marquee
+ * @Public() : le JwtAuthGuard global (voir app.module.ts) exige donc un
+ * jeton valide pour les deux routes ci-dessous. Tout utilisateur
+ * CONNECTE peut les consulter, quel que soit son role (etudiant ou
+ * client) — seule l'absence de compte bloque l'acces, pas le role.
+ */
 @ApiTags('Etudiants')
+@ApiBearerAuth()
 @Controller('etudiants')
 export class EtudiantsController {
   constructor(private readonly etudiantsService: EtudiantsService) {}
 
-  @Public()
   @Get()
-  @ApiOperation({ summary: 'Recherche/annuaire des etudiants (filtre par competence, pagine)' })
+  @ApiOperation({
+    summary:
+      'Recherche/annuaire des etudiants (filtre par competence, pagine) — reserve aux utilisateurs connectes',
+  })
   async findAll(@Query() filtres: FiltrerEtudiantsDto) {
     return this.etudiantsService.findAll(filtres);
   }
 
-  @Public()
   @Get(':id')
-  @ApiOperation({ summary: "Consulter la fiche publique d'un etudiant (projection sans donnees privees)" })
+  @ApiOperation({
+    summary:
+      "Consulter la fiche d'un etudiant (projection sans donnees privees) — reserve aux utilisateurs connectes",
+  })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.etudiantsService.findOnePublic(id);
   }

@@ -17,7 +17,8 @@ import {
   Star,
 } from "lucide-react";
 
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import type {
   EtudiantProfile,
   Evaluation,
@@ -38,6 +39,7 @@ import { ReactionProfil } from "@/components/ui/ReactionProfil";
 import { FavoriBouton } from "@/components/ui/FavoriBouton";
 import { SignalerBouton } from "@/components/ui/SignalerBouton";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
+import { Button } from "@/components/ui/Button";
 
 const LABELS_STATUT_DISPONIBILITE: Record<string, string> = {
   disponible: "Disponible",
@@ -62,27 +64,38 @@ export default function ProfilEtudiantPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  // RG-VIS-001 : les profils étudiants ne sont consultables que par un
+  // utilisateur connecté (backend : GET /etudiants/:id exige un JWT).
+  const { utilisateur, chargement: chargementSession } = useAuth();
 
   const [etudiant, setEtudiant] = useState<EtudiantProfile | null>(null);
   const [services, setServices] = useState<ServiceOffert[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [chargement, setChargement] = useState(true);
+  const [connexionRequise, setConnexionRequise] = useState(false);
 
   useEffect(() => {
+    // On attend d'abord de savoir si une session existe : inutile de
+    // lancer une requête vouée à un 401 pendant que l'état de
+    // connexion est encore en cours de résolution.
+    if (chargementSession) return;
+
+    if (!utilisateur) {
+      setConnexionRequise(true);
+      setChargement(false);
+      return;
+    }
+
     let cancelled = false;
 
     async function chargerProfil() {
+      setChargement(true);
+      setConnexionRequise(false);
       try {
         const [profil, tousServices, notes] = await Promise.all([
-          api.get<EtudiantProfile>(`/etudiants/${id}`, {
-            auth: false,
-          }),
-          api.get<ServiceOffert[]>(`/services`, {
-            auth: false,
-          }),
-          api.get<Evaluation[]>(`/etudiants/${id}/evaluations`, {
-            auth: false,
-          }),
+          api.get<EtudiantProfile>(`/etudiants/${id}`),
+          api.get<ServiceOffert[]>(`/services`),
+          api.get<Evaluation[]>(`/etudiants/${id}/evaluations`),
         ]);
 
         if (cancelled) return;
@@ -90,6 +103,10 @@ export default function ProfilEtudiantPage({
         setEtudiant(profil);
         setServices(tousServices.filter((s) => s.etudiantId === id));
         setEvaluations(notes);
+      } catch (error) {
+        if (!cancelled && error instanceof ApiError && error.status === 401) {
+          setConnexionRequise(true);
+        }
       } finally {
         if (!cancelled) {
           setChargement(false);
@@ -102,7 +119,7 @@ export default function ProfilEtudiantPage({
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, utilisateur, chargementSession]);
 
   const portfolioUrls = useMemo(
     () => (etudiant?.portfolioUrls ?? []).filter(Boolean),
@@ -128,10 +145,24 @@ export default function ProfilEtudiantPage({
   if (!etudiant) {
     return (
       <div className="mx-auto max-w-5xl px-5 py-16">
-        <NoticeCard>
-          <p className="text-sm text-brique">
-            Profil introuvable.
-          </p>
+        <NoticeCard className="flex flex-col items-center gap-3 py-10 text-center">
+          {connexionRequise ? (
+            <>
+              <p className="text-sm text-ink-soft">
+                Connectez-vous pour consulter les profils des étudiants.
+              </p>
+              <div className="flex gap-2.5">
+                <Button variant="primary" size="sm" href="/connexion">
+                  Se connecter
+                </Button>
+                <Button variant="secondary" size="sm" href="/inscription">
+                  Créer un compte
+                </Button>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-brique">Profil introuvable.</p>
+          )}
         </NoticeCard>
       </div>
     );

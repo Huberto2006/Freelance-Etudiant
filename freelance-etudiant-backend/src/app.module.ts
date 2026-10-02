@@ -28,11 +28,13 @@ import { ReactionsModule } from './modules/reactions/reactions.module';
 import { FavorisModule } from './modules/favoris/favoris.module';
 import { PaiementsModule } from './modules/paiements/paiements.module';
 import { MoyensPaiementModule } from './modules/moyens-paiement/moyens-paiement.module';
+import { MoyensPaiementClientModule } from './modules/moyens-paiement-client/moyens-paiement-client.module';
 import { DemandesServiceModule } from './modules/demandes-service/demandes-service.module';
 import { CommentairesModule } from './modules/commentaires/commentaires.module';
 import { ReactionsContenuModule } from './modules/reactions-contenu/reactions-contenu.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
 import { EmailModule } from './modules/email/email.module';
+import { EmailsModule } from './modules/emails/emails.module';
 
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { UploadsModule } from './modules/uploads/uploads.module';
@@ -95,11 +97,13 @@ import { HealthController } from './health.controller';
     FavorisModule,
     PaiementsModule,
     MoyensPaiementModule,
+    MoyensPaiementClientModule,
     DemandesServiceModule,
     CommentairesModule,
     ReactionsContenuModule,
     RealtimeModule,
     EmailModule,
+    EmailsModule,
     GroupesModule,
     AmitieModule,
   ],

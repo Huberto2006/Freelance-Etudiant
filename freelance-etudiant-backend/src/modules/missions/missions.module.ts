@@ -6,8 +6,15 @@ import { ExpirationMissionsService } from './expiration-missions.service';
 import { MissionsController } from './missions.controller';
 import { NotificationsModule } from '../notifications/notifications.module';
 
+import { EtudiantProfile } from '../etudiants/entities/etudiant-profile.entity';
+import { EmailsModule } from '../emails/emails.module';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([Mission]), NotificationsModule],
+  imports: [
+    TypeOrmModule.forFeature([Mission, EtudiantProfile]),
+    NotificationsModule,
+    EmailsModule,
+  ],
   providers: [MissionsService, ExpirationMissionsService],
   controllers: [MissionsController],
   exports: [MissionsService],

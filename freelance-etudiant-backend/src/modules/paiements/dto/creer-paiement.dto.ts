@@ -68,17 +68,37 @@ export class CreerPaiementDto {
   moyenPaiementId?: string;
 
   /**
-   * Numero MVola du payeur : obligatoire pour le paiement en ligne
-   * (le debit sera demande sur ce numero via l'API MVola).
+   * Numero MVola du payeur. Obligatoire pour le paiement en ligne SAUF
+   * si `moyenPaiementClientId` est fourni (le numero est alors repris
+   * du moyen de paiement enregistre) : le backend refuse la requete si
+   * ni l'un ni l'autre n'est present pour une transaction MVola (voir
+   * PaiementsService.creer, RG-PAY-012).
    */
   @ApiPropertyOptional({
     example: '0341234567',
-    description: 'Numero MVola du payeur (paiement mvola uniquement)',
+    description:
+      'Numero MVola du payeur (paiement mvola uniquement). Optionnel si moyenPaiementClientId est fourni.',
   })
-  @ValidateIf((o) => o.methode === MethodePaiement.MVOLA)
+  @ValidateIf(
+    (o) => o.methode === MethodePaiement.MVOLA && !o.moyenPaiementClientId,
+  )
   @IsString()
   @Matches(/^0(34|32|33)\d{7}$/, {
     message: 'Le numero MVola doit etre au format 034XXXXXXX (ou 032/033)',
   })
   telephoneDebite?: string;
+
+  /**
+   * Moyen de paiement CLIENT enregistre a utiliser (RG-PAY-012) : si
+   * fourni, son numero remplace `telephoneDebite`. Le backend verifie
+   * qu'il appartient bien au client authentifie et qu'il est actif.
+   */
+  @ApiPropertyOptional({
+    example: '018e2b4c-...',
+    description:
+      "Identifiant d'un moyen de paiement du client, enregistre via /moyens-paiement-client. Si absent et qu'aucun telephoneDebite n'est fourni, le moyen principal du client est utilise automatiquement.",
+  })
+  @IsOptional()
+  @IsUUID()
+  moyenPaiementClientId?: string;
 }
