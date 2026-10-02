@@ -10,6 +10,7 @@ import {
 import { Candidature } from '../../candidatures/entities/candidature.entity';
 import { Utilisateur } from '../../users/entities/utilisateur.entity';
 import { MoyenPaiement } from '../../moyens-paiement/entities/moyen-paiement.entity';
+import { MoyenPaiementClient } from '../../moyens-paiement-client/entities/moyen-paiement-client.entity';
 import {
   MethodePaiement,
   StatutTransaction,
@@ -103,6 +104,19 @@ export class Transaction {
   /** Numero du payeur (paiement mobile en ligne uniquement). */
   @Column({ name: 'telephone_debite', type: 'varchar', length: 20, nullable: true })
   telephoneDebite?: string | null;
+
+  /**
+   * RG-PAY-012 : moyen de paiement CLIENT utilise pour cette transaction
+   * (facultatif — le client peut toujours saisir un numero ponctuel sans
+   * l'enregistrer). Trace uniquement quelle fiche a servi ; ne remplace
+   * pas telephoneDebite, qui reste la valeur reellement envoyee a MVola.
+   */
+  @ManyToOne(() => MoyenPaiementClient, { onDelete: 'RESTRICT', nullable: true })
+  @JoinColumn({ name: 'moyen_paiement_client_id' })
+  moyenPaiementClient?: MoyenPaiementClient | null;
+
+  @Column({ name: 'moyen_paiement_client_id', type: 'uuid', nullable: true })
+  moyenPaiementClientId?: string | null;
 
   /** Dernier statut brut renvoye par le fournisseur (traçabilite). */
   @Column({ name: 'provider_statut', type: 'varchar', length: 50, nullable: true })

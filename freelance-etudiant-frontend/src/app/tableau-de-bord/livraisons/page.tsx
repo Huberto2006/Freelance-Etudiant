@@ -122,8 +122,8 @@ function LivraisonsContent() {
   const rafraichirRef =
     useRef<
       | ((
-        silencieux?: boolean,
-      ) => Promise<void>)
+          silencieux?: boolean,
+        ) => Promise<void>)
       | null
     >(null);
 
@@ -335,10 +335,10 @@ function LivraisonsContent() {
     role === "client"
       ? candidatures
       : candidatures.filter(
-        (candidature) =>
-          candidature.statut ===
-          "acceptee",
-      );
+          (candidature) =>
+            candidature.statut ===
+            "acceptee",
+        );
 
   // Catégorie de sous-menu correspondant à la livraison (ou son
   // absence) d'une candidature. Sert uniquement à filtrer la liste
@@ -422,8 +422,8 @@ function LivraisonsContent() {
     ongletLivraisons === "toutes"
       ? candidaturesAvecFiltres
       : candidaturesAvecFiltres.filter(
-        (c) => categorieLivraison(c) === ongletLivraisons,
-      );
+          (c) => categorieLivraison(c) === ongletLivraisons,
+        );
 
   // Contrairement à l'ancienne disposition « maître-détail » (liste +
   // détail toujours visibles côte à côte), l'écran de détail n'est
@@ -432,17 +432,17 @@ function LivraisonsContent() {
   // paramètre, l'écran liste (cartes stats + tableau) reste affiché.
   const candidatureSelectionnee = candidatureParam
     ? (candidaturesFiltrees.find(
-      (candidature) => candidature.id === candidatureParam,
-    ) ?? candidaturesFiltrees[0] ?? null)
+        (candidature) => candidature.id === candidatureParam,
+      ) ?? candidaturesFiltrees[0] ?? null)
     : null;
 
   const livraisonSelectionnee =
     candidatureSelectionnee
       ? livraisons.find(
-        (livraison) =>
-          livraison.candidatureId ===
-          candidatureSelectionnee.id,
-      ) ?? null
+          (livraison) =>
+            livraison.candidatureId ===
+            candidatureSelectionnee.id,
+        ) ?? null
       : null;
 
   // ==========================================================
@@ -747,85 +747,39 @@ function LivraisonsContent() {
           ======================================================== */}
 
       {!chargement && candidaturesFiltrees.length > 0 && (
-        <div className="mb-6 rounded-2xl border border-ink/10 bg-paper p-4 shadow-sm">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Recherche */}
-            <div className="relative">
-              <Search
-                size={16}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/50"
-                aria-hidden="true"
-              />
-
-              <Input
-                value={recherche}
-                onChange={(event) => setRecherche(event.target.value)}
-                placeholder="Rechercher un client ou une mission..."
-                aria-label="Rechercher une livraison"
-                className="h-10 rounded-lg border-ink/10 bg-paper pl-9 text-sm shadow-none transition-colors placeholder:text-ink-soft/50 focus:border-ink/30 focus:ring-1 focus:ring-ink/10"
-              />
-            </div>
-
-            {/* Client */}
-            <Select
-              value={filtreClient}
-              onChange={(event) => setFiltreClient(event.target.value)}
-              aria-label="Filtrer par client"
-              className="h-10 rounded-lg border-ink/10 bg-paper text-sm shadow-none transition-colors focus:border-ink/30 focus:ring-1 focus:ring-ink/10"
-            >
-              <option value="">Tous les clients</option>
-
-              {Array.from(
-                new Set(
-                  candidaturesFiltrees.map(
-                    (c) =>
-                      c.mission?.client?.utilisateur?.nom ??
-                      c.mission?.client?.nomEntreprise ??
-                      "Client",
-                  ),
-                ),
-              ).map((client) => (
-                <option key={client} value={client}>
-                  {client}
-                </option>
-              ))}
-            </Select>
-
-            {/* Mission */}
-            <Select
-              value={filtreMission}
-              onChange={(event) => setFiltreMission(event.target.value)}
-              aria-label="Filtrer par mission"
-              className="h-10 rounded-lg border-ink/10 bg-paper text-sm shadow-none transition-colors focus:border-ink/30 focus:ring-1 focus:ring-ink/10"
-            >
-              <option value="">Toutes les missions</option>
-
-              {Array.from(
-                new Set(
-                  candidaturesFiltrees.map(
-                    (c) => c.mission?.titre ?? "Mission",
-                  ),
-                ),
-              ).map((mission) => (
-                <option key={mission} value={mission}>
-                  {mission}
-                </option>
-              ))}
-            </Select>
-
-            {/* Méthode */}
-            <Select
-              value={filtreMethode}
-              onChange={(event) => setFiltreMethode(event.target.value)}
-              aria-label="Filtrer par méthode"
-              className="h-10 rounded-lg border-ink/10 bg-paper text-sm shadow-none transition-colors focus:border-ink/30 focus:ring-1 focus:ring-ink/10"
-            >
-              <option value="">Toutes les méthodes</option>
-              <option value="github">GitHub</option>
-              <option value="gitlab">GitLab</option>
-              <option value="fichiers">Fichiers</option>
-            </Select>
+        <div className="mb-6 grid gap-3 rounded-xl border border-ink/15 bg-paper p-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="relative">
+            <Search
+              size={15}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+              aria-hidden="true"
+            />
+            <Input
+              value={recherche}
+              onChange={(event) => setRecherche(event.target.value)}
+              placeholder="Rechercher un client, une mission…"
+              aria-label="Rechercher une livraison"
+              className="pl-9 text-sm sm:text-base"
+            />
           </div>
+          <Select value={filtreClient} onChange={(event) => setFiltreClient(event.target.value)} aria-label="Filtrer par client">
+            <option value="">Tous les clients</option>
+            {Array.from(new Set(candidaturesFiltrees.map((c) => c.mission?.client?.utilisateur?.nom ?? c.mission?.client?.nomEntreprise ?? "Client"))).map((client) => <option key={client} value={client}>{client}</option>)}
+          </Select>
+          <Select value={filtreMission} onChange={(event) => setFiltreMission(event.target.value)} aria-label="Filtrer par mission">
+            <option value="">Toutes les missions</option>
+            {Array.from(new Set(candidaturesFiltrees.map((c) => c.mission?.titre ?? "Mission"))).map((mission) => <option key={mission} value={mission}>{mission}</option>)}
+          </Select>
+          <Select value={filtreStatut} onChange={(event) => setFiltreStatut(event.target.value)} aria-label="Filtrer par statut">
+            <option value="">Tous les statuts</option>
+            {Object.entries(statutLivraisonLabel).map(([valeur, label]) => <option key={valeur} value={valeur}>{label}</option>)}
+          </Select>
+          <Select value={filtreMethode} onChange={(event) => setFiltreMethode(event.target.value)} aria-label="Filtrer par méthode">
+            <option value="">Toutes les méthodes</option>
+            <option value="github">GitHub</option>
+            <option value="gitlab">GitLab</option>
+            <option value="fichiers">Fichiers</option>
+          </Select>
         </div>
       )}
 
@@ -1053,7 +1007,7 @@ function LivraisonEtudiant({
     setCommentaireLivraison,
   ] = useState(
     livraison?.commentaireLivraison ??
-    "",
+      "",
   );
 
   const [envoi, setEnvoi] =
@@ -1304,17 +1258,17 @@ function LivraisonEtudiant({
           <Tag
             tone={
               livraison.statut ===
-                "validee"
+              "validee"
                 ? "rice"
                 : livraison.statut ===
-                  "correction_demandee"
+                    "correction_demandee"
                   ? "brique"
                   : "ink"
             }
           >
             {
               statutLivraisonLabel[
-              livraison.statut
+                livraison.statut
               ]
             }
           </Tag>
@@ -1343,13 +1297,13 @@ function LivraisonEtudiant({
 
       {livraison?.statut ===
         "validee" && (
-          <div className="mt-5 rounded-lg border border-rice/20 bg-rice/5 p-4">
-            <p className="text-sm text-rice">
-              Votre livraison a été validée
-              par le client.
-            </p>
-          </div>
-        )}
+        <div className="mt-5 rounded-lg border border-rice/20 bg-rice/5 p-4">
+          <p className="text-sm text-rice">
+            Votre livraison a été validée
+            par le client.
+          </p>
+        </div>
+      )}
 
       {/* LIEN */}
 
@@ -1373,271 +1327,272 @@ function LivraisonEtudiant({
 
       {livraison?.statut !==
         "validee" && (
-          <div className="mt-6 max-w-xl border-t border-ink/15 pt-6">
-            <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
-              {livraison
-                ? "Modifier ma livraison"
-                : "Déposer ma livraison"}
-            </p>
+        <div className="mt-6 max-w-xl border-t border-ink/15 pt-6">
+          <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+            {livraison
+              ? "Modifier ma livraison"
+              : "Déposer ma livraison"}
+          </p>
 
-            {/* INDICATEUR D'ÉTAPES */}
+          {/* INDICATEUR D'ÉTAPES */}
 
-            <div className="mt-4 flex items-center">
-              {(
-                [
-                  { numero: 1, label: "Méthode" },
-                  { numero: 2, label: "Informations" },
-                  { numero: 3, label: "Aperçu" },
-                ] as const
-              ).map((item, index) => (
-                <div
-                  key={item.numero}
-                  className={`flex items-center ${index < 2 ? "flex-1" : ""}`}
-                >
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-mono ${etape === item.numero
-                          ? "bg-ocre-dark text-paper-light"
-                          : etape > item.numero
-                            ? "bg-rice text-paper-light"
-                            : "border border-ink/25 text-ink-soft"
-                        }`}
-                    >
-                      {etape > item.numero ? <Check size={13} aria-hidden="true" /> : item.numero}
-                    </span>
-                    <span
-                      className={`hidden text-xs sm:inline ${etape === item.numero ? "font-medium text-ink" : "text-ink-soft"}`}
-                    >
-                      {item.label}
-                    </span>
-                  </div>
-                  {index < 2 && (
-                    <span className="mx-2 h-px flex-1 bg-ink/15" aria-hidden="true" />
-                  )}
+          <div className="mt-4 flex items-center">
+            {(
+              [
+                { numero: 1, label: "Méthode" },
+                { numero: 2, label: "Informations" },
+                { numero: 3, label: "Aperçu" },
+              ] as const
+            ).map((item, index) => (
+              <div
+                key={item.numero}
+                className={`flex items-center ${index < 2 ? "flex-1" : ""}`}
+              >
+                <div className="flex shrink-0 items-center gap-2">
+                  <span
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-mono ${
+                      etape === item.numero
+                        ? "bg-ocre-dark text-paper-light"
+                        : etape > item.numero
+                          ? "bg-rice text-paper-light"
+                          : "border border-ink/25 text-ink-soft"
+                    }`}
+                  >
+                    {etape > item.numero ? <Check size={13} aria-hidden="true" /> : item.numero}
+                  </span>
+                  <span
+                    className={`hidden text-xs sm:inline ${etape === item.numero ? "font-medium text-ink" : "text-ink-soft"}`}
+                  >
+                    {item.label}
+                  </span>
                 </div>
-              ))}
-            </div>
-
-            <form onSubmit={onSubmit} className="mt-6">
-              {/* ÉTAPE 1 : MÉTHODE */}
-
-              {etape === 1 && (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={() => setMethode("depot")}
-                    className={`relative border p-3 text-left text-sm ${methode === "depot" ? "border-ocre-dark bg-ocre/10" : "border-ink/20"}`}
-                  >
-                    {methode === "depot" && (
-                      <Check size={14} className="absolute right-3 top-3 text-ocre-dark" aria-hidden="true" />
-                    )}
-                    <span className="font-medium">Lien de dépôt</span>
-                    <span className="mt-1 block text-xs text-ink-soft">GitHub ou GitLab</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMethode("fichiers")}
-                    className={`relative border p-3 text-left text-sm ${methode === "fichiers" ? "border-ocre-dark bg-ocre/10" : "border-ink/20"}`}
-                  >
-                    {methode === "fichiers" && (
-                      <Check size={14} className="absolute right-3 top-3 text-ocre-dark" aria-hidden="true" />
-                    )}
-                    <span className="font-medium">Fichiers</span>
-                    <span className="mt-1 block text-xs text-ink-soft">Jusqu&apos;à 10 fichiers</span>
-                  </button>
-                </div>
-              )}
-
-              {/* ÉTAPE 2 : INFORMATIONS */}
-
-              {etape === 2 &&
-                (methode === "depot" ? (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Plateforme" htmlFor={`plateforme-${candidature.id}`}>
-                      <Select
-                        id={`plateforme-${candidature.id}`}
-                        value={plateforme}
-                        onChange={(event) => setPlateforme(event.target.value as "github" | "gitlab")}
-                        disabled={envoi}
-                      >
-                        <option value="github">GitHub</option>
-                        <option value="gitlab">GitLab</option>
-                      </Select>
-                    </Field>
-                    <Field label="Branche (optionnel)" htmlFor={`branche-${candidature.id}`}>
-                      <Input
-                        id={`branche-${candidature.id}`}
-                        value={branche}
-                        onChange={(event) => setBranche(event.target.value)}
-                        placeholder="main"
-                        disabled={envoi}
-                      />
-                    </Field>
-                    <div className="sm:col-span-2">
-                      <Field label="URL du dépôt" htmlFor={`lien-${candidature.id}`}>
-                        <Input
-                          id={`lien-${candidature.id}`}
-                          value={lienLivrable}
-                          onChange={(event) => setLienLivrable(event.target.value)}
-                          placeholder={plateforme === "github" ? "https://github.com/…" : "https://gitlab.com/…"}
-                          disabled={envoi}
-                        />
-                      </Field>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <Field label="Commentaire" htmlFor={`commentaire-${candidature.id}`}>
-                        <Textarea
-                          id={`commentaire-${candidature.id}`}
-                          rows={4}
-                          value={commentaireLivraison}
-                          onChange={(event) => setCommentaireLivraison(event.target.value)}
-                          placeholder="Précisions sur votre livraison…"
-                          disabled={envoi}
-                        />
-                      </Field>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label
-                      htmlFor={`fichiers-${candidature.id}`}
-                      className="flex cursor-pointer flex-col items-center gap-2 border border-dashed border-ink/30 p-6 text-center text-sm hover:border-ocre-dark"
-                      onDragOver={(event) => event.preventDefault()}
-                      onDrop={(event) => {
-                        event.preventDefault();
-                        void ajouterFichiers(event.dataTransfer.files);
-                      }}
-                    >
-                      <FileUp size={20} />
-                      <span>{uploadEnCours ? "Envoi des fichiers…" : "Sélectionner ou déposer des fichiers"}</span>
-                      <span className="text-xs text-ink-soft">PDF, Word, Excel, image, archive ou texte</span>
-                      <input
-                        id={`fichiers-${candidature.id}`}
-                        type="file"
-                        multiple
-                        className="sr-only"
-                        onChange={(event) => {
-                          void ajouterFichiers(event.target.files ?? []);
-                          event.target.value = "";
-                        }}
-                        disabled={envoi || uploadEnCours}
-                      />
-                    </label>
-                    {piecesJointes.length > 0 && (
-                      <ul className="mt-3 space-y-2 text-sm">
-                        {piecesJointes.map((piece, index) => (
-                          <li key={`${piece.url}-${index}`} className="flex items-center justify-between gap-3 border border-ink/10 px-3 py-2">
-                            <span className="min-w-0 truncate">{piece.nom} <span className="text-xs text-ink-soft">({Math.ceil((piece.tailleOctets ?? 0) / 1024)} Ko)</span></span>
-                            <button type="button" onClick={() => setPiecesJointes((precedentes) => precedentes.filter((_, pieceIndex) => pieceIndex !== index))} aria-label={`Supprimer ${piece.nom}`} className="shrink-0 text-brique">
-                              <Trash2 size={16} />
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    <div className="mt-4">
-                      <Field label="Commentaire" htmlFor={`commentaire-${candidature.id}`}>
-                        <Textarea
-                          id={`commentaire-${candidature.id}`}
-                          rows={4}
-                          value={commentaireLivraison}
-                          onChange={(event) => setCommentaireLivraison(event.target.value)}
-                          placeholder="Précisions sur votre livraison…"
-                          disabled={envoi}
-                        />
-                      </Field>
-                    </div>
-                  </div>
-                ))}
-
-              {/* ÉTAPE 3 : APERÇU */}
-
-              {etape === 3 && (
-                <div className="space-y-3 rounded-lg border border-ink/15 bg-ink/5 p-4 text-sm">
-                  <p>
-                    <span className="text-ink-soft">Méthode : </span>
-                    {methode === "depot"
-                      ? `Lien de dépôt (${plateforme === "github" ? "GitHub" : "GitLab"})`
-                      : "Fichiers"}
-                  </p>
-
-                  {methode === "depot" ? (
-                    <>
-                      <p className="break-all">
-                        <span className="text-ink-soft">URL : </span>
-                        {lienLivrable || "—"}
-                      </p>
-                      {branche && (
-                        <p>
-                          <span className="text-ink-soft">Branche : </span>
-                          {branche}
-                        </p>
-                      )}
-                    </>
-                  ) : (
-                    <p>
-                      <span className="text-ink-soft">Fichiers : </span>
-                      {piecesJointes.length} fichier{piecesJointes.length > 1 ? "s" : ""}
-                    </p>
-                  )}
-
-                  {commentaireLivraison && (
-                    <p>
-                      <span className="text-ink-soft">Commentaire : </span>
-                      {commentaireLivraison}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {erreur && (
-                <p className="mt-3 text-xs text-brique">
-                  {erreur}
-                </p>
-              )}
-
-              <div className="mt-5 flex items-center justify-between gap-3">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={etapePrecedente}
-                  disabled={etape === 1 || envoi}
-                >
-                  Précédent
-                </Button>
-
-                {etape < 3 ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={etapeSuivante}
-                    disabled={envoi || uploadEnCours}
-                  >
-                    Suivant
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={
-                      envoi ||
-                      uploadEnCours ||
-                      (methode === "depot" ? !lienLivrable.trim() : !piecesJointes.length)
-                    }
-                  >
-                    {envoi
-                      ? "Envoi…"
-                      : livraison
-                        ? "Mettre à jour la livraison"
-                        : "Déposer ma livraison"}
-                  </Button>
+                {index < 2 && (
+                  <span className="mx-2 h-px flex-1 bg-ink/15" aria-hidden="true" />
                 )}
               </div>
-            </form>
+            ))}
           </div>
-        )}
+
+          <form onSubmit={onSubmit} className="mt-6">
+            {/* ÉTAPE 1 : MÉTHODE */}
+
+            {etape === 1 && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setMethode("depot")}
+                  className={`relative border p-3 text-left text-sm ${methode === "depot" ? "border-ocre-dark bg-ocre/10" : "border-ink/20"}`}
+                >
+                  {methode === "depot" && (
+                    <Check size={14} className="absolute right-3 top-3 text-ocre-dark" aria-hidden="true" />
+                  )}
+                  <span className="font-medium">Lien de dépôt</span>
+                  <span className="mt-1 block text-xs text-ink-soft">GitHub ou GitLab</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMethode("fichiers")}
+                  className={`relative border p-3 text-left text-sm ${methode === "fichiers" ? "border-ocre-dark bg-ocre/10" : "border-ink/20"}`}
+                >
+                  {methode === "fichiers" && (
+                    <Check size={14} className="absolute right-3 top-3 text-ocre-dark" aria-hidden="true" />
+                  )}
+                  <span className="font-medium">Fichiers</span>
+                  <span className="mt-1 block text-xs text-ink-soft">Jusqu&apos;à 10 fichiers</span>
+                </button>
+              </div>
+            )}
+
+            {/* ÉTAPE 2 : INFORMATIONS */}
+
+            {etape === 2 &&
+              (methode === "depot" ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Plateforme" htmlFor={`plateforme-${candidature.id}`}>
+                    <Select
+                      id={`plateforme-${candidature.id}`}
+                      value={plateforme}
+                      onChange={(event) => setPlateforme(event.target.value as "github" | "gitlab")}
+                      disabled={envoi}
+                    >
+                      <option value="github">GitHub</option>
+                      <option value="gitlab">GitLab</option>
+                    </Select>
+                  </Field>
+                  <Field label="Branche (optionnel)" htmlFor={`branche-${candidature.id}`}>
+                    <Input
+                      id={`branche-${candidature.id}`}
+                      value={branche}
+                      onChange={(event) => setBranche(event.target.value)}
+                      placeholder="main"
+                      disabled={envoi}
+                    />
+                  </Field>
+                  <div className="sm:col-span-2">
+                    <Field label="URL du dépôt" htmlFor={`lien-${candidature.id}`}>
+                      <Input
+                        id={`lien-${candidature.id}`}
+                        value={lienLivrable}
+                        onChange={(event) => setLienLivrable(event.target.value)}
+                        placeholder={plateforme === "github" ? "https://github.com/…" : "https://gitlab.com/…"}
+                        disabled={envoi}
+                      />
+                    </Field>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Field label="Commentaire" htmlFor={`commentaire-${candidature.id}`}>
+                      <Textarea
+                        id={`commentaire-${candidature.id}`}
+                        rows={4}
+                        value={commentaireLivraison}
+                        onChange={(event) => setCommentaireLivraison(event.target.value)}
+                        placeholder="Précisions sur votre livraison…"
+                        disabled={envoi}
+                      />
+                    </Field>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label
+                    htmlFor={`fichiers-${candidature.id}`}
+                    className="flex cursor-pointer flex-col items-center gap-2 border border-dashed border-ink/30 p-6 text-center text-sm hover:border-ocre-dark"
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      void ajouterFichiers(event.dataTransfer.files);
+                    }}
+                  >
+                    <FileUp size={20} />
+                    <span>{uploadEnCours ? "Envoi des fichiers…" : "Sélectionner ou déposer des fichiers"}</span>
+                    <span className="text-xs text-ink-soft">PDF, Word, Excel, image, archive ou texte</span>
+                    <input
+                      id={`fichiers-${candidature.id}`}
+                      type="file"
+                      multiple
+                      className="sr-only"
+                      onChange={(event) => {
+                        void ajouterFichiers(event.target.files ?? []);
+                        event.target.value = "";
+                      }}
+                      disabled={envoi || uploadEnCours}
+                    />
+                  </label>
+                  {piecesJointes.length > 0 && (
+                    <ul className="mt-3 space-y-2 text-sm">
+                      {piecesJointes.map((piece, index) => (
+                        <li key={`${piece.url}-${index}`} className="flex items-center justify-between gap-3 border border-ink/10 px-3 py-2">
+                          <span className="min-w-0 truncate">{piece.nom} <span className="text-xs text-ink-soft">({Math.ceil((piece.tailleOctets ?? 0) / 1024)} Ko)</span></span>
+                          <button type="button" onClick={() => setPiecesJointes((precedentes) => precedentes.filter((_, pieceIndex) => pieceIndex !== index))} aria-label={`Supprimer ${piece.nom}`} className="shrink-0 text-brique">
+                            <Trash2 size={16} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  <div className="mt-4">
+                    <Field label="Commentaire" htmlFor={`commentaire-${candidature.id}`}>
+                      <Textarea
+                        id={`commentaire-${candidature.id}`}
+                        rows={4}
+                        value={commentaireLivraison}
+                        onChange={(event) => setCommentaireLivraison(event.target.value)}
+                        placeholder="Précisions sur votre livraison…"
+                        disabled={envoi}
+                      />
+                    </Field>
+                  </div>
+                </div>
+              ))}
+
+            {/* ÉTAPE 3 : APERÇU */}
+
+            {etape === 3 && (
+              <div className="space-y-3 rounded-lg border border-ink/15 bg-ink/5 p-4 text-sm">
+                <p>
+                  <span className="text-ink-soft">Méthode : </span>
+                  {methode === "depot"
+                    ? `Lien de dépôt (${plateforme === "github" ? "GitHub" : "GitLab"})`
+                    : "Fichiers"}
+                </p>
+
+                {methode === "depot" ? (
+                  <>
+                    <p className="break-all">
+                      <span className="text-ink-soft">URL : </span>
+                      {lienLivrable || "—"}
+                    </p>
+                    {branche && (
+                      <p>
+                        <span className="text-ink-soft">Branche : </span>
+                        {branche}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p>
+                    <span className="text-ink-soft">Fichiers : </span>
+                    {piecesJointes.length} fichier{piecesJointes.length > 1 ? "s" : ""}
+                  </p>
+                )}
+
+                {commentaireLivraison && (
+                  <p>
+                    <span className="text-ink-soft">Commentaire : </span>
+                    {commentaireLivraison}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {erreur && (
+              <p className="mt-3 text-xs text-brique">
+                {erreur}
+              </p>
+            )}
+
+            <div className="mt-5 flex items-center justify-between gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={etapePrecedente}
+                disabled={etape === 1 || envoi}
+              >
+                Précédent
+              </Button>
+
+              {etape < 3 ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={etapeSuivante}
+                  disabled={envoi || uploadEnCours}
+                >
+                  Suivant
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={
+                    envoi ||
+                    uploadEnCours ||
+                    (methode === "depot" ? !lienLivrable.trim() : !piecesJointes.length)
+                  }
+                >
+                  {envoi
+                    ? "Envoi…"
+                    : livraison
+                      ? "Mettre à jour la livraison"
+                      : "Déposer ma livraison"}
+                </Button>
+              )}
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* =========================================================
           ÉVALUATION DU CLIENT (RG-066)
@@ -1852,7 +1807,7 @@ function LivraisonClient({
     setCommentaireCorrection,
   ] = useState(
     livraison.commentaireCorrection ??
-    "",
+      "",
   );
 
   const [envoi, setEnvoi] =
@@ -1927,7 +1882,7 @@ function LivraisonClient({
     paiementsCandidature.some(
       (transaction) =>
         transaction.statut ===
-        "confirmee" ||
+          "confirmee" ||
         transaction.statut === "liberee",
     );
 
@@ -2025,7 +1980,7 @@ function LivraisonClient({
         // On affiche le message métier du backend.
         setEvaluationErreur(
           error.message ||
-          "Impossible d'envoyer l'évaluation.",
+            "Impossible d'envoyer l'évaluation.",
         );
       } else {
         setEvaluationErreur(
@@ -2098,7 +2053,7 @@ function LivraisonClient({
 
         setStatut(
           resultat.statut ??
-          "validee",
+            "validee",
         );
       } else {
         const resultat =
@@ -2112,7 +2067,7 @@ function LivraisonClient({
 
         setStatut(
           resultat.statut ??
-          "correction_demandee",
+            "correction_demandee",
         );
       }
     } catch (error) {
@@ -2182,7 +2137,7 @@ function LivraisonClient({
             statut === "validee"
               ? "rice"
               : statut ===
-                "correction_demandee"
+                  "correction_demandee"
                 ? "brique"
                 : "ink"
           }
@@ -2318,7 +2273,7 @@ function LivraisonClient({
               <CheckCircle size={16} />
 
               {envoi &&
-                action === "valider"
+              action === "valider"
                 ? "Validation…"
                 : "Valider la livraison"}
             </Button>
@@ -2341,7 +2296,7 @@ function LivraisonClient({
               <XCircle size={16} />
 
               {envoi &&
-                action === "corriger"
+              action === "corriger"
                 ? "Envoi…"
                 : "Demander une correction"}
             </Button>
@@ -2349,7 +2304,7 @@ function LivraisonClient({
         </div>
       )}
 
-      {/* =========================================================
+{/* =========================================================
           WORKFLOW DE FIN DE PROJET
           Livraison validée -> Paiement -> Évaluation -> Terminé
           ==================================================== */}

@@ -85,6 +85,16 @@ const typeMoyenPaiementLabel: Record<
   BANQUE: "Compte bancaire",
 };
 
+/** Moyen de paiement du CLIENT (RG-PAY-012) : numéro à débiter. */
+type MoyenPaiementClient = {
+  id: string;
+  type: "MVOLA" | "ORANGE_MONEY" | "AIRTEL_MONEY";
+  numero: string;
+  nomTitulaire: string;
+  principal: boolean;
+  actif: boolean;
+};
+
 // ============================================================
 // ICONE D'UN MOYEN DE PAIEMENT
 // ============================================================
@@ -388,6 +398,12 @@ function FormulairePaiement({
   const [telephone, setTelephone] = useState("");
   const [reference, setReference] = useState("");
 
+  // RG-PAY-012 : moyens de paiement du CLIENT (numéros enregistrés),
+  // pour ne pas avoir à retaper son numéro MVola à chaque paiement.
+  const [moyensClient, setMoyensClient] = useState<MoyenPaiementClient[]>([]);
+  const [moyenClientId, setMoyenClientId] = useState("");
+  const [saisieLibre, setSaisieLibre] = useState(false);
+
   const [
     moyensPaiement,
     setMoyensPaiement,
@@ -468,6 +484,36 @@ function FormulairePaiement({
     };
   }, [candidature.id]);
 
+  // RG-PAY-012 : charge mes propres moyens de paiement une seule fois
+  // (indépendant de la candidature) et présélectionne le principal —
+  // même logique que côté bénéficiaire.
+  useEffect(() => {
+    let actif = true;
+
+    api
+      .get<MoyenPaiementClient[]>("/moyens-paiement-client")
+      .then((moyens) => {
+        if (!actif) return;
+        const actifs = moyens.filter((m) => m.actif);
+        setMoyensClient(actifs);
+        const principal = actifs.find((m) => m.principal) ?? actifs[0];
+        if (principal) {
+          setMoyenClientId(principal.id);
+        } else {
+          setSaisieLibre(true);
+        }
+      })
+      .catch(() => {
+        // Non bloquant : le client peut toujours saisir son numéro
+        // directement si ses moyens enregistrés ne chargent pas.
+        if (actif) setSaisieLibre(true);
+      });
+
+    return () => {
+      actif = false;
+    };
+  }, []);
+
   // ==========================================================
   // MOYEN SÉLECTIONNÉ
   // ==========================================================
@@ -506,6 +552,15 @@ function FormulairePaiement({
       return;
     }
 
+    if (paiementMvola && !saisieLibre && !moyenClientId) {
+      setErreur("Sélectionnez votre numéro MVola.");
+      return;
+    }
+    if (paiementMvola && saisieLibre && !telephone.trim()) {
+      setErreur("Saisissez votre numéro MVola.");
+      return;
+    }
+
     setEnvoi(true);
 
     try {
@@ -515,7 +570,9 @@ function FormulairePaiement({
           ? {
               montant: Number(montant),
               methode,
-              telephoneDebite: telephone,
+              ...(saisieLibre
+                ? { telephoneDebite: telephone.trim() }
+                : { moyenPaiementClientId: moyenClientId }),
               moyenPaiementId,
             }
           : {
@@ -728,19 +785,59 @@ function FormulairePaiement({
 
           {paiementMvola ? (
             <div className="w-full sm:w-56">
-              <Field
-                label="Votre numéro MVola"
-                htmlFor="telephone"
-              >
-                <Input
-                  id="telephone"
-                  required
-                  value={telephone}
-                  onChange={(e) =>
-                    setTelephone(e.target.value)
-                  }
-                  placeholder="0341234567"
-                />
+              <Field label="Votre numéro MVola" htmlFor="telephone">
+                {!saisieLibre && moyensClient.length > 0 ? (
+                  <>
+                    <Select
+                      id="telephone"
+                      value={moyenClientId}
+                      onChange={(e) => {
+                        if (e.target.value === "__autre__") {
+                          setSaisieLibre(true);
+                        } else {
+                          setMoyenClientId(e.target.value);
+                        }
+                      }}
+                    >
+                      {moyensClient.map((moyen) => (
+                        <option key={moyen.id} value={moyen.id}>
+                          {moyen.numero}
+                          {moyen.principal ? " (principal)" : ""}
+                        </option>
+                      ))}
+                      <option value="__autre__">
+                        Saisir un autre numéro…
+                      </option>
+                    </Select>
+                    <p className="mt-1 text-xs text-ink-soft/70">
+                      <a
+                        href="/tableau-de-bord/parametres/moyens-paiement-client"
+                        className="underline hover:text-ink"
+                      >
+                        Gérer mes moyens de paiement
+                      </a>
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Input
+                      id="telephone"
+                      required
+                      value={telephone}
+                      onChange={(e) => setTelephone(e.target.value)}
+                      placeholder="0341234567"
+                    />
+                    {moyensClient.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setSaisieLibre(false)}
+                        className="mt-1 text-xs text-ink-soft underline hover:text-ink"
+                      >
+                        Choisir un numéro enregistré
+                      </button>
+                    )}
+                  </>
+                )}
               </Field>
             </div>
           ) : (

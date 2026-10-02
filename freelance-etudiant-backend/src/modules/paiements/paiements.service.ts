@@ -26,6 +26,7 @@ import { MvolaService } from './mvola.service';
 import { EmailService } from '../email/email.service';
 import { UsersService } from '../users/users.service';
 import { MoyensPaiementService } from '../moyens-paiement/moyens-paiement.service';
+import { MoyensPaiementClientService } from '../moyens-paiement-client/moyens-paiement-client.service';
 import {
   OPERATEURS_PAR_DEFAUT,
   TypeMoyenPaiement,
@@ -78,6 +79,8 @@ export class PaiementsService {
     private readonly usersService: UsersService,
 
     private readonly moyensPaiementService: MoyensPaiementService,
+
+    private readonly moyensPaiementClientService: MoyensPaiementClientService,
   ) {}
 
   /**
@@ -224,13 +227,45 @@ export class PaiementsService {
     // ============================================================
 
     if (dto.methode === MethodePaiement.MVOLA) {
+      // RG-PAY-012 : si le client a choisi un moyen de paiement
+      // enregistré (plutôt que de retaper un numéro), on en reprend le
+      // numéro — après avoir vérifié qu'il lui appartient bien et qu'il
+      // est actif (MoyensPaiementClientService.trouverPourPaiement,
+      // même garde que côté bénéficiaire). dto.telephoneDebite reste
+      // prioritaire s'il est fourni directement (saisie ponctuelle,
+      // sans enregistrement).
+      let telephoneDebite = dto.telephoneDebite;
+      let moyenPaiementClientId: string | undefined;
+
+      if (!telephoneDebite && dto.moyenPaiementClientId) {
+        const moyenClient =
+          await this.moyensPaiementClientService.trouverPourPaiement(
+            dto.moyenPaiementClientId,
+            clientId,
+          );
+        telephoneDebite = moyenClient.numero;
+        moyenPaiementClientId = moyenClient.id;
+      } else if (dto.moyenPaiementClientId) {
+        // Les deux ont été fournis : on fait confiance au numéro
+        // explicite pour le débit MVola, mais on trace quand même le
+        // moyen choisi pour l'historique.
+        moyenPaiementClientId = dto.moyenPaiementClientId;
+      }
+
+      if (!telephoneDebite) {
+        throw new BadRequestException(
+          'Le numéro MVola du payeur est obligatoire (saisissez-le ou sélectionnez un moyen de paiement enregistré).',
+        );
+      }
+
       return this.creerPaiementMvola(
         candidature,
         candidatureId,
         clientId,
-        dto,
+        telephoneDebite,
         montantConvenu,
         snapshot,
+        moyenPaiementClientId,
       );
     }
 
@@ -318,9 +353,10 @@ export class PaiementsService {
     >,
     candidatureId: string,
     clientId: string,
-    dto: CreerPaiementDto,
+    telephoneDebite: string,
     montantConvenu: number,
     snapshot: Partial<SnapshotMoyenPaiement> = {},
+    moyenPaiementClientId?: string,
   ): Promise<Transaction> {
     if (!this.mvolaService.estConfigure) {
       throw new ServiceUnavailableException(
@@ -342,7 +378,7 @@ export class PaiementsService {
       initiation = await this.mvolaService.initierPaiement({
         montantAr: montantConvenu,
         transactionReference: reference,
-        telephoneDebite: dto.telephoneDebite as string,
+        telephoneDebite,
         description: `Paiement mission "${candidature.mission.titre}" - KIANJA`,
       });
     } catch (error) {
@@ -369,8 +405,9 @@ export class PaiementsService {
       statut: StatutTransaction.EN_ATTENTE,
       provider: 'mvola',
       providerCorrelationId: initiation.serverCorrelationId,
-      telephoneDebite: dto.telephoneDebite,
+      telephoneDebite,
       providerStatut: initiation.statut,
+      moyenPaiementClientId: moyenPaiementClientId ?? null,
 
       // Snapshot du moyen bénéficiaire.
       ...snapshot,

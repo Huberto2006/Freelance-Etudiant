@@ -176,6 +176,11 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
         },
 
         {
+          href: "/tableau-de-bord/parametres/moyens-paiement-client",
+          label: "Moyens de paiement",
+        },
+
+        {
           href: "/tableau-de-bord/favoris",
           label: "Favoris",
         },

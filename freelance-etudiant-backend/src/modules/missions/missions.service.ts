@@ -3,11 +3,14 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { Mission } from './entities/mission.entity';
+import { EtudiantProfile } from '../etudiants/entities/etudiant-profile.entity';
+import { EmailsService } from '../emails/emails.service';
 import { CreateMissionDto, UpdateMissionDto } from './dto/mission.dto';
 import { FiltrerMissionsDto } from './dto/filtrer-missions.dto';
 import { StatutMission } from '../../common/enums/statut-mission.enum';
@@ -23,9 +26,14 @@ import { projeterMission } from '../../common/utils/projection-publique.util';
 
 @Injectable()
 export class MissionsService {
+  private readonly logger = new Logger(MissionsService.name);
+
   constructor(
     @InjectRepository(Mission)
     private readonly repo: Repository<Mission>,
+    @InjectRepository(EtudiantProfile)
+    private readonly etudiantRepo: Repository<EtudiantProfile>,
+    private readonly emailsService: EmailsService,
   ) {}
 
   async create(clientId: string, dto: CreateMissionDto): Promise<Mission> {
@@ -46,7 +54,107 @@ export class MissionsService {
       competencesRequises: dto.competencesRequises ?? [],
       statut: StatutMission.OUVERTE,
     });
-    return this.repo.save(mission);
+    const missionSauvegardee = await this.repo.save(mission);
+
+    // 📧 Déclencher l'email uniquement lorsqu'une mission devient réellement PUBLIÉE (OUVERTE & modérée)
+    // Une création en brouillon ou non modérée ne déclenche aucun email.
+    if (
+      missionSauvegardee.statut === StatutMission.OUVERTE &&
+      missionSauvegardee.estModere !== false
+    ) {
+      this.trouverEtudiantsConcernes(missionSauvegardee)
+        .then((destinataires) => {
+          if (destinataires.length > 0) {
+            return this.emailsService.sendNouvelleMission(destinataires, {
+              id: missionSauvegardee.id,
+              titre: missionSauvegardee.titre,
+              description: missionSauvegardee.description,
+              budget: missionSauvegardee.budget,
+              categorie: missionSauvegardee.categorie,
+              dateLimite: missionSauvegardee.dateLimite,
+            });
+          }
+        })
+        .catch((err) => {
+          this.logger.error(
+            `Échec lors de la diffusion email pour la nouvelle mission "${missionSauvegardee.titre}": ${
+              err instanceof Error ? err.message : String(err)
+            }`,
+          );
+        });
+    }
+
+    return missionSauvegardee;
+  }
+
+  /**
+   * Identifie les étudiants concernés par une nouvelle mission publiée
+   * selon les compétences requises et/ou la catégorie de la mission.
+   * Réutilise les profils existants sans créer d'algorithme complexe.
+   */
+  async trouverEtudiantsConcernes(
+    mission: Mission,
+  ): Promise<Array<{ email: string; nom?: string }>> {
+    const etudiants = await this.etudiantRepo
+      .createQueryBuilder('etudiant')
+      .leftJoinAndSelect('etudiant.utilisateur', 'utilisateur')
+      .where('utilisateur.estActif = true')
+      .andWhere('utilisateur.estSuspendu = false')
+      .getMany();
+
+    const competencesRequises = (mission.competencesRequises ?? []).map((c) =>
+      c.toLowerCase().trim(),
+    );
+    const categorie = (mission.categorie ?? '').toLowerCase().trim();
+
+    const etudiantsConcernes = etudiants.filter((etudiant) => {
+      // Ne pas notifier le créateur de la mission
+      if (etudiant.utilisateurId === mission.clientId) {
+        return false;
+      }
+
+      if (!etudiant.utilisateur?.email) {
+        return false;
+      }
+
+      // 1. Correspondance sur les compétences techniques
+      const competencesEtudiant = (etudiant.competences ?? []).map((c) =>
+        c.toLowerCase().trim(),
+      );
+      const aCompetenceCommune =
+        competencesRequises.length > 0 &&
+        competencesRequises.some((c) => competencesEtudiant.includes(c));
+
+      if (aCompetenceCommune) {
+        return true;
+      }
+
+      // 2. Correspondance sur les spécialités ou la filière (catégorie)
+      if (categorie) {
+        const specialites = (etudiant.specialites ?? []).map((s) =>
+          s.toLowerCase().trim(),
+        );
+        const aSpecialite = specialites.some(
+          (s) => s.includes(categorie) || categorie.includes(s),
+        );
+        if (aSpecialite) {
+          return true;
+        }
+
+        const filiere = (etudiant.filiere ?? '').toLowerCase().trim();
+        if (filiere && (filiere.includes(categorie) || categorie.includes(filiere))) {
+          return true;
+        }
+      }
+
+      // 3. Repli : si la mission n'exige aucune compétence spécifique, tous les étudiants actifs
+      return competencesRequises.length === 0;
+    });
+
+    return etudiantsConcernes.map((e) => ({
+      email: e.utilisateur.email,
+      nom: e.utilisateur.nom,
+    }));
   }
 
   async findAll(filtres: FiltrerMissionsDto) {

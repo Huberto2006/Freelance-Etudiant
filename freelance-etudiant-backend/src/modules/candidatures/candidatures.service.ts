@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -23,9 +24,12 @@ import { Utilisateur } from '../users/entities/utilisateur.entity';
 
 import { Groupe } from '../groupes/entities/groupe.entity';
 import { MembreGroupe } from '../groupes/entities/membre-groupe.entity';
+import { EmailsService } from '../emails/emails.service';
 
 @Injectable()
 export class CandidaturesService {
+  private readonly logger = new Logger(CandidaturesService.name);
+
   constructor(
     @InjectRepository(Candidature)
     private readonly repo: Repository<Candidature>,
@@ -41,6 +45,8 @@ export class CandidaturesService {
     private readonly missionsService: MissionsService,
 
     private readonly notificationsService: NotificationsService,
+
+    private readonly emailsService: EmailsService,
   ) { }
 
   /**
@@ -623,6 +629,22 @@ export class CandidaturesService {
         '/tableau-de-bord/candidatures',
     });
 
+    // 📧 Envoi d'email transactionnel indépendant (non bloquant, aucune notification interne créée)
+    this.emailsService
+      .sendCandidatureAcceptee({
+        email: candidatureInitiale.etudiant?.utilisateur?.email,
+        nom: candidatureInitiale.etudiant?.utilisateur?.nom,
+        titreMission: candidatureInitiale.mission?.titre,
+        missionId: candidatureInitiale.missionId,
+      })
+      .catch((err) => {
+        this.logger.error(
+          `Échec d'envoi de l'email candidature acceptée pour ${candidatureInitiale.etudiant?.utilisateur?.email}: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+      });
+
     return resultat.candidature;
   }
 
@@ -697,6 +719,22 @@ export class CandidaturesService {
       lienUrl:
         '/tableau-de-bord/candidatures',
     });
+
+    // 📧 Envoi d'email transactionnel indépendant (non bloquant, aucune notification interne créée)
+    this.emailsService
+      .sendCandidatureRefusee({
+        email: candidature.etudiant?.utilisateur?.email,
+        nom: candidature.etudiant?.utilisateur?.nom,
+        titreMission: candidature.mission?.titre,
+        missionId: candidature.missionId,
+      })
+      .catch((err) => {
+        this.logger.error(
+          `Échec d'envoi de l'email candidature refusée pour ${candidature.etudiant?.utilisateur?.email}: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+      });
 
     return saved;
   }

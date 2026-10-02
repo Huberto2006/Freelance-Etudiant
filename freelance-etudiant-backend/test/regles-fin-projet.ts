@@ -364,10 +364,15 @@ const mvolaFaux = {
 
 // Aucun moyen de paiement dans ce scenario : le service doit tolerer
 // une dependance inactive (aucun snapshot n'est alors copie).
-const moyensPaiementFaux = {} as unknown as MoyensPaiementService;
+const moyensPaiementFaux = {
+  listerPourClient: async () => [{ id: 'mp-test', estActif: true, type: 'orange_money', numeroTelephone: '0320000000', nomTitulaire: 'Test' }] as any,
+  trouverPourPaiement: async () => ({ id: 'mp-test', estActif: true, type: 'orange_money', numeroTelephone: '0320000000', nomTitulaire: 'Test' }) as any,
+} as unknown as MoyensPaiementService;
 
 const missionsService = new MissionsService(
   depotMissions as unknown as Repository<Mission>,
+  null as unknown as any,
+  null as unknown as any,
 );
 
 const candidaturesService = new CandidaturesService(
@@ -377,6 +382,7 @@ const candidaturesService = new CandidaturesService(
   null as unknown as any,
   missionsService,
   notificationsFaux,
+  null as unknown as any,
 );
 
 const paiementsService = new PaiementsService(
@@ -388,6 +394,7 @@ const paiementsService = new PaiementsService(
   emailFaux,
   usersFaux,
   moyensPaiementFaux,
+  null as unknown as any,
 );
 
 const livraisonsService = new LivraisonsService(
