@@ -35,8 +35,12 @@ export default function ConnexionPage() {
     setRenvoiMessage(null);
     setEnvoi(true);
     try {
-      await connecter(email, motDePasse);
-      router.push("/tableau-de-bord");
+      const completion = await connecter(email, motDePasse);
+      router.push(
+        completion?.role === "etudiant" && !completion.complete
+          ? "/completer-profil"
+          : "/tableau-de-bord",
+      );
     } catch (err) {
       if (
         err instanceof ApiError &&

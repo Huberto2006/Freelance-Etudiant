@@ -16,6 +16,18 @@ import {
   EmailNouvelleMissionData,
   templateNouvelleMission,
 } from './templates/nouvelle-mission.template';
+import {
+  EmailNouvelleCandidatureClientData,
+  templateDemandeServiceAccepteeClient,
+  templateNouvelleCandidatureClient,
+  templateNouvelleLivraisonClient,
+} from './templates/notifications-client.template';
+
+export interface ParamNotificationClient
+  extends Omit<EmailNouvelleCandidatureClientData, 'lienKianja'> {
+  email?: string | null;
+  routeKianja: string;
+}
 
 export interface ParamCandidatureEmail {
   email?: string | null;
@@ -236,6 +248,65 @@ export class EmailsService {
     } catch (err) {
       this.logger.error(
         `Erreur inattendue dans sendCandidatureRefusee : ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return false;
+    }
+  }
+
+  async sendNouvelleCandidatureClient(
+    params: ParamNotificationClient,
+  ): Promise<boolean> {
+    return this.envoyerNotificationClient(
+      params,
+      templateNouvelleCandidatureClient,
+    );
+  }
+
+  async sendNouvelleLivraisonClient(
+    params: ParamNotificationClient,
+  ): Promise<boolean> {
+    return this.envoyerNotificationClient(
+      params,
+      templateNouvelleLivraisonClient,
+    );
+  }
+
+  async sendDemandeServiceAccepteeClient(
+    params: ParamNotificationClient,
+  ): Promise<boolean> {
+    return this.envoyerNotificationClient(
+      params,
+      templateDemandeServiceAccepteeClient,
+    );
+  }
+
+  private async envoyerNotificationClient(
+    params: ParamNotificationClient,
+    template: (data: EmailNouvelleCandidatureClientData) => {
+      subject: string;
+      html: string;
+      text: string;
+    },
+  ): Promise<boolean> {
+    try {
+      if (!params.email) {
+        this.logger.warn(
+          `Email client absent pour l'événement concernant "${params.titre}"`,
+        );
+        return false;
+      }
+
+      const { routeKianja, ...data } = params;
+      const { subject, html, text } = template({
+        ...data,
+        lienKianja: `${this.frontendUrl.replace(/\/$/, '')}${routeKianja}`,
+      });
+      return await this.envoyerMail(params.email, subject, html, text);
+    } catch (error) {
+      this.logger.error(
+        `Erreur inattendue lors de l'envoi de l'email client pour "${params.titre}" : ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
       return false;
     }

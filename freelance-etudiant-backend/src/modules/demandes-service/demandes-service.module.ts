@@ -7,6 +7,7 @@ import { ServicesModule } from '../services/services.module';
 import { MissionsModule } from '../missions/missions.module';
 import { CandidaturesModule } from '../candidatures/candidatures.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { EmailsModule } from '../emails/emails.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     MissionsModule,
     CandidaturesModule,
     NotificationsModule,
+    EmailsModule,
   ],
   providers: [DemandesServiceService],
   controllers: [DemandesServiceController],

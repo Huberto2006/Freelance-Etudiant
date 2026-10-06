@@ -116,6 +116,8 @@ export class CandidaturesService {
         '/tableau-de-bord/mes-missions',
     });
 
+    void this.envoyerEmailNouvelleCandidature(saved, mission, etudiantId);
+
     return saved;
   }
 
@@ -245,6 +247,13 @@ export class CandidaturesService {
       lienUrl:
         '/tableau-de-bord/mes-missions',
     });
+
+    void this.envoyerEmailNouvelleCandidature(
+      saved,
+      mission,
+      chefId,
+      groupe.nom,
+    );
 
     return saved;
   }
@@ -1055,6 +1064,52 @@ export class CandidaturesService {
     ) {
       throw new BadRequestException(
         "Seule une candidature acceptee autorise le depot d'une livraison",
+      );
+    }
+  }
+
+  private async envoyerEmailNouvelleCandidature(
+    candidature: Candidature,
+    mission: Mission,
+    etudiantId: string,
+    nomGroupe?: string,
+  ): Promise<void> {
+    try {
+      const detailsEtudiant = await this.repo.findOne({
+        where: { id: candidature.id },
+        relations: ['etudiant', 'etudiant.utilisateur'],
+      });
+      const etudiant = detailsEtudiant?.etudiant?.utilisateur;
+      const client = mission.client?.utilisateur;
+
+      if (!etudiant?.email || !etudiant.nom) {
+        this.logger.warn(
+          `Email de candidature non envoyé : identité de l'étudiant ${etudiantId} introuvable.`,
+        );
+        return;
+      }
+      if (!client?.email) {
+        this.logger.warn(
+          `Email de candidature non envoyé : email du client de la mission ${mission.id} introuvable.`,
+        );
+        return;
+      }
+
+      await this.emailsService.sendNouvelleCandidatureClient({
+        email: client.email,
+        nomClient: client.nom,
+        titre: mission.titre,
+        nomEtudiant: nomGroupe
+          ? `${etudiant.nom} (groupe ${nomGroupe})`
+          : etudiant.nom,
+        date: candidature.dateCandidature,
+        routeKianja: '/tableau-de-bord/mes-missions',
+      });
+    } catch (error) {
+      this.logger.error(
+        `Échec de préparation de l'email de nouvelle candidature ${candidature.id} : ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
     }
   }

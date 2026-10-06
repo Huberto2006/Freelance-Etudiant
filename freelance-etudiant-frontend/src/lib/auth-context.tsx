@@ -41,10 +41,13 @@ interface AuthContextValue {
    * premier chargement.
    */
   completionProfil: CompletionProfil | null;
-  connecter: (email: string, motDePasse: string) => Promise<void>;
+  connecter: (
+    email: string,
+    motDePasse: string,
+  ) => Promise<CompletionProfil | null>;
   inscrire: (payload: RegisterPayload) => Promise<ReponseInscription>;
   deconnecter: () => void;
-  rafraichirProfil: () => Promise<void>;
+  rafraichirProfil: () => Promise<CompletionProfil | null>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -56,47 +59,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useState<CompletionProfil | null>(null);
   const router = useRouter();
 
-  const rafraichirProfil = useCallback(async () => {
-    // Le jeton d'acces n'existe qu'en memoire : apres un rechargement on le
-    // reobtient via le cookie httpOnly (refresh). Sans session : deconnecte.
-    const sessionOk = await restaurerSession();
-    if (!sessionOk) {
-      setUtilisateur(null);
-      setCompletionProfil(null);
-      setChargement(false);
-      return;
-    }
-    try {
-      const moi = await api.get<Utilisateur>("/users/me");
-      setUtilisateur(moi);
+  const rafraichirProfil = useCallback(
+    async (): Promise<CompletionProfil | null> => {
+      // Le jeton d'acces n'existe qu'en memoire : apres un rechargement on le
+      // reobtient via le cookie httpOnly (refresh). Sans session : deconnecte.
+      const sessionOk = await restaurerSession();
+      if (!sessionOk) {
+        setUtilisateur(null);
+        setCompletionProfil(null);
+        setChargement(false);
+        return null;
+      }
+      let completionChargee: CompletionProfil | null = null;
+      try {
+        const moi = await api.get<Utilisateur>("/users/me");
+        setUtilisateur(moi);
 
-      // Seul le parcours étudiant existe pour l'instant (ÉTAPE G) : on ne
-      // charge la complétion que pour ce rôle, pour ne rien changer au
-      // comportement des clients/admins.
-      if (moi.role === "etudiant") {
-        try {
-          const completion = await api.get<CompletionProfil>(
-            "/users/me/profile-completion",
-          );
-          setCompletionProfil(completion);
-        } catch {
+        // Seul le parcours étudiant existe pour l'instant (ÉTAPE G) : on ne
+        // charge la complétion que pour ce rôle, pour ne rien changer au
+        // comportement des clients/admins.
+        if (moi.role === "etudiant") {
+          try {
+            const completion = await api.get<CompletionProfil>(
+              "/users/me/profile-completion",
+            );
+            completionChargee = completion;
+            setCompletionProfil(completion);
+          } catch {
+            setCompletionProfil(null);
+          }
+        } else {
           setCompletionProfil(null);
         }
-      } else {
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          // La requete a deja tente un rafraichissement : echec final,
+          // on purge la session locale complete.
+          clearTokens();
+        }
+        setUtilisateur(null);
         setCompletionProfil(null);
+      } finally {
+        setChargement(false);
       }
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        // La requete a deja tente un rafraichissement : echec final,
-        // on purge la session locale complete.
-        clearTokens();
-      }
-      setUtilisateur(null);
-      setCompletionProfil(null);
-    } finally {
-      setChargement(false);
-    }
-  }, []);
+      return completionChargee;
+    },
+    [],
+  );
 
   useEffect(() => {
     // Differre l'appel hors du corps synchrone de l'effet (react-hooks/
@@ -124,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Le refresh token est pose par le serveur en cookie httpOnly : il
       // n'apparait jamais dans la reponse ni dans le JavaScript.
       setToken(res.accessToken);
-      await rafraichirProfil();
+      return rafraichirProfil();
     },
     [rafraichirProfil],
   );
