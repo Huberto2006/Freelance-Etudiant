@@ -6,6 +6,7 @@ import { LivraisonsController } from './livraisons.controller';
 import { CandidaturesModule } from '../candidatures/candidatures.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { PaiementsModule } from '../paiements/paiements.module';
+import { EmailsModule } from '../emails/emails.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { PaiementsModule } from '../paiements/paiements.module';
     CandidaturesModule,
     NotificationsModule,
     PaiementsModule,
+    EmailsModule,
   ],
   providers: [LivraisonsService],
   controllers: [LivraisonsController],

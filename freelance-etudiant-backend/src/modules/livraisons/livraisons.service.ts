@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
 
@@ -22,9 +23,12 @@ import { CandidaturesService } from "../candidatures/candidatures.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { TypeNotification } from "../../common/enums/type-notification.enum";
 import { PaiementsService } from "../paiements/paiements.service";
+import { EmailsService } from "../emails/emails.service";
 
 @Injectable()
 export class LivraisonsService {
+  private readonly logger = new Logger(LivraisonsService.name);
+
   constructor(
     @InjectRepository(Livraison)
     private readonly repo: Repository<Livraison>,
@@ -34,6 +38,8 @@ export class LivraisonsService {
     private readonly notificationsService: NotificationsService,
 
     private readonly paiementsService: PaiementsService,
+
+    private readonly emailsService: EmailsService,
   ) {}
 
   // ============================================================
@@ -200,6 +206,23 @@ export class LivraisonsService {
 
       lienUrl: `/tableau-de-bord/livraisons?candidature=${encodeURIComponent(candidatureId)}`,
     });
+
+    void this.emailsService
+      .sendNouvelleLivraisonClient({
+        email: candidature.mission.client?.utilisateur?.email,
+        nomClient: candidature.mission.client?.utilisateur?.nom,
+        titre: candidature.mission.titre,
+        nomEtudiant: candidature.etudiant?.utilisateur?.nom ?? 'Étudiant',
+        date: saved.dateLivraison,
+        routeKianja: `/tableau-de-bord/livraisons?candidature=${encodeURIComponent(candidatureId)}`,
+      })
+      .catch((error) => {
+        this.logger.error(
+          `Échec d'envoi de l'email de nouvelle livraison ${saved.id} : ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      });
 
     return saved;
   }

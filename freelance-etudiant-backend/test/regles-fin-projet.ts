@@ -35,6 +35,7 @@ import { PaiementsService } from '../src/modules/paiements/paiements.service';
 import { EvaluationsService } from '../src/modules/evaluations/evaluations.service';
 import { LivraisonsService } from '../src/modules/livraisons/livraisons.service';
 import { CandidaturesService } from '../src/modules/candidatures/candidatures.service';
+import { EmailsService } from '../src/modules/emails/emails.service';
 import { MissionsService } from '../src/modules/missions/missions.service';
 
 // Dependances simulees : "import type" est efface a la compilation,
@@ -336,6 +337,10 @@ const notificationsFaux = {
   creer: async () => undefined,
 } as unknown as NotificationsService;
 
+const emailsFaux = {
+  sendNouvelleLivraisonClient: async () => true,
+};
+
 const reputationFaux = {
   recalculerScore: async () => undefined,
 } as unknown as ReputationService;
@@ -402,6 +407,7 @@ const livraisonsService = new LivraisonsService(
   candidaturesService,
   notificationsFaux,
   paiementsService,
+  emailsFaux as unknown as EmailsService,
 );
 
 const evaluationsService = new EvaluationsService(

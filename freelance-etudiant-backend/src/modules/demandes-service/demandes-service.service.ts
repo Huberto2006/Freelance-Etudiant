@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -16,9 +17,12 @@ import { CandidaturesService } from '../candidatures/candidatures.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TypeNotification } from '../../common/enums/type-notification.enum';
 import { Role } from '../../common/enums/role.enum';
+import { EmailsService } from '../emails/emails.service';
 
 @Injectable()
 export class DemandesServiceService {
+  private readonly logger = new Logger(DemandesServiceService.name);
+
   constructor(
     @InjectRepository(DemandeService)
     private readonly repo: Repository<DemandeService>,
@@ -26,6 +30,7 @@ export class DemandesServiceService {
     private readonly missionsService: MissionsService,
     private readonly candidaturesService: CandidaturesService,
     private readonly notificationsService: NotificationsService,
+    private readonly emailsService: EmailsService,
   ) {}
 
   /**
@@ -218,6 +223,24 @@ export class DemandesServiceService {
       message: `Votre demande pour "${demande.service.titre}" a été acceptée. Vous pouvez suivre le projet dans "Mes missions".`,
       lienUrl: '/tableau-de-bord/mes-missions',
     });
+
+    void this.emailsService
+      .sendDemandeServiceAccepteeClient({
+        email: demande.client?.email,
+        nomClient: demande.client?.nom,
+        titre: demande.service.titre,
+        nomEtudiant:
+          demande.service.etudiant?.utilisateur?.nom ?? 'Étudiant',
+        date: new Date(),
+        routeKianja: '/tableau-de-bord/mes-missions',
+      })
+      .catch((error) => {
+        this.logger.error(
+          `Échec d'envoi de l'email pour la demande de service acceptée ${demande.id} : ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      });
 
     return demandeAcceptee;
   }
