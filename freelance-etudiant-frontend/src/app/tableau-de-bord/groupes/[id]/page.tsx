@@ -52,7 +52,11 @@ export default function GroupeDetailPage({
   const [annuaire, setAnnuaire] = useState<EtudiantProfile[]>([]);
 
   const [afficherInvitation, setAfficherInvitation] = useState(false);
-  const [invitations, setInvitations] = useState<InvitationGroupe[]>([]);
+  const [invitationsChargees, setInvitationsChargees] = useState<{
+    groupeId: string;
+    chefId: string;
+    items: InvitationGroupe[];
+  } | null>(null);
   const [actionEnCours, setActionEnCours] = useState<string | null>(null);
 
   const charger = async () => {
@@ -130,18 +134,35 @@ export default function GroupeDetailPage({
   );
 
   const estChef = monMembre?.role === "chef";
+  const invitations =
+    estChef &&
+    invitationsChargees?.groupeId === id &&
+    invitationsChargees.chefId === utilisateur?.id
+      ? invitationsChargees.items
+      : [];
 
   useEffect(() => {
-    if (!estChef) {
-      setInvitations([]);
-      return;
-    }
+    const chefId = utilisateur?.id;
+    if (!estChef || !chefId) return;
 
+    let cancelled = false;
     api
       .get<InvitationGroupe[]>(`/groupes/${id}/invitations`)
-      .then(setInvitations)
-      .catch(() => setInvitations([]));
-  }, [id, estChef]);
+      .then((items) => {
+        if (!cancelled) {
+          setInvitationsChargees({ groupeId: id, chefId, items });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setInvitationsChargees({ groupeId: id, chefId, items: [] });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, estChef, utilisateur?.id]);
 
   async function executerAction(
     cle: string,
@@ -494,15 +515,22 @@ export default function GroupeDetailPage({
                               `/groupes/invitations/${invitation.id}`,
                             );
 
-                            setInvitations((courantes) =>
-                              courantes.map((courante) =>
-                                courante.id === invitation.id
-                                  ? {
-                                      ...courante,
-                                      statut: "annulee",
-                                    }
-                                  : courante,
-                              ),
+                            setInvitationsChargees((courantes) =>
+                              !courantes ||
+                              courantes.groupeId !== id ||
+                              courantes.chefId !== utilisateur?.id
+                                ? courantes
+                                : {
+                                    ...courantes,
+                                    items: courantes.items.map((courante) =>
+                                      courante.id === invitation.id
+                                        ? {
+                                            ...courante,
+                                            statut: "annulee",
+                                          }
+                                        : courante,
+                                    ),
+                                  },
                             );
                           },
                         );

@@ -27,8 +27,14 @@ export default function MissionDetailPage({
   const { utilisateur } = useAuth();
   const router = useRouter();
 
-  const [mission, setMission] = useState<Mission | null>(null);
-  const [chargement, setChargement] = useState(true);
+  const [resultatMission, setResultatMission] = useState<{
+    id: string;
+    mission: Mission | null;
+    erreur: boolean;
+  } | null>(null);
+  const mission =
+    resultatMission?.id === id ? resultatMission.mission : null;
+  const chargement = resultatMission?.id !== id;
   const [afficherFormulaire, setAfficherFormulaire] = useState(false);
   const [prixPropose, setPrixPropose] = useState("");
   const [delaiPropose, setDelaiPropose] = useState("");
@@ -36,16 +42,28 @@ export default function MissionDetailPage({
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [succes, setSucces] = useState(false);
-  const [erreurChargement, setErreurChargement] = useState(false);
+  const erreurChargement =
+    resultatMission?.id === id && resultatMission.erreur;
 
   useEffect(() => {
-    setChargement(true);
-    setErreurChargement(false);
+    let cancelled = false;
+
     api
       .get<Mission>(`/missions/${id}`, { auth: false })
-      .then(setMission)
-      .catch(() => setErreurChargement(true))
-      .finally(() => setChargement(false));
+      .then((data) => {
+        if (!cancelled) {
+          setResultatMission({ id, mission: data, erreur: false });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setResultatMission({ id, mission: null, erreur: true });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   async function postuler(e: React.FormEvent) {

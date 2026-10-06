@@ -12,11 +12,18 @@ import { CommentairePublic } from '../../common/utils/projection-publique.util';
 import { SocketAuthentifie } from '../realtime/guards/ws-jwt.guard';
 import { getCorsOrigins } from '../../config/cors.config';
 
+const REGEX_UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Nombre maximal de rooms "commentaires" par socket (anti-abus memoire). */
+const MAX_ROOMS_COMMENTAIRES = 20;
+
 @WebSocketGateway({
   cors: {
     origin: getCorsOrigins(),
     credentials: true,
   },
+  // Borne la taille d'un message Socket.IO (defaut : 1 Mo).
+  maxHttpBufferSize: 100_000,
 })
 export class CommentairesGateway {
   @WebSocketServer()
@@ -49,7 +56,28 @@ export class CommentairesGateway {
       return;
     }
 
+    // Charge utile non fiable : validation stricte avant toute utilisation.
+    if (
+      !data ||
+      typeof data.cibleId !== 'string' ||
+      !REGEX_UUID.test(data.cibleId) ||
+      (data.cibleType !== TypeCibleContenu.MISSION &&
+        data.cibleType !== TypeCibleContenu.SERVICE)
+    ) {
+      return;
+    }
+
     const room = this.getRoomName(data.cibleType, data.cibleId);
+
+    const roomsCommentaires = [...socket.rooms].filter(
+      (r) => r.startsWith('mission:') || r.startsWith('service:'),
+    );
+    if (
+      !socket.rooms.has(room) &&
+      roomsCommentaires.length >= MAX_ROOMS_COMMENTAIRES
+    ) {
+      return;
+    }
 
     socket.join(room);
   }

@@ -6,7 +6,8 @@ import {
   Patch,
   Post,
   UseGuards,
-} from "@nestjs/common";
+  ParseUUIDPipe,
+} from '@nestjs/common';
 
 import {
   ApiBearerAuth,
@@ -50,7 +51,7 @@ export class LivraisonsController {
     summary: "Déposer ou modifier une livraison",
   })
   async livrer(
-    @Param("candidatureId") candidatureId: string,
+    @Param("candidatureId", ParseUUIDPipe) candidatureId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreerLivraisonDto,
   ) {
@@ -105,7 +106,7 @@ export class LivraisonsController {
     summary: "Consulter une livraison",
   })
   async findOne(
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.livraisonsService.findOneForUser(
@@ -124,7 +125,7 @@ export class LivraisonsController {
     summary: "Valider une livraison",
   })
   async valider(
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.livraisonsService.valider(
@@ -143,7 +144,7 @@ export class LivraisonsController {
     summary: "Demander une correction",
   })
   async demanderCorrection(
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: DemanderCorrectionDto,
   ) {

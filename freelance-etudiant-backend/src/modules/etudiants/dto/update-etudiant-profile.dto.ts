@@ -1,4 +1,6 @@
+import { REGEX_URL_PHOTO_PROFIL } from '../../../common/utils/upload-url.util';
 import {
+  ArrayMaxSize,
   IsArray,
   IsBoolean,
   IsInt,
@@ -78,6 +80,10 @@ export class UpdateEtudiantProfileDto {
   })
   @IsOptional()
   @IsString()
+  @MaxLength(500)
+  @Matches(REGEX_URL_PHOTO_PROFIL, {
+    message: 'La photo doit etre un fichier envoye a la plateforme ou une URL https.',
+  })
   photoUrl?: string;
 
   @ApiProperty({
@@ -91,7 +97,17 @@ export class UpdateEtudiantProfileDto {
   })
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(10, { message: 'Maximum 10 liens de portfolio.' })
   @IsString({ each: true })
+  @MaxLength(300, { each: true })
+  @Matches(URL_PROTOCOL_REGEX, {
+    each: true,
+    message: 'Chaque lien de portfolio doit commencer par http:// ou https://',
+  })
+  @IsUrl({ protocols: ['http', 'https'], require_tld: false }, {
+    each: true,
+    message: 'Chaque lien de portfolio doit etre une URL http(s) valide',
+  })
   portfolioUrls?: string[];
 
   // ==========================================================

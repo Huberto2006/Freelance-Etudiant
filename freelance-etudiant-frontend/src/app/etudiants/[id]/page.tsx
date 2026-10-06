@@ -17,7 +17,7 @@ import {
   Star,
 } from "lucide-react";
 
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, lienExterneSur } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type {
   EtudiantProfile,
@@ -29,7 +29,6 @@ import { formatArgent, formatDateCourte } from "@/lib/format";
 import {
   MessageVide,
   NoticeCard,
-  SousTitreSection,
   StampBadge,
   Tag,
 } from "@/components/ui/Notice";
@@ -81,8 +80,6 @@ export default function ProfilEtudiantPage({
     if (chargementSession) return;
 
     if (!utilisateur) {
-      setConnexionRequise(true);
-      setChargement(false);
       return;
     }
 
@@ -121,6 +118,11 @@ export default function ProfilEtudiantPage({
     };
   }, [id, utilisateur, chargementSession]);
 
+  const chargementAffiche =
+    chargementSession || (Boolean(utilisateur) && chargement);
+  const connexionRequiseAffichee =
+    connexionRequise || (!chargementSession && !utilisateur);
+
   const portfolioUrls = useMemo(
     () => (etudiant?.portfolioUrls ?? []).filter(Boolean),
     [etudiant],
@@ -132,7 +134,7 @@ export default function ProfilEtudiantPage({
     etudiant?.nombreMissionsTerminees ?? 0,
   );
 
-  if (chargement) {
+  if (chargementAffiche) {
     return (
       <div className="mx-auto max-w-5xl px-5 py-16">
         <div className="rounded-2xl border border-ink/10 bg-paper-light p-8 text-sm text-ink-soft shadow-sm">
@@ -146,7 +148,7 @@ export default function ProfilEtudiantPage({
     return (
       <div className="mx-auto max-w-5xl px-5 py-16">
         <NoticeCard className="flex flex-col items-center gap-3 py-10 text-center">
-          {connexionRequise ? (
+          {connexionRequiseAffichee ? (
             <>
               <p className="text-sm text-ink-soft">
                 Connectez-vous pour consulter les profils des étudiants.
@@ -495,7 +497,7 @@ export default function ProfilEtudiantPage({
               <div className="flex flex-wrap gap-2">
                 {etudiant.githubUrl && (
                   <a
-                    href={etudiant.githubUrl}
+                    href={lienExterneSur(etudiant.githubUrl) ?? "#"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
@@ -506,7 +508,7 @@ export default function ProfilEtudiantPage({
                 )}
                 {etudiant.gitlabUrl && (
                   <a
-                    href={etudiant.gitlabUrl}
+                    href={lienExterneSur(etudiant.gitlabUrl) ?? "#"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
@@ -517,7 +519,7 @@ export default function ProfilEtudiantPage({
                 )}
                 {etudiant.linkedinUrl && (
                   <a
-                    href={etudiant.linkedinUrl}
+                    href={lienExterneSur(etudiant.linkedinUrl) ?? "#"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
@@ -528,7 +530,7 @@ export default function ProfilEtudiantPage({
                 )}
                 {etudiant.siteWeb && (
                   <a
-                    href={etudiant.siteWeb}
+                    href={lienExterneSur(etudiant.siteWeb) ?? "#"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"

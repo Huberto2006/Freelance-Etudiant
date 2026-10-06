@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import { nettoyerSujet } from '../../common/utils/html.util';
 import type { Transporter } from 'nodemailer';
 
 import {
@@ -164,7 +165,7 @@ export class EmailsService {
       await transporter.sendMail({
         from: this.fromAddress,
         to,
-        subject,
+        subject: nettoyerSujet(subject),
         html,
         text,
       });

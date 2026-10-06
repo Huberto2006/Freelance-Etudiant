@@ -530,22 +530,25 @@ function MessagesContent() {
   /*
    * Conversation active = INDIVIDUEL ou GROUPE.
    */
-  const conversationActive =
-    contactActif
-      ? {
-          type: "INDIVIDUEL" as const,
-          id: contactActif.id,
-          nom: contactActif.nom,
-        }
-      : groupeActif
+  const conversationActive = useMemo(
+    () =>
+      contactActif
         ? {
-            type: "GROUPE" as const,
-            id: groupeActif.id,
-            nom: groupeActif.nom,
-            nombreMembres:
-              groupeActif.nombreMembres,
+            type: "INDIVIDUEL" as const,
+            id: contactActif.id,
+            nom: contactActif.nom,
           }
-        : null;
+        : groupeActif
+          ? {
+              type: "GROUPE" as const,
+              id: groupeActif.id,
+              nom: groupeActif.nom,
+              nombreMembres:
+                groupeActif.nombreMembres,
+            }
+          : null,
+    [contactActif, groupeActif],
+  );
 
   /* =========================================================
      CHARGEMENT DES CONVERSATIONS
@@ -1771,7 +1774,6 @@ function MessagesContent() {
 
   useEffect(() => {
     if (!missionIdActif) {
-      setMission(null);
       return;
     }
 

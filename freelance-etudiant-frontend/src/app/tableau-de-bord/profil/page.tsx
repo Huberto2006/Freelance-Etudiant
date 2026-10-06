@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, lienExterneSur } from "@/lib/api";
 import { formatArgent } from "@/lib/format";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
@@ -745,7 +745,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               <div className="mt-6 flex flex-wrap gap-2 border-t border-ink/10 pt-5">
                 {profil?.githubUrl && (
                   <a
-                    href={profil.githubUrl}
+                    href={lienExterneSur(profil.githubUrl) ?? "#"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
@@ -756,7 +756,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 )}
                 {profil?.gitlabUrl && (
                   <a
-                    href={profil.gitlabUrl}
+                    href={lienExterneSur(profil.gitlabUrl) ?? "#"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
@@ -767,7 +767,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 )}
                 {profil?.linkedinUrl && (
                   <a
-                    href={profil.linkedinUrl}
+                    href={lienExterneSur(profil.linkedinUrl) ?? "#"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
@@ -778,7 +778,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 )}
                 {profil?.siteWeb && (
                   <a
-                    href={profil.siteWeb}
+                    href={lienExterneSur(profil.siteWeb) ?? "#"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"

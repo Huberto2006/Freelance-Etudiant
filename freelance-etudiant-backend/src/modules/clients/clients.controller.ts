@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ClientsService } from './clients.service';
 import { UpdateClientProfileDto } from './dto/update-client-profile.dto';
@@ -38,21 +46,33 @@ export class ClientsController {
   @Public()
   @Get(':id')
   @ApiOperation({ summary: "Consulter la fiche publique d'un client" })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
     const profil = await this.clientsService.findByUtilisateurId(id);
 
     /*
-     * Sanitisation de la fiche publique :
-     * - telephone : coordonnee privee, reservee au proprietaire
-     *   (GET /clients/me) et a la mise en relation ;
-     * - profil.utilisateur.email : donnee privee jamais exposee publiquement.
+     * Fiche publique en LISTE BLANCHE : seuls les champs ci-dessous sont
+     * exposes. Tout futur champ ajoute a ClientProfile (telephone, budgets,
+     * besoins...) reste prive par defaut, contrairement a un destructuring
+     * qui retire seulement les champs connus.
      */
-    const { telephone, utilisateur, ...profilPublic } = profil;
-    const utilisateurPublic = utilisateur
-      ? { id: utilisateur.id, nom: utilisateur.nom, role: utilisateur.role, photoUrl: utilisateur.photoUrl }
-      : undefined;
-
-    return { ...profilPublic, utilisateur: utilisateurPublic };
+    return {
+      utilisateurId: profil.utilisateurId,
+      typeClient: profil.typeClient,
+      nomEntreprise: profil.nomEntreprise,
+      secteurActivite: profil.secteurActivite,
+      description: profil.description,
+      ville: profil.ville,
+      siteWeb: profil.siteWeb,
+      nombreProjets: profil.nombreProjets,
+      utilisateur: profil.utilisateur
+        ? {
+            id: profil.utilisateur.id,
+            nom: profil.utilisateur.nom,
+            role: profil.utilisateur.role,
+            photoUrl: profil.utilisateur.photoUrl,
+          }
+        : undefined,
+    };
   }
 }
 

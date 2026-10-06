@@ -1,14 +1,18 @@
 import {
   Injectable,
+  Logger,
   UnauthorizedException,
   BadRequestException,
   HttpException,
   HttpStatus,
 } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { IsNull, LessThan, Repository } from "typeorm";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcrypt";
 import * as crypto from "crypto";
+import { RefreshToken } from "./entities/refresh-token.entity";
 import { UsersService } from "../users/users.service";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
@@ -45,15 +49,97 @@ const HASH_FACTICE_TEMPS_CONSTANT =
  */
 const VERIFICATION_EMAIL_EXPIRE_HEURES = 24;
 const RENVOI_VERIFICATION_DELAI_MS = 60_000;
+/** Delai minimal entre deux emails de reinitialisation pour un meme compte. */
+const RENVOI_RESET_DELAI_MS = 60_000;
+
+/**
+ * Protection anti brute force PAR COMPTE (en plus du throttling par IP) :
+ * apres MAX_ECHECS_CONNEXION echecs dans la fenetre, toute tentative sur cet
+ * email est refusee pendant BLOCAGE_CONNEXION_MS. Le blocage s'applique a
+ * n'importe quel email (existant ou non) : il ne revele rien. Etat en
+ * memoire (un seul processus) : utiliser Redis pour plusieurs instances.
+ */
+const MAX_ECHECS_CONNEXION = 10;
+const FENETRE_ECHECS_MS = 15 * 60_000;
+const BLOCAGE_CONNEXION_MS = 5 * 60_000;
+const TAILLE_MAX_TABLE_ECHECS = 10_000;
+
+/**
+ * Tolerance apres rotation : deux onglets peuvent legitimement presenter le
+ * meme refresh token a quelques instants d'ecart. Au-dela, la reutilisation
+ * d'un jeton revoque est consideree comme un vol.
+ */
+const GRACE_REUTILISATION_MS = 10_000;
+
+export interface SessionEmise {
+  accessToken: string;
+  refreshToken: string;
+  /** Expiration du refresh token (epoch secondes), pour le cookie. */
+  refreshExp?: number;
+  utilisateur: { id: string; email: string; role: Role };
+}
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+  private readonly echecsConnexion = new Map<
+    string,
+    { count: number; premierLe: number; bloqueJusqua: number }
+  >();
+
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly emailService: EmailService,
+    @InjectRepository(RefreshToken)
+    private readonly refreshRepo: Repository<RefreshToken>,
   ) {}
+
+  // ------------------------------------------------------------------
+  // Anti brute force par compte
+  // ------------------------------------------------------------------
+
+  private cleEchecs(email: string): string {
+    return email.trim().toLowerCase();
+  }
+
+  private verifierBlocage(email: string): void {
+    const etat = this.echecsConnexion.get(this.cleEchecs(email));
+    if (etat && etat.bloqueJusqua > Date.now()) {
+      throw new HttpException(
+        "Trop de tentatives de connexion. Reessayez dans quelques minutes.",
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+  }
+
+  private enregistrerEchec(email: string): void {
+    const cle = this.cleEchecs(email);
+    const maintenant = Date.now();
+    if (this.echecsConnexion.size >= TAILLE_MAX_TABLE_ECHECS) {
+      for (const [k, v] of this.echecsConnexion) {
+        if (v.bloqueJusqua < maintenant && maintenant - v.premierLe > FENETRE_ECHECS_MS) {
+          this.echecsConnexion.delete(k);
+        }
+      }
+    }
+    let etat = this.echecsConnexion.get(cle);
+    if (!etat || maintenant - etat.premierLe > FENETRE_ECHECS_MS) {
+      etat = { count: 0, premierLe: maintenant, bloqueJusqua: 0 };
+    }
+    etat.count += 1;
+    if (etat.count >= MAX_ECHECS_CONNEXION) {
+      etat.bloqueJusqua = maintenant + BLOCAGE_CONNEXION_MS;
+      etat.count = 0;
+      etat.premierLe = maintenant;
+    }
+    this.echecsConnexion.set(cle, etat);
+  }
+
+  private reinitialiserEchecs(email: string): void {
+    this.echecsConnexion.delete(this.cleEchecs(email));
+  }
 
   /**
    * Inscription. RG1 : role unique choisi a l'inscription (etudiant ou
@@ -117,7 +203,8 @@ export class AuthService {
     };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto): Promise<SessionEmise> {
+    this.verifierBlocage(dto.email);
     const utilisateur = await this.usersService.findByEmail(dto.email);
 
     // Defense contre l'enumeration de comptes (OWASP API2 / A07:2021) :
@@ -136,8 +223,10 @@ export class AuthService {
       utilisateur?.motDePasse ?? HASH_FACTICE_TEMPS_CONSTANT,
     );
     if (!utilisateur || !motDePasseValide) {
+      this.enregistrerEchec(dto.email);
       throw new UnauthorizedException("Identifiants invalides");
     }
+    this.reinitialiserEchecs(dto.email);
 
     // A partir d'ici, le mot de passe est confirme correct : reveler
     // l'etat du compte au legitime proprietaire ne cree plus de risque
@@ -150,35 +239,106 @@ export class AuthService {
         "Votre adresse email n'a pas encore ete verifiee. Consultez votre boite de reception et cliquez sur le lien de verification recu a l'inscription.",
       );
     }
-    return this.buildAuthResponse(
+    return this.emettreSession(
       utilisateur.id,
       utilisateur.email,
       utilisateur.role,
     );
   }
 
-  async refreshToken(refreshToken: string) {
+  /**
+   * Echange un refresh token contre un nouveau couple (rotation). Le jeton
+   * presente est revoque. Un jeton deja revoque (hors tolerance) declenche
+   * la revocation de TOUTES les sessions de l'utilisateur.
+   */
+  async refreshToken(
+    refreshToken: string | null | undefined,
+  ): Promise<SessionEmise> {
+    const refus = () =>
+      new UnauthorizedException("Refresh token invalide ou expire");
+
+    if (!refreshToken || typeof refreshToken !== "string") throw refus();
+
+    let payload: JwtPayload;
     try {
-      // Meme secret que celui utilise pour SIGNER le refresh token dans
-      // buildAuthResponse() : un secret dedie (JWT_REFRESH_SECRET) avec
-      // repli sur le secret principal s'il n'est pas defini.
-      const payload = this.jwtService.verify<JwtPayload>(refreshToken, {
-        secret:
-          this.configService.get<string>("jwt.refreshSecret") ??
-          this.configService.get<string>("JWT_SECRET"),
+      payload = this.jwtService.verify<JwtPayload>(refreshToken, {
+        secret: this.configService.getOrThrow<string>("jwt.refreshSecret"),
+        algorithms: ["HS256"],
       });
-      const utilisateur = await this.usersService.findById(payload.sub);
-      if (!utilisateur || utilisateur.estSuspendu || !utilisateur.estActif) {
-        throw new UnauthorizedException();
-      }
-      return this.buildAuthResponse(
-        utilisateur.id,
-        utilisateur.email,
-        utilisateur.role,
-      );
     } catch {
-      throw new UnauthorizedException("Refresh token invalide ou expire");
+      throw refus();
     }
+    if (payload.typ !== "refresh" || !payload.jti || !payload.sub) throw refus();
+
+    const ligne = await this.refreshRepo.findOne({
+      where: { id: payload.jti, utilisateurId: payload.sub },
+    });
+    if (
+      !ligne ||
+      ligne.tokenHash !== this.empreinte(refreshToken) ||
+      ligne.dateExpiration.getTime() < Date.now()
+    ) {
+      throw refus();
+    }
+
+    if (ligne.revoqueLe) {
+      if (Date.now() - ligne.revoqueLe.getTime() > GRACE_REUTILISATION_MS) {
+        await this.revoquerToutesLesSessions(ligne.utilisateurId);
+        this.logger.warn(
+          `Reutilisation d'un refresh token revoque (utilisateur ${ligne.utilisateurId}) : toutes les sessions ont ete revoquees`,
+        );
+      }
+      throw refus();
+    }
+
+    // Revocation atomique : un seul appel concurrent peut reussir.
+    const maj = await this.refreshRepo.update(
+      { id: ligne.id, revoqueLe: IsNull() },
+      { revoqueLe: new Date() },
+    );
+    if (!maj.affected) throw refus();
+
+    const utilisateur = await this.usersService.findById(payload.sub);
+    if (!utilisateur || utilisateur.estSuspendu || !utilisateur.estActif) {
+      throw refus();
+    }
+    return this.emettreSession(
+      utilisateur.id,
+      utilisateur.email,
+      utilisateur.role,
+    );
+  }
+
+  /** Deconnexion : revoque le refresh token presente (silencieux si invalide). */
+  async logout(refreshToken: string | null | undefined): Promise<void> {
+    if (!refreshToken) return;
+    try {
+      const payload = this.jwtService.verify<JwtPayload>(refreshToken, {
+        secret: this.configService.getOrThrow<string>("jwt.refreshSecret"),
+        algorithms: ["HS256"],
+        ignoreExpiration: true,
+      });
+      if (payload.typ === "refresh" && payload.jti) {
+        await this.refreshRepo.update(
+          { id: payload.jti, utilisateurId: payload.sub, revoqueLe: IsNull() },
+          { revoqueLe: new Date() },
+        );
+      }
+    } catch {
+      /* jeton invalide : rien a revoquer */
+    }
+  }
+
+  /** Revoque toutes les sessions (changement de mot de passe, vol detecte). */
+  async revoquerToutesLesSessions(utilisateurId: string): Promise<void> {
+    await this.refreshRepo.update(
+      { utilisateurId, revoqueLe: IsNull() },
+      { revoqueLe: new Date() },
+    );
+  }
+
+  private empreinte(jeton: string): string {
+    return crypto.createHash("sha256").update(jeton).digest("hex");
   }
 
   /**
@@ -188,37 +348,50 @@ export class AuthService {
    * volontairement neutre que l'email existe ou non (anti-enumeration).
    */
   async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
-    const utilisateur = await this.usersService.findByEmail(dto.email);
-    if (utilisateur) {
-      const jeton = crypto.randomBytes(32).toString("hex");
-      const jetonHache = crypto.createHash("sha256").update(jeton).digest("hex");
-
-      utilisateur.resetPasswordToken = jetonHache;
-      utilisateur.resetPasswordExpire = new Date(
-        Date.now() + RESET_PASSWORD_EXPIRE_MINUTES * 60 * 1000,
-      );
-      await this.usersService.save(utilisateur);
-
-      const frontendUrl =
-        this.configService.get<string>("app.frontendUrl") ??
-        "http://localhost:3001";
-      const lien = `${frontendUrl}/reinitialiser-mot-de-passe?token=${jeton}`;
-
-      // Envoi du VRAI email via SMTP (Nodemailer). En dev sans SMTP
-      // configure, EmailService journalise le contenu en console.
-      // L'echec d'envoi ne modifie jamais la reponse : elle doit rester
-      // identique que le compte existe ou non (anti-enumeration).
-      await this.emailService.envoyerResetPassword(dto.email, {
-        nom: utilisateur.nom,
-        lien,
-        dureeMinutes: RESET_PASSWORD_EXPIRE_MINUTES,
-      });
-    }
+    // Le traitement (lecture/ecriture en base, envoi SMTP) est execute APRES
+    // la reponse : sa duree ne depend plus de l'existence du compte, ce qui
+    // supprime l'oracle de timing d'enumeration.
+    void this.traiterDemandeReset(dto.email).catch((error) =>
+      this.logger.error(
+        `forgot-password : ${error instanceof Error ? error.message : String(error)}`,
+      ),
+    );
 
     return {
       message:
         "Si un compte existe avec cette adresse, un lien de reinitialisation vient d'etre envoye.",
     };
+  }
+
+  private async traiterDemandeReset(email: string): Promise<void> {
+    const utilisateur = await this.usersService.findByEmail(email);
+    if (!utilisateur) return;
+
+    // Anti-spam de la boite du proprietaire du compte.
+    if (utilisateur.resetPasswordExpire) {
+      const genereLe =
+        utilisateur.resetPasswordExpire.getTime() -
+        RESET_PASSWORD_EXPIRE_MINUTES * 60 * 1000;
+      if (Date.now() - genereLe < RENVOI_RESET_DELAI_MS) return;
+    }
+
+    const jeton = crypto.randomBytes(32).toString("hex");
+    utilisateur.resetPasswordToken = this.empreinte(jeton);
+    utilisateur.resetPasswordExpire = new Date(
+      Date.now() + RESET_PASSWORD_EXPIRE_MINUTES * 60 * 1000,
+    );
+    await this.usersService.save(utilisateur);
+
+    const frontendUrl =
+      this.configService.get<string>("app.frontendUrl") ??
+      "http://localhost:3001";
+    const lien = `${frontendUrl}/reinitialiser-mot-de-passe?token=${jeton}`;
+
+    await this.emailService.envoyerResetPassword(email, {
+      nom: utilisateur.nom,
+      lien,
+      dureeMinutes: RESET_PASSWORD_EXPIRE_MINUTES,
+    });
   }
 
   /**
@@ -244,6 +417,11 @@ export class AuthService {
     utilisateur.resetPasswordToken = null;
     utilisateur.resetPasswordExpire = null;
     await this.usersService.save(utilisateur);
+
+    // Un mot de passe reinitialise (compte potentiellement compromis)
+    // invalide toutes les sessions existantes.
+    await this.revoquerToutesLesSessions(utilisateur.id);
+    this.reinitialiserEchecs(utilisateur.email);
 
     return { message: "Mot de passe reinitialise avec succes" };
   }
@@ -311,30 +489,34 @@ export class AuthService {
   async renvoyerVerificationEmail(
     dto: RenvoyerVerificationEmailDto,
   ): Promise<{ message: string }> {
-    const utilisateur = await this.usersService.findByEmail(dto.email);
-
-    if (utilisateur && !utilisateur.emailVerifie) {
-      // Anti-abus : l'instant de generation du dernier jeton se deduit de
-      // son expiration ; on refuse un renvoi trop rapproche.
-      if (utilisateur.emailVerificationExpire) {
-        const genereLe =
-          utilisateur.emailVerificationExpire.getTime() -
-          VERIFICATION_EMAIL_EXPIRE_HEURES * 60 * 60 * 1000;
-        if (Date.now() - genereLe < RENVOI_VERIFICATION_DELAI_MS) {
-          throw new HttpException(
-            "Un email de verification a deja ete envoye recemment. Patientez une minute avant de reessayer.",
-            HttpStatus.TOO_MANY_REQUESTS,
-          );
-        }
-      }
-
-      await this.genererEtEnvoyerVerificationEmail(utilisateur);
-    }
+    // Reponse IDENTIQUE (statut, message, duree) que le compte existe, soit
+    // deja verifie ou que le delai anti-abus soit actif : aucun 429 ne
+    // trahit plus l'existence du compte.
+    void this.traiterRenvoiVerification(dto.email).catch((error) =>
+      this.logger.error(
+        `resend-verification : ${error instanceof Error ? error.message : String(error)}`,
+      ),
+    );
 
     return {
       message:
         "Si un compte non verifie existe avec cette adresse, un nouvel email de verification vient d'etre envoye.",
     };
+  }
+
+  private async traiterRenvoiVerification(email: string): Promise<void> {
+    const utilisateur = await this.usersService.findByEmail(email);
+    if (!utilisateur || utilisateur.emailVerifie) return;
+
+    // Anti-abus : renvoi trop rapproche ignore silencieusement.
+    if (utilisateur.emailVerificationExpire) {
+      const genereLe =
+        utilisateur.emailVerificationExpire.getTime() -
+        VERIFICATION_EMAIL_EXPIRE_HEURES * 60 * 60 * 1000;
+      if (Date.now() - genereLe < RENVOI_VERIFICATION_DELAI_MS) return;
+    }
+
+    await this.genererEtEnvoyerVerificationEmail(utilisateur);
   }
 
   /**
@@ -375,34 +557,55 @@ export class AuthService {
     });
   }
 
-  private buildAuthResponse(id: string, email: string, role: Role) {
-    const payload: JwtPayload = { sub: id, email, role };
-    const accessToken = this.jwtService.sign(payload, {
-      expiresIn: (this.configService.get<string>("JWT_EXPIRES_IN") ??
-        "15m") as StringValue,
+  /**
+   * Emet un couple access/refresh. L'access token est court (15 min) et
+   * porte typ=access ; le refresh token porte typ=refresh + jti, est signe
+   * avec un secret DEDIE et son empreinte est enregistree en base (session
+   * revocable, rotation a chaque usage).
+   */
+  private async emettreSession(
+    id: string,
+    email: string,
+    role: Role,
+  ): Promise<SessionEmise> {
+    const accessToken = this.jwtService.sign(
+      { sub: id, email, role, typ: "access" } satisfies JwtPayload,
+      {
+        expiresIn: (this.configService.get<string>("jwt.expiresIn") ??
+          "15m") as StringValue,
+      },
+    );
+
+    const jti = crypto.randomUUID();
+    const refreshToken = this.jwtService.sign(
+      { sub: id, email, role, typ: "refresh", jti } satisfies JwtPayload,
+      {
+        secret: this.configService.getOrThrow<string>("jwt.refreshSecret"),
+        expiresIn: (this.configService.get<string>("jwt.refreshExpiresIn") ??
+          "7d") as StringValue,
+      },
+    );
+
+    const decode = this.jwtService.decode(refreshToken) as { exp?: number } | null;
+    const refreshExp = decode?.exp;
+
+    await this.refreshRepo.insert({
+      id: jti,
+      utilisateurId: id,
+      tokenHash: this.empreinte(refreshToken),
+      dateExpiration: new Date((refreshExp ?? 0) * 1000),
     });
 
-    /*
-     * Correctif : le refresh token doit etre signe avec un secret DEDIE
-     * (JWT_REFRESH_SECRET) et non avec le secret du JwtModule. C'est le
-     * secret que refreshToken() utilise pour la verification ; signe avec
-     * le secret principal, la verification echouait systematiquement.
-     * Repli sur le secret principal si le secret dedie est absent.
-     */
-    const refreshSecret =
-      this.configService.get<string>("jwt.refreshSecret") ??
-      this.configService.get<string>("JWT_SECRET");
-
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: refreshSecret,
-      expiresIn: (this.configService.get<string>(
-        "JWT_REFRESH_EXPIRES_IN",
-      ) ?? "7d") as StringValue,
+    // Nettoyage opportuniste des sessions expirees de cet utilisateur.
+    await this.refreshRepo.delete({
+      utilisateurId: id,
+      dateExpiration: LessThan(new Date()),
     });
 
     return {
       accessToken,
       refreshToken,
+      refreshExp,
       utilisateur: { id, email, role },
     };
   }

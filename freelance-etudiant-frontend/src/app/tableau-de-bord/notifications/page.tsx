@@ -9,7 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 
-import { api } from "@/lib/api";
+import { api, lienInterneSur } from "@/lib/api";
 import type { NotificationItem } from "@/lib/types";
 import { formatDateCourte } from "@/lib/format";
 import { useApiList } from "@/hooks/useApiList";
@@ -353,11 +353,12 @@ export default function NotificationsPage() {
                * Exemple attendu :
                * /tableau-de-bord/livraisons?candidature=123
                */
-              if (notification.lienUrl) {
+              const lienSur = lienInterneSur(notification.lienUrl);
+              if (lienSur) {
                 return (
                   <Link
                     key={notification.id}
-                    href={notification.lienUrl}
+                    href={lienSur}
                     onClick={() =>
                       marquerLue(
                         notification,

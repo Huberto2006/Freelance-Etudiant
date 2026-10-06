@@ -8,6 +8,7 @@ import {
   Post,
   Req,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 
 import { GroupesService } from './groupes.service';
@@ -41,7 +42,7 @@ export class GroupesController {
 
   @Get('invitations/:invitationId')
   async trouverInvitation(
-    @Param('invitationId') invitationId: string,
+    @Param('invitationId', ParseUUIDPipe) invitationId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.groupesService.trouverInvitation(
@@ -52,7 +53,7 @@ export class GroupesController {
 
   @Get(':id')
   async trouver(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.groupesService.findOne(id, user.id);
@@ -60,7 +61,7 @@ export class GroupesController {
 
   @Post(':id/quitter')
   async quitter(
-    @Param('id') groupeId: string,
+    @Param('id', ParseUUIDPipe) groupeId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     await this.groupesService.quitter(groupeId, user);
@@ -69,8 +70,8 @@ export class GroupesController {
 
   @Delete(':id/membres/:etudiantId')
   async retirerMembre(
-    @Param('id') groupeId: string,
-    @Param('etudiantId') etudiantId: string,
+    @Param('id', ParseUUIDPipe) groupeId: string,
+    @Param('etudiantId', ParseUUIDPipe) etudiantId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     await this.groupesService.retirerMembre(groupeId, etudiantId, user);
@@ -79,7 +80,7 @@ export class GroupesController {
 
   @Patch(':id/chef')
   async transfererChef(
-    @Param('id') groupeId: string,
+    @Param('id', ParseUUIDPipe) groupeId: string,
     @Body('etudiantId') etudiantId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
@@ -88,7 +89,7 @@ export class GroupesController {
 
   @Post(':id/invitations')
   async inviter(
-    @Param('id') groupeId: string,
+    @Param('id', ParseUUIDPipe) groupeId: string,
     @Body() dto: InviterEtudiantDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
@@ -101,7 +102,7 @@ export class GroupesController {
 
   @Get(':id/invitations')
   async invitationsDuGroupe(
-    @Param('id') groupeId: string,
+    @Param('id', ParseUUIDPipe) groupeId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.groupesService.trouverInvitationsPourChef(groupeId, user);
@@ -109,7 +110,7 @@ export class GroupesController {
 
   @Post('invitations/:invitationId/accepter')
   async accepterInvitation(
-    @Param('invitationId') invitationId: string,
+    @Param('invitationId', ParseUUIDPipe) invitationId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.groupesService.accepterInvitation(
@@ -120,7 +121,7 @@ export class GroupesController {
 
   @Post('invitations/:invitationId/refuser')
   async refuserInvitation(
-    @Param('invitationId') invitationId: string,
+    @Param('invitationId', ParseUUIDPipe) invitationId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.groupesService.refuserInvitation(
@@ -131,7 +132,7 @@ export class GroupesController {
 
   @Delete('invitations/:invitationId')
   async annulerInvitation(
-    @Param('invitationId') invitationId: string,
+    @Param('invitationId', ParseUUIDPipe) invitationId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.groupesService.annulerInvitation(invitationId, user);

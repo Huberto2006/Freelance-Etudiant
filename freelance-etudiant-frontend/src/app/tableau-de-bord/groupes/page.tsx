@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell, Loader2, Plus, Users, X } from "lucide-react";
 
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, lienInterneSur } from "@/lib/api";
 import type { Groupe, Mission, NotificationItem } from "@/lib/types";
 
 import { Button } from "@/components/ui/Button";
@@ -139,7 +139,7 @@ export default function GroupesPage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {invitations.map((invitation) => (
-              <Link key={invitation.id} href={invitation.lienUrl ?? "#"}>
+              <Link key={invitation.id} href={lienInterneSur(invitation.lienUrl) ?? "#"}>
                 <NoticeCard className="h-full transition-colors hover:border-ink/30">
                   <p className="font-display font-medium">{invitation.titre}</p>
                   <p className="mt-1 text-sm text-ink-soft">{invitation.message}</p>

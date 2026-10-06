@@ -78,13 +78,18 @@ export function getFileUrl(
 
   avertirSiOrigineFichiersSuspecte();
 
-  // URL absolue
-  if (
-    valeur.startsWith("http://") ||
-    valeur.startsWith("https://") ||
-    valeur.startsWith("data:")
-  ) {
+  // URL absolue : http(s) uniquement. Les schemas javascript:, vbscript:,
+  // file: ou data: arbitraires sont refuses (seule une petite image
+  // data:image/... est tolérée, pour l'apercu local avant envoi).
+  if (/^https?:\/\//i.test(valeur)) {
     return valeur;
+  }
+  if (/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(valeur)) {
+    return valeur;
+  }
+  // Tout autre schema (xxx:) est rejete.
+  if (/^[a-z][a-z0-9+.-]*:/i.test(valeur)) {
+    return null;
   }
 
   /*
@@ -140,41 +145,60 @@ export function getFileUrl(
   return `${FILES_ORIGIN}${chemin}`;
 }
 
-const TOKEN_KEY = "kianja_access_token";
-const REFRESH_TOKEN_KEY = "kianja_refresh_token";
+/**
+ * Jeton d'acces : conserve UNIQUEMENT en memoire (variable de module).
+ * Il n'est plus ecrit dans localStorage, donc une faille XSS ne peut plus
+ * le lire de facon durable. Il vit 15 minutes ; au rechargement de la page
+ * il est reobtenu via /auth/refresh grace au cookie httpOnly (illisible
+ * par JavaScript) depose par le serveur.
+ */
+let accessTokenMemoire: string | null = null;
+
+/** Nettoyage des anciennes cles (sessions creees avant ce correctif). */
+function purgerAnciensJetons(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem("kianja_access_token");
+    window.localStorage.removeItem("kianja_refresh_token");
+  } catch {
+    /* stockage indisponible : sans importance */
+  }
+}
+purgerAnciensJetons();
 
 export function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(TOKEN_KEY);
+  return accessTokenMemoire;
 }
 
 export function setToken(token: string | null): void {
-  if (typeof window === "undefined") return;
-  if (token) {
-    window.localStorage.setItem(TOKEN_KEY, token);
-  } else {
-    window.localStorage.removeItem(TOKEN_KEY);
-  }
+  accessTokenMemoire = token;
 }
 
-export function getRefreshToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(REFRESH_TOKEN_KEY);
-}
-
-export function setRefreshToken(token: string | null): void {
-  if (typeof window === "undefined") return;
-  if (token) {
-    window.localStorage.setItem(REFRESH_TOKEN_KEY, token);
-  } else {
-    window.localStorage.removeItem(REFRESH_TOKEN_KEY);
-  }
-}
-
-/** Purge complete de la session locale (access + refresh). */
+/** Purge locale de la session (le cookie est efface par POST /auth/logout). */
 export function clearTokens(): void {
-  setToken(null);
-  setRefreshToken(null);
+  accessTokenMemoire = null;
+}
+
+/**
+ * En-tete exige par l'API sur les routes authentifiees par cookie
+ * (refresh, logout) : protection CSRF (un site tiers ne peut pas l'ajouter).
+ */
+const ENTETES_COOKIE = {
+  "Content-Type": "application/json",
+  "X-Kianja-Csrf": "1",
+};
+
+/** Termine la session cote serveur (revocation + suppression du cookie). */
+export async function terminerSessionServeur(): Promise<void> {
+  try {
+    await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: "POST",
+      headers: ENTETES_COOKIE,
+      credentials: "include",
+    });
+  } catch {
+    /* hors ligne : la session locale est purgee de toute facon */
+  }
 }
 
 export class ApiError extends Error {
@@ -211,29 +235,25 @@ let rafraichissementEnCours: Promise<string | null> | null = null;
 
 async function rafraichirToken(): Promise<string | null> {
   rafraichissementEnCours ??= (async () => {
-    const refreshToken = getRefreshToken();
-    if (!refreshToken) return null;
-
     try {
+      // Le refresh token est dans un cookie httpOnly : on ne le voit ni ne
+      // l'envoie nous-memes, le navigateur le joint (credentials: include).
       const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken }),
+        headers: ENTETES_COOKIE,
+        credentials: "include",
+        body: "{}",
       });
 
       if (!response.ok) return null;
 
       const data = parseBody(await response.text()) as {
         accessToken?: string;
-        refreshToken?: string;
       } | null;
 
       if (!data?.accessToken) return null;
 
       setToken(data.accessToken);
-      if (data.refreshToken) {
-        setRefreshToken(data.refreshToken);
-      }
       return data.accessToken;
     } catch {
       return null;
@@ -243,6 +263,16 @@ async function rafraichirToken(): Promise<string | null> {
   });
 
   return rafraichissementEnCours;
+}
+
+/**
+ * Restaure la session au chargement de la page : sans jeton en memoire, on
+ * tente un refresh via le cookie httpOnly. Retourne true si une session
+ * valide a ete retablie.
+ */
+export async function restaurerSession(): Promise<boolean> {
+  if (getToken()) return true;
+  return (await rafraichirToken()) !== null;
 }
 
 /** Analyse le corps d'une reponse en tolerant un contenu non JSON. */
@@ -282,6 +312,10 @@ async function executerRequete(
   return fetch(`${API_BASE_URL}${path}`, {
     ...rest,
     headers: finalHeaders,
+    // Necessaire pour que le navigateur accepte le cookie httpOnly pose par
+    // /auth/login (API sur une autre origine). Le cookie est limite par
+    // Path a /api/v1/auth : il n'est pas joint aux autres routes.
+    credentials: "include",
   });
 }
 
@@ -365,3 +399,52 @@ export const api = {
     return data as T;
   },
 };
+
+/**
+ * Ouvre un document prive (livrable, piece jointe) : demande d'abord au
+ * serveur un lien signe valable 60 s (controle d'acces cote serveur), puis
+ * l'ouvre dans un nouvel onglet. Les documents ne sont plus accessibles
+ * par une URL statique publique.
+ */
+export async function ouvrirDocument(url: string): Promise<void> {
+  // L'onglet est ouvert tout de suite (geste utilisateur) pour ne pas etre
+  // bloque par le navigateur, puis redirige vers le lien signe.
+  const onglet = typeof window !== "undefined" ? window.open("", "_blank") : null;
+  try {
+    if (onglet) onglet.opener = null;
+    const lien = await api.post<{ url: string }>("/uploads/document/lien", { url });
+    const cible = `${getApiOrigin()}${lien.url}`;
+    if (onglet) {
+      onglet.location.href = cible;
+    } else {
+      window.location.href = cible;
+    }
+  } catch (error) {
+    onglet?.close();
+    throw error;
+  }
+}
+
+/**
+ * Retourne l'URL uniquement si elle est http(s) ; sinon null. A utiliser
+ * pour tout lien externe saisi par un utilisateur (portfolio, depot...)
+ * avant de l'injecter dans un href.
+ */
+export function lienExterneSur(url?: string | null): string | null {
+  if (!url) return null;
+  const valeur = url.trim();
+  try {
+    const u = new URL(valeur);
+    return u.protocol === "http:" || u.protocol === "https:" ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Lien interne (notification...) : chemin relatif au site uniquement. */
+export function lienInterneSur(url?: string | null): string | null {
+  if (!url) return null;
+  const valeur = url.trim();
+  // "/chemin" accepte ; "//hote" (protocole relatif) et "/\\hote" refuses.
+  return /^\/(?![/\\])/.test(valeur) ? valeur : null;
+}

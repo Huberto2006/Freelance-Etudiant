@@ -1,3 +1,4 @@
+import { echapperHtml, nettoyerSujet, urlHttpSure } from '../../../common/utils/html.util';
 import {
   COULEURS,
   boutonAction,
@@ -12,9 +13,10 @@ export interface EmailCandidatureRefuseeData {
 }
 
 export function templateCandidatureRefusee(data: EmailCandidatureRefuseeData) {
-  const subject = `Mise à jour de votre candidature — ${data.titreMission}`;
+  const subject = nettoyerSujet(`Mise à jour de votre candidature — ${data.titreMission}`);
 
   const salutation = data.nom ? `Bonjour ${data.nom},` : 'Bonjour,';
+  const salutationHtml = echapperHtml(salutation);
 
   const html = envelopperEmail(`
     ${enteteEmail('Mise à jour de candidature', {
@@ -25,14 +27,14 @@ export function templateCandidatureRefusee(data: EmailCandidatureRefuseeData) {
     <tr>
       <td style="padding:16px 28px 8px 28px;">
         <p style="margin:0 0 16px 0;font-size:15px;color:${COULEURS.encre};line-height:1.6;">
-          ${salutation}
+          ${salutationHtml}
         </p>
         <p style="margin:0 0 16px 0;font-size:15px;color:${COULEURS.encre};line-height:1.6;">
           Nous vous informons que votre candidature pour la mission suivante n'a pas été retenue par le client :
         </p>
         <div style="background:#faf7f0;border-left:4px solid ${COULEURS.neutre};padding:14px 18px;border-radius:4px;margin:20px 0;">
           <p style="margin:0;font-size:16px;font-weight:bold;color:${COULEURS.encre};">
-            ${data.titreMission}
+            ${echapperHtml(data.titreMission)}
           </p>
         </div>
         <p style="margin:0 0 16px 0;font-size:14px;color:${COULEURS.texteSecondaire};line-height:1.6;">
@@ -48,7 +50,7 @@ export function templateCandidatureRefusee(data: EmailCandidatureRefuseeData) {
       <td style="padding:4px 28px 24px 28px;">
         <p style="margin:0;font-size:12px;color:${COULEURS.texteSecondaire};line-height:1.6;">
           Lien vers la plateforme :<br/>
-          <a href="${data.lienKianja}" style="color:${COULEURS.ocre};word-break:break-all;">${data.lienKianja}</a>
+          <a href="${echapperHtml(data.lienKianja)}" style="color:${COULEURS.ocre};word-break:break-all;">${echapperHtml(data.lienKianja)}</a>
         </p>
       </td>
     </tr>

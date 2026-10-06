@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -9,6 +10,7 @@ import {
   Query,
   Req,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -50,7 +52,7 @@ export class PaiementsController {
       "Payer une candidature acceptee : MVola en ligne (reel) ou declaration de virement",
   })
   async creer(
-    @Param('candidatureId') candidatureId: string,
+    @Param('candidatureId', ParseUUIDPipe) candidatureId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreerPaiementDto,
   ) {
@@ -91,6 +93,9 @@ export class PaiementsController {
       throw new UnauthorizedException('Signature webhook invalide');
     }
 
+    if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+      throw new BadRequestException('Notification invalide');
+    }
     return this.paiementsService.traiterWebhook(req.body);
   }
 
@@ -101,7 +106,7 @@ export class PaiementsController {
       "Verifier aupres du fournisseur (MVola) le statut reel d'un paiement en ligne",
   })
   async verifier(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.paiementsService.verifier(
@@ -139,7 +144,7 @@ export class PaiementsController {
       "Coordonnees de paiement de l'etudiant beneficiaire (livraison validee requise)",
   })
   async moyensPaiementCandidature(
-    @Param('candidatureId') candidatureId: string,
+    @Param('candidatureId', ParseUUIDPipe) candidatureId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.paiementsService.moyensPourCandidature(
@@ -161,7 +166,7 @@ export class PaiementsController {
       "Coordonnees de paiement de l'etudiant beneficiaire pour un paiement existant",
   })
   async moyensPaiementTransaction(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.paiementsService.moyensPourPaiement(
@@ -181,14 +186,14 @@ export class PaiementsController {
   @Roles(Role.ADMIN)
   @Patch('paiements/:id/confirmer')
   @ApiOperation({ summary: 'Confirmer la reception effective des fonds' })
-  async confirmer(@Param('id') id: string) {
+  async confirmer(@Param('id', ParseUUIDPipe) id: string) {
     return this.paiementsService.confirmer(id);
   }
 
   @Roles(Role.ADMIN)
   @Patch('paiements/:id/annuler')
   @ApiOperation({ summary: 'Annuler un paiement declare a tort' })
-  async annuler(@Param('id') id: string) {
+  async annuler(@Param('id', ParseUUIDPipe) id: string) {
     return this.paiementsService.annuler(id);
   }
 }

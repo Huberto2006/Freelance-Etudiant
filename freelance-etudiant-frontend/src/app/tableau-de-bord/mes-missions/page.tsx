@@ -9,7 +9,7 @@ import { api, ApiError, getFileUrl } from "@/lib/api";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { Candidature, Mission } from "@/lib/types";
 import { SousNavigation } from "@/components/ui/SousNavigation";
-import { CATEGORIE_AUTRE, cleCategorie, iconePourCategorie, optionsCategories } from "@/lib/categories";
+import { CATEGORIE_AUTRE, cleCategorie, optionsCategories } from "@/lib/categories";
 
 import {
   formatArgent,
@@ -42,7 +42,9 @@ function MesMissionsContent() {
 
   const [afficherFormulaire, setAfficherFormulaire] = useState(false);
   const [missionEnEdition, setMissionEnEdition] = useState<Mission | null>(null);
-  const [ouvertureAutoTraitee, setOuvertureAutoTraitee] = useState(false);
+  const [idAutoEditionFermee, setIdAutoEditionFermee] = useState<string | null>(
+    null,
+  );
 
   const [missionOuverte, setMissionOuverte] = useState<string | null>(null);
 
@@ -150,18 +152,17 @@ function MesMissionsContent() {
   const terminees = missions.filter((m) => m.statut === "terminee").length;
   const expirees = missions.filter(estExpiree).length;
 
-  // Ouvre automatiquement le formulaire d'edition quand on arrive depuis
-  // « Mes publications » avec ?editer=<id> (une seule fois, pour ne pas
-  // rouvrir le formulaire si l'utilisateur le referme).
-  useEffect(() => {
-    if (!idAEditer || ouvertureAutoTraitee || missions.length === 0) return;
-    const mission = missions.find((m) => m.id === idAEditer);
-    if (mission) {
-      setAfficherFormulaire(false);
-      setMissionEnEdition(mission);
-    }
-    setOuvertureAutoTraitee(true);
-  }, [idAEditer, missions, ouvertureAutoTraitee]);
+  const missionAutoAEditer =
+    idAEditer && idAutoEditionFermee !== idAEditer
+      ? missions.find((m) => m.id === idAEditer) ?? null
+      : null;
+  const missionEditee = missionEnEdition ?? missionAutoAEditer;
+
+  function fermerEdition() {
+    setMissionEnEdition(null);
+    setAfficherFormulaire(false);
+    if (idAEditer) setIdAutoEditionFermee(idAEditer);
+  }
 
   const categoriesDisponibles = Array.from(
     new Map(
@@ -209,7 +210,7 @@ function MesMissionsContent() {
           variant="secondary"
           className="flex items-center justify-center gap-2"
           onClick={() => {
-            setMissionEnEdition(null);
+            fermerEdition();
             setAfficherFormulaire((v) => !v);
           }}
         >
@@ -262,7 +263,7 @@ function MesMissionsContent() {
           FORMULAIRE DE CRÉATION
           ===================================================== */}
 
-      {afficherFormulaire && (
+      {afficherFormulaire && !missionAutoAEditer && (
         <div className="mb-8">
           <FormulaireMission
             onCree={async () => {
@@ -277,16 +278,16 @@ function MesMissionsContent() {
           FORMULAIRE D'ÉDITION
           ===================================================== */}
 
-      {missionEnEdition && (
+      {missionEditee && (
         <div className="mb-8">
           <FormulaireMission
-            key={missionEnEdition.id}
-            missionExistante={missionEnEdition}
+            key={missionEditee.id}
+            missionExistante={missionEditee}
             onCree={async () => {
-              setMissionEnEdition(null);
+              fermerEdition();
               await charger();
             }}
-            onAnnuler={() => setMissionEnEdition(null)}
+            onAnnuler={fermerEdition}
           />
         </div>
       )}

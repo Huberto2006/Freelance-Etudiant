@@ -395,7 +395,9 @@ export default function MesServicesPage() {
 function MesServicesContent() {
   const searchParams = useSearchParams();
   const idAEditer = searchParams.get("editer");
-  const [ouvertureAutoTraitee, setOuvertureAutoTraitee] = useState(false);
+  const [idAutoEditionFermee, setIdAutoEditionFermee] = useState<string | null>(
+    null,
+  );
   const [services, setServices] = useState<ServiceOffert[]>(
     [],
   );
@@ -405,6 +407,8 @@ function MesServicesContent() {
 
   const [ongletServices, setOngletServices] =
     useState<OngletServices>("actifs");
+  const [ongletChoisiManuellement, setOngletChoisiManuellement] =
+    useState(false);
 
   const [recherche, setRecherche] = useState("");
   const [filtreCategorie, setFiltreCategorie] =
@@ -449,16 +453,21 @@ function MesServicesContent() {
     };
   }, [chargerServices]);
 
-  useEffect(() => {
-    if (!idAEditer || ouvertureAutoTraitee || services.length === 0) return;
-    const service = services.find((s) => s.id === idAEditer);
-    if (service) {
-      setAfficherCreation(false);
-      setServiceEnEdition(service);
-      if (service.estArchive) setOngletServices("archives");
-    }
-    setOuvertureAutoTraitee(true);
-  }, [idAEditer, services, ouvertureAutoTraitee]);
+  const serviceAutoAEditer =
+    idAEditer && idAutoEditionFermee !== idAEditer
+      ? services.find((service) => service.id === idAEditer) ?? null
+      : null;
+  const serviceEdite = serviceEnEdition ?? serviceAutoAEditer;
+  const ongletServicesAffiche =
+    serviceAutoAEditer?.estArchive && !ongletChoisiManuellement
+      ? "archives"
+      : ongletServices;
+
+  function fermerEdition() {
+    setServiceEnEdition(null);
+    setAfficherCreation(false);
+    if (idAEditer) setIdAutoEditionFermee(idAEditer);
+  }
 
   const categoriesDisponibles = Array.from(
     new Map(
@@ -492,7 +501,7 @@ function MesServicesContent() {
 
   const servicesAffiches = servicesFiltres.filter(
     (service) =>
-      ongletServices === "archives"
+      ongletServicesAffiche === "archives"
         ? service.estArchive
         : !service.estArchive,
   );
@@ -582,8 +591,8 @@ function MesServicesContent() {
         ),
       );
 
-      if (serviceEnEdition?.id === service.id) {
-        setServiceEnEdition(null);
+      if (serviceEdite?.id === service.id) {
+        fermerEdition();
       }
     } catch (error) {
       setErreur(
@@ -642,8 +651,8 @@ function MesServicesContent() {
         ),
       );
 
-      if (serviceEnEdition?.id === service.id) {
-        setServiceEnEdition(null);
+      if (serviceEdite?.id === service.id) {
+        fermerEdition();
       }
     } catch (error) {
       setErreur(
@@ -663,7 +672,7 @@ function MesServicesContent() {
     ]);
 
     setAfficherCreation(false);
-    setServiceEnEdition(null);
+    fermerEdition();
     setOngletServices("actifs");
   };
 
@@ -678,7 +687,7 @@ function MesServicesContent() {
       ),
     );
 
-    setServiceEnEdition(null);
+    fermerEdition();
   };
 
   return (
@@ -693,8 +702,8 @@ function MesServicesContent() {
 
         <Button
           onClick={() => {
+            fermerEdition();
             setAfficherCreation(true);
-            setServiceEnEdition(null);
           }}
           className="flex items-center justify-center gap-2"
         >
@@ -750,7 +759,7 @@ function MesServicesContent() {
         />
       </div>
 
-      {afficherCreation && (
+      {afficherCreation && !serviceAutoAEditer && (
         <NoticeCard>
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
@@ -797,12 +806,13 @@ function MesServicesContent() {
             label: "Archivés",
           },
         ]}
-        actif={ongletServices}
-        onChanger={(valeur) =>
+        actif={ongletServicesAffiche}
+        onChanger={(valeur) => {
+          setOngletChoisiManuellement(true);
           setOngletServices(
             valeur as OngletServices,
-          )
-        }
+          );
+        }}
       />
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -819,7 +829,7 @@ function MesServicesContent() {
               setRecherche(event.target.value)
             }
             placeholder={
-              ongletServices === "archives"
+              ongletServicesAffiche === "archives"
                 ? "Rechercher un service archivé…"
                 : "Rechercher un service actif…"
             }
@@ -870,7 +880,7 @@ function MesServicesContent() {
             </div>
 
             <h3 className="font-semibold text-ink">
-              {ongletServices === "archives"
+              {ongletServicesAffiche === "archives"
                 ? "Aucun service archivé"
                 : "Aucun service actif"}
             </h3>
@@ -878,19 +888,19 @@ function MesServicesContent() {
             <p className="mt-1 max-w-md text-sm text-ink-soft">
               {recherche || filtreCategorie
                 ? "Aucun service ne correspond aux filtres sélectionnés."
-                : ongletServices === "archives"
+                : ongletServicesAffiche === "archives"
                   ? "Les services que vous archivez apparaîtront ici."
                   : "Créez votre premier service pour commencer à proposer vos compétences."}
             </p>
 
-            {ongletServices === "actifs" &&
+            {ongletServicesAffiche === "actifs" &&
               !recherche &&
               !filtreCategorie && (
                 <Button
                   className="mt-5"
                   onClick={() => {
+                    fermerEdition();
                     setAfficherCreation(true);
-                    setServiceEnEdition(null);
                   }}
                 >
                   <Plus size={16} />
@@ -1091,7 +1101,7 @@ function MesServicesContent() {
         </div>
       )}
 
-      {serviceEnEdition && (
+      {serviceEdite && (
         <NoticeCard>
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
@@ -1108,7 +1118,7 @@ function MesServicesContent() {
             <button
               type="button"
               onClick={() =>
-                setServiceEnEdition(null)
+                fermerEdition()
               }
               className="rounded-lg p-2 text-ink-soft transition hover:bg-ink/5 hover:text-ink"
               aria-label="Fermer"
@@ -1118,33 +1128,33 @@ function MesServicesContent() {
           </div>
 
           <FormulaireService
-            key={serviceEnEdition.id}
+            key={serviceEdite.id}
             mode="edition"
-            serviceId={serviceEnEdition.id}
+            serviceId={serviceEdite.id}
             initialValues={{
-              titre: serviceEnEdition.titre ?? "",
+              titre: serviceEdite.titre ?? "",
               description:
-                serviceEnEdition.description ?? "",
+                serviceEdite.description ?? "",
               categorie:
-                serviceEnEdition.categorie ?? "",
+                serviceEdite.categorie ?? "",
               prix: String(
-                serviceEnEdition.prix ?? "",
+                serviceEdite.prix ?? "",
               ),
               delaiJours: String(
                 Number(
-                  serviceEnEdition.delai ?? 0,
+                  serviceEdite.delai ?? 0,
                 ),
               ),
               disponible:
-                serviceEnEdition.disponible ?? true,
-              imagesUrls: serviceEnEdition.imagesUrls ?? [],
+                serviceEdite.disponible ?? true,
+              imagesUrls: serviceEdite.imagesUrls ?? [],
               competences: (
-                serviceEnEdition.competences ?? []
+                serviceEdite.competences ?? []
               ).join(", "),
             }}
             onSuccess={apresEdition}
             onCancel={() =>
-              setServiceEnEdition(null)
+              fermerEdition()
             }
           />
         </NoticeCard>

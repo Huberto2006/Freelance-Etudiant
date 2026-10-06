@@ -27,7 +27,8 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, lienExterneSur } from "@/lib/api";
+import { PieceJointeAffichage } from "@/components/ui/PieceJointe";
 import { useAuth } from "@/lib/auth-context";
 
 import type {
@@ -39,7 +40,6 @@ import type {
 } from "@/lib/types";
 
 import { formatArgent, formatDateCourte, statutLivraisonLabel } from "@/lib/format";
-import { getFileUrl } from "@/lib/api";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -1311,7 +1311,7 @@ function LivraisonEtudiant({
         <div className="mt-5">
           <a
             href={
-              livraison.lienLivrable
+              lienExterneSur(livraison.lienLivrable) ?? "#"
             }
             target="_blank"
             rel="noopener noreferrer"
@@ -2152,7 +2152,7 @@ function LivraisonClient({
         <div className="mt-5">
           <a
             href={
-              livraison.lienLivrable
+              lienExterneSur(livraison.lienLivrable) ?? "#"
             }
             target="_blank"
             rel="noopener noreferrer"
@@ -2172,15 +2172,7 @@ function LivraisonClient({
           <ul className="mt-2 space-y-2 text-sm">
             {livraison.piecesJointes.map((piece) => (
               <li key={piece.url}>
-                <a
-                  href={getFileUrl(piece.url) ?? piece.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex max-w-full items-center gap-2 break-all text-ocre-dark hover:underline"
-                >
-                  <ExternalLink size={15} />
-                  {piece.nom}
-                </a>
+                <PieceJointeAffichage url={piece.url} nom={piece.nom} />
               </li>
             ))}
           </ul>

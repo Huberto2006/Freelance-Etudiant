@@ -96,7 +96,7 @@ export class AmitieController {
   @Delete(':etudiantId')
   @ApiOperation({ summary: "Retirer un étudiant de mes amis" })
   async retirerAmi(
-    @Param('etudiantId') etudiantId: string,
+    @Param('etudiantId', ParseUUIDPipe) etudiantId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     await this.amitieService.retirer(etudiantId, user);

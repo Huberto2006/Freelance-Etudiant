@@ -1,12 +1,12 @@
 import {
   IsEmail,
   IsEnum,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
   MinLength,
   MaxLength,
-  ValidateIf,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '../../../common/enums/role.enum';
@@ -21,6 +21,7 @@ export class RegisterDto {
 
   @ApiProperty({ example: 'lanja@emit.mg' })
   @IsEmail()
+  @MaxLength(150)
   email: string;
 
   @ApiProperty({ example: 'MotDePasse123!' })
@@ -30,19 +31,24 @@ export class RegisterDto {
   motDePasse: string;
 
   @ApiProperty({ enum: Role, example: Role.ETUDIANT })
-  @IsEnum(Role, { message: 'Le role doit etre etudiant ou client' })
-  @ValidateIf((dto) => dto.role !== Role.ADMIN)
+  // Liste blanche stricte. L'ancien @ValidateIf(role !== ADMIN) desactivait
+  // TOUTE validation du champ precisement quand role === 'admin'.
+  @IsIn([Role.ETUDIANT, Role.CLIENT], {
+    message: 'Le role doit etre etudiant ou client',
+  })
   role: Role.ETUDIANT | Role.CLIENT;
 
   // Champs optionnels specifiques au profil etudiant
   @ApiProperty({ required: false, example: 'Licence 3' })
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   niveauEtude?: string;
 
   @ApiProperty({ required: false, example: 'EMIT Fianarantsoa' })
   @IsOptional()
   @IsString()
+  @MaxLength(150)
   universite?: string;
 
   // Champs optionnels specifiques au profil client
@@ -54,5 +60,6 @@ export class RegisterDto {
   @ApiProperty({ required: false, example: 'CISCO Fianarantsoa' })
   @IsOptional()
   @IsString()
+  @MaxLength(150)
   nomEntreprise?: string;
 }

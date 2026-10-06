@@ -1,4 +1,17 @@
-import { IsInt, IsNumber, IsOptional, IsString, Min, MinLength } from 'class-validator';
+import {
+  MESSAGE_URL_DOCUMENT_UPLOAD,
+  REGEX_URL_DOCUMENT_UPLOAD,
+} from '../../../common/utils/upload-url.util';
+import {
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  MinLength,
+  MaxLength,
+  Matches,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreerDemandeServiceDto {
@@ -36,10 +49,13 @@ export class CreerDemandeServiceDto {
   @ApiProperty({ required: false, description: 'URL du fichier joint (retournee par /uploads/document)' })
   @IsOptional()
   @IsString()
+  @MaxLength(300)
+  @Matches(REGEX_URL_DOCUMENT_UPLOAD, { message: MESSAGE_URL_DOCUMENT_UPLOAD })
   pieceJointeUrl?: string;
 
   @ApiProperty({ required: false, description: 'Nom original du fichier joint' })
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   pieceJointeNom?: string;
 }

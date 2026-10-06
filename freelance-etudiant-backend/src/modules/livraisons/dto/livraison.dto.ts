@@ -1,10 +1,15 @@
 import {
+  MESSAGE_URL_DOCUMENT_UPLOAD,
+  REGEX_URL_DOCUMENT_UPLOAD,
+} from '../../../common/utils/upload-url.util';
+import {
   ArrayMaxSize,
   IsArray,
   IsInt,
   IsOptional,
   IsString,
   Matches,
+  Max,
   Min,
   MaxLength,
   ValidateNested,
@@ -19,9 +24,10 @@ import { Type } from 'class-transformer';
  * rattacher ses metadonnees a la livraison.
  */
 export class PieceJointeLivraisonDto {
-  @ApiProperty({ example: '/uploads/documents/abc123.zip' })
+  @ApiProperty({ example: '/uploads/documents/<uuid>.zip' })
   @IsString()
-  @MaxLength(500)
+  @MaxLength(300)
+  @Matches(REGEX_URL_DOCUMENT_UPLOAD, { message: MESSAGE_URL_DOCUMENT_UPLOAD })
   url: string;
 
   @ApiProperty({ example: 'projet-final.zip' })
@@ -33,6 +39,7 @@ export class PieceJointeLivraisonDto {
   @IsOptional()
   @IsInt()
   @Min(0)
+  @Max(50 * 1024 * 1024)
   tailleOctets?: number;
 }
 
@@ -40,7 +47,8 @@ export class CreerLivraisonDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  @MaxLength(500)
+  @MaxLength(300)
+  @Matches(REGEX_URL_DOCUMENT_UPLOAD, { message: MESSAGE_URL_DOCUMENT_UPLOAD })
   fichierUrl?: string;
 
   @ApiProperty({

@@ -37,33 +37,48 @@ async function bootstrap() {
   }
   app.enableShutdownHooks();
 
-  /*
-   * Fichiers statiques
-   *
-   * Exemple :
-   * uploads/profiles/photo.jpg
-   *
-   * sera accessible avec :
-   * /uploads/profiles/photo.jpg
-   */
-  app.useStaticAssets(join(process.cwd(), "uploads"), {
-    prefix: "/uploads/",
-    setHeaders: (res) => {
-      // Empeche le navigateur de deviner un autre type que celui declare
-      // (defense XSS sur les fichiers envoyes par les utilisateurs).
-      res.setHeader("X-Content-Type-Options", "nosniff");
-      // Les images sont affichees depuis le front (origine differente
-      // possible) : sans cet en-tete, un helmet() place avant ce bloc, ou
-      // un proxy, les bloquerait (Cross-Origin-Resource-Policy: same-origin).
-      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-    },
-  });
+  // helmet AVANT toute route/statique : ses en-tetes (nosniff, HSTS,
+  // frameguard...) s'appliquent aussi aux fichiers servis. La politique
+  // cross-origin des ressources reste ouverte car le front (autre origine
+  // possible) affiche les images publiques.
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
 
-  app.use(helmet());
+  /*
+   * Fichiers statiques PUBLICS : uniquement les photos de profil et les
+   * images de missions/services (affichees sur des pages publiques).
+   * Les DOCUMENTS (livrables, pieces jointes, cahiers des charges) ne sont
+   * plus exposes ici : ils passent par un lien signe de 60 s delivre apres
+   * controle d'acces (voir UploadsController). Exemple :
+   * uploads/profiles/photo.jpg -> /uploads/profiles/photo.jpg
+   */
+  for (const dossier of ['profiles', 'images']) {
+    app.useStaticAssets(join(process.cwd(), 'uploads', dossier), {
+      prefix: `/uploads/${dossier}/`,
+      index: false,
+      dotfiles: 'deny',
+      setHeaders: (res) => {
+        // Empeche le navigateur de deviner un autre type que celui declare
+        // et interdit toute execution de contenu actif dans ces fichiers.
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader(
+          'Content-Security-Policy',
+          "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox",
+        );
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      },
+    });
+  }
 
   app.enableCors({
-    origin: configService.get<string[]>("app.corsOrigin"),
+    origin: configService.get<string[]>('app.corsOrigin'),
     credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Kianja-Csrf'],
+    maxAge: 600,
   });
 
   const apiPrefix =
@@ -131,7 +146,7 @@ async function bootstrap() {
   );
 
   console.log(
-    `Fichiers uploads disponibles sur http://localhost:${port}/uploads/`,
+    `Images publiques disponibles sur http://localhost:${port}/uploads/(profiles|images)/`,
   );
 
   if (nodeEnv !== "production") {

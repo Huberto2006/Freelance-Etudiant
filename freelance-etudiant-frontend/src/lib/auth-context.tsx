@@ -9,7 +9,15 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
-import { api, ApiError, getToken, setToken, setRefreshToken, clearTokens, setOnSessionExpired } from "./api";
+import {
+  api,
+  ApiError,
+  clearTokens,
+  restaurerSession,
+  setOnSessionExpired,
+  setToken,
+  terminerSessionServeur,
+} from "./api";
 import type { AuthResponse, CompletionProfil, ReponseInscription, Role, Utilisateur } from "./types";
 
 interface RegisterPayload {
@@ -49,8 +57,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const rafraichirProfil = useCallback(async () => {
-    const token = getToken();
-    if (!token) {
+    // Le jeton d'acces n'existe qu'en memoire : apres un rechargement on le
+    // reobtient via le cookie httpOnly (refresh). Sans session : deconnecte.
+    const sessionOk = await restaurerSession();
+    if (!sessionOk) {
       setUtilisateur(null);
       setCompletionProfil(null);
       setChargement(false);
@@ -111,8 +121,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         { email, motDePasse },
         { auth: false },
       );
+      // Le refresh token est pose par le serveur en cookie httpOnly : il
+      // n'apparait jamais dans la reponse ni dans le JavaScript.
       setToken(res.accessToken);
-      setRefreshToken(res.refreshToken);
       await rafraichirProfil();
     },
     [rafraichirProfil],
@@ -134,6 +145,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const deconnecter = useCallback(() => {
+    // Revocation de la session cote serveur (en tache de fond) + purge locale.
+    void terminerSessionServeur();
     clearTokens();
     setUtilisateur(null);
     setCompletionProfil(null);

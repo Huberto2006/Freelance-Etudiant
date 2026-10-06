@@ -913,107 +913,82 @@ export class PaiementsService {
 
   /**
    * Traitement du webhook MVola.
+   *
+   * Le webhook n'est qu'une NOTIFICATION : le statut annonce dans le corps
+   * n'est jamais cru. Meme avec une signature valide (secret divulgue,
+   * corps rejoue), l'argent n'est confirme qu'apres interrogation directe
+   * de l'API MVola avec l'identifiant de correlation enregistre cote
+   * serveur. Un attaquant ne peut donc pas confirmer un paiement fictif.
    */
   async traiterWebhook(
     payload: WebhookPaiementPayload,
   ): Promise<{ status: string }> {
-    const transaction =
-      await this.repo.findOne({
-        where: [
-          {
-            providerCorrelationId:
-              payload.serverCorrelationId ??
-              '__none__',
-          },
-          {
-            reference:
-              payload.transactionReference ??
-              '__none__',
-          },
-        ],
-        relations: [
-          'candidature',
-          'candidature.mission',
-          'client',
-          'etudiant',
-        ],
-      });
+    const texteCourt = (v: unknown): string | undefined =>
+      typeof v === 'string' && v.length > 0 && v.length <= 100 ? v : undefined;
+
+    const correlationId = texteCourt(payload?.serverCorrelationId);
+    const reference = texteCourt(payload?.transactionReference);
+
+    if (!correlationId && !reference) {
+      throw new BadRequestException('Notification invalide');
+    }
+
+    const transaction = await this.repo.findOne({
+      where: [
+        ...(correlationId ? [{ providerCorrelationId: correlationId }] : []),
+        ...(reference ? [{ reference }] : []),
+      ],
+      relations: ['candidature', 'candidature.mission', 'client', 'etudiant'],
+    });
 
     if (!transaction) {
       this.logger.warn(
-        `Webhook paiement : transaction inconnue (ref=${payload.transactionReference ?? '?'}, corrId=${payload.serverCorrelationId ?? '?'})`,
+        `Webhook paiement : transaction inconnue (ref=${reference ?? '?'}, corrId=${correlationId ?? '?'})`,
       );
-
-      throw new NotFoundException(
-        'Transaction inconnue',
-      );
+      throw new NotFoundException('Transaction inconnue');
     }
 
-    // Vérification du montant.
-    if (
-      payload.amount !== undefined &&
-      Number(payload.amount) !==
-        Number(transaction.montant)
-    ) {
+    // Idempotence : une transaction deja traitee ne change plus.
+    if (transaction.statut !== StatutTransaction.EN_ATTENTE) {
+      return { status: 'ignored' };
+    }
+
+    // Seules les transactions en ligne MVola sont concernees ; les
+    // declarations manuelles sont verifiees par un administrateur.
+    if (transaction.provider !== 'mvola' || !transaction.providerCorrelationId) {
+      throw new BadRequestException('Transaction non eligible a une notification');
+    }
+
+    // Verification aupres du fournisseur (source de verite).
+    let statutFournisseur: 'completed' | 'pending' | 'failed';
+    try {
+      statutFournisseur = await this.mvolaService.verifierStatut(
+        transaction.providerCorrelationId,
+      );
+    } catch (error) {
       this.logger.error(
-        `Webhook paiement : montant falsifie pour ${transaction.reference} (recu ${payload.amount}, attendu ${transaction.montant})`,
+        `Webhook paiement : verification fournisseur impossible pour ${transaction.reference} : ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
-
-      throw new BadRequestException(
-        'Montant incoherent',
-      );
+      // 503 : le fournisseur (ou l'operateur) pourra reessayer plus tard.
+      throw new ServiceUnavailableException('Verification fournisseur indisponible');
     }
 
-    // Idempotence.
-    if (
-      transaction.statut !==
-      StatutTransaction.EN_ATTENTE
-    ) {
-      return {
-        status: 'ignored',
-      };
+    transaction.providerStatut = statutFournisseur;
+
+    if (statutFournisseur === 'completed') {
+      await this.marquerConfirmee(transaction);
+      return { status: 'confirmed' };
     }
 
-    const brut =
-      (payload.status ?? '').toLowerCase();
-
-    if (
-      brut === 'completed' ||
-      brut === 'success' ||
-      brut === 'successful'
-    ) {
-      await this.marquerConfirmee(
-        transaction,
-      );
-
-      return {
-        status: 'confirmed',
-      };
+    if (statutFournisseur === 'failed') {
+      await this.marquerAnnulee(transaction);
+      return { status: 'cancelled' };
     }
-
-    if (
-      brut === 'failed' ||
-      brut === 'rejected' ||
-      brut === 'expired'
-    ) {
-      await this.marquerAnnulee(
-        transaction,
-      );
-
-      return {
-        status: 'cancelled',
-      };
-    }
-
-    transaction.providerStatut =
-      brut ||
-      transaction.providerStatut;
 
     await this.repo.save(transaction);
-
-    return {
-      status: 'pending',
-    };
+    return { status: 'pending' };
   }
 
   /**
