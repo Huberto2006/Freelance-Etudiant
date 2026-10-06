@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Mission } from '../missions/entities/mission.entity';
 import { EtudiantProfile } from '../etudiants/entities/etudiant-profile.entity';
 import { StatutMission } from '../../common/enums/statut-mission.enum';
 import { dateLimiteDepassee } from '../../common/utils/date-limite.util';
+import { Role } from '../../common/enums/role.enum';
+import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
+
+/** Borne la charge memoire/CPU d'un calcul de matching. */
+const LIMITE_ETUDIANTS_MATCHING = 500;
 
 export interface ResultatMatching {
   etudiantId: string;
@@ -46,10 +51,17 @@ export class MatchingService {
    * Calcule, pour une mission donnee, le score de compatibilite de chaque
    * etudiant actif et retourne la liste triee par score decroissant.
    */
-  async trouverEtudiantsCompatibles(missionId: string): Promise<ResultatMatching[]> {
+  async trouverEtudiantsCompatibles(
+    missionId: string,
+    user: AuthenticatedUser,
+  ): Promise<ResultatMatching[]> {
     const mission = await this.missionRepo.findOne({ where: { id: missionId } });
     if (!mission) {
       throw new NotFoundException('Mission introuvable');
+    }
+    // Un client ne peut analyser que SES missions (pas d'IDOR).
+    if (user.role !== Role.ADMIN && mission.clientId !== user.id) {
+      throw new ForbiddenException("Cette mission ne vous appartient pas");
     }
 
     const etudiants = await this.etudiantRepo
@@ -57,6 +69,7 @@ export class MatchingService {
       .leftJoinAndSelect('etudiant.utilisateur', 'utilisateur')
       .where('utilisateur.estActif = true')
       .andWhere('utilisateur.estSuspendu = false')
+      .take(LIMITE_ETUDIANTS_MATCHING)
       .getMany();
 
     const resultats = etudiants.map((etudiant) =>

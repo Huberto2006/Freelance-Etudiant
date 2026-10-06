@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { EvaluationsService } from './evaluations.service';
 import { CreateEvaluationDto } from './dto/create-evaluation.dto';
@@ -20,7 +29,7 @@ export class EvaluationsController {
   @Post('livraisons/:livraisonId/evaluation')
   @ApiOperation({ summary: 'Evaluer une livraison validee (RG5, RG6, RG12)' })
   async evaluer(
-    @Param('livraisonId') livraisonId: string,
+    @Param('livraisonId', ParseUUIDPipe) livraisonId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateEvaluationDto,
   ) {
@@ -36,7 +45,7 @@ export class EvaluationsController {
       "RG-066 : l'etudiant evalue le client apres livraison validee et paiement confirme",
   })
   async evaluerClient(
-    @Param('livraisonId') livraisonId: string,
+    @Param('livraisonId', ParseUUIDPipe) livraisonId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateEvaluationDto,
   ) {
@@ -56,7 +65,7 @@ export class EvaluationsController {
       'RG-065 : modifier sa propre evaluation (client ou etudiant evaluateur)',
   })
   async modifier(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateEvaluationDto,
   ) {
@@ -66,7 +75,7 @@ export class EvaluationsController {
   @Public()
   @Get('etudiants/:etudiantId/evaluations')
   @ApiOperation({ summary: "Consulter les evaluations recues par un etudiant" })
-  async parEtudiant(@Param('etudiantId') etudiantId: string) {
+  async parEtudiant(@Param('etudiantId', ParseUUIDPipe) etudiantId: string) {
     return this.evaluationsService.findByEtudiant(etudiantId);
   }
 }

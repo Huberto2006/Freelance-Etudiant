@@ -1,3 +1,4 @@
+import { echapperHtml, nettoyerSujet, urlHttpSure } from '../../../common/utils/html.util';
 import {
   entete,
   envelopper,
@@ -12,17 +13,17 @@ export interface EmailPaiement {
 }
 
 export function templatePaiementInitie(data: EmailPaiement) {
-  const subject = `KIANJA - Paiement declare pour "${data.titreMission}"`;
+  const subject = nettoyerSujet(`KIANJA - Paiement declare pour "${data.titreMission}"`);
 
   const html = envelopper(`
     ${entete('Paiement declare')}
     <tr><td style="padding:16px 24px;">
       <p style="margin:0;font-size:14px;color:#2b2b28;line-height:1.7;">
-        Bonjour ${data.nom},<br/><br/>
+        Bonjour ${echapperHtml(data.nom)},<br/><br/>
         Le client a declare un paiement de
         <strong style="color:#b8860b;">${formaterArgentEmail(data.montant)}</strong>
-        pour la mission <strong>"${data.titreMission}"</strong>
-        (ref. ${data.reference}).
+        pour la mission <strong>"${echapperHtml(data.titreMission)}"</strong>
+        (ref. ${echapperHtml(data.reference)}).
         Il sera verifie par la plateforme avant le debut du travail.
       </p>
     </td></tr>
@@ -37,17 +38,17 @@ Il sera verifie par la plateforme avant le debut du travail.`;
 }
 
 export function templatePaiementConfirme(data: EmailPaiement) {
-  const subject = `KIANJA - Paiement confirme pour "${data.titreMission}"`;
+  const subject = nettoyerSujet(`KIANJA - Paiement confirme pour "${data.titreMission}"`);
 
   const html = envelopper(`
     ${entete('Paiement confirme')}
     <tr><td style="padding:16px 24px;">
       <p style="margin:0;font-size:14px;color:#2b2b28;line-height:1.7;">
-        Bonjour ${data.nom},<br/><br/>
+        Bonjour ${echapperHtml(data.nom)},<br/><br/>
         Le paiement de
         <strong style="color:#b8860b;">${formaterArgentEmail(data.montant)}</strong>
-        pour la mission <strong>"${data.titreMission}"</strong>
-        (ref. ${data.reference}) a ete verifie et confirme par la plateforme.
+        pour la mission <strong>"${echapperHtml(data.titreMission)}"</strong>
+        (ref. ${echapperHtml(data.reference)}) a ete verifie et confirme par la plateforme.
       </p>
     </td></tr>
   `);
@@ -60,17 +61,17 @@ Le paiement de ${formaterArgentEmail(data.montant)} pour la mission "${data.titr
 }
 
 export function templatePaiementLibere(data: EmailPaiement) {
-  const subject = `KIANJA - Fonds liberes pour "${data.titreMission}"`;
+  const subject = nettoyerSujet(`KIANJA - Fonds liberes pour "${data.titreMission}"`);
 
   const html = envelopper(`
     ${entete('Fonds liberes')}
     <tr><td style="padding:16px 24px;">
       <p style="margin:0;font-size:14px;color:#2b2b28;line-height:1.7;">
-        Bonjour ${data.nom},<br/><br/>
+        Bonjour ${echapperHtml(data.nom)},<br/><br/>
         Les fonds de
         <strong style="color:#b8860b;">${formaterArgentEmail(data.montant)}</strong>
-        pour la mission <strong>"${data.titreMission}"</strong>
-        (ref. ${data.reference}) vous sont dus : la livraison a ete validee
+        pour la mission <strong>"${echapperHtml(data.titreMission)}"</strong>
+        (ref. ${echapperHtml(data.reference)}) vous sont dus : la livraison a ete validee
         par le client et le paiement a ete libere.
       </p>
     </td></tr>

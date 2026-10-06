@@ -27,8 +27,14 @@ export default function ServiceDetailPage({
 }) {
   const { id } = use(params);
   const { utilisateur } = useAuth();
-  const [service, setService] = useState<ServiceOffert | null>(null);
-  const [chargement, setChargement] = useState(true);
+  const [resultatService, setResultatService] = useState<{
+    id: string;
+    service: ServiceOffert | null;
+    erreur: boolean;
+  } | null>(null);
+  const service =
+    resultatService?.id === id ? resultatService.service : null;
+  const chargement = resultatService?.id !== id;
 
   const [afficherFormulaire, setAfficherFormulaire] = useState(false);
   const [cahierDesCharges, setCahierDesCharges] = useState("");
@@ -38,20 +44,30 @@ export default function ServiceDetailPage({
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [succes, setSucces] = useState(false);
-  const [erreurChargement, setErreurChargement] = useState(false);
+  const erreurChargement =
+    resultatService?.id === id && resultatService.erreur;
 
   useEffect(() => {
-    setChargement(true);
-    setErreurChargement(false);
+    let cancelled = false;
+
     api
       .get<ServiceOffert>(`/services/${id}`, { auth: false })
       .then((data) => {
-        setService(data);
-        setBudgetPropose(String(data.prix));
-        setDelaiSouhaite(String(data.delai));
+        if (!cancelled) {
+          setResultatService({ id, service: data, erreur: false });
+          setBudgetPropose(String(data.prix));
+          setDelaiSouhaite(String(data.delai));
+        }
       })
-      .catch(() => setErreurChargement(true))
-      .finally(() => setChargement(false));
+      .catch(() => {
+        if (!cancelled) {
+          setResultatService({ id, service: null, erreur: true });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   async function commander(e: React.FormEvent) {

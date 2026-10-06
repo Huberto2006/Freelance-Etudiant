@@ -1,16 +1,27 @@
 import {
   BadRequestException,
+  Body,
   Controller,
+  Get,
+  NotFoundException,
+  Param,
   Post,
+  Query,
+  Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import type { Response } from 'express';
+import { IsString, MaxLength } from 'class-validator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { randomUUID } from 'crypto';
 import { existsSync, mkdirSync } from 'fs';
 import { UploadsService } from './uploads.service';
+import { Public } from '../../common/decorators/public.decorator';
+import { join as joinPath } from 'path';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -53,6 +64,15 @@ function verifierExtension(
   cb(null, true);
 }
 
+/** Limite dediee aux envois de fichiers (disque + bande passante). */
+const LIMITE_UPLOAD = { default: { limit: 20, ttl: 60000 } };
+
+class LienDocumentDto {
+  @IsString()
+  @MaxLength(300)
+  url: string;
+}
+
 @ApiTags('Uploads')
 @ApiBearerAuth()
 @Controller('uploads')
@@ -63,6 +83,7 @@ export class UploadsController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.ETUDIANT, Role.CLIENT)
+  @Throttle(LIMITE_UPLOAD)
   @Post('profile')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -120,6 +141,8 @@ export class UploadsController {
       );
     }
 
+    await this.uploadsService.verifierContenu(file);
+
     return this.uploadsService.saveProfilePhoto(
       user.id,
       file.filename,
@@ -135,6 +158,7 @@ export class UploadsController {
    */
   @UseGuards(RolesGuard)
   @Roles(Role.ETUDIANT, Role.CLIENT)
+  @Throttle(LIMITE_UPLOAD)
   @Post('image')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -179,11 +203,14 @@ export class UploadsController {
       throw new BadRequestException('Aucune image n’a été envoyée.');
     }
 
+    await this.uploadsService.verifierContenu(file);
+
     return this.uploadsService.formatImageResponse(file);
   }
 
   @UseGuards(RolesGuard)
   @Roles(Role.ETUDIANT, Role.CLIENT)
+  @Throttle(LIMITE_UPLOAD)
   @Post('document')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -257,6 +284,48 @@ export class UploadsController {
       throw new BadRequestException('Aucun fichier n’a été envoyé.');
     }
 
+    await this.uploadsService.verifierContenu(file);
+
     return this.uploadsService.formatDocumentResponse(file);
+  }
+
+  /**
+   * Les documents (livrables, pieces jointes de messages, cahiers des
+   * charges) ne sont PLUS servis statiquement. Le client demande ici un
+   * lien valable 60 s ; le serveur verifie qu'il est participant de l'objet
+   * qui reference le fichier.
+   */
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
+  @Post('document/lien')
+  async lienDocument(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: LienDocumentDto,
+  ) {
+    return this.uploadsService.genererLienDocument(user.id, user.role, dto.url);
+  }
+
+  /**
+   * Telechargement d'un document avec un ticket signe (pas de Bearer : le
+   * lien est ouvert dans un nouvel onglet). Toujours servi en piece jointe,
+   * sans sniffing et sans execution possible dans le navigateur.
+   */
+  @Public()
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
+  @Get('documents/:nom')
+  async telechargerDocument(
+    @Param('nom') nom: string,
+    @Query('t') ticket: string | undefined,
+    @Res() res: Response,
+  ) {
+    if (!this.uploadsService.verifierTicket(nom, ticket)) {
+      throw new NotFoundException('Document introuvable');
+    }
+    const chemin = this.uploadsService.cheminDocument(nom);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.setHeader('Content-Disposition', `attachment; filename="${nom}"`);
+    res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+    res.sendFile(joinPath(chemin), { dotfiles: 'deny' });
   }
 }

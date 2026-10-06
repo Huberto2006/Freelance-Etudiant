@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessagesService } from './messages.service';
@@ -37,7 +38,7 @@ export class MessagesController {
   @ApiOperation({ summary: "Envoyer un message a un groupe dont je suis membre" })
   async envoyerAuGroupe(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('groupeId') groupeId: string,
+    @Param('groupeId', ParseUUIDPipe) groupeId: string,
     @Body() dto: EnvoyerMessageGroupeDto,
   ) {
     return this.messagesService.envoyerAuGroupe(user.id, groupeId, dto);
@@ -69,7 +70,7 @@ export class MessagesController {
   @ApiOperation({ summary: 'Consulter une conversation avec un utilisateur donne' })
   async conversation(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('autreUtilisateurId') autreUtilisateurId: string,
+    @Param('autreUtilisateurId', ParseUUIDPipe) autreUtilisateurId: string,
   ) {
     return this.messagesService.findConversation(user.id, autreUtilisateurId);
   }
@@ -82,7 +83,7 @@ export class MessagesController {
   @ApiOperation({ summary: "Consulter la conversation d'un groupe dont je suis membre" })
   async conversationGroupe(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('groupeId') groupeId: string,
+    @Param('groupeId', ParseUUIDPipe) groupeId: string,
   ) {
     return this.messagesService.findConversationGroupe(user.id, groupeId);
   }
@@ -94,7 +95,7 @@ export class MessagesController {
   @ApiOperation({ summary: "Marquer comme lus les messages d'un groupe" })
   async marquerGroupeLu(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('groupeId') groupeId: string,
+    @Param('groupeId', ParseUUIDPipe) groupeId: string,
   ) {
     const total = await this.messagesService.marquerMessagesGroupeCommeLus(
       user.id,
@@ -109,7 +110,7 @@ export class MessagesController {
 
   @Patch(':id/lu')
   @ApiOperation({ summary: 'Marquer un message comme lu' })
-  async marquerLu(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async marquerLu(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     await this.messagesService.marquerCommeLu(id, user.id);
     return { message: 'Message marque comme lu' };
   }
@@ -121,7 +122,7 @@ export class MessagesController {
    */
   @Delete(':id')
   @ApiOperation({ summary: "Supprimer un de mes messages (l'expediteur uniquement)" })
-  async supprimer(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async supprimer(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     await this.messagesService.supprimer(id, user.id);
     return { message: 'Message supprime' };
   }

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Globe, X } from "lucide-react";
 import { clsx } from "clsx";
-import { getFileUrl } from "@/lib/api";
+import { getFileUrl, lienExterneSur } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { NoticeCard } from "@/components/ui/Notice";
 
@@ -201,7 +201,7 @@ export function PortfolioGalerie({
                     </div>
                   </div>
                   <Button
-                    href={url}
+                    href={lienExterneSur(url) ?? "#"}
                     target="_blank"
                     variant="ghost"
                     size="sm"

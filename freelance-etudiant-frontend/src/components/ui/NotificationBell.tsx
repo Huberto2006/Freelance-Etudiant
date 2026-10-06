@@ -9,7 +9,7 @@ import {
   X,
 } from "lucide-react";
 
-import { api } from "@/lib/api";
+import { api, lienInterneSur } from "@/lib/api";
 import type { NotificationItem } from "@/lib/types";
 import { useSocket } from "@/lib/socket-context";
 
@@ -789,17 +789,16 @@ export function NotificationBell() {
                       </>
                     );
 
-                    if (
-                      notification.lienUrl
-                    ) {
+                    const lienSur = lienInterneSur(
+                      notification.lienUrl,
+                    );
+                    if (lienSur) {
                       return (
                         <Link
                           key={
                             notification.id
                           }
-                          href={
-                            notification.lienUrl
-                          }
+                          href={lienSur}
                           onClick={() =>
                             marquerCommeLue(
                               notification,

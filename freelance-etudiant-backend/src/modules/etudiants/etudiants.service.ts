@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { EtudiantProfile } from './entities/etudiant-profile.entity';
 import { UpdateEtudiantProfileDto } from './dto/update-etudiant-profile.dto';
 import { FiltrerEtudiantsDto } from './dto/filtrer-etudiants.dto';
+import { ProfilEtudiantPublicDto } from './dto/profil-etudiant-public.dto';
 import { ProfileCompletionService } from '../profile-completion/profile-completion.service';
 import { projeterEtudiant } from '../../common/utils/projection-publique.util';
 
@@ -56,14 +57,47 @@ export class EtudiantsService {
   }
 
   /**
-   * Fiche PUBLIQUE d'un etudiant (GET /etudiants/:id) : meme projection
-   * que findAll, jamais l'entite complete (voir clients.controller.ts qui
-   * appliquait deja ce filtrage — etudiants.controller.ts ne le faisait
-   * pas, exposant email/telephone/etat de compte a tout visiteur).
+   * Fiche publique d'un étudiant : construit une liste blanche distincte
+   * de l'entité TypeORM pour ne jamais sérialiser ses champs privés.
    */
-  async findOnePublic(utilisateurId: string) {
+  async findOnePublic(
+    utilisateurId: string,
+  ): Promise<ProfilEtudiantPublicDto> {
     const profil = await this.findByUtilisateurId(utilisateurId);
-    return projeterEtudiant(profil);
+    return {
+      utilisateurId: profil.utilisateurId,
+      universite: profil.universite ?? null,
+      niveauEtude: profil.niveauEtude ?? null,
+      filiere: profil.filiere ?? null,
+      anneeEtude: profil.anneeEtude ?? null,
+      ville: profil.ville ?? null,
+      specialites: profil.specialites ?? [],
+      experience: profil.experience,
+      typeFreelance: profil.typeFreelance ?? null,
+      statutDisponibilite: profil.statutDisponibilite ?? null,
+      tarifHoraire: profil.tarifHoraire ?? null,
+      tarifMinimum: profil.tarifMinimum ?? null,
+      tarifMaximum: profil.tarifMaximum ?? null,
+      githubUrl: profil.githubUrl ?? null,
+      gitlabUrl: profil.gitlabUrl ?? null,
+      linkedinUrl: profil.linkedinUrl ?? null,
+      siteWeb: profil.siteWeb ?? null,
+      competences: profil.competences ?? [],
+      langues: profil.langues ?? [],
+      disponibilite: profil.disponibilite,
+      description: profil.description ?? null,
+      portfolioUrls: profil.portfolioUrls ?? [],
+      scoreReputation: profil.scoreReputation,
+      noteMoyenne: profil.noteMoyenne,
+      nombreMissionsTerminees: profil.nombreMissionsTerminees,
+      utilisateur: profil.utilisateur
+        ? {
+            id: profil.utilisateur.id,
+            nom: profil.utilisateur.nom,
+            photoUrl: profil.utilisateur.photoUrl ?? null,
+          }
+        : null,
+    };
   }
 
   /**

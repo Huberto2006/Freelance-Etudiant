@@ -49,6 +49,11 @@ export class WsJwtGuard {
         secret,
       });
 
+      if (payload.typ !== 'access') {
+        this.logger.debug(`Connexion WS refusee (${client.id}) : type de jeton invalide`);
+        return null;
+      }
+
       const user = await this.usersService.findById(payload.sub);
       if (!user || user.estSuspendu || !user.estActif) {
         this.logger.debug(

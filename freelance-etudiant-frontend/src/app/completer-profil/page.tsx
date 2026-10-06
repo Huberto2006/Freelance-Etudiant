@@ -177,8 +177,7 @@ export default function CompleterProfilPage() {
    * départ est calculée à partir de ce qui manque réellement — la
    * progression n'est jamais stockée côté client.
    */
-  useEffect(() => {
-    if (initialise || !utilisateur) return;
+  if (!initialise && utilisateur) {
     const p = utilisateur.profilEtudiant;
 
     setVille(p?.ville ?? "");
@@ -223,7 +222,7 @@ export default function CompleterProfilPage() {
     }
 
     setInitialise(true);
-  }, [utilisateur, initialise]);
+  }
 
   /* Une fois la dernière étape validée, on quitte le questionnaire dès
      que le backend confirme que le profil est complet. */

@@ -7,7 +7,8 @@ import {
   Patch,
   Post,
   UseGuards,
-} from "@nestjs/common";
+  ParseUUIDPipe,
+} from '@nestjs/common';
 
 import {
   ApiBearerAuth,
@@ -48,7 +49,7 @@ export class CandidaturesController {
     summary: "Postuler à une mission",
   })
   async postuler(
-    @Param("missionId") missionId: string,
+    @Param("missionId", ParseUUIDPipe) missionId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateCandidatureDto,
   ) {
@@ -70,7 +71,7 @@ export class CandidaturesController {
       "Lister les candidatures reçues pour une mission",
   })
   async listerParMission(
-    @Param("missionId") missionId: string,
+    @Param("missionId", ParseUUIDPipe) missionId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.candidaturesService.findByMission(
@@ -124,7 +125,7 @@ export class CandidaturesController {
     summary: "Accepter une candidature",
   })
   async accepter(
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.candidaturesService.accepter(
@@ -143,7 +144,7 @@ export class CandidaturesController {
     summary: "Refuser une candidature",
   })
   async refuser(
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.candidaturesService.refuser(
@@ -156,7 +157,7 @@ export class CandidaturesController {
   @Patch("candidatures/:id")
   @ApiOperation({ summary: "Modifier une candidature en attente" })
   async modifier(
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateCandidatureDto,
   ) {
@@ -167,7 +168,7 @@ export class CandidaturesController {
   @Delete("candidatures/:id")
   @ApiOperation({ summary: "Annuler une candidature en attente" })
   async annuler(
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     await this.candidaturesService.annuler(id, user.id);
@@ -184,8 +185,8 @@ export class CandidaturesController {
     summary: "Postuler à une mission au nom d'un groupe",
   })
   async postulerAvecGroupe(
-    @Param("missionId") missionId: string,
-    @Param("groupeId") groupeId: string,
+    @Param("missionId", ParseUUIDPipe) missionId: string,
+    @Param("groupeId", ParseUUIDPipe) groupeId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateCandidatureDto,
   ) {

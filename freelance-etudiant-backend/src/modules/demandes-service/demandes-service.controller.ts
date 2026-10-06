@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { DemandesServiceService } from './demandes-service.service';
 import { CreerDemandeServiceDto } from './dto/creer-demande-service.dto';
@@ -19,7 +28,7 @@ export class DemandesServiceController {
   @Post('services/:serviceId/demandes')
   @ApiOperation({ summary: 'Commander un service avec un cahier des charges' })
   async creer(
-    @Param('serviceId') serviceId: string,
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreerDemandeServiceDto,
   ) {
@@ -43,7 +52,7 @@ export class DemandesServiceController {
   @Get('demandes-service/:id')
   @ApiOperation({ summary: 'Consulter une demande de service (client, etudiant fournisseur ou admin)' })
   async findOne(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.demandesServiceService.findOnePourUtilisateur(id, user);
@@ -52,14 +61,14 @@ export class DemandesServiceController {
   @Roles(Role.ETUDIANT)
   @Patch('demandes-service/:id/accepter')
   @ApiOperation({ summary: 'Accepter une demande de service (genere une mission privee)' })
-  async accepter(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async accepter(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.demandesServiceService.accepter(id, user.id);
   }
 
   @Roles(Role.ETUDIANT)
   @Patch('demandes-service/:id/refuser')
   @ApiOperation({ summary: 'Refuser une demande de service' })
-  async refuser(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async refuser(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.demandesServiceService.refuser(id, user.id);
   }
 }

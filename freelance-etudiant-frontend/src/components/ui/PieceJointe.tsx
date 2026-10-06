@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { FileText, Loader2, Paperclip, X } from "lucide-react";
-import { api, ApiError, getFileUrl } from "@/lib/api";
+import { api, ApiError, ouvrirDocument } from "@/lib/api";
 
 const TAILLE_MAX = 15 * 1024 * 1024; // 15 Mo, aligné sur la limite backend
 
@@ -156,19 +156,39 @@ export function PieceJointeAffichage({
   url: string;
   nom?: string | null;
 }) {
-  const lienComplet = getFileUrl(url);
-  if (!lienComplet) return null;
+  const [ouverture, setOuverture] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
+
+  // Le document n'a plus d'URL publique : un clic demande au serveur un
+  // lien signe de 60 s apres controle d'acces.
+  async function ouvrir() {
+    setErreur(null);
+    setOuverture(true);
+    try {
+      await ouvrirDocument(url);
+    } catch (e) {
+      setErreur(
+        e instanceof ApiError && e.status === 403
+          ? "Accès refusé à ce fichier."
+          : "Impossible d'ouvrir le fichier.",
+      );
+    } finally {
+      setOuverture(false);
+    }
+  }
 
   return (
-    <a
-      href={lienComplet}
-      target="_blank"
-      rel="noreferrer"
-      download={nom ?? undefined}
-      className="inline-flex items-center gap-1.5 rounded-full border border-ink/20 bg-ink/[0.03] px-3 py-1.5 text-xs text-ink-soft hover:bg-ink/[0.06] transition-colors"
-    >
-      <FileText size={13} />
-      <span className="max-w-[200px] truncate">{nom ?? "Pièce jointe"}</span>
-    </a>
+    <span className="inline-flex flex-col">
+      <button
+        type="button"
+        onClick={ouvrir}
+        disabled={ouverture}
+        className="inline-flex items-center gap-1.5 rounded-full border border-ink/20 bg-ink/[0.03] px-3 py-1.5 text-xs text-ink-soft hover:bg-ink/[0.06] transition-colors disabled:cursor-wait disabled:opacity-60"
+      >
+        {ouverture ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} />}
+        <span className="max-w-[200px] truncate">{nom ?? "Pièce jointe"}</span>
+      </button>
+      {erreur && <span className="mt-1 text-xs text-brique">{erreur}</span>}
+    </span>
   );
 }

@@ -24,6 +24,7 @@ import { getCorsOrigins } from '../../config/cors.config';
  * contourner puisqu'il ne cree jamais de message lui-meme.
  */
 @WebSocketGateway({
+  maxHttpBufferSize: 100_000,
   cors: {
     origin: getCorsOrigins(),
     credentials: true,

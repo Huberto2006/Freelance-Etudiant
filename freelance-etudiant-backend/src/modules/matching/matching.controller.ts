@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MatchingService } from './matching.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -17,8 +17,11 @@ export class MatchingController {
   @Roles(Role.CLIENT, Role.ADMIN)
   @Get('missions/:missionId/etudiants-compatibles')
   @ApiOperation({ summary: "Etudiants les plus compatibles avec une mission (5.1)" })
-  async etudiantsCompatibles(@Param('missionId') missionId: string) {
-    return this.matchingService.trouverEtudiantsCompatibles(missionId);
+  async etudiantsCompatibles(
+    @Param('missionId', ParseUUIDPipe) missionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.matchingService.trouverEtudiantsCompatibles(missionId, user);
   }
 
   @Roles(Role.ETUDIANT)

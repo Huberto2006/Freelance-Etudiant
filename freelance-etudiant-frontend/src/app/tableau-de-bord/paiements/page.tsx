@@ -633,7 +633,7 @@ function FormulairePaiement({
 
           <p className="mt-0.5 text-xs text-ink-soft">
             Sélectionnez le compte ou numéro de paiement
-            de l'étudiant.
+            de l&apos;étudiant.
           </p>
         </div>
 
@@ -659,13 +659,13 @@ function FormulairePaiement({
           moyensPaiement.length === 0 && (
             <div className="rounded-xl border border-ocre/20 bg-ocre/5 p-4">
               <p className="text-sm text-ink-soft">
-                Aucun moyen de paiement actif n'est
-                actuellement configuré par l'étudiant.
+                Aucun moyen de paiement actif n&apos;est
+                actuellement configuré par l&apos;étudiant.
               </p>
 
               <p className="mt-1 text-xs text-ink-soft/70">
                 Le paiement ne peut pas être lancé tant
-                qu'un moyen de paiement n'est pas
+                qu&apos;un moyen de paiement n&apos;est pas
                 disponible.
               </p>
             </div>

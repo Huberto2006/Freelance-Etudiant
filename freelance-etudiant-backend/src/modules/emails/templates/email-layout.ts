@@ -1,3 +1,4 @@
+import { echapperHtml, urlHttpSure } from '../../../common/utils/html.util';
 /**
  * Socle HTML commun des emails transactionnels Kianja.
  * Conçu pour un rendu propre, responsive et compatible avec tous les clients email.
@@ -35,10 +36,10 @@ export function boutonAction(libelle: string, url: string, couleur = COULEURS.oc
   return `
     <tr>
       <td align="center" style="padding:20px 28px;">
-        <a href="${url}"
+        <a href="${echapperHtml(urlHttpSure(url))}"
            target="_blank"
            style="display:inline-block;padding:12px 28px;background:${couleur};color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:bold;letter-spacing:0.3px;">
-          ${libelle}
+          ${echapperHtml(libelle)}
         </a>
       </td>
     </tr>

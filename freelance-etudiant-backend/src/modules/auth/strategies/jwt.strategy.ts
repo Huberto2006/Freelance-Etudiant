@@ -31,6 +31,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
+    if (payload.typ !== 'access') {
+      throw new UnauthorizedException('Type de jeton invalide');
+    }
     const user = await this.usersService.findById(payload.sub);
     if (!user || user.estSuspendu || !user.estActif) {
       throw new UnauthorizedException('Compte introuvable, suspendu ou desactive');

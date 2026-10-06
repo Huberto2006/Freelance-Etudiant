@@ -29,7 +29,11 @@ export function useApiList<T>(loader: () => Promise<T>, deps: unknown[] = []) {
   // appel lance est autorise a ecrire son resultat.
   const requeteEnCours = useRef(0);
   const loaderRef = useRef(loader);
-  loaderRef.current = loader;
+  const depsPrecedentes = useRef<unknown[] | null>(null);
+
+  useEffect(() => {
+    loaderRef.current = loader;
+  }, [loader]);
 
   const charger = useCallback(() => {
     const id = ++requeteEnCours.current;
@@ -51,13 +55,21 @@ export function useApiList<T>(loader: () => Promise<T>, deps: unknown[] = []) {
       .finally(() => {
         if (requeteEnCours.current === id) setChargement(false);
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
+  }, []);
 
   useEffect(() => {
-    charger();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [charger]);
+    const precedentes = depsPrecedentes.current;
+    const dependancesModifiees =
+      precedentes === null ||
+      precedentes.length !== deps.length ||
+      deps.some((dependance, index) => !Object.is(dependance, precedentes[index]));
+
+    depsPrecedentes.current = deps;
+
+    if (dependancesModifiees) {
+      charger();
+    }
+  });
 
   return { donnees, setDonnees, chargement, erreur, setErreur, recharger: charger };
 }

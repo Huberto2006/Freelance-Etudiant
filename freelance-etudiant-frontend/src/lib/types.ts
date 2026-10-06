@@ -598,8 +598,6 @@
   export interface AuthResponse {
     accessToken: string;
 
-    refreshToken: string;
-
     utilisateur: {
       id: string;
       email: string;

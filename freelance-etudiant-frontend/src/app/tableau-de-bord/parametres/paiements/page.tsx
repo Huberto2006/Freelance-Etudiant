@@ -106,16 +106,16 @@ export default function MoyensPaiementPage() {
 
   const [action, setAction] = useState<ActionMoyen>(null);
 
-  const chargerMoyens = useCallback(async () => {
+  const obtenirMoyens = useCallback(
+    () => api.get<MoyenPaiement[]>("/moyens-paiement"),
+    [],
+  );
+
+  async function rechargerMoyens() {
     setChargement(true);
     setErreur(null);
-
     try {
-      const resultat = await api.get<MoyenPaiement[]>(
-        "/moyens-paiement",
-      );
-
-      setMoyens(resultat);
+      setMoyens(await obtenirMoyens());
     } catch (err) {
       setErreur(
         err instanceof ApiError
@@ -125,15 +125,33 @@ export default function MoyensPaiementPage() {
     } finally {
       setChargement(false);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    if (utilisateur?.role === "etudiant") {
-      void chargerMoyens();
-    } else {
-      setChargement(false);
-    }
-  }, [utilisateur, chargerMoyens]);
+    if (utilisateur?.role !== "etudiant") return;
+
+    let cancelled = false;
+    obtenirMoyens()
+      .then((resultat) => {
+        if (!cancelled) setMoyens(resultat);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setErreur(
+            err instanceof ApiError
+              ? err.message
+              : "Impossible de charger vos moyens de paiement.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setChargement(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [utilisateur?.role, obtenirMoyens]);
 
   function fermerActions() {
     setMoyenSelectionne(null);
@@ -204,7 +222,7 @@ export default function MoyensPaiementPage() {
           onFermer={() => setAjoutOuvert(false)}
           onAjoute={async () => {
             setAjoutOuvert(false);
-            await chargerMoyens();
+            await rechargerMoyens();
           }}
         />
       )}
@@ -291,7 +309,7 @@ export default function MoyensPaiementPage() {
           onFermer={fermerActions}
           onModifie={async () => {
             fermerActions();
-            await chargerMoyens();
+            await rechargerMoyens();
           }}
         />
       )}
@@ -310,7 +328,7 @@ export default function MoyensPaiementPage() {
               );
 
               fermerActions();
-              await chargerMoyens();
+              await rechargerMoyens();
             } catch (err) {
               setErreur(
                 err instanceof ApiError
@@ -338,7 +356,7 @@ export default function MoyensPaiementPage() {
               );
 
               fermerActions();
-              await chargerMoyens();
+              await rechargerMoyens();
             } catch (err) {
               setErreur(
                 err instanceof ApiError
@@ -363,7 +381,7 @@ export default function MoyensPaiementPage() {
               );
 
               fermerActions();
-              await chargerMoyens();
+              await rechargerMoyens();
             } catch (err) {
               setErreur(
                 err instanceof ApiError
@@ -961,7 +979,7 @@ function FormulaireMoyen({
             </span>
 
             <span className="mt-0.5 block text-xs text-ink-soft">
-              Ce moyen sera proposé en priorité lors d'un paiement.
+              Ce moyen sera proposé en priorité lors d&apos;un paiement.
             </span>
           </span>
         </label>
