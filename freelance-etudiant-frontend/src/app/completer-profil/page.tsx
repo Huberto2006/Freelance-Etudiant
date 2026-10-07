@@ -19,8 +19,10 @@ import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { MultiSelectCreatable } from "@/components/ui/MultiSelectCreatable";
 import { NoticeCard, PageHeader } from "@/components/ui/Notice";
 import { PhotoProfil } from "@/components/ui/PhotoProfil";
+import { COMPETENCES_PREDEFINIES, LANGUES_PREDEFINIES, SPECIALITES_PREDEFINIES } from "@/data/field-options";
 import type { EtudiantProfile, Utilisateur } from "@/lib/types";
 
 /* =========================================================
@@ -873,13 +875,15 @@ function EtapeEtudes({
       <Field
         label="Langues *"
         htmlFor="langues"
-        hint="Séparez chaque langue par une virgule."
+        hint="Ajoutez vos langues ou sélectionnez dans la liste."
       >
-        <Input
+        <MultiSelectCreatable
           id="langues"
           value={langues}
-          onChange={(e) => setLangues(e.target.value)}
-          placeholder="Français, Malagasy, Anglais"
+          onChange={setLangues}
+          options={LANGUES_PREDEFINIES}
+          placeholder="Rechercher ou saisir une langue…"
+          allowCreate
         />
       </Field>
     </div>
@@ -929,13 +933,15 @@ function EtapeCompetences({
       <Field
         label="Compétences *"
         htmlFor="competences"
-        hint="Séparez chaque compétence par une virgule."
+        hint="Sélectionnez ou ajoutez des compétences."
       >
-        <Input
+        <MultiSelectCreatable
           id="competences"
           value={competences}
-          onChange={(e) => setCompetences(e.target.value)}
-          placeholder="React, NestJS, Flutter"
+          onChange={setCompetences}
+          options={COMPETENCES_PREDEFINIES}
+          placeholder="Rechercher une compétence…"
+          allowCreate
         />
       </Field>
 
@@ -944,11 +950,13 @@ function EtapeCompetences({
         htmlFor="specialites"
         hint="Domaines d'intervention principaux (facultatif)."
       >
-        <Input
+        <MultiSelectCreatable
           id="specialites"
           value={specialites}
-          onChange={(e) => setSpecialites(e.target.value)}
-          placeholder="Développement mobile, UI/UX"
+          onChange={setSpecialites}
+          options={SPECIALITES_PREDEFINIES}
+          placeholder="Saisir une spécialité…"
+          allowCreate
         />
       </Field>
 
