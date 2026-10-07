@@ -31,11 +31,13 @@ import { formatArgent } from "@/lib/format";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { MessageVide, NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
+import { MultiSelectCreatable } from "@/components/ui/MultiSelectCreatable";
 import { PhotoProfil } from "@/components/ui/PhotoProfil";
 import { PortfolioGalerie, estImageUrl } from "@/components/ui/Portfolio";
 import { SelecteurTheme } from "@/components/ui/SelecteurTheme";
 import { ThemeCondition } from "@/components/ui/ThemeCondition";
-import type { ClientProfile, EtudiantProfile, Utilisateur } from "@/lib/types";
+import { COMPETENCES_PREDEFINIES, LANGUES_PREDEFINIES, SPECIALITES_PREDEFINIES } from "@/data/field-options";
+import type { ClientProfile, EtudiantProfile, OcrCvExtraction, Utilisateur } from "@/lib/types";
 
 const NIVEAUX_ETUDE = ["L1", "L2", "L3", "M1", "M2", "D1", "D2", "D3"];
 
@@ -200,6 +202,53 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
   const [envoi, setEnvoi] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [importCvEnCours, setImportCvEnCours] = useState(false);
+  const [cvDraft, setCvDraft] = useState<OcrCvExtraction | null>(null);
+  const [cvErreur, setCvErreur] = useState<string | null>(null);
+
+  async function importerCv(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportCvEnCours(true);
+    setCvErreur(null);
+    setMessage(null);
+    setErreur(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const resultat = await api.upload<OcrCvExtraction>("/etudiants/me/cv-import", formData);
+      setCvDraft(resultat);
+      setMessage("Le CV a été analysé. Vérifiez les suggestions avant d’enregistrer.");
+    } catch (error) {
+      const messageErreur = error instanceof ApiError ? error.message : "Impossible d’analyser ce CV.";
+      setCvErreur(messageErreur);
+    } finally {
+      setImportCvEnCours(false);
+      e.target.value = "";
+    }
+  }
+
+  function appliquerSuggestionCV() {
+    if (!cvDraft) return;
+    const suggestions = cvDraft.fields;
+    if (suggestions.nom?.value) setNiveauEtude((prev) => prev || suggestions.nom?.value || prev);
+    if (suggestions.universite?.value) setUniversite(suggestions.universite.value);
+    if (suggestions.filiere?.value) setFiliere(suggestions.filiere.value);
+    if (suggestions.anneeEtude?.value) setAnneeEtude(suggestions.anneeEtude.value);
+    if (suggestions.ville?.value) setVille(suggestions.ville.value);
+    if (suggestions.telephone?.value) setTelephone(suggestions.telephone.value);
+    if (suggestions.description?.value) setDescription(suggestions.description.value);
+    if (suggestions.competences?.value?.length) setCompetences(suggestions.competences.value.join(", "));
+    if (suggestions.langues?.value?.length) setLangues(suggestions.langues.value.join(", "));
+    if (suggestions.githubUrl?.value) setGithubUrl(suggestions.githubUrl.value);
+    if (suggestions.linkedinUrl?.value) setLinkedinUrl(suggestions.linkedinUrl.value);
+    if (suggestions.siteWeb?.value) setSiteWeb(suggestions.siteWeb.value);
+    if (suggestions.portfolioUrls?.value?.length) setPortfolioUrls(suggestions.portfolioUrls.value);
+    setCvDraft(null);
+    setMessage("Les données OCR ont été appliquées comme suggestions. Enregistrez votre profil pour valider définitivement.");
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -821,6 +870,74 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
             </Button>
           </div>
 
+          <div className="mb-6 flex flex-col gap-4 rounded-xl border border-ink/10 bg-paper-light p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ocre-dark">Import CV</p>
+                <h3 className="mt-1 font-display text-xl font-semibold">Importer mon CV</h3>
+              </div>
+              <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-ink/30 bg-white px-3 py-2 text-sm text-ink hover:border-ocre">
+                <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" className="hidden" onChange={importerCv} disabled={importCvEnCours} />
+                {importCvEnCours ? "Analyse…" : "Choisir un fichier"}
+              </label>
+            </div>
+
+            {cvErreur && (
+              <p className="text-sm text-brique">{cvErreur}</p>
+            )}
+
+            {cvDraft && (
+              <div className="rounded-xl border border-ocre/30 bg-ocre/5 p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <p className="font-display text-lg font-semibold">Suggestions OCR</p>
+                    <p className="text-sm text-ink-soft">Les valeurs ci-dessous sont des propositions à valider avant enregistrement.</p>
+                  </div>
+                  <Button type="button" variant="secondary" size="sm" onClick={appliquerSuggestionCV}>Appliquer les suggestions</Button>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {Object.entries(cvDraft.fields).map(([key, field]) => {
+                    if (!field || !field.value) return null;
+                    const label = {
+                      nom: "Nom",
+                      email: "E-mail",
+                      telephone: "Téléphone",
+                      universite: "Université",
+                      filiere: "Filière",
+                      anneeEtude: "Année d’étude",
+                      ville: "Ville",
+                      description: "Description",
+                      competences: "Compétences",
+                      langues: "Langues",
+                      githubUrl: "GitHub",
+                      linkedinUrl: "LinkedIn",
+                      siteWeb: "Site web",
+                      portfolioUrls: "Portfolio",
+                    }[key] ?? key;
+                    const value = Array.isArray(field.value) ? field.value.join(", ") : field.value;
+                    return (
+                      <div key={key} className="rounded-lg border border-ink/10 bg-paper p-3">
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-ink-soft">{label}</p>
+                        <p className="mt-2 text-sm text-ink">{value}</p>
+                        <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-ocre-dark">Niveau: {field.confidence}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {cvDraft.warnings.length > 0 && (
+                  <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3">
+                    <p className="text-xs font-mono uppercase tracking-[0.2em] text-amber-700">Vérification</p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-900">
+                      {cvDraft.warnings.map((warning) => <li key={warning}>{warning}</li>)}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <form onSubmit={onSubmit} className="flex flex-col gap-5">
             <div className="grid gap-5 sm:grid-cols-2">
               <Field label="Niveau d'étude" htmlFor="niveauEtude">
@@ -903,26 +1020,30 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
             <Field
               label="Compétences"
               htmlFor="competences"
-              hint="Séparées par des virgules"
+              hint="Sélectionnez ou ajoutez des compétences."
             >
-              <Input
+              <MultiSelectCreatable
                 id="competences"
                 value={competences}
-                onChange={(e) => setCompetences(e.target.value)}
-                placeholder="Next.js, NestJS, PostgreSQL"
+                onChange={setCompetences}
+                options={COMPETENCES_PREDEFINIES}
+                placeholder="Rechercher une compétence…"
+                allowCreate
               />
             </Field>
 
             <Field
               label="Spécialités"
               htmlFor="specialites"
-              hint="Séparées par des virgules"
+              hint="Sélectionnez ou ajoutez un domaine d'intervention."
             >
-              <Input
+              <MultiSelectCreatable
                 id="specialites"
                 value={specialites}
-                onChange={(e) => setSpecialites(e.target.value)}
-                placeholder="Développement mobile, UI/UX"
+                onChange={setSpecialites}
+                options={SPECIALITES_PREDEFINIES}
+                placeholder="Rechercher une spécialité…"
+                allowCreate
               />
             </Field>
 
@@ -973,13 +1094,15 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
             <Field
               label="Langues"
               htmlFor="langues"
-              hint="Séparées par des virgules"
+              hint="Ajoutez vos langues ou sélectionnez dans la liste."
             >
-              <Input
+              <MultiSelectCreatable
                 id="langues"
                 value={langues}
-                onChange={(e) => setLangues(e.target.value)}
-                placeholder="Malagasy, Français, Anglais"
+                onChange={setLangues}
+                options={LANGUES_PREDEFINIES}
+                placeholder="Rechercher ou saisir une langue…"
+                allowCreate
               />
             </Field>
 

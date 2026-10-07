@@ -57,6 +57,32 @@
     profilClient?: ClientProfile | null;
   }
 
+  export interface OcrField<T = string | string[] | null> {
+    value: T;
+    confidence: "high" | "medium" | "low" | "null";
+  }
+
+  export interface OcrCvExtraction {
+    rawText: string;
+    fields: {
+      nom?: OcrField<string>;
+      email?: OcrField<string>;
+      telephone?: OcrField<string>;
+      universite?: OcrField<string>;
+      filiere?: OcrField<string>;
+      anneeEtude?: OcrField<string>;
+      ville?: OcrField<string>;
+      description?: OcrField<string>;
+      competences?: OcrField<string[]>;
+      langues?: OcrField<string[]>;
+      githubUrl?: OcrField<string>;
+      linkedinUrl?: OcrField<string>;
+      siteWeb?: OcrField<string>;
+      portfolioUrls?: OcrField<string[]>;
+    };
+    warnings: string[];
+  }
+
   export interface EtudiantProfile {
     utilisateurId: string;
 

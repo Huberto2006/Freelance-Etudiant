@@ -4,13 +4,14 @@ import { EtudiantProfile } from './entities/etudiant-profile.entity';
 import { EtudiantsService } from './etudiants.service';
 import { EtudiantsController } from './etudiants.controller';
 import { ProfileCompletionModule } from '../profile-completion/profile-completion.module';
+import { CvImportService } from './cv-import.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([EtudiantProfile]),
     ProfileCompletionModule,
   ],
-  providers: [EtudiantsService],
+  providers: [EtudiantsService, CvImportService],
   controllers: [EtudiantsController],
   exports: [EtudiantsService],
 })

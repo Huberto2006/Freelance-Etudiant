@@ -1,4 +1,17 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { EtudiantsService } from './etudiants.service';
 import { UpdateEtudiantProfileDto } from './dto/update-etudiant-profile.dto';
@@ -8,6 +21,7 @@ import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interfa
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Role } from '../../common/enums/role.enum';
+import { CvImportService } from './cv-import.service';
 
 /**
  * RG-VIS-001 : les profils etudiants ne sont PAS consultables par un
@@ -21,7 +35,10 @@ import { Role } from '../../common/enums/role.enum';
 @ApiBearerAuth()
 @Controller('etudiants')
 export class EtudiantsController {
-  constructor(private readonly etudiantsService: EtudiantsService) {}
+  constructor(
+    private readonly etudiantsService: EtudiantsService,
+    private readonly cvImportService: CvImportService,
+  ) {}
 
   @Get()
   @ApiOperation({
@@ -39,6 +56,22 @@ export class EtudiantsController {
   })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.etudiantsService.findOnePublic(id);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ETUDIANT)
+  @ApiBearerAuth()
+  @Post('me/cv-import')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({
+    summary:
+      'Importe un CV et extrait des suggestions non-destructives sans modifier le profil tant qu’elles ne sont pas validées.',
+  })
+  async importCv(
+    @CurrentUser() user: AuthenticatedUser,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.cvImportService.analyserCv(file);
   }
 
   @UseGuards(RolesGuard)
