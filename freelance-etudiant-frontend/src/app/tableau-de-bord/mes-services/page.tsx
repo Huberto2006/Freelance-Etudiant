@@ -23,6 +23,7 @@ import { cleCategorie, iconePourCategorie, optionsCategories } from "@/lib/categ
 
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { MultiSelectCreatable } from "@/components/ui/MultiSelectCreatable";
 import {
   NoticeCard,
   PageHeader,
@@ -32,6 +33,7 @@ import {
 import { SelecteurImages } from "@/components/ui/SelecteurImages";
 import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
 import { SousNavigation } from "@/components/ui/SousNavigation";
+import { COMPETENCES_PREDEFINIES } from "@/data/field-options";
 
 type OngletServices = "actifs" | "archives";
 
@@ -237,7 +239,7 @@ function FormulaireService({
             }
             disabled={chargement}
           >
-            <option value="">
+            <option value="" disabled hidden>
               Sélectionner une catégorie
             </option>
 
@@ -281,14 +283,18 @@ function FormulaireService({
         </Field>
       </div>
 
-      <Field label="Compétences" htmlFor="service-competences">
-        <Input
+      <Field
+        label="Compétences"
+        htmlFor="service-competences"
+        hint="Sélectionnez ou ajoutez des compétences."
+      >
+        <MultiSelectCreatable
           id="service-competences"
           value={formulaire.competences}
-          onChange={(event) =>
-            modifierChamp("competences", event.target.value)
-          }
-          placeholder="Figma, UI/UX, Prototypage (séparées par des virgules)"
+          onChange={(value) => modifierChamp("competences", value)}
+          options={COMPETENCES_PREDEFINIES}
+          placeholder="Rechercher une compétence…"
+          allowCreate
           disabled={chargement}
         />
       </Field>
@@ -845,7 +851,7 @@ function MesServicesContent() {
           }
           aria-label="Filtrer par catégorie"
         >
-          <option value="">
+          <option value="" disabled hidden>
             Toutes les catégories
           </option>
 

@@ -74,7 +74,11 @@ export class AuthController {
       session.refreshToken,
       session.refreshExp,
     );
-    return { accessToken: session.accessToken, utilisateur: session.utilisateur };
+    return {
+      accessToken: session.accessToken,
+      premiereConnexion: session.premiereConnexion,
+      utilisateur: session.utilisateur,
+    };
   }
 
   @Public()

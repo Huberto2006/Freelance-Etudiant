@@ -946,7 +946,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                   value={niveauEtude}
                   onChange={(e) => setNiveauEtude(e.target.value)}
                 >
-                  <option value="">Sélectionner…</option>
+                  <option value="" disabled hidden>Sélectionner…</option>
                   {NIVEAUX_ETUDE.map((n) => (
                     <option key={n} value={n}>
                       {n}
@@ -979,7 +979,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                   value={anneeEtude}
                   onChange={(e) => setAnneeEtude(e.target.value)}
                 >
-                  <option value="">Sélectionner…</option>
+                  <option value="" disabled hidden>Sélectionner…</option>
                   {NIVEAUX_ETUDE.map((n) => (
                     <option key={n} value={n}>
                       {n}
@@ -1066,7 +1066,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                   value={typeFreelance}
                   onChange={(e) => setTypeFreelance(e.target.value)}
                 >
-                  <option value="">Sélectionner…</option>
+                  <option value="" disabled hidden>Sélectionner…</option>
                   {TYPES_FREELANCE.map((t) => (
                     <option key={t} value={t}>
                       {t}
@@ -1081,7 +1081,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                   value={statutDisponibilite}
                   onChange={(e) => setStatutDisponibilite(e.target.value)}
                 >
-                  <option value="">Sélectionner…</option>
+                  <option value="" disabled hidden>Sélectionner…</option>
                   {STATUTS_DISPONIBILITE.map((s) => (
                     <option key={s} value={s}>
                       {LABELS_STATUT_DISPONIBILITE[s]}

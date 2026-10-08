@@ -5,13 +5,24 @@ import { usePathname } from "next/navigation";
 import { Footer } from "./Footer";
 
 /**
- * Le Footer ne doit être affiché que sur la page d'accueil.
+ * Routes publiques « vitrine » qui affichent le Footer partagé : l'accueil
+ * et les pages d'information (À propos, FAQ, Contact) ainsi que
+ * l'annuaire des freelances.
  *
- * Toutes les autres routes, y compris les sections publiques comme
- * "/missions" et "/services", doivent le masquer.
+ * Les catalogues (/publications, /missions, /services) et les pages de
+ * détail restent sans footer, comme avant : ce sont des écrans de travail
+ * où le pied de page gênerait le défilement des listes.
  */
+const ROUTES_AVEC_FOOTER = [
+  "/",
+  "/a-propos",
+  "/faq",
+  "/contact",
+  "/freelances",
+];
+
 function footerVisibleSur(pathname: string): boolean {
-  return pathname === "/";
+  return ROUTES_AVEC_FOOTER.includes(pathname);
 }
 
 /**

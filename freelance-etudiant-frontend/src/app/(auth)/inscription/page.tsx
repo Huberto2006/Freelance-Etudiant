@@ -111,10 +111,10 @@ function FormulaireInscription() {
   if (reponseInscription) {
     return (
       <div className="mx-auto max-w-md px-5 pb-16">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark mb-3">
+        <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
           Vérification de l&apos;email
         </p>
-        <h1 className="font-display text-3xl font-semibold mb-8">
+        <h1 className="mb-7 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
           Confirmez votre adresse email
         </h1>
 
@@ -157,9 +157,12 @@ function FormulaireInscription() {
           </div>
         </NoticeCard>
 
-        <p className="mt-6 text-sm text-ink-soft text-center">
+        <p className="mt-6 text-center text-sm text-ink-soft">
           Vous avez déjà vérifié votre adresse ?{" "}
-          <Link href="/connexion" className="text-ocre-dark hover:underline">
+          <Link
+            href="/connexion"
+            className="font-medium text-ocre-dark hover:underline"
+          >
             Se connecter
           </Link>
         </p>
@@ -169,30 +172,40 @@ function FormulaireInscription() {
 
   return (
     <div className="mx-auto max-w-md px-5 pb-16">
-      <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark mb-3">
+      <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
         Bienvenue sur Kianja
       </p>
-      <h1 className="font-display text-3xl font-semibold mb-8">
+      <h1 className="mb-7 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
         Créer un compte
       </h1>
 
-      <div className="flex mb-6 rounded-lg border border-ink/30 divide-x divide-ink/30 overflow-hidden">
+      <div
+        role="group"
+        aria-label="Type de compte"
+        className="mb-6 grid grid-cols-2 gap-1 rounded-xl border border-ink/10 bg-ink/5 p-1"
+      >
         <button
           type="button"
+          aria-pressed={role === "etudiant"}
           onClick={() => setRole("etudiant")}
           className={clsx(
-            "flex-1 py-2.5 text-sm font-medium transition-colors",
-            role === "etudiant" ? "bg-ink text-paper-light" : "text-ink-soft hover:bg-ink/5",
+            "min-h-10 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu",
+            role === "etudiant"
+              ? "bg-paper-light text-ink shadow-sm"
+              : "text-ink-soft hover:text-ink",
           )}
         >
           Je suis étudiant
         </button>
         <button
           type="button"
+          aria-pressed={role === "client"}
           onClick={() => setRole("client")}
           className={clsx(
-            "flex-1 py-2.5 text-sm font-medium transition-colors",
-            role === "client" ? "bg-ink text-paper-light" : "text-ink-soft hover:bg-ink/5",
+            "min-h-10 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu",
+            role === "client"
+              ? "bg-paper-light text-ink shadow-sm"
+              : "text-ink-soft hover:text-ink",
           )}
         >
           Je suis client
@@ -269,9 +282,12 @@ function FormulaireInscription() {
         </form>
       </NoticeCard>
 
-      <p className="mt-6 text-sm text-ink-soft text-center">
+      <p className="mt-6 text-center text-sm text-ink-soft">
         Déjà un compte ?{" "}
-        <Link href="/connexion" className="text-ocre-dark hover:underline">
+        <Link
+          href="/connexion"
+          className="font-medium text-ocre-dark hover:underline"
+        >
           Se connecter
         </Link>
       </p>

@@ -44,7 +44,10 @@ interface AuthContextValue {
   connecter: (
     email: string,
     motDePasse: string,
-  ) => Promise<CompletionProfil | null>;
+  ) => Promise<{
+    completionProfil: CompletionProfil | null;
+    premiereConnexion: boolean;
+  }>;
   inscrire: (payload: RegisterPayload) => Promise<ReponseInscription>;
   deconnecter: () => void;
   rafraichirProfil: () => Promise<CompletionProfil | null>;
@@ -133,7 +136,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Le refresh token est pose par le serveur en cookie httpOnly : il
       // n'apparait jamais dans la reponse ni dans le JavaScript.
       setToken(res.accessToken);
-      return rafraichirProfil();
+      const profil = await rafraichirProfil();
+      return {
+        completionProfil: profil,
+        premiereConnexion: res.premiereConnexion,
+      };
     },
     [rafraichirProfil],
   );

@@ -763,19 +763,19 @@ function LivraisonsContent() {
             />
           </div>
           <Select value={filtreClient} onChange={(event) => setFiltreClient(event.target.value)} aria-label="Filtrer par client">
-            <option value="">Tous les clients</option>
+            <option value="" disabled hidden>Tous les clients</option>
             {Array.from(new Set(candidaturesFiltrees.map((c) => c.mission?.client?.utilisateur?.nom ?? c.mission?.client?.nomEntreprise ?? "Client"))).map((client) => <option key={client} value={client}>{client}</option>)}
           </Select>
           <Select value={filtreMission} onChange={(event) => setFiltreMission(event.target.value)} aria-label="Filtrer par mission">
-            <option value="">Toutes les missions</option>
+            <option value="" disabled hidden>Toutes les missions</option>
             {Array.from(new Set(candidaturesFiltrees.map((c) => c.mission?.titre ?? "Mission"))).map((mission) => <option key={mission} value={mission}>{mission}</option>)}
           </Select>
           <Select value={filtreStatut} onChange={(event) => setFiltreStatut(event.target.value)} aria-label="Filtrer par statut">
-            <option value="">Tous les statuts</option>
+            <option value="" disabled hidden>Tous les statuts</option>
             {Object.entries(statutLivraisonLabel).map(([valeur, label]) => <option key={valeur} value={valeur}>{label}</option>)}
           </Select>
           <Select value={filtreMethode} onChange={(event) => setFiltreMethode(event.target.value)} aria-label="Filtrer par méthode">
-            <option value="">Toutes les méthodes</option>
+            <option value="" disabled hidden>Toutes les méthodes</option>
             <option value="github">GitHub</option>
             <option value="gitlab">GitLab</option>
             <option value="fichiers">Fichiers</option>

@@ -35,10 +35,10 @@ export default function MotDePasseOubliePage() {
 
   return (
     <div className="mx-auto max-w-md px-5 pb-16">
-      <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark mb-3">
+      <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
         Récupération de compte
       </p>
-      <h1 className="font-display text-3xl font-semibold mb-8">
+      <h1 className="mb-7 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
         Mot de passe oublié
       </h1>
 
@@ -72,8 +72,11 @@ export default function MotDePasseOubliePage() {
         )}
       </NoticeCard>
 
-      <p className="mt-6 text-sm text-ink-soft text-center">
-        <Link href="/connexion" className="text-ocre-dark hover:underline">
+      <p className="mt-6 text-center text-sm text-ink-soft">
+        <Link
+          href="/connexion"
+          className="font-medium text-ocre-dark hover:underline"
+        >
           Retour à la connexion
         </Link>
       </p>

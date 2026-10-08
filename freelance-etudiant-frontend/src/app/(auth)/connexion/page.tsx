@@ -35,9 +35,14 @@ export default function ConnexionPage() {
     setRenvoiMessage(null);
     setEnvoi(true);
     try {
-      const completion = await connecter(email, motDePasse);
+      const { completionProfil, premiereConnexion } = await connecter(
+        email,
+        motDePasse,
+      );
       router.push(
-        completion?.role === "etudiant" && !completion.complete
+        premiereConnexion &&
+          completionProfil?.role === "etudiant" &&
+          !completionProfil.complete
           ? "/completer-profil"
           : "/tableau-de-bord",
       );
@@ -83,99 +88,87 @@ export default function ConnexionPage() {
 
   return (
     <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center px-5 pb-16">
-        <div className="w-full">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark mb-3">
-            Bon retour
-          </p>
+      <div className="w-full">
+        <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
+          Bon retour
+        </p>
 
-          <h1 className="font-display text-3xl font-semibold mb-8">
-            Se connecter
-          </h1>
+        <h1 className="mb-7 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+          Se connecter
+        </h1>
 
-          <NoticeCard>
-            <form onSubmit={onSubmit} className="flex flex-col gap-5">
-              <Field label="Adresse email" htmlFor="email">
-                <Input
-                  id="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="vous@exemple.mg"
-                />
-              </Field>
+        <NoticeCard>
+          <form onSubmit={onSubmit} className="flex flex-col gap-5">
+            <Field label="Adresse email" htmlFor="email">
+              <Input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="vous@exemple.mg"
+              />
+            </Field>
 
-              <Field label="Mot de passe" htmlFor="motDePasse">
-                <PasswordInput
-                  id="motDePasse"
-                  required
-                  autoComplete="current-password"
-                  value={motDePasse}
-                  onChange={(e) => setMotDePasse(e.target.value)}
-                  placeholder="••••••••"
-                />
-              </Field>
+            <Field label="Mot de passe" htmlFor="motDePasse">
+              <PasswordInput
+                id="motDePasse"
+                required
+                autoComplete="current-password"
+                value={motDePasse}
+                onChange={(e) => setMotDePasse(e.target.value)}
+                placeholder="••••••••"
+              />
+            </Field>
 
-              <Link
-                href="/mot-de-passe-oublie"
-                className="-mt-2 self-end text-xs text-ocre-dark hover:underline"
-              >
-                Mot de passe oublié ?
-              </Link>
-
-              {erreur && (
-                <p className="text-sm text-brique">
-                  {erreur}
-                </p>
-              )}
-
-              {erreurVerification && (
-                <div className="flex flex-col gap-3">
-                  <p className="text-sm text-brique">
-                    {erreurVerification}
-                  </p>
-
-                  {renvoiMessage && (
-                    <p className="text-xs text-ink-soft">
-                      {renvoiMessage}
-                    </p>
-                  )}
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={renvoyerEmailVerification}
-                    disabled={renvoiEnCours}
-                  >
-                    {renvoiEnCours
-                      ? "Envoi en cours…"
-                      : "Renvoyer l'email de vérification"}
-                  </Button>
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                disabled={envoi}
-                className="mt-2"
-              >
-                {envoi ? "Connexion…" : "Se connecter"}
-              </Button>
-            </form>
-          </NoticeCard>
-
-          <p className="mt-6 text-sm text-ink-soft text-center">
-            Pas encore de compte?{" "}
             <Link
-              href="/inscription"
-              className="text-ocre-dark hover:underline"
+              href="/mot-de-passe-oublie"
+              className="-mt-2 self-end text-xs font-medium text-ocre-dark hover:underline"
             >
-              S&apos;inscrire
+              Mot de passe oublié ?
             </Link>
-          </p>
-        </div>
+
+            {erreur && <p className="text-sm text-brique">{erreur}</p>}
+
+            {erreurVerification && (
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-brique">{erreurVerification}</p>
+
+                {renvoiMessage && (
+                  <p className="text-xs text-ink-soft">{renvoiMessage}</p>
+                )}
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={renvoyerEmailVerification}
+                  disabled={renvoiEnCours}
+                >
+                  {renvoiEnCours
+                    ? "Envoi en cours…"
+                    : "Renvoyer l'email de vérification"}
+                </Button>
+              </div>
+            )}
+
+            <Button type="submit" disabled={envoi} className="mt-2">
+              {envoi ? "Connexion…" : "Se connecter"}
+            </Button>
+          </form>
+        </NoticeCard>
+
+        <p className="mt-6 text-center text-sm text-ink-soft">
+          Pas encore de compte?{" "}
+          <Link
+            href="/inscription"
+            className="font-medium text-ocre-dark hover:underline"
+          >
+            S&apos;inscrire
+          </Link>
+        </p>
+      </div>
     </main>
   );
 }
