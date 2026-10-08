@@ -76,6 +76,8 @@ export interface SessionEmise {
   refreshToken: string;
   /** Expiration du refresh token (epoch secondes), pour le cookie. */
   refreshExp?: number;
+  /** Indique qu'il s'agit de la première authentification de l'utilisateur. */
+  premiereConnexion: boolean;
   utilisateur: { id: string; email: string; role: Role };
 }
 
@@ -239,10 +241,14 @@ export class AuthService {
         "Votre adresse email n'a pas encore ete verifiee. Consultez votre boite de reception et cliquez sur le lien de verification recu a l'inscription.",
       );
     }
+    const premiereConnexion = await this.usersService.marquerPremiereConnexion(
+      utilisateur.id,
+    );
     return this.emettreSession(
       utilisateur.id,
       utilisateur.email,
       utilisateur.role,
+      premiereConnexion,
     );
   }
 
@@ -567,6 +573,7 @@ export class AuthService {
     id: string,
     email: string,
     role: Role,
+    premiereConnexion = false,
   ): Promise<SessionEmise> {
     const accessToken = this.jwtService.sign(
       { sub: id, email, role, typ: "access" } satisfies JwtPayload,
@@ -606,6 +613,7 @@ export class AuthService {
       accessToken,
       refreshToken,
       refreshExp,
+      premiereConnexion,
       utilisateur: { id, email, role },
     };
   }

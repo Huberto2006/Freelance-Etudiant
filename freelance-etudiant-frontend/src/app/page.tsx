@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import { api } from "@/lib/api";
 import { libelleCategorie } from "@/lib/categories";
-import type { EtudiantProfile, Mission, ServiceOffert } from "@/lib/types";
+import type { Mission, ServiceOffert } from "@/lib/types";
 
 import { HeroAccueil, type StatVive } from "@/components/home/HeroAccueil";
 import {
@@ -27,26 +27,25 @@ import { SectionFonctionnement } from "@/components/home/SectionFonctionnement";
 export default function PageAccueil() {
   const [services, setServices] = useState<ServiceOffert[]>([]);
   const [missions, setMissions] = useState<Mission[]>([]);
-  const [nombreEtudiants, setNombreEtudiants] = useState<number | null>(null);
   const [chargement, setChargement] = useState(true);
 
   useEffect(() => {
     let annule = false;
 
     async function charger() {
-      const [resServices, resMissions, resEtudiants] = await Promise.allSettled([
+      // Le total des étudiants n'est plus demandé ici : GET /etudiants est
+      // réservé aux utilisateurs connectés (RG-VIS-001) — un visiteur
+      // recevait un 401 — et n'est de toute façon paginé (il ne renvoie
+      // pas le nombre total d'étudiants).
+      const [resServices, resMissions] = await Promise.allSettled([
         api.get<ServiceOffert[]>("/services", { auth: false }),
         api.get<Mission[]>("/missions", { auth: false }),
-        api.get<EtudiantProfile[]>("/etudiants", { auth: false }),
       ]);
 
       if (annule) return;
 
       if (resServices.status === "fulfilled") setServices(resServices.value);
       if (resMissions.status === "fulfilled") setMissions(resMissions.value);
-      if (resEtudiants.status === "fulfilled") {
-        setNombreEtudiants(resEtudiants.value.length);
-      }
 
       setChargement(false);
     }
@@ -88,10 +87,6 @@ export default function PageAccueil() {
     : [
         { label: "Services proposés", valeur: String(services.length) },
         { label: "Missions ouvertes", valeur: String(missions.length) },
-        {
-          label: "Étudiants actifs",
-          valeur: nombreEtudiants !== null ? String(nombreEtudiants) : "—",
-        },
       ];
 
   return (

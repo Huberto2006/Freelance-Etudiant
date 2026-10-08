@@ -40,6 +40,7 @@ export function MultiSelectCreatable({
   allowCreate = true,
   mode = "multiple",
   className,
+  disabled = false,
 }: {
   id?: string;
   value: string;
@@ -49,6 +50,7 @@ export function MultiSelectCreatable({
   allowCreate?: boolean;
   mode?: "single" | "multiple";
   className?: string;
+  disabled?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -126,10 +128,13 @@ export function MultiSelectCreatable({
   return (
     <div className={clsx("relative", className)}>
       <div
-        onClick={() => inputRef.current?.focus()}
+        onClick={() => {
+          if (!disabled) inputRef.current?.focus();
+        }}
         className={clsx(
           "flex min-h-[44px] w-full flex-wrap items-center gap-1.5 rounded-lg border border-ink/30 bg-paper-light px-2 py-1.5 text-sm text-ink transition-colors focus-within:border-ocre",
           isOpen && "border-ocre",
+          disabled && "cursor-not-allowed opacity-60",
         )}
       >
         {selected.length > 0 &&
@@ -141,6 +146,7 @@ export function MultiSelectCreatable({
               <span>{item}</span>
               <button
                 type="button"
+                disabled={disabled}
                 aria-label={`Supprimer ${item}`}
                 title={`Supprimer ${item}`}
                 onClick={(event) => {
@@ -157,8 +163,11 @@ export function MultiSelectCreatable({
         <input
           id={id}
           ref={inputRef}
+          disabled={disabled}
           value={query}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => {
+            if (!disabled) setIsOpen(true);
+          }}
           onBlur={() => window.setTimeout(() => setIsOpen(false), 120)}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -166,17 +175,18 @@ export function MultiSelectCreatable({
           }}
           onKeyDown={handleKeyDown}
           placeholder={selected.length > 0 && !query ? "Rechercher..." : placeholder}
-          className="min-w-[140px] flex-1 border-0 bg-transparent px-1 py-1.5 text-sm text-ink placeholder:text-ink-soft/60 focus:outline-none"
+          className="min-w-[140px] flex-1 border-0 bg-transparent px-1 py-1.5 text-sm text-ink placeholder:text-ink-soft/60 focus:outline-none disabled:cursor-not-allowed"
         />
       </div>
 
-      {isOpen && (filteredOptions.length > 0 || customValue) && (
+      {!disabled && isOpen && (filteredOptions.length > 0 || customValue) && (
         <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-ink/10 bg-paper-light shadow-lg">
           <div className="max-h-56 overflow-y-auto p-1">
             {filteredOptions.map((option) => (
               <button
                 key={option}
                 type="button"
+                disabled={disabled}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => appliquerValeur(option)}
                 className="flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left text-sm text-ink transition-colors hover:bg-ink/[0.04]"
@@ -191,6 +201,7 @@ export function MultiSelectCreatable({
             {customValue && (
               <button
                 type="button"
+                disabled={disabled}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => appliquerValeur(customValue)}
                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-ocre-dark transition-colors hover:bg-ocre/5"

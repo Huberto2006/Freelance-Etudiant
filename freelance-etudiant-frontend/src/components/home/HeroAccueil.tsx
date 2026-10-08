@@ -548,6 +548,22 @@ export function HeroAccueil({
               /* =================================================
                  UTILISATEUR NON CONNECTÉ
                  ================================================= */
+              <>
+              <div className="mx-auto mb-5 flex w-full max-w-xl flex-col justify-center gap-2.5 sm:flex-row">
+                <Link
+                  href="/publications"
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-ink bg-ink px-5 py-2.5 text-sm font-medium text-paper-light transition-colors hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu"
+                >
+                  Explorer les publications
+                </Link>
+                <Link
+                  href="/inscription"
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-ink/30 bg-paper-light/80 px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink hover:bg-ink/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu"
+                >
+                  Rejoindre Kianja
+                </Link>
+              </div>
+
               <div
                 className="
                   mx-auto
@@ -790,6 +806,7 @@ export function HeroAccueil({
                   </div>
                 </div>
               </div>
+              </>
             )}
           </div>
         )}
@@ -809,7 +826,6 @@ export function HeroAccueil({
               border-t
               border-ink/10
               pt-6
-              sm:grid-cols-3
             "
           >
             {stats.map((stat) => (

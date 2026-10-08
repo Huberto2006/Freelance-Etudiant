@@ -90,7 +90,13 @@ export class EmailService {
    * l'email est reellement parti (ou a ete journalise en mode console
    * sans SMTP), false en cas d'echec SMTP.
    */
-  async envoyerMail(destinataire: string, subject: string, html: string, text: string): Promise<boolean> {
+  async envoyerMail(
+    destinataire: string,
+    subject: string,
+    html: string,
+    text: string,
+    replyTo?: string,
+  ): Promise<boolean> {
     const transporteur = await this.obtenirTransporteur();
 
     if (!transporteur) {
@@ -109,6 +115,7 @@ export class EmailService {
         subject: nettoyerSujet(subject),
         html,
         text,
+        ...(replyTo ? { replyTo: nettoyerSujet(replyTo) } : {}),
       });
       this.logger.log(`Email envoye a ${destinataire} : ${subject}`);
       return true;

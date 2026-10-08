@@ -341,7 +341,7 @@ function FormulaireGroupe({
             onChange={(e) => setMissionId(e.target.value)}
             disabled={envoi}
           >
-            <option value="">Aucune mission</option>
+            <option value="" disabled hidden>Aucune mission</option>
             {missions.map((mission) => (
               <option key={mission.id} value={mission.id}>
                 {mission.titre}

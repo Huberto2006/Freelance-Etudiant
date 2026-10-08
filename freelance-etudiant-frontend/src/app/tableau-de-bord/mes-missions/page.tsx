@@ -20,10 +20,12 @@ import {
 
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { MultiSelectCreatable } from "@/components/ui/MultiSelectCreatable";
 import { NoticeCard, PageHeader, StampBadge, StatCard, Tag } from "@/components/ui/Notice";
 import { SelecteurImage } from "@/components/ui/SelecteurImage";
 import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
 import { dateLimiteDepassee } from "@/lib/format";
+import { COMPETENCES_PREDEFINIES } from "@/data/field-options";
 
 export default function MesMissionsPage() {
   return (
@@ -371,7 +373,7 @@ function MesMissionsContent() {
                 onChange={(e) => setFiltreCategorie(e.target.value)}
                 aria-label="Filtrer par catégorie"
               >
-                <option value="">Toutes les catégories</option>
+                <option value="" disabled hidden>Toutes les catégories</option>
                 {categoriesDisponibles.map((categorie) => (
                   <option key={categorie} value={categorie}>
                     {categorie}
@@ -745,7 +747,7 @@ function FormulaireMission({
               onChange={(e) => setCategorie(e.target.value)}
               disabled={envoi}
             >
-              <option value="">Sélectionner une catégorie</option>
+              <option value="" disabled hidden>Sélectionner une catégorie</option>
               {optionsCategories(categorieInitiale).map((option) => (
                 <option key={option.valeur} value={option.valeur}>
                   {option.libelle}
@@ -797,13 +799,15 @@ function FormulaireMission({
         <Field
           label="Compétences requises"
           htmlFor="competencesRequises"
-          hint="Séparées par des virgules"
+          hint="Sélectionnez ou ajoutez des compétences."
         >
-          <Input
+          <MultiSelectCreatable
             id="competencesRequises"
             value={competencesRequises}
-            onChange={(e) => setCompetencesRequises(e.target.value)}
-            placeholder="Next.js, NestJS, PostgreSQL"
+            onChange={setCompetencesRequises}
+            options={COMPETENCES_PREDEFINIES}
+            placeholder="Rechercher une compétence…"
+            allowCreate
             disabled={envoi}
           />
         </Field>

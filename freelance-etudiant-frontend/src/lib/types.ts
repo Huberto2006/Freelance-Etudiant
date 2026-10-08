@@ -624,6 +624,8 @@
   export interface AuthResponse {
     accessToken: string;
 
+    premiereConnexion: boolean;
+
     utilisateur: {
       id: string;
       email: string;

@@ -74,6 +74,28 @@ export class UsersService {
     return this.utilisateurRepo.save(utilisateur);
   }
 
+  /**
+   * Enregistre une authentification et indique atomiquement si elle est
+   * la première. Le questionnaire initial ne doit être proposé qu'une fois,
+   * même si plusieurs connexions arrivent simultanément.
+   */
+  async marquerPremiereConnexion(id: string): Promise<boolean> {
+    const maintenant = new Date();
+    const premiereConnexion = await this.utilisateurRepo
+      .createQueryBuilder()
+      .update(Utilisateur)
+      .set({ derniereConnexion: maintenant })
+      .where('id = :id AND derniere_connexion IS NULL', { id })
+      .execute();
+
+    if (premiereConnexion.affected) return true;
+
+    await this.utilisateurRepo.update(id, {
+      derniereConnexion: maintenant,
+    });
+    return false;
+  }
+
   async findAll(role?: Role): Promise<Utilisateur[]> {
     return this.utilisateurRepo.find({
       where: role ? { role } : {},

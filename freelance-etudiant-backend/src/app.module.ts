@@ -35,6 +35,7 @@ import { ReactionsContenuModule } from './modules/reactions-contenu/reactions-co
 import { RealtimeModule } from './modules/realtime/realtime.module';
 import { EmailModule } from './modules/email/email.module';
 import { EmailsModule } from './modules/emails/emails.module';
+import { ContactModule } from './modules/contact/contact.module';
 
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { UploadsModule } from './modules/uploads/uploads.module';
@@ -104,6 +105,7 @@ import { HealthController } from './health.controller';
     RealtimeModule,
     EmailModule,
     EmailsModule,
+    ContactModule,
     GroupesModule,
     AmitieModule,
   ],
