@@ -1,4 +1,8 @@
-  export type Role = "etudiant" | "client" | "admin";
+  /**
+   * "a_definir" : role transitoire d'un compte tout juste cree via Google,
+   * avant le choix explicite etudiant/client (page /choix-role).
+   */
+  export type Role = "etudiant" | "client" | "admin" | "a_definir";
 
   export type StatutCandidature =
     | "en_attente"
@@ -41,6 +45,12 @@
      * l'inscription ; un compte non verifie ne peut pas se connecter.
      */
     emailVerifie: boolean;
+
+    /** Origine du compte (LOCAL = email + mot de passe, GOOGLE = Google). */
+    authProvider?: "LOCAL" | "GOOGLE";
+
+    /** Renseigne (non null) lorsqu'un compte Google est lie. */
+    googleId?: string | null;
 
     dateInscription: string;
 

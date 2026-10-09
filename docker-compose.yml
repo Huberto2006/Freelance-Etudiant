@@ -46,6 +46,8 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-2d}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET requis dans .env}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID requis dans .env}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:?TURNSTILE_SECRET_KEY requis dans .env}
       ADMIN_EMAIL: ${ADMIN_EMAIL:?ADMIN_EMAIL requis dans .env}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD requis dans .env}
       FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL requis dans .env}
@@ -84,6 +86,8 @@ services:
       context: ./freelance-etudiant-frontend
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api/v1}
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:?NEXT_PUBLIC_GOOGLE_CLIENT_ID requis dans .env}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?NEXT_PUBLIC_TURNSTILE_SITE_KEY requis dans .env}
     restart: unless-stopped
     init: true
     environment:

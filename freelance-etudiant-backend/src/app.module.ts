@@ -7,6 +7,8 @@ import { APP_GUARD } from '@nestjs/core';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
+import googleConfig from './config/google.config';
+import turnstileConfig from './config/turnstile.config';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -38,6 +40,7 @@ import { EmailsModule } from './modules/emails/emails.module';
 import { ContactModule } from './modules/contact/contact.module';
 
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { RoleDefiniGuard } from './modules/auth/guards/role-defini.guard';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { GroupesModule } from './modules/groupes/groupes.module';
 import { AmitieModule } from './modules/amitie/amitie.module';
@@ -47,7 +50,7 @@ import { HealthController } from './health.controller';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, jwtConfig],
+      load: [appConfig, databaseConfig, jwtConfig, googleConfig, turnstileConfig],
       envFilePath: ['.env'],
     }),
       
@@ -122,6 +125,12 @@ import { HealthController } from './health.controller';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      // Bloque les comptes Google sans role choisi (A_DEFINIR) hors des
+      // routes marquees @AutoriserRoleADefinir(). Apres JwtAuthGuard.
+      provide: APP_GUARD,
+      useClass: RoleDefiniGuard,
     },
   ],
 })

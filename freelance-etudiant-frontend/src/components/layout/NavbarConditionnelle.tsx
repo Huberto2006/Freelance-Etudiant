@@ -37,6 +37,9 @@ function pageAuthActive(pathname: string): boolean {
     // complet (cf. app/completer-profil/layout.tsx, qui gère lui-même
     // son propre en-tête minimal).
     "/completer-profil",
+    // Choix etudiant/client apres une premiere connexion Google : meme
+    // principe, ecran sans navigation (cf. app/choix-role/layout.tsx).
+    "/choix-role",
   ].includes(pathname);
 }
 

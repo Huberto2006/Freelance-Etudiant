@@ -1,27 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { api, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { NoticeCard } from "@/components/ui/Notice";
+import {
+  TurnstileWidget,
+  type TurnstileHandle,
+} from "@/components/auth/TurnstileWidget";
 
 export default function MotDePasseOubliePage() {
   const [email, setEmail] = useState("");
   const [envoi, setEnvoi] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstile = useRef<TurnstileHandle>(null);
+  const enCours = useRef(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (enCours.current || !turnstileToken) return;
+    enCours.current = true;
     setErreur(null);
     setEnvoi(true);
     try {
       const res = await api.post<{ message: string }>(
         "/auth/forgot-password",
         { email },
-        { auth: false },
+        { auth: false, headers: { "X-Turnstile-Token": turnstileToken } },
       );
       setMessage(res.message);
     } catch (err) {
@@ -29,7 +38,9 @@ export default function MotDePasseOubliePage() {
         err instanceof ApiError ? err.message : "Une erreur est survenue",
       );
     } finally {
+      enCours.current = false;
       setEnvoi(false);
+      turnstile.current?.reset();
     }
   }
 
@@ -65,7 +76,17 @@ export default function MotDePasseOubliePage() {
 
             {erreur && <p className="text-sm text-brique">{erreur}</p>}
 
-            <Button type="submit" disabled={envoi} className="mt-2">
+            <TurnstileWidget
+              ref={turnstile}
+              action="mot-de-passe-oublie"
+              onToken={setTurnstileToken}
+            />
+
+            <Button
+              type="submit"
+              disabled={envoi || !turnstileToken}
+              className="mt-2"
+            >
               {envoi ? "Envoi…" : "Envoyer le lien"}
             </Button>
           </form>

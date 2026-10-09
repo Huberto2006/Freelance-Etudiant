@@ -3,11 +3,12 @@ import {
   Logger,
   UnauthorizedException,
   BadRequestException,
+  ConflictException,
   HttpException,
   HttpStatus,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { IsNull, LessThan, Repository } from "typeorm";
+import { IsNull, LessThan, QueryFailedError, Repository } from "typeorm";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcrypt";
@@ -28,6 +29,12 @@ import { Utilisateur } from "../users/entities/utilisateur.entity";
 import { TypeClient } from "../../common/enums/type-client.enum";
 import { JwtPayload } from "./interfaces/authenticated-user.interface";
 import { EmailService } from "../email/email.service";
+import { AuthProvider } from "../../common/enums/auth-provider.enum";
+import {
+  GoogleTokenVerifierService,
+  IdentiteGoogle,
+} from "./google-token-verifier.service";
+import { ChoisirRoleDto } from "./dto/choisir-role.dto";
 import type { StringValue } from "ms";
 
 const SALT_ROUNDS = 12;
@@ -94,6 +101,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly emailService: EmailService,
+    private readonly googleVerifier: GoogleTokenVerifierService,
     @InjectRepository(RefreshToken)
     private readonly refreshRepo: Repository<RefreshToken>,
   ) {}
@@ -249,6 +257,161 @@ export class AuthService {
       utilisateur.email,
       utilisateur.role,
       premiereConnexion,
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // Google Sign-In (jeton d'identite valide cote serveur)
+  // ------------------------------------------------------------------
+
+  /**
+   * Connexion / creation de compte via Google. Le navigateur ne fournit
+   * QUE le jeton d'identite : email, `sub` et nom proviennent de la
+   * verification cryptographique du jeton, jamais du corps de la requete.
+   *
+   * Regles :
+   * - `sub` deja connu -> connexion au compte correspondant ;
+   * - sinon, email deja utilise par un compte existant -> 409, AUCUN
+   *   doublon et AUCUNE liaison automatique (voir lierGoogle pour la
+   *   procedure explicite, qui exige d'etre connecte au compte existant) ;
+   * - sinon creation d'un compte au role transitoire A_DEFINIR (jamais
+   *   admin) : le role est choisi ensuite via choisirRole().
+   */
+  async loginAvecGoogle(idToken: string): Promise<SessionEmise> {
+    const identite = await this.googleVerifier.verifier(idToken);
+
+    let utilisateur = await this.usersService.findByGoogleId(identite.sub);
+
+    if (!utilisateur) {
+      const existant = await this.usersService.findByEmailInsensible(
+        identite.email,
+      );
+      if (existant) {
+        throw new ConflictException(
+          "Un compte Kianja existe deja avec cette adresse email. Connectez-vous avec votre mot de passe, puis liez votre compte Google depuis vos parametres.",
+        );
+      }
+      utilisateur = await this.creerCompteGoogle(identite);
+    }
+
+    if (utilisateur.estSuspendu || !utilisateur.estActif) {
+      throw new UnauthorizedException("Ce compte est suspendu ou desactive");
+    }
+
+    const premiereConnexion = await this.usersService.marquerPremiereConnexion(
+      utilisateur.id,
+    );
+    return this.emettreSession(
+      utilisateur.id,
+      utilisateur.email,
+      utilisateur.role,
+      premiereConnexion,
+    );
+  }
+
+  private async creerCompteGoogle(
+    identite: IdentiteGoogle,
+  ): Promise<Utilisateur> {
+    if (identite.email.length > 150) {
+      throw new BadRequestException("Adresse email trop longue");
+    }
+    // La colonne mot_de_passe est NOT NULL : on y place le hash d'un secret
+    // aleatoire que personne ne connait (connexion par mot de passe
+    // impossible tant que l'utilisateur n'a pas fait une reinitialisation).
+    const motDePasseInutilisable = await bcrypt.hash(
+      crypto.randomBytes(48).toString("hex"),
+      SALT_ROUNDS,
+    );
+    try {
+      return await this.usersService.create({
+        nom: identite.nom,
+        email: identite.email,
+        motDePasse: motDePasseInutilisable,
+        role: Role.A_DEFINIR,
+        emailVerifie: true,
+        authProvider: AuthProvider.GOOGLE,
+        googleId: identite.sub,
+      });
+    } catch (error) {
+      // Deux requetes simultanees pour le meme nouveau compte : la
+      // contrainte d'unicite en base a tranche, on reprend le gagnant.
+      if (
+        error instanceof QueryFailedError &&
+        (error as unknown as { code?: string }).code === "23505"
+      ) {
+        const gagnant = await this.usersService.findByGoogleId(identite.sub);
+        if (gagnant) return gagnant;
+        throw new ConflictException("Cette adresse email est deja utilisee");
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Liaison EXPLICITE d'un compte Google a un compte existant : l'utilisateur
+   * est deja authentifie (JWT) sur son compte Kianja et prouve en plus la
+   * possession du compte Google. L'email Google doit etre celui du compte.
+   */
+  async lierGoogle(
+    utilisateurId: string,
+    idToken: string,
+  ): Promise<{ message: string }> {
+    const utilisateur = await this.usersService.findByIdOrFail(utilisateurId);
+    if (utilisateur.googleId) {
+      throw new ConflictException("Un compte Google est deja lie a ce compte");
+    }
+
+    const identite = await this.googleVerifier.verifier(idToken);
+    if (identite.email !== utilisateur.email.trim().toLowerCase()) {
+      throw new BadRequestException(
+        "L'adresse email du compte Google doit etre identique a celle de votre compte Kianja.",
+      );
+    }
+    if (await this.usersService.findByGoogleId(identite.sub)) {
+      throw new ConflictException(
+        "Ce compte Google est deja associe a un compte Kianja",
+      );
+    }
+
+    utilisateur.googleId = identite.sub;
+    try {
+      await this.usersService.save(utilisateur);
+    } catch (error) {
+      if (
+        error instanceof QueryFailedError &&
+        (error as unknown as { code?: string }).code === "23505"
+      ) {
+        throw new ConflictException(
+          "Ce compte Google est deja associe a un compte Kianja",
+        );
+      }
+      throw error;
+    }
+    return { message: "Votre compte Google a ete lie a votre compte Kianja." };
+  }
+
+  /**
+   * Choix du role par un compte Google tout juste cree (A_DEFINIR). Valide
+   * cote serveur (liste blanche etudiant/client), unique et atomique : un
+   * compte deja etudiant, client ou admin ne peut jamais etre modifie ici.
+   * Le role etant porte par le JWT, une nouvelle session est emise.
+   */
+  async choisirRole(
+    utilisateurId: string,
+    dto: ChoisirRoleDto,
+  ): Promise<SessionEmise> {
+    const ok = await this.usersService.definirRoleInitial(
+      utilisateurId,
+      dto.role,
+    );
+    if (!ok) {
+      throw new ConflictException("Votre role est deja defini");
+    }
+    const utilisateur = await this.usersService.findByIdOrFail(utilisateurId);
+    return this.emettreSession(
+      utilisateur.id,
+      utilisateur.email,
+      utilisateur.role,
     );
   }
 

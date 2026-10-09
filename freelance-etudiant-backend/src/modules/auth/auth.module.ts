@@ -6,12 +6,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { GoogleTokenVerifierService } from './google-token-verifier.service';
+import { TurnstileModule } from '../turnstile/turnstile.module';
 import { UsersModule } from '../users/users.module';
 import { RefreshToken } from './entities/refresh-token.entity';
 import type { StringValue } from 'ms';
 @Module({
   imports: [
     UsersModule,
+    TurnstileModule,
     TypeOrmModule.forFeature([RefreshToken]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
@@ -34,7 +37,7 @@ import type { StringValue } from 'ms';
       },
     }),
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, GoogleTokenVerifierService],
   controllers: [AuthController],
   exports: [AuthService, JwtModule],
 })

@@ -77,7 +77,12 @@ async function bootstrap() {
     origin: configService.get<string[]>('app.corsOrigin'),
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Kianja-Csrf'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Kianja-Csrf',
+      'X-Turnstile-Token',
+    ],
     maxAge: 600,
   });
 

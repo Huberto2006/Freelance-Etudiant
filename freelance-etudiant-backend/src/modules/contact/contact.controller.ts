@@ -1,7 +1,9 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../../common/decorators/public.decorator';
+import { TurnstileGuard } from '../turnstile/turnstile.guard';
+import { TurnstileActions } from '../turnstile/turnstile-action.decorator';
 import { ContactService } from './contact.service';
 import { EnvoyerMessageContactDto } from './dto/envoyer-message-contact.dto';
 
@@ -16,6 +18,8 @@ export class ContactController {
 
   @Public()
   @Throttle(LIMITE_CONTACT)
+  @UseGuards(TurnstileGuard)
+  @TurnstileActions('contact')
   @HttpCode(200)
   @Post()
   @ApiOperation({

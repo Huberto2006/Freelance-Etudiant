@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -8,14 +8,24 @@ import { api, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, PasswordInput } from "@/components/ui/Field";
 import { NoticeCard } from "@/components/ui/Notice";
+import {
+  TurnstileWidget,
+  type TurnstileHandle,
+} from "@/components/auth/TurnstileWidget";
+import { BoutonGoogle } from "@/components/auth/BoutonGoogle";
 
 export default function ConnexionPage() {
-  const { connecter } = useAuth();
+  const { connecter, connecterAvecGoogle } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
+
+  // Jeton Turnstile (a usage unique) et garde contre les doubles envois.
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstile = useRef<TurnstileHandle>(null);
+  const enCours = useRef(false);
 
   /*
    * Cas specifique "email non verifie" : le backend refuse la connexion
@@ -28,8 +38,46 @@ export default function ConnexionPage() {
   const [renvoiEnCours, setRenvoiEnCours] = useState(false);
   const [renvoiMessage, setRenvoiMessage] = useState<string | null>(null);
 
+  async function onGoogle(idToken: string) {
+    if (enCours.current) return;
+    if (!turnstileToken) {
+      setErreur("Complétez d'abord la vérification anti-robot ci-dessous.");
+      return;
+    }
+    enCours.current = true;
+    setErreur(null);
+    setErreurVerification(null);
+    setEnvoi(true);
+    try {
+      const { role, completionProfil, premiereConnexion } =
+        await connecterAvecGoogle(idToken, turnstileToken);
+      router.push(
+        role === "a_definir"
+          ? "/choix-role"
+          : premiereConnexion &&
+              completionProfil?.role === "etudiant" &&
+              !completionProfil.complete
+            ? "/completer-profil"
+            : "/tableau-de-bord",
+      );
+    } catch (err) {
+      setErreur(
+        err instanceof ApiError
+          ? err.message
+          : "Impossible de se connecter avec Google",
+      );
+    } finally {
+      enCours.current = false;
+      setEnvoi(false);
+      // Le jeton Turnstile est a usage unique : on en demande un nouveau.
+      turnstile.current?.reset();
+    }
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (enCours.current || !turnstileToken) return;
+    enCours.current = true;
     setErreur(null);
     setErreurVerification(null);
     setRenvoiMessage(null);
@@ -38,6 +86,7 @@ export default function ConnexionPage() {
       const { completionProfil, premiereConnexion } = await connecter(
         email,
         motDePasse,
+        turnstileToken,
       );
       router.push(
         premiereConnexion &&
@@ -61,7 +110,9 @@ export default function ConnexionPage() {
         );
       }
     } finally {
+      enCours.current = false;
       setEnvoi(false);
+      turnstile.current?.reset();
     }
   }
 
@@ -98,6 +149,21 @@ export default function ConnexionPage() {
         </h1>
 
         <NoticeCard>
+          <div className="mb-5 flex flex-col gap-4">
+            <BoutonGoogle
+              onCredential={onGoogle}
+              texte="continue_with"
+              disabled={envoi}
+            />
+            {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+              <div className="flex items-center gap-3 text-xs text-ink-soft">
+                <span className="h-px flex-1 bg-ink/10" aria-hidden="true" />
+                ou avec votre email
+                <span className="h-px flex-1 bg-ink/10" aria-hidden="true" />
+              </div>
+            )}
+          </div>
+
           <form onSubmit={onSubmit} className="flex flex-col gap-5">
             <Field label="Adresse email" htmlFor="email">
               <Input
@@ -153,7 +219,17 @@ export default function ConnexionPage() {
               </div>
             )}
 
-            <Button type="submit" disabled={envoi} className="mt-2">
+            <TurnstileWidget
+              ref={turnstile}
+              action="connexion"
+              onToken={setTurnstileToken}
+            />
+
+            <Button
+              type="submit"
+              disabled={envoi || !turnstileToken}
+              className="mt-2"
+            >
               {envoi ? "Connexion…" : "Se connecter"}
             </Button>
           </form>

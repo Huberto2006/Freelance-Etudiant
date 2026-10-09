@@ -41,6 +41,16 @@ export default function TableauDeBordLayout({
   }, [chargement, utilisateur, router]);
 
   /*
+   * Compte Google tout juste cree : le role etudiant/client doit d'abord
+   * etre choisi (le backend refuse de toute facon les routes metier).
+   */
+  useEffect(() => {
+    if (!chargement && utilisateur?.role === "a_definir") {
+      router.replace("/choix-role");
+    }
+  }, [chargement, utilisateur, router]);
+
+  /*
    * ==========================================================
    * QUESTIONNAIRE DE COMPLÉTION DE PROFIL (ÉTAPE G)
    * ==========================================================
@@ -86,7 +96,7 @@ export default function TableauDeBordLayout({
    * ==========================================================
    */
 
-  if (chargement || !utilisateur) {
+  if (chargement || !utilisateur || utilisateur.role === "a_definir") {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-paper px-5">
         <p className="text-sm text-ink-soft">

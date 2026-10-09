@@ -9,6 +9,10 @@ COPY . .
 # Les variables NEXT_PUBLIC sont integrees aux fichiers JS lors du build.
 ARG NEXT_PUBLIC_API_URL=/api/v1
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY
+ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 RUN npm run build
 
 FROM node:24-bookworm-slim AS runner
@@ -24,4 +28,3 @@ COPY --from=builder --chown=node:node /app/public ./public
 USER node
 EXPOSE 3000
 CMD ["node", "server.js"]
-

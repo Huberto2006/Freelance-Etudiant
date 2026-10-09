@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { TurnstileModule } from '../turnstile/turnstile.module';
 import { ContactController } from './contact.controller';
 import { ContactService } from './contact.service';
 
@@ -8,6 +9,7 @@ import { ContactService } from './contact.service';
  * explicite.
  */
 @Module({
+  imports: [TurnstileModule],
   controllers: [ContactController],
   providers: [ContactService],
 })

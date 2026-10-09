@@ -107,14 +107,17 @@ export function SectionCommentaires({
   useEffect(() => {
     if (!socket) return;
 
-    socket.emit("commentaire:rejoindre", {
-      cibleType,
-      cibleId,
-    });
-
-    console.log(
-      `[Commentaires] Room rejointe : ${cibleType}:${cibleId}`,
-    );
+    const rejoindreRoom = () => {
+      socket.emit("commentaire:rejoindre", {
+        cibleType,
+        cibleId,
+      });
+      console.log(
+        `[Commentaires] Demande de rejoindre la room : ${cibleType}:${cibleId}`,
+      );
+    };
+    socket.on("connect", rejoindreRoom);
+    if (socket.connected) rejoindreRoom();
 
     /**
      * Nouveau commentaire.
@@ -200,6 +203,7 @@ export function SectionCommentaires({
     );
 
     return () => {
+      socket.off("connect", rejoindreRoom);
       socket.off(
         "commentaire:nouveau",
         handleNouveauCommentaire,

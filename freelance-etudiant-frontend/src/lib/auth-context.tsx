@@ -31,6 +31,11 @@ interface RegisterPayload {
   nomEntreprise?: string;
 }
 
+/** En-tete portant le jeton Turnstile (verifie cote serveur). */
+function enteteTurnstile(jeton: string): Record<string, string> {
+  return { "X-Turnstile-Token": jeton };
+}
+
 interface AuthContextValue {
   utilisateur: Utilisateur | null;
   chargement: boolean;
@@ -44,11 +49,28 @@ interface AuthContextValue {
   connecter: (
     email: string,
     motDePasse: string,
+    turnstileToken: string,
   ) => Promise<{
     completionProfil: CompletionProfil | null;
     premiereConnexion: boolean;
   }>;
-  inscrire: (payload: RegisterPayload) => Promise<ReponseInscription>;
+  /** Connexion / creation de compte via le jeton d'identite Google. */
+  connecterAvecGoogle: (
+    idToken: string,
+    turnstileToken: string,
+  ) => Promise<{
+    role: Role;
+    completionProfil: CompletionProfil | null;
+    premiereConnexion: boolean;
+  }>;
+  /** Choix etudiant/client d'un compte Google tout juste cree. */
+  choisirRole: (
+    role: "etudiant" | "client",
+  ) => Promise<{ completionProfil: CompletionProfil | null }>;
+  inscrire: (
+    payload: RegisterPayload,
+    turnstileToken: string,
+  ) => Promise<ReponseInscription>;
   deconnecter: () => void;
   rafraichirProfil: () => Promise<CompletionProfil | null>;
 }
@@ -127,11 +149,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const connecter = useCallback(
-    async (email: string, motDePasse: string) => {
+    async (email: string, motDePasse: string, turnstileToken: string) => {
       const res = await api.post<AuthResponse>(
         "/auth/login",
         { email, motDePasse },
-        { auth: false },
+        { auth: false, headers: enteteTurnstile(turnstileToken) },
       );
       // Le refresh token est pose par le serveur en cookie httpOnly : il
       // n'apparait jamais dans la reponse ni dans le JavaScript.
@@ -145,8 +167,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [rafraichirProfil],
   );
 
+  const connecterAvecGoogle = useCallback(
+    async (idToken: string, turnstileToken: string) => {
+      // Le backend verifie le jeton Google (signature, audience, email
+      // verifie) ET le jeton Turnstile ; rien d'autre n'est envoye.
+      const res = await api.post<AuthResponse>(
+        "/auth/google",
+        { idToken },
+        { auth: false, headers: enteteTurnstile(turnstileToken) },
+      );
+      setToken(res.accessToken);
+      const profil = await rafraichirProfil();
+      return {
+        role: res.utilisateur.role,
+        completionProfil: profil,
+        premiereConnexion: res.premiereConnexion,
+      };
+    },
+    [rafraichirProfil],
+  );
+
+  const choisirRole = useCallback(
+    async (role: "etudiant" | "client") => {
+      // Le role est valide et applique cote serveur ; une nouvelle session
+      // est emise car le role est porte par le jeton d'acces.
+      const res = await api.post<AuthResponse>("/auth/choose-role", { role });
+      setToken(res.accessToken);
+      const profil = await rafraichirProfil();
+      return { completionProfil: profil };
+    },
+    [rafraichirProfil],
+  );
+
   const inscrire = useCallback(
-    async (payload: RegisterPayload): Promise<ReponseInscription> => {
+    async (
+      payload: RegisterPayload,
+      turnstileToken: string,
+    ): Promise<ReponseInscription> => {
       /*
        * Verification d'email : le backend cree le compte mais ne delivre
        * AUCUN jeton tant que l'adresse n'est pas confirmee. On retourne la
@@ -155,6 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
        */
       return api.post<ReponseInscription>("/auth/register", payload, {
         auth: false,
+        headers: enteteTurnstile(turnstileToken),
       });
     },
     [],
@@ -175,6 +233,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       chargement,
       completionProfil,
       connecter,
+      connecterAvecGoogle,
+      choisirRole,
       inscrire,
       deconnecter,
       rafraichirProfil,
@@ -184,6 +244,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       chargement,
       completionProfil,
       connecter,
+      connecterAvecGoogle,
+      choisirRole,
       inscrire,
       deconnecter,
       rafraichirProfil,
@@ -207,5 +269,7 @@ export function roleLabel(role: Role): string {
       return "Client";
     case "admin":
       return "Administrateur";
+    case "a_definir":
+      return "Rôle à choisir";
   }
 }
