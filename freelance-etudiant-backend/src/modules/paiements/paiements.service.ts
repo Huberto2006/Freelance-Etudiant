@@ -342,10 +342,8 @@ export class PaiementsService {
   }
 
   /**
-   * Paiement MVola réel.
-   *
-   * L'initiation est effectuée auprès du fournisseur avant
-   * l'enregistrement de la transaction.
+   * Paiement MVola réel. La réservation locale est persistée avant tout
+   * appel fournisseur afin que chaque tentative soit traçable et unique.
    */
   private async creerPaiementMvola(
     candidature: Awaited<
@@ -369,32 +367,6 @@ export class PaiementsService {
       .toString('hex')
       .toUpperCase()}`;
 
-    let initiation: {
-      serverCorrelationId: string;
-      statut: string;
-    };
-
-    try {
-      initiation = await this.mvolaService.initierPaiement({
-        montantAr: montantConvenu,
-        transactionReference: reference,
-        telephoneDebite,
-        description: `Paiement mission "${candidature.mission.titre}" - KIANJA`,
-      });
-    } catch (error) {
-      this.logger.error(
-        `Echec d'initiation MVola pour la candidature ${candidatureId} : ${
-          error instanceof Error
-            ? error.message
-            : String(error)
-        }`,
-      );
-
-      throw new ServiceUnavailableException(
-        'Le fournisseur de paiement MVola a refuse la transaction. Verifiez votre numero et reessayez.',
-      );
-    }
-
     const transaction = this.repo.create({
       candidatureId,
       clientId,
@@ -404,9 +376,8 @@ export class PaiementsService {
       reference,
       statut: StatutTransaction.EN_ATTENTE,
       provider: 'mvola',
-      providerCorrelationId: initiation.serverCorrelationId,
       telephoneDebite,
-      providerStatut: initiation.statut,
+      providerStatut: 'initiation_en_cours',
       moyenPaiementClientId: moyenPaiementClientId ?? null,
 
       // Snapshot du moyen bénéficiaire.
@@ -429,6 +400,56 @@ export class PaiementsService {
 
       throw error;
     }
+
+    let initiation: {
+      serverCorrelationId: string;
+      statut: string;
+    };
+
+    try {
+      initiation = await this.mvolaService.initierPaiement({
+        montantAr: montantConvenu,
+        transactionReference: reference,
+        telephoneDebite,
+        description: `Paiement mission "${candidature.mission.titre}" - KIANJA`,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Echec d'initiation MVola pour la candidature ${candidatureId}, reference ${reference} : ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      await this.marquerInitiationMvolaIncertaine(saved.id, reference);
+      throw new ServiceUnavailableException(
+        `Le resultat de la demande MVola est incertain (reference ${reference}). Ne relancez pas le paiement avant verification aupres du fournisseur.`,
+      );
+    }
+
+    try {
+      const resultatMiseAJour = await this.repo.update(
+        { id: saved.id, statut: StatutTransaction.EN_ATTENTE },
+        {
+          providerCorrelationId: initiation.serverCorrelationId,
+          providerStatut: initiation.statut,
+        },
+      );
+      if (!resultatMiseAJour.affected) {
+        throw new Error('La reservation du paiement MVola a disparu');
+      }
+    } catch (error) {
+      this.logger.error(
+        `Initiation MVola effectuee mais non rattachee a la reference ${reference} : ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      await this.marquerInitiationMvolaIncertaine(saved.id, reference);
+      throw new ServiceUnavailableException(
+        `La demande MVola a ete transmise, mais son suivi n'a pas pu etre enregistre (reference ${reference}). Ne relancez pas le paiement avant reconciliation.`,
+      );
+    }
+
+    saved.providerCorrelationId = initiation.serverCorrelationId;
+    saved.providerStatut = initiation.statut;
 
     await this.notificationsService.creer({
       destinataireId: candidature.etudiant.utilisateurId,
@@ -453,6 +474,29 @@ export class PaiementsService {
     );
 
     return saved;
+  }
+
+  private async marquerInitiationMvolaIncertaine(
+    transactionId: string,
+    reference: string,
+  ): Promise<void> {
+    try {
+      const resultat = await this.repo.update(
+        { id: transactionId, statut: StatutTransaction.EN_ATTENTE },
+        { providerStatut: 'initiation_inconnue' },
+      );
+      if (!resultat.affected) {
+        this.logger.error(
+          `La reservation MVola ${reference} n'a pas pu etre mise a jour pour tracer le resultat incertain`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Impossible de marquer la reservation MVola ${reference} comme incertaine : ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 
   /**
@@ -1076,12 +1120,7 @@ export class PaiementsService {
       );
     }
 
-    transaction.statut =
-      StatutTransaction.ANNULEE;
-
-    return this.repo.save(
-      transaction,
-    );
+    return this.marquerAnnulee(transaction);
   }
 
   /**

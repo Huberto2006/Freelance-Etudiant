@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { clsx } from "clsx";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
@@ -10,6 +10,11 @@ import type { ReponseInscription } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, PasswordInput } from "@/components/ui/Field";
 import { NoticeCard } from "@/components/ui/Notice";
+import {
+  TurnstileWidget,
+  type TurnstileHandle,
+} from "@/components/auth/TurnstileWidget";
+import { BoutonGoogle } from "@/components/auth/BoutonGoogle";
 
 /**
  * Delai anti-abus applique cote backend : on aligne le compte a rebours
@@ -18,7 +23,8 @@ import { NoticeCard } from "@/components/ui/Notice";
 const DELAI_RENVOI_SECONDES = 60;
 
 function FormulaireInscription() {
-  const { inscrire } = useAuth();
+  const { inscrire, connecterAvecGoogle } = useAuth();
+  const router = useRouter();
   const params = useSearchParams();
   const roleInitial = params.get("role") === "client" ? "client" : "etudiant";
 
@@ -30,6 +36,11 @@ function FormulaireInscription() {
   const [nomEntreprise, setNomEntreprise] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
+
+  // Jeton Turnstile (a usage unique) et garde contre les doubles envois.
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstile = useRef<TurnstileHandle>(null);
+  const enCours = useRef(false);
 
   /*
    * Verification d'email : apres une inscription reussie, le compte n'est
@@ -56,20 +67,71 @@ function FormulaireInscription() {
     return () => clearInterval(minuteur);
   }, [secondesAvantRenvoi]);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  /*
+   * Inscription via Google : le compte est cree par le backend a partir du
+   * jeton d'identite verifie. Le choix etudiant/client se fait ensuite sur
+   * /choix-role (valide cote serveur) ; le bouton ci-dessus ne fait que
+   * le pre-selectionner.
+   */
+  async function onGoogle(idToken: string) {
+    if (enCours.current) return;
+    if (!turnstileToken) {
+      setErreur("Complétez d'abord la vérification anti-robot ci-dessous.");
+      return;
+    }
+    enCours.current = true;
     setErreur(null);
     setEnvoi(true);
     try {
-      const reponse = await inscrire({
-        nom,
-        email,
-        motDePasse,
-        role,
-        universite: role === "etudiant" ? universite : undefined,
-        nomEntreprise: role === "client" ? nomEntreprise || undefined : undefined,
-        typeClient: role === "client" ? (nomEntreprise ? "entreprise" : "particulier") : undefined,
-      });
+      const { role: roleCompte, completionProfil, premiereConnexion } =
+        await connecterAvecGoogle(idToken, turnstileToken);
+      router.push(
+        roleCompte === "a_definir"
+          ? `/choix-role?role=${role}`
+          : premiereConnexion &&
+              completionProfil?.role === "etudiant" &&
+              !completionProfil.complete
+            ? "/completer-profil"
+            : "/tableau-de-bord",
+      );
+    } catch (err) {
+      setErreur(
+        err instanceof ApiError
+          ? err.message
+          : "Impossible de créer le compte avec Google",
+      );
+    } finally {
+      enCours.current = false;
+      setEnvoi(false);
+      turnstile.current?.reset();
+    }
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (enCours.current || !turnstileToken) return;
+    enCours.current = true;
+    setErreur(null);
+    setEnvoi(true);
+    try {
+      const reponse = await inscrire(
+        {
+          nom,
+          email,
+          motDePasse,
+          role,
+          universite: role === "etudiant" ? universite : undefined,
+          nomEntreprise:
+            role === "client" ? nomEntreprise || undefined : undefined,
+          typeClient:
+            role === "client"
+              ? nomEntreprise
+                ? "entreprise"
+                : "particulier"
+              : undefined,
+        },
+        turnstileToken,
+      );
       // Pas de redirection vers le tableau de bord : le compte doit
       // d'abord etre active via le lien recu par email.
       setReponseInscription(reponse);
@@ -79,7 +141,9 @@ function FormulaireInscription() {
         err instanceof ApiError ? err.message : "Impossible de créer le compte",
       );
     } finally {
+      enCours.current = false;
       setEnvoi(false);
+      turnstile.current?.reset();
     }
   }
 
@@ -213,6 +277,21 @@ function FormulaireInscription() {
       </div>
 
       <NoticeCard>
+        <div className="mb-5 flex flex-col gap-4">
+          <BoutonGoogle
+            onCredential={onGoogle}
+            texte="signup_with"
+            disabled={envoi}
+          />
+          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+            <div className="flex items-center gap-3 text-xs text-ink-soft">
+              <span className="h-px flex-1 bg-ink/10" aria-hidden="true" />
+              ou avec votre email
+              <span className="h-px flex-1 bg-ink/10" aria-hidden="true" />
+            </div>
+          )}
+        </div>
+
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
           <Field label="Nom complet" htmlFor="nom">
             <Input
@@ -276,7 +355,17 @@ function FormulaireInscription() {
 
           {erreur && <p className="text-sm text-brique">{erreur}</p>}
 
-          <Button type="submit" disabled={envoi} className="mt-2">
+          <TurnstileWidget
+            ref={turnstile}
+            action="inscription"
+            onToken={setTurnstileToken}
+          />
+
+          <Button
+            type="submit"
+            disabled={envoi || !turnstileToken}
+            className="mt-2"
+          >
             {envoi ? "Création…" : "Créer mon compte"}
           </Button>
         </form>

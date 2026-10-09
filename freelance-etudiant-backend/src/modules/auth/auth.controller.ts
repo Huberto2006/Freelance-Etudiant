@@ -7,6 +7,7 @@ import {
   Post,
   Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -21,6 +22,13 @@ import {
   RenvoyerVerificationEmailDto,
 } from './dto/verification-email.dto';
 import { Public } from '../../common/decorators/public.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { AutoriserRoleADefinir } from '../../common/decorators/autoriser-role-a-definir.decorator';
+import type { AuthenticatedUser } from './interfaces/authenticated-user.interface';
+import { GoogleIdTokenDto } from './dto/google-login.dto';
+import { ChoisirRoleDto } from './dto/choisir-role.dto';
+import { TurnstileGuard } from '../turnstile/turnstile.guard';
+import { TurnstileActions } from '../turnstile/turnstile-action.decorator';
 import {
   NOM_COOKIE_REFRESH,
   effacerCookieRefresh,
@@ -39,6 +47,9 @@ const LIMITE_REGISTER = { default: { limit: 5, ttl: 60000 } };
 const LIMITE_REFRESH = { default: { limit: 30, ttl: 60000 } };
 const LIMITE_EMAIL = { default: { limit: 3, ttl: 60000 } };
 const LIMITE_RESET = { default: { limit: 10, ttl: 60000 } };
+const LIMITE_GOOGLE = { default: { limit: 10, ttl: 60000 } };
+const LIMITE_LIAISON = { default: { limit: 5, ttl: 60000 } };
+const LIMITE_CHOIX_ROLE = { default: { limit: 5, ttl: 60000 } };
 
 /**
  * En-tete obligatoire sur les routes authentifiees par COOKIE (refresh,
@@ -84,6 +95,8 @@ export class AuthController {
   @Public()
   @Post('register')
   @Throttle(LIMITE_REGISTER)
+  @UseGuards(TurnstileGuard)
+  @TurnstileActions('inscription')
   @ApiOperation({ summary: "Inscription d'un etudiant ou d'un client" })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
@@ -93,9 +106,56 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Throttle(LIMITE_LOGIN)
+  @UseGuards(TurnstileGuard)
+  @TurnstileActions('connexion')
   @ApiOperation({ summary: 'Connexion' })
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const session = await this.authService.login(dto);
+    return this.repondreSession(res, session);
+  }
+
+  /**
+   * Connexion / inscription Google. Protegee par Turnstile (le widget de la
+   * page de connexion ou d'inscription fournit le jeton) ET par la
+   * validation cryptographique du jeton d'identite Google cote serveur.
+   */
+  @Public()
+  @Post('google')
+  @HttpCode(HttpStatus.OK)
+  @Throttle(LIMITE_GOOGLE)
+  @UseGuards(TurnstileGuard)
+  @TurnstileActions('connexion', 'inscription')
+  @ApiOperation({ summary: "Connexion ou creation de compte avec Google (jeton d'identite)" })
+  async google(
+    @Body() dto: GoogleIdTokenDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const session = await this.authService.loginAvecGoogle(dto.idToken);
+    return this.repondreSession(res, session);
+  }
+
+  @Post('google/link')
+  @HttpCode(HttpStatus.OK)
+  @Throttle(LIMITE_LIAISON)
+  @ApiOperation({ summary: 'Lier un compte Google au compte connecte (liaison explicite)' })
+  async lierGoogle(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: GoogleIdTokenDto,
+  ) {
+    return this.authService.lierGoogle(user.id, dto.idToken);
+  }
+
+  @Post('choose-role')
+  @HttpCode(HttpStatus.OK)
+  @Throttle(LIMITE_CHOIX_ROLE)
+  @AutoriserRoleADefinir()
+  @ApiOperation({ summary: 'Choisir etudiant ou client apres une premiere connexion Google' })
+  async choisirRole(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: ChoisirRoleDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const session = await this.authService.choisirRole(user.id, dto);
     return this.repondreSession(res, session);
   }
 
@@ -140,6 +200,8 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @Throttle(LIMITE_EMAIL)
+  @UseGuards(TurnstileGuard)
+  @TurnstileActions('mot-de-passe-oublie')
   @ApiOperation({ summary: 'Demander un lien de reinitialisation de mot de passe' })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto);

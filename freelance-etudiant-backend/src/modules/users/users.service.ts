@@ -3,6 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, QueryFailedError, Repository } from 'typeorm';
 import { Utilisateur } from './entities/utilisateur.entity';
 import { Role } from '../../common/enums/role.enum';
+import { TypeClient } from '../../common/enums/type-client.enum';
+import { EtudiantProfile } from '../etudiants/entities/etudiant-profile.entity';
+import { ClientProfile } from '../clients/entities/client-profile.entity';
 
 /**
  * Limite raisonnable de resultats pour l'autocompletion @mention :
@@ -20,6 +23,58 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<Utilisateur | null> {
     return this.utilisateurRepo.findOne({ where: { email } });
+  }
+
+  /**
+   * Recherche insensible a la casse : evite qu'un meme email ecrit
+   * differemment (Lanja@x.mg / lanja@x.mg) cree un second compte.
+   */
+  async findByEmailInsensible(email: string): Promise<Utilisateur | null> {
+    return this.utilisateurRepo
+      .createQueryBuilder('u')
+      .where('LOWER(u.email) = LOWER(:email)', { email: email.trim() })
+      .getOne();
+  }
+
+  async findByGoogleId(googleId: string): Promise<Utilisateur | null> {
+    return this.utilisateurRepo.findOne({ where: { googleId } });
+  }
+
+  /**
+   * Choix initial du role d'un compte cree via Google (role A_DEFINIR).
+   * Operation atomique et unique : le role n'est modifie QUE si le compte
+   * est encore A_DEFINIR, et le profil correspondant est cree dans la meme
+   * transaction. Retourne false si le role etait deja defini.
+   */
+  async definirRoleInitial(
+    id: string,
+    role: Role.ETUDIANT | Role.CLIENT,
+  ): Promise<boolean> {
+    return this.utilisateurRepo.manager.transaction(async (m) => {
+      const maj = await m.update(
+        Utilisateur,
+        { id, role: Role.A_DEFINIR },
+        { role },
+      );
+      if (!maj.affected) return false;
+
+      if (role === Role.ETUDIANT) {
+        const profil = new EtudiantProfile();
+        profil.utilisateurId = id;
+        profil.niveauEtude = null;
+        profil.universite = null;
+        profil.competences = [];
+        profil.langues = [];
+        profil.portfolioUrls = [];
+        await m.save(profil);
+      } else {
+        const profil = new ClientProfile();
+        profil.utilisateurId = id;
+        profil.typeClient = TypeClient.PARTICULIER;
+        await m.save(profil);
+      }
+      return true;
+    });
   }
 
   async findByResetToken(hashedToken: string): Promise<Utilisateur | null> {

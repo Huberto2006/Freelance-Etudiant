@@ -33,8 +33,9 @@ const connectSrc = estProduction
   ? connectSrcProd
   : `'self' http://localhost:3000 http://127.0.0.1:3000 ws://localhost:* ws://127.0.0.1:*`;
 const scriptSrc = estProduction
-  ? `'self' 'unsafe-inline'`
-  : `'self' 'unsafe-inline' 'unsafe-eval'`;
+  ? `'self' 'unsafe-inline' https://challenges.cloudflare.com`
+  : `'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com`;
+const frameSrc = `'self' https://challenges.cloudflare.com`;
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -43,7 +44,7 @@ const contentSecurityPolicy = [
   "img-src 'self' data: blob:",
   "font-src 'self'",
   `connect-src ${connectSrc}`,
-  "frame-src 'self'",
+  `frame-src ${frameSrc}`,
   "frame-ancestors 'self'",
   "object-src 'none'",
   "base-uri 'self'",

@@ -12,10 +12,11 @@ import { EnvoyerMessageContactDto } from './dto/envoyer-message-contact.dto';
  * Traitement des messages du formulaire public de contact.
  *
  * Principes :
- * - Aucune adresse n'est codee en dur : la destination vient de la
- *   variable d'environnement CONTACT_EMAIL.
+ * - Aucune adresse n'est codee en dur : la destination vient des
+ *   variables d'environnement CONTACT_MAIL_TO (nom canonique) et,
+ *   pour compatibilite, CONTACT_EMAIL.
  * - Le service refuse de repondre « succes » quand rien n'a pu etre
- *   envoye : si CONTACT_EMAIL ou le SMTP (SMTP_HOST/SMTP_USER/SMTP_PASS)
+ *   envoye : si la destination ou le SMTP (SMTP_HOST/SMTP_USER/SMTP_PASS)
  *   ne sont pas configures, ou si l'envoi echoue, une erreur 503 est
  *   retournee. Le mode « console » d'EmailService (qui journalise sans
  *   envoyer) n'est volontairement PAS accepte ici : un visiteur ne doit
@@ -41,7 +42,9 @@ export class ContactService {
       return { message: 'Votre message a bien ete envoye.' };
     }
 
-    const destinataire = this.configService.get<string>('CONTACT_EMAIL');
+    const destinataire =
+      this.configService.get<string>('CONTACT_MAIL_TO') ||
+      this.configService.get<string>('CONTACT_EMAIL');
     const smtpConfigure = Boolean(
       this.configService.get<string>('SMTP_HOST') &&
         this.configService.get<string>('SMTP_USER') &&
@@ -50,7 +53,7 @@ export class ContactService {
 
     if (!destinataire || !smtpConfigure) {
       this.logger.error(
-        'Formulaire de contact indisponible : CONTACT_EMAIL et/ou le bloc SMTP ne sont pas configures dans .env.',
+        'Formulaire de contact indisponible : CONTACT_MAIL_TO/CONTACT_EMAIL et/ou le bloc SMTP ne sont pas configures dans .env.',
       );
       throw new ServiceUnavailableException(
         "Le service de contact n'est pas encore disponible. Veuillez reessayer plus tard.",

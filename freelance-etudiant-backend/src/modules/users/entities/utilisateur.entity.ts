@@ -130,7 +130,10 @@ export class Utilisateur {
    * Identifiant du compte Google (claim `sub` du token OIDC), unique
    * et indexe lorsqu'il est present. Jamais renseigne pour un compte LOCAL.
    */
-  @Index('UQ_utilisateurs_google_id', { unique: true })
+  @Index('UQ_utilisateurs_google_id', {
+    unique: true,
+    where: '"google_id" IS NOT NULL',
+  })
   @Column({
     name: 'google_id',
     type: 'varchar',

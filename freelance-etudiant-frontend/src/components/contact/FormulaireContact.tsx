@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { CheckCircle2, Loader2, TriangleAlert } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
 import { Field, Input, Textarea } from "@/components/ui/Field";
+import {
+  TurnstileWidget,
+  type TurnstileHandle,
+} from "@/components/auth/TurnstileWidget";
 
 interface ValeursFormulaire {
   nom: string;
@@ -64,6 +68,8 @@ export function FormulaireContact() {
   const [erreurs, setErreurs] = useState<ErreursFormulaire>({});
   const [piege, setPiege] = useState("");
   const [etat, setEtat] = useState<Etat>({ statut: "repos" });
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstile = useRef<TurnstileHandle>(null);
 
   function modifier(champ: keyof ValeursFormulaire, valeur: string) {
     setValeurs((courant) => ({ ...courant, [champ]: valeur }));
@@ -74,7 +80,7 @@ export function FormulaireContact() {
 
   async function envoyer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (etat.statut === "envoi") return;
+    if (etat.statut === "envoi" || !turnstileToken) return;
 
     const erreursTrouvees = valider(valeurs);
     setErreurs(erreursTrouvees);
@@ -98,7 +104,7 @@ export function FormulaireContact() {
           message: valeurs.message.trim(),
           ...(piege ? { siteWeb: piege } : {}),
         },
-        { auth: false },
+        { auth: false, headers: { "X-Turnstile-Token": turnstileToken } },
       );
       setEtat({ statut: "succes" });
       setValeurs(VIDE);
@@ -119,6 +125,9 @@ export function FormulaireContact() {
           "Impossible de joindre le serveur. Vérifiez votre connexion puis réessayez.";
       }
       setEtat({ statut: "erreur", message });
+    } finally {
+      // Jeton a usage unique : nouvelle verification pour un prochain envoi.
+      turnstile.current?.reset();
     }
   }
 
@@ -249,9 +258,15 @@ export function FormulaireContact() {
         />
       </div>
 
+      <TurnstileWidget
+        ref={turnstile}
+        action="contact"
+        onToken={setTurnstileToken}
+      />
+
       <button
         type="submit"
-        disabled={enEnvoi}
+        disabled={enEnvoi || !turnstileToken}
         className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-ink bg-ink px-4 py-2.5 text-sm font-medium text-paper-light transition-colors hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >
         {enEnvoi && (

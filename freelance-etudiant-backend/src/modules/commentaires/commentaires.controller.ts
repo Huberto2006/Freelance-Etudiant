@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseEnumPipe,
   ParseUUIDPipe,
   Patch,
   Post,
@@ -29,8 +30,10 @@ export class CommentairesController {
   @Get()
   @ApiOperation({ summary: "Lister les commentaires d'une mission ou d'un service" })
   async findByCible(
-    @Query('cibleType') cibleType: TypeCibleContenu,
-    @Query('cibleId') cibleId: string,
+    @Query('cibleType', new ParseEnumPipe(TypeCibleContenu))
+    cibleType: TypeCibleContenu,
+    @Query('cibleId', new ParseUUIDPipe())
+    cibleId: string,
   ) {
     return this.commentairesService.findByCible(cibleType, cibleId);
   }

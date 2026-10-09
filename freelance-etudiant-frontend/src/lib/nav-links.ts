@@ -25,6 +25,10 @@ export interface GroupeNav {
 }
 
 export const navigationParRole: Record<Role, GroupeNav[]> = {
+  // Role transitoire (compte Google avant le choix etudiant/client) :
+  // aucune navigation, l'utilisateur est redirige vers /choix-role.
+  a_definir: [],
+
   // ==========================================================
   // ÉTUDIANT
   // ==========================================================
@@ -107,6 +111,11 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
         },
 
         {
+          href: "/tableau-de-bord/parametres/compte-google",
+          label: "Compte Google",
+        },
+
+        {
           href: "/tableau-de-bord/favoris",
           label: "Favoris",
         },
@@ -178,6 +187,11 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
         {
           href: "/tableau-de-bord/parametres/moyens-paiement-client",
           label: "Moyens de paiement",
+        },
+
+        {
+          href: "/tableau-de-bord/parametres/compte-google",
+          label: "Compte Google",
         },
 
         {
