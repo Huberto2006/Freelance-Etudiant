@@ -46,8 +46,8 @@ export function Footer() {
   const annee = new Date().getFullYear();
 
   return (
-    <footer className="mt-24 border-t border-ink/15 bg-paper-light/60">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr]">
+    <footer className="mt-20 border-t border-ink/15 bg-paper-light/60">
+      <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr]">
         {/* ------------------------------- MARQUE */}
         <div className="sm:col-span-2 lg:col-span-1">
           <Link
@@ -67,7 +67,7 @@ export function Footer() {
             </span>
           </Link>
 
-          <p className="mt-1 text-[10px] uppercase tracking-wider text-ink-soft/70">
+          <p className="mt-1 text-[0.65rem] uppercase tracking-wider text-ink-soft/70">
             {SIGNATURE}
           </p>
 
@@ -142,7 +142,7 @@ export function Footer() {
 
       {/* ------------------------------- MENTIONS */}
       <div className="border-t border-ink/10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-5 text-xs text-ink-soft/70 sm:flex-row">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-5 py-5 text-xs text-ink-soft/70 sm:flex-row">
           <p>© {annee} Kianja — Freelances étudiants × Clients</p>
           <p className="font-mono">
             Projet L3 Informatique · Fianarantsoa · Madagascar

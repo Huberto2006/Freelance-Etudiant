@@ -200,7 +200,7 @@ function MesMissionsContent() {
 
   return (
     <div>
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
         <PageHeader
           icon={BriefcaseBusiness}
           eyebrow="Espace client"
@@ -266,7 +266,7 @@ function MesMissionsContent() {
           ===================================================== */}
 
       {afficherFormulaire && !missionAutoAEditer && (
-        <div className="mb-8">
+        <div className="mb-7">
           <FormulaireMission
             onCree={async () => {
               setAfficherFormulaire(false);
@@ -281,7 +281,7 @@ function MesMissionsContent() {
           ===================================================== */}
 
       {missionEditee && (
-        <div className="mb-8">
+        <div className="mb-7">
           <FormulaireMission
             key={missionEditee.id}
             missionExistante={missionEditee}
@@ -653,7 +653,7 @@ function FormulaireMission({
       <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-5">
         {/* — 01 · VISUEL */}
 
-        <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft/70">
+        <p className="font-mono text-[0.6875rem] uppercase tracking-[0.15em] text-ink-soft/70">
           01 · Visuel
         </p>
 
@@ -701,7 +701,7 @@ function FormulaireMission({
 
         {/* — 02 · CONTENU */}
 
-        <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft/70">
+        <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[0.6875rem] uppercase tracking-[0.15em] text-ink-soft/70">
           02 · Contenu
         </p>
 
@@ -734,7 +734,7 @@ function FormulaireMission({
 
         {/* — 03 · PARAMÈTRES */}
 
-        <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft/70">
+        <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[0.6875rem] uppercase tracking-[0.15em] text-ink-soft/70">
           03 · Paramètres
         </p>
 
@@ -792,7 +792,7 @@ function FormulaireMission({
 
         {/* — 04 · COMPÉTENCES */}
 
-        <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[11px] uppercase tracking-[0.15em] text-ink-soft/70">
+        <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[0.6875rem] uppercase tracking-[0.15em] text-ink-soft/70">
           04 · Compétences
         </p>
 
@@ -1045,7 +1045,7 @@ function CandidaturesMission({
                   <p className="font-display flex items-center gap-1.5 font-medium">
                     {etudiant?.nom ?? "Étudiant"}
                     {candidature.groupeId && (
-                      <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-normal text-ink-soft">
+                      <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[0.65rem] font-normal text-ink-soft">
                         Groupe{candidature.groupe?.nom ? ` · ${candidature.groupe.nom}` : ""}
                       </span>
                     )}

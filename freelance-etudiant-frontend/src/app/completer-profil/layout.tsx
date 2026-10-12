@@ -31,7 +31,7 @@ export default function CompleterProfilLayout({
           Se déconnecter
         </button>
       </div>
-      <div className="mx-auto w-full max-w-3xl px-5 py-6 md:px-8 md:py-8">
+      <div className="mx-auto w-full max-w-3xl px-5 py-6 md:px-8 md:py-7">
         {children}
       </div>
     </div>

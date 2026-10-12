@@ -181,7 +181,7 @@ export default function MoyensPaiementPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       <PageHeader
         icon={Wallet}
         eyebrow="Paiements"
@@ -251,7 +251,7 @@ export default function MoyensPaiementPage() {
         </NoticeCard>
       ) : moyens.length === 0 ? (
         <NoticeCard>
-          <div className="flex flex-col items-center justify-center py-10 text-center">
+          <div className="flex flex-col items-center justify-center py-8 text-center">
             <span
               className="
                 flex h-12 w-12 items-center justify-center

@@ -50,7 +50,7 @@ export function SousNavigation({
             aria-current={estActif ? "true" : undefined}
             className={clsx(
               "inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5",
-              "font-mono text-[11px] uppercase tracking-wider transition-colors",
+              "font-mono text-[0.6875rem] uppercase tracking-wider transition-colors",
               estActif
                 ? "border-ink bg-ink text-paper-light"
                 : "border-ink/20 bg-paper text-ink-soft hover:border-ink/50 hover:text-ink",
@@ -60,7 +60,7 @@ export function SousNavigation({
             {onglet.compte !== undefined && (
               <span
                 className={clsx(
-                  "rounded-full px-1.5 py-px text-[10px] leading-none",
+                  "rounded-full px-1.5 py-px text-[0.65rem] leading-none",
                   estActif
                     ? "bg-paper-light/20 text-paper-light"
                     : "bg-ink/10 text-ink-soft",
@@ -101,7 +101,7 @@ export function SousNavigationLiens({
             aria-current={estActif ? "page" : undefined}
             className={clsx(
               "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5",
-              "font-mono text-[11px] uppercase tracking-wider transition-colors",
+              "font-mono text-[0.6875rem] uppercase tracking-wider transition-colors",
               estActif
                 ? "border-ink bg-ink text-paper-light"
                 : "border-ink/20 bg-paper text-ink-soft hover:border-ink/50 hover:text-ink",
@@ -111,7 +111,7 @@ export function SousNavigationLiens({
             {lien.compte !== undefined && (
               <span
                 className={clsx(
-                  "rounded-full px-1.5 py-px text-[10px] leading-none",
+                  "rounded-full px-1.5 py-px text-[0.65rem] leading-none",
                   estActif
                     ? "bg-paper-light/20 text-paper-light"
                     : "bg-ink/10 text-ink-soft",

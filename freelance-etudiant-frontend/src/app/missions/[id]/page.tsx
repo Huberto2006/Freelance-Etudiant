@@ -89,7 +89,7 @@ export default function MissionDetailPage({
 
   if (chargement) {
     return (
-      <p className="mx-auto flex max-w-3xl items-center justify-center gap-2 px-5 py-16 text-sm text-ink-soft">
+      <p className="mx-auto flex max-w-3xl items-center justify-center gap-2 px-5 py-12 text-sm text-ink-soft">
         <Loader2 size={16} className="animate-spin" aria-hidden="true" />
         Chargement…
       </p>
@@ -98,7 +98,7 @@ export default function MissionDetailPage({
 
   if (!mission) {
     return (
-      <div className="mx-auto max-w-3xl px-5 py-16">
+      <div className="mx-auto max-w-3xl px-5 py-12">
         <NoticeCard>
           <div className="flex flex-col items-center gap-3 py-4 text-center">
             <span
@@ -126,7 +126,7 @@ export default function MissionDetailPage({
 
   return (
 
-    <div className="mx-auto max-w-4xl px-5 pt-8 pb-14">
+    <div className="mx-auto max-w-4xl px-5 pt-7 pb-11">
       <div className="mb-4">
         <BoutonRetour repli="/missions" />
       </div>
@@ -150,16 +150,16 @@ export default function MissionDetailPage({
       <h1 className="mb-3 font-display text-3xl font-semibold sm:text-4xl">
         {mission.titre}
       </h1>
-      <p className="mb-8 text-sm text-ink-soft">
+      <p className="mb-7 text-sm text-ink-soft">
         Publiée le {formatDate(mission.dateCreation)} · candidatures ouvertes
         jusqu&apos;au {formatDate(mission.dateLimite)}
       </p>
 
-      <div className="flex flex-col-reverse items-start gap-8 lg:flex-row lg:items-start">
+      <div className="flex flex-col-reverse items-start gap-7 lg:flex-row lg:items-start">
         {/* ————— COLONNE PRINCIPALE ————— */}
         <div className="min-w-0 flex-1">
 
-          <div className="mb-8">
+          <div className="mb-7">
             <h2 className="mb-3 font-display text-xl font-semibold">
               Description
             </h2>
@@ -169,7 +169,7 @@ export default function MissionDetailPage({
           </div>
 
           {mission.competencesRequises.length > 0 && (
-            <div className="mb-10">
+            <div className="mb-8">
               <h2 className="mb-3 font-display text-xl font-semibold">
                 Compétences requises
               </h2>
@@ -183,11 +183,11 @@ export default function MissionDetailPage({
             </div>
           )}
 
-          <div className="mt-6 mb-10">
+          <div className="mt-6 mb-8">
             <BoutonsReaction cibleType="mission" cibleId={mission.id} />
           </div>
 
-          <div className="border-t border-ink/10 pt-8">
+          <div className="border-t border-ink/10 pt-7">
             <SectionCommentaires cibleType="mission" cibleId={mission.id} />
           </div>
         </div>

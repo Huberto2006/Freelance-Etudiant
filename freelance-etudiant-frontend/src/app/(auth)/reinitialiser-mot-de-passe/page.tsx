@@ -100,7 +100,7 @@ function FormulaireReinitialisation() {
 
 export default function ReinitialiserMotDePassePage() {
   return (
-    <div className="mx-auto max-w-md px-5 pb-16">
+    <div className="mx-auto max-w-md px-5 pb-12">
       <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
         Récupération de compte
       </p>

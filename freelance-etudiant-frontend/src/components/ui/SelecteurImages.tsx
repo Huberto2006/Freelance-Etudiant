@@ -111,7 +111,7 @@ export function SelecteurImages({
               className="h-full w-full object-cover"
             />
             {index === 0 && (
-              <span className="absolute bottom-1 left-1 rounded bg-ink/70 px-1.5 py-0.5 text-[10px] font-medium text-paper-light">
+              <span className="absolute bottom-1 left-1 rounded bg-ink/70 px-1.5 py-0.5 text-[0.65rem] font-medium text-paper-light">
                 Couverture
               </span>
             )}
@@ -139,7 +139,7 @@ export function SelecteurImages({
             ) : (
               <ImagePlus size={20} />
             )}
-            <span className="text-[11px]">{envoi ? "Envoi…" : "Ajouter"}</span>
+            <span className="text-[0.6875rem]">{envoi ? "Envoi…" : "Ajouter"}</span>
           </button>
         )}
       </div>

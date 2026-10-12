@@ -109,7 +109,7 @@ function Parcours({
 
 export function SectionFonctionnement() {
   return (
-    <section id="fonctionnement" className="mx-auto max-w-6xl px-4 pb-8 sm:px-5 sm:pb-12">
+    <section id="fonctionnement" className="mx-auto max-w-7xl px-4 pb-7 sm:px-5 sm:pb-10">
       <SectionTitre
         icon={ArrowRightLeft}
         eyebrow="Processus simplifié"
@@ -117,7 +117,7 @@ export function SectionFonctionnement() {
         sousTitre="Du premier contact à la validation finale, chaque étape est pensée pour garantir la réussite du projet."
       />
 
-      <div className="grid gap-8 rounded-xl border border-ink/10 bg-paper-light p-6 sm:p-8 lg:grid-cols-2 lg:gap-12">
+      <div className="grid gap-7 rounded-xl border border-ink/10 bg-paper-light p-6 sm:p-8 lg:grid-cols-2 lg:gap-10">
         {/* Volet Client */}
         <div className="flex flex-col">
           <div className="mb-4 flex items-center gap-2">
@@ -137,7 +137,7 @@ export function SectionFonctionnement() {
         </div>
 
         {/* Volet Étudiant */}
-        <div className="flex flex-col border-t border-ink/10 pt-8 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
+        <div className="flex flex-col border-t border-ink/10 pt-7 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
           <div className="mb-4 flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-ocre/10 text-ocre-dark">
               <GraduationCap size={15} aria-hidden="true" />

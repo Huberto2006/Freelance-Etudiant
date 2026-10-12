@@ -37,7 +37,7 @@ export default function PublicationsPage() {
   return (
     <Suspense
       fallback={
-        <div className="container mx-auto max-w-6xl px-4 pb-12 pt-8">
+        <div className="container mx-auto max-w-7xl px-4 pb-10 pt-7">
           <SqueletteCatalogue nombre={6} />
         </div>
       }
@@ -320,7 +320,7 @@ function PublicationsContent() {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 pb-12 pt-8">
+    <div className="container mx-auto max-w-7xl px-4 pb-10 pt-7">
       {/* ---------------------------------------------------- RETOUR */}
       <div className="mb-4">
         <BoutonRetour repli="/" forcer />
@@ -346,14 +346,14 @@ function PublicationsContent() {
 
           {/* Badges de synthèse en direct */}
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-            <span className="inline-flex items-center rounded-full border border-ink/15 bg-paper-light px-2.5 py-0.5 font-mono text-[11px] font-medium text-ink">
+            <span className="inline-flex items-center rounded-full border border-ink/15 bg-paper-light px-2.5 py-0.5 font-mono text-[0.6875rem] font-medium text-ink">
               {chargement ? "…" : `${nbTotal} publications`}
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-bleu/20 bg-bleu/10 px-2.5 py-0.5 font-mono text-[11px] font-medium text-bleu-dark">
+            <span className="inline-flex items-center gap-1 rounded-full border border-bleu/20 bg-bleu/10 px-2.5 py-0.5 font-mono text-[0.6875rem] font-medium text-bleu-dark">
               <BriefcaseBusiness size={11} aria-hidden="true" />
               {chargement ? "…" : `${nbMissionsTotal} missions ouvertes`}
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-ocre/20 bg-ocre/10 px-2.5 py-0.5 font-mono text-[11px] font-medium text-ocre-dark">
+            <span className="inline-flex items-center gap-1 rounded-full border border-ocre/20 bg-ocre/10 px-2.5 py-0.5 font-mono text-[0.6875rem] font-medium text-ocre-dark">
               <Wrench size={11} aria-hidden="true" />
               {chargement ? "…" : `${nbServicesTotal} services proposés`}
             </span>
@@ -534,7 +534,7 @@ function PublicationsContent() {
             </NoticeCard>
           ) : publicationsFiltrees.length === 0 ? (
             <NoticeCard>
-              <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+              <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
                 <span
                   className="flex h-12 w-12 items-center justify-center rounded-full bg-ink/5 text-ink-soft"
                   aria-hidden="true"

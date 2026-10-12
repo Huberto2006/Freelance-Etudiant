@@ -299,7 +299,7 @@ export default function TableauDeBordVueEnsemble() {
 function ChargementDashboard() {
   return (
     <div role="status" aria-label="Chargement du tableau de bord">
-      <div className="mb-8 flex items-center gap-4">
+      <div className="mb-7 flex items-center gap-4">
         <Skeleton rond className="h-14 w-14" />
 
         <div className="flex-1">
@@ -316,7 +316,7 @@ function ChargementDashboard() {
         <SkeletonCarte className="hidden lg:flex" />
       </div>
 
-      <SkeletonListe nombre={3} className="mt-10" />
+      <SkeletonListe nombre={3} className="mt-8" />
     </div>
   );
 }
@@ -550,7 +550,7 @@ function VueEtudiant({
         <DashboardSection
           titre="Revenus & réputation"
           icone={Banknote}
-          className="mt-10"
+          className="mt-8"
         >
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="lg:col-span-2">
@@ -594,7 +594,7 @@ function VueEtudiant({
       <DashboardSection
         titre="À faire maintenant"
         icone={Zap}
-        className="mt-10"
+        className="mt-8"
       >
         {candidatures !== null &&
         livraisons !== null &&
@@ -611,7 +611,7 @@ function VueEtudiant({
       <DashboardSection
         titre="Missions recommandées pour vous"
         icone={TrendingUp}
-        className="mt-10"
+        className="mt-8"
       >
         <RecommendedMissions missionsExcluesIds={missionsExcluesIds} />
       </DashboardSection>
@@ -620,7 +620,7 @@ function VueEtudiant({
       <DashboardSection
         titre="Mes projets en cours"
         icone={BriefcaseBusiness}
-        className="mt-10"
+        className="mt-8"
         action={
           <Link
             href="/tableau-de-bord/livraisons"
@@ -641,7 +641,7 @@ function VueEtudiant({
       </DashboardSection>
 
       {/* ============ ACTIVITÉ RÉCENTE + PROFIL ============ */}
-      <div className="mt-10 grid gap-6 lg:grid-cols-3">
+      <div className="mt-8 grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <DashboardSection
             titre="Activité récente"
@@ -894,7 +894,7 @@ function VueClient({
       </section>
 
       {/* ============ ACTIONS RAPIDES ============ */}
-      <DashboardSection titre="Actions rapides" icone={Zap} className="mt-10">
+      <DashboardSection titre="Actions rapides" icone={Zap} className="mt-8">
         <DashboardActions actions={actionsRapides} variante="rapide" />
       </DashboardSection>
 
@@ -902,7 +902,7 @@ function VueClient({
       <DashboardSection
         titre="À faire maintenant"
         icone={Clock}
-        className="mt-10"
+        className="mt-8"
       >
         {candidatures !== null && livraisons !== null && paiements !== null ? (
           <DashboardActions actions={actionsUrgentes} />
@@ -917,7 +917,7 @@ function VueClient({
       <DashboardSection
         titre="Candidatures à examiner"
         icone={ClipboardList}
-        className="mt-10"
+        className="mt-8"
         action={
           <Link
             href="/tableau-de-bord/mes-missions"
@@ -938,7 +938,7 @@ function VueClient({
       <DashboardSection
         titre="Missions en cours"
         icone={BriefcaseBusiness}
-        className="mt-10"
+        className="mt-8"
       >
         {missions !== null && candidatures !== null && livraisons !== null ? (
           <ProjetsEnCours
@@ -960,7 +960,7 @@ function VueClient({
       <DashboardSection
         titre="Derniers paiements"
         icone={Wallet}
-        className="mt-10"
+        className="mt-8"
         action={
           <Link
             href="/tableau-de-bord/paiements"
@@ -1035,7 +1035,7 @@ function VueClient({
       <DashboardSection
         titre="Activité récente"
         icone={Clock}
-        className="mt-10"
+        className="mt-8"
       >
         {notifications !== null ? (
           <ActiviteRecente
@@ -1225,7 +1225,7 @@ function VueAdmin({
       <DashboardSection
         titre="À surveiller"
         icone={ShieldAlert}
-        className="mt-10"
+        className="mt-8"
       >
         {signalements !== null &&
         paiements !== null &&
@@ -1246,7 +1246,7 @@ function VueAdmin({
       <DashboardSection
         titre="Indicateurs"
         icone={TrendingUp}
-        className="mt-10"
+        className="mt-8"
       >
         {stats === null ? (
           <div role="status" aria-label="Chargement des indicateurs">
@@ -1292,7 +1292,7 @@ function VueAdmin({
       <DashboardSection
         titre="Activité plateforme"
         icone={Clock}
-        className="mt-10"
+        className="mt-8"
       >
         {signalements !== null && paiements !== null ? (
           <ActiviteRecente

@@ -34,7 +34,7 @@ export function StampBadge({
       title={`Score de reputation : ${arrondi}/100`}
     >
       <span className="text-lg font-bold leading-none">{arrondi}</span>
-      <span className="text-[8px] uppercase tracking-wider mt-0.5">score</span>
+      <span className="text-[0.625rem] uppercase tracking-wider mt-0.5">score</span>
     </div>
   );
 }
@@ -205,7 +205,7 @@ export function PageHeader({
     ink: "bg-ink/10 text-ink",
   };
   return (
-    <div className={clsx("mb-8 flex items-center gap-3", className)}>
+    <div className={clsx("mb-7 flex items-center gap-3", className)}>
       <span
         className={clsx(
           "flex h-11 w-11 shrink-0 items-center justify-center rounded-full",
@@ -228,7 +228,7 @@ export function PageHeader({
 /**
  * État vide standard (liste sans résultat) : médaillon-icône + texte
  * centré, dans une NoticeCard. Avant ce composant, ce même geste visuel
- * (icône dans un médaillon `bg-ink/5`, texte `text-ink-soft/70`, `py-10
+ * (icône dans un médaillon `bg-ink/5`, texte `text-ink-soft/70`, `py-8
  * text-center`) était réécrit à la main dans chaque page — avec de
  * légères variations (icône nue vs médaillon, tailles différentes) qui
  * le rendaient visuellement moins cohérent d'une page à l'autre.
@@ -251,7 +251,7 @@ export function EtatVide({
   return (
     <NoticeCard
       className={clsx(
-        "flex flex-col items-center gap-3 py-10 text-center",
+        "flex flex-col items-center gap-3 py-8 text-center",
         className,
       )}
     >

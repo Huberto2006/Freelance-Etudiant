@@ -95,7 +95,7 @@ export default function ServiceDetailPage({
 
   if (chargement) {
     return (
-      <p className="mx-auto flex max-w-3xl items-center justify-center gap-2 px-5 py-16 text-sm text-ink-soft">
+      <p className="mx-auto flex max-w-3xl items-center justify-center gap-2 px-5 py-12 text-sm text-ink-soft">
         <Loader2 size={16} className="animate-spin" aria-hidden="true" />
         Chargement…
       </p>
@@ -104,7 +104,7 @@ export default function ServiceDetailPage({
 
   if (!service) {
     return (
-      <div className="mx-auto max-w-3xl px-5 py-16">
+      <div className="mx-auto max-w-3xl px-5 py-12">
         <NoticeCard>
           <div className="flex flex-col items-center gap-3 py-4 text-center">
             <span
@@ -131,7 +131,7 @@ export default function ServiceDetailPage({
   const estProprietaire = utilisateur?.id === etudiant?.utilisateurId;
 
   return (
-    <div className="mx-auto max-w-4xl px-5 pt-8 pb-14">
+    <div className="mx-auto max-w-4xl px-5 pt-7 pb-11">
       <div className="mb-4">
         <BoutonRetour repli="/services" />
       </div>
@@ -176,15 +176,15 @@ export default function ServiceDetailPage({
       <h1 className="mb-3 font-display text-3xl font-semibold sm:text-4xl">
         {service.titre}
       </h1>
-      <p className="mb-8 text-sm text-ink-soft">
+      <p className="mb-7 text-sm text-ink-soft">
         Publié le {formatDate(service.dateCreation)}
       </p>
 
-      <div className="flex flex-col-reverse items-start gap-8 lg:flex-row lg:items-start">
+      <div className="flex flex-col-reverse items-start gap-7 lg:flex-row lg:items-start">
         {/* ————— COLONNE PRINCIPALE ————— */}
         <div className="min-w-0 flex-1">
 
-          <div className="mb-8">
+          <div className="mb-7">
             <h2 className="mb-3 font-display text-xl font-semibold">
               Description
             </h2>
@@ -194,7 +194,7 @@ export default function ServiceDetailPage({
           </div>
 
           {service.competences.length > 0 && (
-            <div className="mb-10">
+            <div className="mb-8">
               <h2 className="mb-3 font-display text-xl font-semibold">
                 Compétences mobilisées
               </h2>
@@ -208,11 +208,11 @@ export default function ServiceDetailPage({
             </div>
           )}
 
-          <div className="mt-6 mb-10">
+          <div className="mt-6 mb-8">
             <BoutonsReaction cibleType="service" cibleId={service.id} />
           </div>
 
-          <div className="border-t border-ink/10 pt-8">
+          <div className="border-t border-ink/10 pt-7">
             <SectionCommentaires cibleType="service" cibleId={service.id} />
           </div>
         </div>

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function PageFreelances() {
   return (
-    <div className="mx-auto max-w-6xl px-5 pb-8 pt-10 sm:pt-14">
+    <div className="mx-auto max-w-7xl px-5 pb-7 pt-8 sm:pt-11">
       <EnTetePagePublique
         icon={Users}
         eyebrow="Explorer"

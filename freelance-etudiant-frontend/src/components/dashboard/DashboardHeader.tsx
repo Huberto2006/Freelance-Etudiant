@@ -24,7 +24,7 @@ export function DashboardHeader({
   const prenom = utilisateur.nom.split(" ")[0] || utilisateur.nom;
 
   return (
-    <header className={clsx("mb-8 flex items-center gap-4", className)}>
+    <header className={clsx("mb-7 flex items-center gap-4", className)}>
       <Avatar
         nom={utilisateur.nom}
         photoUrl={utilisateur.photoUrl}

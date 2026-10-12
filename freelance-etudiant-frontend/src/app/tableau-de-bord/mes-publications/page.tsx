@@ -223,7 +223,7 @@ export default function MesPublicationsPage() {
           {/* --------------------------------- TYPE SELON LE RÔLE */}
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div
-              className="inline-flex items-center gap-1.5 rounded-full border border-ink/15 bg-paper-light px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-wider text-ink"
+              className="inline-flex items-center gap-1.5 rounded-full border border-ink/15 bg-paper-light px-3.5 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-ink"
               aria-label={role === "client" ? "Mes missions" : "Mes services"}
             >
               {role === "client" ? (
@@ -271,7 +271,7 @@ export default function MesPublicationsPage() {
                 </NoticeCard>
               ) : items.length === 0 ? (
                 <NoticeCard>
-                  <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+                  <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
                     <span
                       className="flex h-12 w-12 items-center justify-center rounded-full bg-ink/5 text-ink-soft"
                       aria-hidden="true"

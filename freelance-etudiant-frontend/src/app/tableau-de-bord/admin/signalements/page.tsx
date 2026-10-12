@@ -74,11 +74,11 @@ export default function AdminSignalementsPage() {
             À traiter ({ouverts.length})
           </h2>
           {ouverts.length === 0 ? (
-            <NoticeCard className="mb-8">
+            <NoticeCard className="mb-7">
               <p className="text-sm text-ink-soft/70">Aucun signalement en attente.</p>
             </NoticeCard>
           ) : (
-            <div className="flex flex-col gap-3 mb-8">
+            <div className="flex flex-col gap-3 mb-7">
               {ouverts.map((s) => (
                 <NoticeCard key={s.id} className="flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-2">

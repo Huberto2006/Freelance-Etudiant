@@ -3,14 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-  BriefcaseBusiness,
-  GraduationCap,
-  Search,
-} from "lucide-react";
+import { Search } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
-import { useAuth, roleLabel } from "@/lib/auth-context";
+import { useAuth } from "@/lib/auth-context";
 
 export interface SuggestionCategorie {
   valeur: string;
@@ -22,6 +18,14 @@ export interface StatVive {
   valeur: string;
 }
 
+type CibleRecherche = "services" | "missions";
+
+/**
+ * Hero de la page d'accueil. Volontairement sobre : un titre, une seule
+ * barre de recherche (le choix Services / Missions est un sélecteur intégré
+ * à la barre), des domaines populaires en simples liens texte et au plus
+ * deux actions (une principale, un lien secondaire).
+ */
 export function HeroAccueil({
   suggestions,
   stats,
@@ -33,832 +37,176 @@ export function HeroAccueil({
   const { utilisateur, chargement } = useAuth();
 
   const [recherche, setRecherche] = useState("");
-  const [cibleRecherche, setCibleRecherche] = useState<
-    "services" | "missions"
-  >("services");
+  const [cible, setCible] = useState<CibleRecherche>("services");
 
   function lancerRecherche(e: React.FormEvent) {
     e.preventDefault();
-
     const motsCles = recherche.trim();
-
-    if (cibleRecherche === "missions") {
-      router.push(
-        motsCles
-          ? `/missions?q=${encodeURIComponent(motsCles)}`
-          : "/missions",
-      );
-      return;
-    }
-
     router.push(
       motsCles
-        ? `/services?q=${encodeURIComponent(motsCles)}`
-        : "/services",
+        ? `/${cible}?q=${encodeURIComponent(motsCles)}`
+        : `/${cible}`,
     );
   }
 
   return (
     <section className="relative isolate overflow-hidden bg-paper-light">
-      {/* =========================================================
-          IMAGE DE FOND
-          L'image reste dans le section et conserve son ratio naturel.
-          Elle n'est pas recadrée par bg-cover.
-          ========================================================= */}
+      {/* Image d'ambiance : conserve son ratio, fondue vers le fond de page. */}
       <div
-        className="
-          pointer-events-none
-          absolute
-          inset-x-0
-          top-0
-          z-0
-          w-full
-        "
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 w-full"
         aria-hidden="true"
       >
         <img
           src="/images/hero-kianja.png"
           alt=""
-          className="
-            block
-            h-auto
-            w-full
-            max-w-none
-          "
+          className="block h-auto w-full max-w-none"
         />
       </div>
-
-      {/* =========================================================
-          OVERLAY
-          Permet de garder le texte lisible sans cacher complètement
-          l'image.
-          ========================================================= */}
       <div
-        className="
-          pointer-events-none
-          absolute
-          inset-0
-          z-10
-          bg-gradient-to-b
-          from-paper-light/10
-          via-paper-light/100
-          to-paper-light
-        "
+        className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-paper-light/10 via-paper-light to-paper-light"
         aria-hidden="true"
       />
 
-      {/* =========================================================
-          HALO DÉCORATIF DROIT
-          ========================================================= */}
-      <div
-        className="
-          pointer-events-none
-          absolute
-          -right-24
-          -top-28
-          z-10
-          h-72
-          w-72
-          rounded-full
-          bg-ocre/15
-          blur-3xl
-        "
-        aria-hidden="true"
-      />
-
-      {/* =========================================================
-          HALO DÉCORATIF GAUCHE
-          ========================================================= */}
-      <div
-        className="
-          pointer-events-none
-          absolute
-          -bottom-32
-          -left-24
-          z-10
-          h-72
-          w-72
-          rounded-full
-          bg-bleu/10
-          blur-3xl
-        "
-        aria-hidden="true"
-      />
-
-      {/* =========================================================
-          CONTENU
-          ========================================================= */}
-      <div
-        className="
-          relative
-          z-20
-          mx-auto
-          max-w-2xl
-          px-5
-          py-12
-          text-center
-          sm:px-10
-          sm:py-16
-        "
-      >
-        {/* =======================================================
-            BADGE
-            ======================================================= */}
-        <p
-          className="
-            mb-5
-            inline-flex
-            items-center
-            gap-2
-            rounded-full
-            border
-            border-ocre-dark/30
-            bg-ocre/10
-            px-3.5
-            py-1
-            font-mono
-            text-[11px]
-            uppercase
-            tracking-[0.2em]
-            text-ocre-dark
-          "
-        >
+      <div className="relative z-20 mx-auto max-w-3xl px-5 py-16 text-center sm:px-10 sm:py-24">
+        <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-soft">
           Kianja · Marketplace des étudiants freelances
         </p>
 
-        {/* =======================================================
-            TITRE
-            ======================================================= */}
-        <h1
-          className="
-            font-display
-            text-4xl
-            font-semibold
-            leading-tight
-            sm:text-5xl
-          "
-        >
+        <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
           Les besoins des clients.{" "}
           <span className="text-ocre-dark">
             Les compétences des étudiants.
           </span>
         </h1>
 
-        {/* =======================================================
-            DESCRIPTION
-            ======================================================= */}
-        <p
-          className="
-            mx-auto
-            mt-4
-            max-w-xl
-            text-base
-            leading-relaxed
-            text-ink-soft
-          "
-        >
-          La marketplace qui connecte les étudiants freelances avec
-          les clients à la recherche de talents. Trouvez un profil
-          qualifié, publiez un besoin ou proposez vos compétences.
+        <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-ink-soft">
+          Trouvez un profil qualifié, publiez un besoin ou proposez vos
+          compétences, dans un cadre clair et sécurisé.
         </p>
 
-        {/* =======================================================
-            COMMUTATEUR DE RECHERCHE
-            ======================================================= */}
-        <div
-          className="
-            mx-auto
-            mt-6
-            inline-flex
-            rounded-full
-            border
-            border-ink/15
-            bg-paper-light/90
-            p-1
-            shadow-xs
-            backdrop-blur-sm
-          "
-        >
-          {/* Services étudiants */}
-          <button
-            type="button"
-            onClick={() => setCibleRecherche("services")}
-            className={`
-              inline-flex
-              items-center
-              gap-1.5
-              rounded-full
-              px-3.5
-              py-1
-              text-xs
-              font-medium
-              transition-colors
-              ${
-                cibleRecherche === "services"
-                  ? "bg-bleu text-white shadow-xs"
-                  : "text-ink-soft hover:text-ink"
-              }
-            `}
-          >
-            <GraduationCap
-              size={14}
-              aria-hidden="true"
-            />
-
-            <span>Services étudiants</span>
-          </button>
-
-          {/* Missions clients */}
-          <button
-            type="button"
-            onClick={() => setCibleRecherche("missions")}
-            className={`
-              inline-flex
-              items-center
-              gap-1.5
-              rounded-full
-              px-3.5
-              py-1
-              text-xs
-              font-medium
-              transition-colors
-              ${
-                cibleRecherche === "missions"
-                  ? "bg-bleu text-white shadow-xs"
-                  : "text-ink-soft hover:text-ink"
-              }
-            `}
-          >
-            <BriefcaseBusiness
-              size={14}
-              aria-hidden="true"
-            />
-
-            <span>Missions clients</span>
-          </button>
-        </div>
-
-        {/* =======================================================
-            RECHERCHE
-            ======================================================= */}
+        {/* Recherche : une seule barre, sélecteur Services / Missions intégré */}
         <form
           onSubmit={lancerRecherche}
           role="search"
-          className="
-            mx-auto
-            mt-3
-            flex
-            max-w-lg
-            flex-col
-            gap-2
-            sm:flex-row
-          "
+          className="mx-auto mt-9 flex max-w-xl items-stretch overflow-hidden rounded-xl border border-ink/20 bg-paper-light shadow-sm transition focus-within:border-bleu focus-within:ring-2 focus-within:ring-bleu/15"
         >
-          <div className="relative flex-1">
-            <Search
-              size={16}
-              className="
-                pointer-events-none
-                absolute
-                left-3.5
-                top-1/2
-                -translate-y-1/2
-                text-ink-soft/60
-              "
-              aria-hidden="true"
-            />
-
-            <input
-              type="search"
-              value={recherche}
-              onChange={(e) => setRecherche(e.target.value)}
-              placeholder={
-                cibleRecherche === "services"
-                  ? "Design, site web, rédaction, traduction…"
-                  : "Refonte de site, application mobile, graphisme…"
-              }
-              aria-label={
-                cibleRecherche === "services"
-                  ? "Rechercher un service étudiant"
-                  : "Rechercher une mission de client"
-              }
-              className="
-                h-10
-                w-full
-                rounded-lg
-                border
-                border-ink/20
-                bg-paper-light/95
-                pl-9
-                pr-3
-                text-sm
-                text-ink
-                shadow-sm
-                outline-none
-                placeholder:text-ink-soft/60
-                transition
-                focus:border-bleu
-                focus:ring-2
-                focus:ring-bleu/15
-              "
-            />
-          </div>
-
-          <Button
-            type="submit"
-            variant="secondary"
-            size="sm"
-            className="
-              flex
-              h-10
-              shrink-0
-              items-center
-              justify-center
-              gap-1.5
-              px-4
-              text-sm
-            "
+          <label className="sr-only" htmlFor="cible-recherche">
+            Type de recherche
+          </label>
+          <select
+            id="cible-recherche"
+            value={cible}
+            onChange={(e) => setCible(e.target.value as CibleRecherche)}
+            className="cursor-pointer border-r border-ink/10 bg-transparent py-3 pl-4 pr-2 text-sm font-medium text-ink outline-none"
           >
-            <Search
-              size={15}
-              className="sm:hidden"
-              aria-hidden="true"
-            />
+            <option value="services">Services</option>
+            <option value="missions">Missions</option>
+          </select>
 
-            <span>Rechercher</span>
-          </Button>
+          <input
+            type="search"
+            value={recherche}
+            onChange={(e) => setRecherche(e.target.value)}
+            placeholder={
+              cible === "services"
+                ? "Design, site web, rédaction, traduction…"
+                : "Refonte de site, application mobile…"
+            }
+            aria-label={
+              cible === "services"
+                ? "Rechercher un service étudiant"
+                : "Rechercher une mission de client"
+            }
+            className="min-w-0 flex-1 bg-transparent px-3 text-sm text-ink outline-none placeholder:text-ink-soft/60"
+          />
+
+          <button
+            type="submit"
+            aria-label="Lancer la recherche"
+            className="flex w-12 shrink-0 cursor-pointer items-center justify-center bg-ink text-paper-light transition-colors hover:bg-ink-soft"
+          >
+            <Search size={17} aria-hidden="true" />
+          </button>
         </form>
 
-        {/* =======================================================
-            SUGGESTIONS
-            ======================================================= */}
+        {/* Domaines populaires : liens texte discrets */}
         {suggestions.length > 0 && (
-          <div
-            className="
-              mt-4
-              flex
-              flex-wrap
-              items-center
-              justify-center
-              gap-2
-            "
-          >
-            <span className="text-xs text-ink-soft">
-              Domaines populaires :
-            </span>
-
-            {suggestions.map((suggestion) => (
-              <Link
-                key={suggestion.valeur}
-                href={
-                  cibleRecherche === "missions"
-                    ? `/missions?categorie=${encodeURIComponent(
-                        suggestion.valeur,
-                      )}`
-                    : `/services?categorie=${encodeURIComponent(
-                        suggestion.valeur,
-                      )}`
-                }
-                className="
-                  rounded-full
-                  border
-                  border-ink/15
-                  bg-paper-light/80
-                  px-2.5
-                  py-1
-                  text-xs
-                  text-ink-soft
-                  backdrop-blur-sm
-                  transition-colors
-                  hover:border-bleu/40
-                  hover:bg-bleu/10
-                  hover:text-bleu-dark
-                "
-              >
-                {suggestion.libelle}
-              </Link>
+          <p className="mt-4 text-xs text-ink-soft">
+            Populaires :{" "}
+            {suggestions.slice(0, 4).map((suggestion, index) => (
+              <span key={suggestion.valeur}>
+                {index > 0 && (
+                  <span aria-hidden="true" className="mx-1.5 text-ink/30">
+                    ·
+                  </span>
+                )}
+                <Link
+                  href={`/${cible}?categorie=${encodeURIComponent(suggestion.valeur)}`}
+                  className="underline-offset-4 transition-colors hover:text-bleu-dark hover:underline"
+                >
+                  {suggestion.libelle}
+                </Link>
+              </span>
             ))}
-          </div>
+          </p>
         )}
 
-        {/* =======================================================
-            APPELS À L'ACTION
-            ======================================================= */}
+        {/* Actions : une principale + un lien secondaire */}
         {!chargement && (
-          <div className="mt-8">
+          <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
             {utilisateur ? (
-              /* =================================================
-                 UTILISATEUR CONNECTÉ
-                 ================================================= */
-              <div
-                className="
-                  rounded-xl
-                  border
-                  border-ink/10
-                  bg-paper-light/80
-                  p-4
-                  shadow-xs
-                  backdrop-blur-md
-                "
-              >
-                <p className="text-xs text-ink-soft">
-                  Connecté en tant que{" "}
-                  <span className="font-semibold text-ink">
-                    {utilisateur.nom}
-                  </span>{" "}
-                  ({roleLabel(utilisateur.role)})
-                </p>
-
-                <div
-                  className="
-                    mt-3
-                    flex
-                    flex-wrap
-                    justify-center
-                    gap-2.5
-                  "
-                >
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="h-9 px-4 text-xs"
-                    onClick={() =>
-                      router.push("/tableau-de-bord")
-                    }
-                  >
-                    Accéder à mon tableau de bord
-                  </Button>
-
-                  {utilisateur.role === "client" ? (
-                    <>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 px-3 text-xs"
-                        onClick={() =>
-                          router.push(
-                            "/tableau-de-bord/mes-missions",
-                          )
-                        }
-                      >
-                        Publier une mission
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-9 px-3 text-xs"
-                        onClick={() =>
-                          router.push("/services")
-                        }
-                      >
-                        Trouver un étudiant
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 px-3 text-xs"
-                        onClick={() =>
-                          router.push("/missions")
-                        }
-                      >
-                        Trouver une mission
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-9 px-3 text-xs"
-                        onClick={() =>
-                          router.push(
-                            "/tableau-de-bord/mes-services",
-                          )
-                        }
-                      >
-                        Gérer mes services
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ) : (
-              /* =================================================
-                 UTILISATEUR NON CONNECTÉ
-                 ================================================= */
               <>
-              <div className="mx-auto mb-5 flex w-full max-w-xl flex-col justify-center gap-2.5 sm:flex-row">
+                <Button href="/tableau-de-bord" size="lg">
+                  Accéder à mon tableau de bord
+                </Button>
+                {utilisateur.role === "client" && (
+                  <Link
+                    href="/tableau-de-bord/mes-missions"
+                    className="text-sm font-medium text-ink underline-offset-4 hover:underline"
+                  >
+                    Publier une mission
+                  </Link>
+                )}
+                {utilisateur.role === "etudiant" && (
+                  <Link
+                    href="/missions"
+                    className="text-sm font-medium text-ink underline-offset-4 hover:underline"
+                  >
+                    Trouver une mission
+                  </Link>
+                )}
+              </>
+            ) : (
+              <>
+                <Button href="/inscription" size="lg">
+                  Rejoindre Kianja
+                </Button>
                 <Link
                   href="/publications"
-                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-ink bg-ink px-5 py-2.5 text-sm font-medium text-paper-light transition-colors hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu"
+                  className="text-sm font-medium text-ink underline-offset-4 hover:underline"
                 >
-                  Explorer les publications
+                  Explorer les publications →
                 </Link>
-                <Link
-                  href="/inscription"
-                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-ink/30 bg-paper-light/80 px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink hover:bg-ink/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu"
-                >
-                  Rejoindre Kianja
-                </Link>
-              </div>
-
-              <div
-                className="
-                  mx-auto
-                  grid
-                  w-full
-                  max-w-xl
-                  grid-cols-1
-                  gap-4
-                  text-left
-                  sm:grid-cols-2
-                "
-              >
-                {/* =================================================
-                   CÔTÉ CLIENT
-                   ================================================= */}
-                <div
-                  className="
-                    flex
-                    flex-col
-                    justify-between
-                    rounded-xl
-                    border
-                    border-ink/10
-                    bg-paper-light/85
-                    p-5
-                    shadow-xs
-                    backdrop-blur-sm
-                    transition
-                    hover:border-bleu/30
-                    hover:shadow-md
-                  "
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="
-                          flex
-                          h-7
-                          w-7
-                          items-center
-                          justify-center
-                          rounded-lg
-                          bg-bleu/10
-                          text-bleu-dark
-                        "
-                      >
-                        <BriefcaseBusiness
-                          size={15}
-                          aria-hidden="true"
-                        />
-                      </span>
-
-                      <span
-                        className="
-                          font-mono
-                          text-[11px]
-                          font-semibold
-                          uppercase
-                          tracking-[0.15em]
-                          text-bleu-dark
-                        "
-                      >
-                        Côté client
-                      </span>
-                    </div>
-
-                    <h3
-                      className="
-                        mt-2.5
-                        font-display
-                        text-base
-                        font-semibold
-                        text-ink
-                      "
-                    >
-                      Vous avez un besoin ?
-                    </h3>
-
-                    <p
-                      className="
-                        mt-1
-                        text-xs
-                        leading-relaxed
-                        text-ink-soft
-                      "
-                    >
-                      Trouvez des talents étudiants, publiez vos
-                      missions et suivez la réalisation de vos
-                      projets.
-                    </p>
-                  </div>
-
-                  <div className="mt-4 flex flex-col gap-2">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="
-                        h-9
-                        w-full
-                        justify-center
-                        text-xs
-                      "
-                      onClick={() =>
-                        router.push("/services")
-                      }
-                    >
-                      Trouver un étudiant
-                    </Button>
-
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="
-                        h-9
-                        w-full
-                        justify-center
-                        text-xs
-                      "
-                      onClick={() =>
-                        router.push("/missions")
-                      }
-                    >
-                      Publier une mission
-                    </Button>
-                  </div>
-                </div>
-
-                {/* =================================================
-                   CÔTÉ ÉTUDIANT
-                   ================================================= */}
-                <div
-                  className="
-                    flex
-                    flex-col
-                    justify-between
-                    rounded-xl
-                    border
-                    border-ink/10
-                    bg-paper-light/85
-                    p-5
-                    shadow-xs
-                    backdrop-blur-sm
-                    transition
-                    hover:border-ocre/30
-                    hover:shadow-md
-                  "
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="
-                          flex
-                          h-7
-                          w-7
-                          items-center
-                          justify-center
-                          rounded-lg
-                          bg-ocre/10
-                          text-ocre-dark
-                        "
-                      >
-                        <GraduationCap
-                          size={15}
-                          aria-hidden="true"
-                        />
-                      </span>
-
-                      <span
-                        className="
-                          font-mono
-                          text-[11px]
-                          font-semibold
-                          uppercase
-                          tracking-[0.15em]
-                          text-ocre-dark
-                        "
-                      >
-                        Côté étudiant
-                      </span>
-                    </div>
-
-                    <h3
-                      className="
-                        mt-2.5
-                        font-display
-                        text-base
-                        font-semibold
-                        text-ink
-                      "
-                    >
-                      Vous avez des compétences ?
-                    </h3>
-
-                    <p
-                      className="
-                        mt-1
-                        text-xs
-                        leading-relaxed
-                        text-ink-soft
-                      "
-                    >
-                      Proposez vos services, candidatez aux
-                      missions ouvertes et développez votre
-                      réputation professionnelle.
-                    </p>
-                  </div>
-
-                  <div className="mt-4 flex flex-col gap-2">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="
-                        h-9
-                        w-full
-                        justify-center
-                        text-xs
-                      "
-                      onClick={() =>
-                        router.push("/missions")
-                      }
-                    >
-                      Trouver une mission
-                    </Button>
-
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="
-                        h-9
-                        w-full
-                        justify-center
-                        text-xs
-                      "
-                      onClick={() =>
-                        router.push("/inscription")
-                      }
-                    >
-                      Proposer mes services
-                    </Button>
-                  </div>
-                </div>
-              </div>
               </>
             )}
           </div>
         )}
 
-        {/* =======================================================
-            STATISTIQUES
-            ======================================================= */}
+        {/* Chiffres : une ligne de texte, sans cartes */}
         {stats && stats.length > 0 && (
-          <div
-            className="
-              mx-auto
-              mt-9
-              grid
-              max-w-lg
-              grid-cols-2
-              gap-3
-              border-t
-              border-ink/10
-              pt-6
-            "
-          >
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="text-center"
-              >
-                <p
-                  className="
-                    font-display
-                    text-xl
-                    font-semibold
-                    text-ink
-                  "
-                >
-                  {stat.valeur}
-                </p>
-
-                <p
-                  className="
-                    mt-0.5
-                    font-mono
-                    text-[10px]
-                    uppercase
-                    tracking-wider
-                    text-ink-soft
-                  "
-                >
-                  {stat.label}
-                </p>
-              </div>
+          <p className="mt-10 border-t border-ink/10 pt-6 font-mono text-xs uppercase tracking-wider text-ink-soft">
+            {stats.map((stat, index) => (
+              <span key={stat.label}>
+                {index > 0 && (
+                  <span aria-hidden="true" className="mx-3 text-ink/30">
+                    |
+                  </span>
+                )}
+                <span className="font-semibold text-ink">{stat.valeur}</span>{" "}
+                {stat.label}
+              </span>
             ))}
-          </div>
+          </p>
         )}
       </div>
     </section>

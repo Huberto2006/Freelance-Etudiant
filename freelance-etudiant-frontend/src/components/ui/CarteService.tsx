@@ -51,12 +51,12 @@ export function CarteService({
 
         <span className="absolute left-3 top-3 flex flex-wrap gap-1.5">
           {afficherType && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-ocre/30 bg-ocre/90 px-2.5 py-0.5 text-[11px] font-mono font-semibold uppercase tracking-wide text-white shadow-xs backdrop-blur-sm">
+            <span className="inline-flex items-center gap-1 rounded-full border border-ocre/30 bg-ocre/90 px-2.5 py-0.5 text-[0.6875rem] font-mono font-semibold uppercase tracking-wide text-white shadow-xs backdrop-blur-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" aria-hidden="true" />
               Service
             </span>
           )}
-          <span className="inline-flex items-center rounded-full border border-ink/10 bg-paper-light/90 px-2.5 py-0.5 text-[11px] font-mono uppercase tracking-wide text-ink-soft backdrop-blur-sm">
+          <span className="inline-flex items-center rounded-full border border-ink/10 bg-paper-light/90 px-2.5 py-0.5 text-[0.6875rem] font-mono uppercase tracking-wide text-ink-soft backdrop-blur-sm">
             {libelleCategorie(service.categorie)}
           </span>
         </span>
@@ -118,7 +118,7 @@ export function CarteService({
                 <p className="truncate text-xs font-medium text-ink">
                   {auteur?.nom ?? "Étudiant"}
                 </p>
-                <div className="flex items-center gap-1 text-[11px] text-ink-soft">
+                <div className="flex items-center gap-1 text-[0.6875rem] text-ink-soft">
                   <span>Étudiant</span>
                   {note > 0 && (
                     <span className="inline-flex items-center gap-0.5 font-medium text-ocre-dark">

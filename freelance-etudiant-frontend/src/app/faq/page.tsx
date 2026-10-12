@@ -164,7 +164,7 @@ const THEMES: Theme[] = [
 
 export default function PageFaq() {
   return (
-    <div className="mx-auto max-w-4xl px-5 pb-8 pt-10 sm:pt-14">
+    <div className="mx-auto max-w-4xl px-5 pb-7 pt-8 sm:pt-11">
       <EnTetePagePublique
         icon={CircleHelp}
         eyebrow="Centre d'aide"
@@ -175,7 +175,7 @@ export default function PageFaq() {
       {/* Sommaire : ancres vers chaque thème */}
       <nav
         aria-label="Thèmes de la FAQ"
-        className="mb-10 flex flex-wrap gap-2"
+        className="mb-8 flex flex-wrap gap-2"
       >
         {THEMES.map((theme) => (
           <a
@@ -188,7 +188,7 @@ export default function PageFaq() {
         ))}
       </nav>
 
-      <div className="space-y-10">
+      <div className="space-y-8">
         {THEMES.map((theme) => (
           <section
             key={theme.id}
@@ -225,7 +225,7 @@ export default function PageFaq() {
       </div>
 
       {/* Renvoi vers le contact */}
-      <aside className="mt-12 flex flex-col items-start gap-4 rounded-2xl border border-ink/10 bg-paper-light p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <aside className="mt-10 flex flex-col items-start gap-4 rounded-2xl border border-ink/10 bg-paper-light p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
           <span
             aria-hidden="true"

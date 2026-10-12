@@ -102,7 +102,7 @@ export default function GroupesPage() {
   return (
     <div>
       {/* En-tête */}
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
         <PageHeader
           icon={Users}
           eyebrow="Espace étudiant"
@@ -130,7 +130,7 @@ export default function GroupesPage() {
       </div>
 
       {invitations.length > 0 && (
-        <section className="mb-8">
+        <section className="mb-7">
           <div className="mb-4 flex items-center gap-2">
             <Bell size={18} className="text-ocre-dark" aria-hidden="true" />
             <h2 className="font-display text-lg font-semibold">
@@ -162,7 +162,7 @@ export default function GroupesPage() {
 
       {/* Formulaire de création */}
       {afficherFormulaire && (
-        <div className="mb-8">
+        <div className="mb-7">
           <FormulaireGroupe
             onCree={async () => {
               setAfficherFormulaire(false);

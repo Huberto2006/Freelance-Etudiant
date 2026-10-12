@@ -79,7 +79,7 @@ export default function ProfilClientPage({
 
   if (chargement) {
     return (
-      <div className="mx-auto max-w-5xl px-5 py-16">
+      <div className="mx-auto max-w-5xl px-5 py-12">
         <div className="animate-in-fade rounded-2xl border border-ink/10 bg-paper-light p-8 text-sm text-ink-soft shadow-sm">
           Chargement du profil…
         </div>
@@ -89,7 +89,7 @@ export default function ProfilClientPage({
 
   if (!client) {
     return (
-      <div className="mx-auto max-w-5xl px-5 py-16">
+      <div className="mx-auto max-w-5xl px-5 py-12">
         <NoticeCard>
           <p className="text-sm text-brique">Profil introuvable.</p>
         </NoticeCard>
@@ -101,7 +101,7 @@ export default function ProfilClientPage({
   const estEntreprise = client.typeClient === "entreprise";
 
   return (
-    <div className="mx-auto max-w-5xl px-5 pb-16 pt-6">
+    <div className="mx-auto max-w-5xl px-5 pb-12 pt-6">
       {/* =====================================================
           RETOUR
           ===================================================== */}
@@ -199,7 +199,7 @@ export default function ProfilClientPage({
               <div className="h-8 w-1 rounded-full bg-ink" />
 
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
                   Activité
                 </p>
 
@@ -253,7 +253,7 @@ export default function ProfilClientPage({
         <aside className="space-y-6">
           {/* IDENTITÉ */}
           <section className="animate-in delay-1 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
               Identité
             </p>
 
@@ -282,7 +282,7 @@ export default function ProfilClientPage({
 
           {/* STATISTIQUES */}
           <section className="animate-in delay-2 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
               Statistiques
             </p>
 

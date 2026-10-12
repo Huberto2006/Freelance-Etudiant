@@ -868,7 +868,7 @@ function FormulairePaiement({
 
         {moyenSelectionne && (
           <div className="rounded-xl border border-ink/10 bg-ink/[0.025] p-4">
-            <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft/70">
+            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-ink-soft/70">
               Destinataire du paiement
             </p>
 

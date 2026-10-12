@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 
 import { api } from "@/lib/api";
 import { libelleCategorie } from "@/lib/categories";
@@ -21,7 +20,7 @@ import { SectionFonctionnement } from "@/components/home/SectionFonctionnement";
 /**
  * Page d'accueil publique de Kianja : hero avec recherche, categories de
  * services, services populaires, missions recentes, avantages de la
- * plateforme et appel a l'action final. Les donnees proviennent des
+ * plateforme et appel a l'action final (un seul bouton principal par bloc). Les donnees proviennent des
  * endpoints publics (aucune authentification requise).
  */
 export default function PageAccueil() {
@@ -95,10 +94,7 @@ export default function PageAccueil() {
       <HeroAccueil suggestions={suggestions} stats={stats} />
 
       {/* 2. Audiences : mise en valeur immédiate des deux côtés de la marketplace */}
-      <SectionAudiences
-        missions={missions.slice(0, 2)}
-        services={services.slice(0, 2)}
-      />
+      <SectionAudiences />
 
       {/* 3. Besoins des clients : missions ouvertes aux étudiants */}
       <SectionMissions missions={missions} />
@@ -130,21 +126,6 @@ export default function PageAccueil() {
 
       {/* 7. Avantages & double appel à l'action final */}
       <SectionAvantages />
-
-      {/* Note de projet académique */}
-      <p className="mt-12 text-center font-mono text-xs text-ink-soft/50">
-        Kianja — projet étudiant de mise en relation freelance, développé en
-        Licence 3 à l&apos;{" "}
-        <Link
-          href="https://emit.mg"
-          target="_blank"
-          rel="noreferrer"
-          className="underline decoration-dotted hover:text-bleu-dark"
-        >
-          EMIT Fianarantsoa
-        </Link>
-        .
-      </p>
     </div>
   );
 }

@@ -138,7 +138,7 @@ export default function ConnexionPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center px-5 pb-16">
+    <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center px-5 pb-12">
       <div className="w-full">
         <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
           Bon retour

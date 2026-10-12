@@ -89,13 +89,13 @@ export default function AdminPaiementsPage() {
             À vérifier ({enAttente.length})
           </h2>
           {enAttente.length === 0 ? (
-            <NoticeCard className="mb-8">
+            <NoticeCard className="mb-7">
               <p className="text-sm text-ink-soft/70">
                 Aucun paiement en attente de vérification.
               </p>
             </NoticeCard>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 mb-8">
+            <div className="grid gap-3 sm:grid-cols-2 mb-7">
               {enAttente.map((t) => (
                 <NoticeCard key={t.id} className="flex flex-col gap-2">
                   <p className="font-display font-medium">

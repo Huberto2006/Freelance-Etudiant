@@ -436,7 +436,7 @@ export function NotificationBell() {
               bg-brique
               px-1
               font-mono
-              text-[9px]
+              text-[0.625rem]
               font-bold
               leading-none
               text-paper-light
@@ -518,7 +518,7 @@ export function NotificationBell() {
                       px-2
                       py-0.5
                       font-mono
-                      text-[9px]
+                      text-[0.625rem]
                       font-semibold
                       text-brique
                     "
@@ -531,7 +531,7 @@ export function NotificationBell() {
               <p
                 className="
                   mt-0.5
-                  text-[10px]
+                  text-[0.65rem]
                   text-ink-soft
                 "
               >
@@ -587,7 +587,7 @@ export function NotificationBell() {
                   flex
                   items-center
                   gap-1.5
-                  text-[10px]
+                  text-[0.65rem]
                   font-medium
                   text-ink-soft
                   transition-colors
@@ -639,7 +639,7 @@ export function NotificationBell() {
               <div
                 className="
                   px-5
-                  py-12
+                  py-10
                   text-center
                 "
               >
@@ -761,7 +761,7 @@ export function NotificationBell() {
                             className="
                               mt-0.5
                               line-clamp-2
-                              text-[11px]
+                              text-[0.6875rem]
                               leading-4
                               text-ink-soft
                             "
@@ -775,7 +775,7 @@ export function NotificationBell() {
                             className="
                               mt-1.5
                               font-mono
-                              text-[9px]
+                              text-[0.625rem]
                               uppercase
                               tracking-wide
                               text-ink-soft/50

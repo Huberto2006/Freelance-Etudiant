@@ -621,7 +621,7 @@ export function Navbar({
                       className="
                         truncate
                         font-mono
-                        text-[9px]
+                        text-[0.625rem]
                         uppercase
                         tracking-wider
                         text-ink-soft/60
@@ -708,7 +708,7 @@ export function Navbar({
                         className="
                           mt-1
                           font-mono
-                          text-[9px]
+                          text-[0.625rem]
                           uppercase
                           tracking-wider
                           text-ink-soft/60

@@ -64,7 +64,7 @@ const VALEURS = [
 
 export default function PageAPropos() {
   return (
-    <div className="mx-auto max-w-4xl px-5 pb-8 pt-10 sm:pt-14">
+    <div className="mx-auto max-w-4xl px-5 pb-7 pt-8 sm:pt-11">
       <EnTetePagePublique
         icon={Info}
         eyebrow="À propos"
@@ -73,7 +73,7 @@ export default function PageAPropos() {
       />
 
       {/* ------------------------------------------------ MISSION */}
-      <section aria-labelledby="mission" className="mb-12">
+      <section aria-labelledby="mission" className="mb-10">
         <h2
           id="mission"
           className="font-display text-2xl font-semibold text-ink"
@@ -97,7 +97,7 @@ export default function PageAPropos() {
       </section>
 
       {/* ------------------------------------------------ PROBLÈME */}
-      <section aria-labelledby="probleme" className="mb-12">
+      <section aria-labelledby="probleme" className="mb-10">
         <h2
           id="probleme"
           className="font-display text-2xl font-semibold text-ink"
@@ -121,7 +121,7 @@ export default function PageAPropos() {
       </section>
 
       {/* ------------------------------------------------ FONCTIONNEMENT */}
-      <section aria-labelledby="fonctionnement" className="mb-12">
+      <section aria-labelledby="fonctionnement" className="mb-10">
         <h2
           id="fonctionnement"
           className="font-display text-2xl font-semibold text-ink"
@@ -152,7 +152,7 @@ export default function PageAPropos() {
       </section>
 
       {/* ------------------------------------------------ VALEURS */}
-      <section aria-labelledby="valeurs" className="mb-12">
+      <section aria-labelledby="valeurs" className="mb-10">
         <h2
           id="valeurs"
           className="font-display text-2xl font-semibold text-ink"
@@ -188,7 +188,7 @@ export default function PageAPropos() {
       </section>
 
       {/* ------------------------------------------------ VISION */}
-      <section aria-labelledby="vision" className="mb-12">
+      <section aria-labelledby="vision" className="mb-10">
         <h2
           id="vision"
           className="font-display text-2xl font-semibold text-ink"

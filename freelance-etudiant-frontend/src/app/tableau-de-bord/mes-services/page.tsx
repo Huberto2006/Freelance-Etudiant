@@ -698,7 +698,7 @@ function MesServicesContent() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
         <PageHeader
           icon={Wrench}
           eyebrow="Espace étudiant"
@@ -877,7 +877,7 @@ function MesServicesContent() {
         </div>
       ) : servicesAffiches.length === 0 ? (
         <NoticeCard>
-          <div className="flex flex-col items-center justify-center py-10 text-center">
+          <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-ink/5">
               <Wrench
                 size={20}
@@ -1036,7 +1036,7 @@ function MesServicesContent() {
                       className="h-full w-full object-cover"
                     />
                     {nombreImages > 1 && (
-                      <span className="absolute bottom-2 right-2 rounded-full bg-ink/70 px-2 py-0.5 text-[11px] font-medium text-paper-light">
+                      <span className="absolute bottom-2 right-2 rounded-full bg-ink/70 px-2 py-0.5 text-[0.6875rem] font-medium text-paper-light">
                         +{nombreImages - 1}
                       </span>
                     )}
