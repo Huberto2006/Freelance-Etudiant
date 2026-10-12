@@ -11,6 +11,8 @@ import type { NextConfig } from "next";
  * - Socket.IO en production passe par wss://kianja.arato.mg (meme origine via Cloudflare) ;
  *   l'origine wss explicite est ajoutee pour les navigateurs qui n'assimilent pas
  *   'self' aux WebSocket (comportement CSP3 inegal selon les versions).
+ * - Google Identity Services charge son client, ses styles et ses iframes depuis
+ *   accounts.google.com/gsi ; seules les URL documentees par Google sont autorisees.
  * - Un seul lien externe existe (https://emit.mg) : c'est une navigation <Link>,
  *   pas une ressource chargee -> aucune origine externe requise.
  *
@@ -25,22 +27,26 @@ import type { NextConfig } from "next";
  * l'acces a l'API locale (http://localhost:3000) et le HMR WebSocket.
  */
 const estProduction = process.env.NODE_ENV === "production";
+const googleGsi = "https://accounts.google.com/gsi/";
+const googleGsiClient = "https://accounts.google.com/gsi/client";
+const googleGsiStyle = "https://accounts.google.com/gsi/style";
 
 const connectSrcProd = `'self' ${
   process.env.NEXT_PUBLIC_WS_ORIGIN || "wss://kianja.arato.mg"
-}`;
+} ${googleGsi}`;
 const connectSrc = estProduction
   ? connectSrcProd
-  : `'self' http://localhost:3000 http://127.0.0.1:3000 ws://localhost:* ws://127.0.0.1:*`;
+  : `'self' http://localhost:3000 http://127.0.0.1:3000 ws://localhost:* ws://127.0.0.1:* ${googleGsi}`;
 const scriptSrc = estProduction
-  ? `'self' 'unsafe-inline' https://challenges.cloudflare.com`
-  : `'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com`;
-const frameSrc = `'self' https://challenges.cloudflare.com`;
+  ? `'self' 'unsafe-inline' https://challenges.cloudflare.com ${googleGsiClient}`
+  : `'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com ${googleGsiClient}`;
+const styleSrc = `'self' 'unsafe-inline' ${googleGsiStyle}`;
+const frameSrc = `'self' https://challenges.cloudflare.com ${googleGsi}`;
 
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src ${scriptSrc}`,
-  "style-src 'self' 'unsafe-inline'",
+  `style-src ${styleSrc}`,
   "img-src 'self' data: blob:",
   "font-src 'self'",
   `connect-src ${connectSrc}`,
