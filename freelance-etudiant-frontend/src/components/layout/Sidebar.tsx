@@ -4,16 +4,30 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
+  Gauge,
   BriefcaseBusiness,
+  FolderKanban,
   ShoppingBag,
+  HandHelping,
   Layers3,
   ClipboardList,
+  FileText,
   Package,
+  PackageCheck,
   Wallet,
+  CreditCard,
+  WalletCards,
   Star,
+  BadgeCheck,
   User,
+  CircleUserRound,
   Users,
   UserRoundPlus,
+  Wrench,
+  Heart,
+  Shield,
+  ShieldCheck,
+  Flag,
   LogOut,
   Settings,
   ChevronLeft,
@@ -44,40 +58,45 @@ const ICONS: Record<
   React.ElementType
 > = {
   "Tableau de bord": Home,
-  Dashboard: Home,
+  Dashboard: Gauge,
 
   Missions: BriefcaseBusiness,
+  "Mes missions": FolderKanban,
 
   Services: ShoppingBag,
+  "Mes services": HandHelping,
 
   "Mes publications": Layers3,
 
   Candidatures: ClipboardList,
-  "Mes candidatures": ClipboardList,
+  "Mes candidatures": FileText,
 
   Groupes: Users,
 
   Amis: UserRoundPlus,
 
-  "Demandes de service": ClipboardList,
+  "Demandes de service": Wrench,
 
   Livraisons: Package,
-  "Mes livraisons": Package,
+  "Mes livraisons": PackageCheck,
 
   Paiements: Wallet,
-  "Mes paiements": Wallet,
-  "Moyens de paiement": Wallet,
+  "Mes paiements": CreditCard,
+  "Moyens de paiement": WalletCards,
 
   "Évaluations": Star,
   Evaluations: Star,
-  "Mes évaluations": Star,
+  "Mes évaluations": BadgeCheck,
 
   Profil: User,
-  "Mon profil": User,
+  "Mon profil": CircleUserRound,
 
-  Favoris: Star,
+  Favoris: Heart,
 
   Paramètres: Settings,
+  Administration: Shield,
+  Gestion: ShieldCheck,
+  Signalements: Flag,
 };
 
 function getIcon(label: string) {

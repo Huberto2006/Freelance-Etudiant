@@ -317,7 +317,7 @@ export function BoutonRelation({
         </Button>
 
         {erreur && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-brique">
             {erreur}
           </p>
         )}
@@ -361,7 +361,7 @@ export function BoutonRelation({
         </div>
 
         {erreur && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-brique">
             {erreur}
           </p>
         )}
@@ -417,7 +417,7 @@ export function BoutonRelation({
         </div>
 
         {erreur && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-brique">
             {erreur}
           </p>
         )}
@@ -447,7 +447,7 @@ export function BoutonRelation({
       </Button>
 
       {erreur && (
-        <p className="text-xs text-red-500">
+        <p className="text-xs text-brique">
           {erreur}
         </p>
       )}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ChevronDown,
+  Info,
   LayoutDashboard,
   Menu,
   Search,
@@ -191,14 +192,6 @@ export function NavbarPublique() {
             }
           />
 
-          <Link
-            href={LIEN_A_PROPOS.href}
-            aria-current={aProposActif ? "page" : undefined}
-            className={classeLien(aProposActif)}
-          >
-            {LIEN_A_PROPOS.label}
-          </Link>
-
           <MenuDeroulantNav
             menu={MENU_AIDE}
             ouvert={dropdownOuvert === MENU_AIDE.id}
@@ -222,7 +215,7 @@ export function NavbarPublique() {
                 name="q"
                 placeholder="Rechercher un service…"
                 aria-label="Rechercher un service"
-                className="h-9 w-full rounded-full border border-ink/15 bg-paper-light pl-9 pr-3 text-xs text-ink outline-none transition placeholder:text-ink-soft/50 focus:border-bleu focus:ring-2 focus:ring-bleu/20"
+                className="kianja-field-control h-9 w-full rounded-full border-0 bg-paper-light pl-9 pr-3 text-xs text-ink outline-none transition placeholder:text-ink-soft/50"
               />
             </div>
           </form>
@@ -241,6 +234,20 @@ export function NavbarPublique() {
               <div className="hidden items-center gap-1 sm:flex">
                 <MessagesLink />
                 <NotificationBell />
+                <Link
+                  href={LIEN_A_PROPOS.href}
+                  aria-label={LIEN_A_PROPOS.label}
+                  title={LIEN_A_PROPOS.label}
+                  aria-current={aProposActif ? "page" : undefined}
+                  className={clsx(
+                    "flex h-9 w-9 items-center justify-center rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu",
+                    aProposActif
+                      ? "bg-bleu-soft text-bleu-dark"
+                      : "text-ink-soft hover:bg-ink/5 hover:text-ink",
+                  )}
+                >
+                  <Info size={18} aria-hidden="true" />
+                </Link>
               </div>
 
               <Link
@@ -327,6 +334,20 @@ export function NavbarPublique() {
             </>
           ) : (
             <div className="hidden items-center gap-2 sm:flex">
+              <Link
+                href={LIEN_A_PROPOS.href}
+                aria-label={LIEN_A_PROPOS.label}
+                title={LIEN_A_PROPOS.label}
+                aria-current={aProposActif ? "page" : undefined}
+                className={clsx(
+                  "flex h-9 w-9 items-center justify-center rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu",
+                  aProposActif
+                    ? "bg-bleu-soft text-bleu-dark"
+                    : "text-ink-soft hover:bg-ink/5 hover:text-ink",
+                )}
+              >
+                <Info size={18} aria-hidden="true" />
+              </Link>
               <BasculeTheme />
               <Link href="/connexion" className={styleBoutonConnexion}>
                 Connexion

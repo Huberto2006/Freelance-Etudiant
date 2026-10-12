@@ -42,7 +42,7 @@ export function BarreRecherche({
           onChange={(e) => setSaisie(e.target.value)}
           placeholder={placeholder}
           autoComplete="off"
-          className="h-12 w-full rounded-[10px] border border-ink/20 bg-paper-light pl-11 pr-3 text-base text-ink outline-none transition placeholder:text-ink-soft/60 focus:border-bleu focus:ring-2 focus:ring-bleu/20"
+          className="kianja-field-control h-12 w-full rounded-[10px] border-0 bg-paper-light pl-11 pr-3 text-base text-ink outline-none transition placeholder:text-ink-soft/60"
         />
       </div>
 
