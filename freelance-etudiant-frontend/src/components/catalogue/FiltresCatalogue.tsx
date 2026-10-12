@@ -9,7 +9,7 @@ import { CATEGORIES_REPERENTIEL } from "@/lib/categories";
 import { useSaisieDifferee } from "./useSaisieDifferee";
 
 const classeChamp =
-  "h-11 w-full rounded-[10px] border border-ink/20 bg-paper-light px-3 text-base text-ink outline-none transition placeholder:text-ink-soft/60 focus:border-bleu focus:ring-2 focus:ring-bleu/20";
+  "kianja-field-control h-11 w-full rounded-[10px] border-0 bg-paper-light px-3 text-base text-ink outline-none transition placeholder:text-ink-soft/60 disabled:cursor-not-allowed disabled:opacity-60";
 
 const classeTitre =
   "mb-3 font-mono text-[0.6875rem] font-medium uppercase tracking-[0.14em] text-ink-soft";

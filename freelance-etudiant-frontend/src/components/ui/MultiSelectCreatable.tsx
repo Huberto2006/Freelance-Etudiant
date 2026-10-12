@@ -132,8 +132,7 @@ export function MultiSelectCreatable({
           if (!disabled) inputRef.current?.focus();
         }}
         className={clsx(
-          "flex min-h-[44px] w-full flex-wrap items-center gap-1.5 rounded-lg border border-ink/30 bg-paper-light px-2 py-1.5 text-sm text-ink transition-colors focus-within:border-ocre",
-          isOpen && "border-ocre",
+          "flex min-h-[44px] w-full flex-wrap items-center gap-1.5 rounded-lg bg-paper-light px-2 py-1.5 text-sm text-ink transition-colors",
           disabled && "cursor-not-allowed opacity-60",
         )}
       >
@@ -175,7 +174,7 @@ export function MultiSelectCreatable({
           }}
           onKeyDown={handleKeyDown}
           placeholder={selected.length > 0 && !query ? "Rechercher..." : placeholder}
-          className="min-w-[140px] flex-1 border-0 bg-transparent px-1 py-1.5 text-sm text-ink placeholder:text-ink-soft/60 focus:outline-none disabled:cursor-not-allowed"
+          className="kianja-field-control min-w-[140px] flex-1 border-0 bg-transparent px-1 py-1.5 text-sm text-ink placeholder:text-ink-soft/60 focus:outline-none disabled:cursor-not-allowed"
         />
       </div>
 

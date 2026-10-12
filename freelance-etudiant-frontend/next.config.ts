@@ -30,6 +30,7 @@ const estProduction = process.env.NODE_ENV === "production";
 const googleGsi = "https://accounts.google.com/gsi/";
 const googleGsiClient = "https://accounts.google.com/gsi/client";
 const googleGsiStyle = "https://accounts.google.com/gsi/style";
+const cloudflareInsights = "https://static.cloudflareinsights.com";
 
 const connectSrcProd = `'self' ${
   process.env.NEXT_PUBLIC_WS_ORIGIN || "wss://kianja.arato.mg"
@@ -38,8 +39,8 @@ const connectSrc = estProduction
   ? connectSrcProd
   : `'self' http://localhost:3000 http://127.0.0.1:3000 ws://localhost:* ws://127.0.0.1:* ${googleGsi}`;
 const scriptSrc = estProduction
-  ? `'self' 'unsafe-inline' https://challenges.cloudflare.com ${googleGsiClient}`
-  : `'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com ${googleGsiClient}`;
+  ? `'self' 'unsafe-inline' https://challenges.cloudflare.com ${googleGsiClient} ${cloudflareInsights}`
+  : `'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com ${googleGsiClient} ${cloudflareInsights}`;
 const styleSrc = `'self' 'unsafe-inline' ${googleGsiStyle}`;
 const frameSrc = `'self' https://challenges.cloudflare.com ${googleGsi}`;
 

@@ -212,7 +212,7 @@ export function ListeFreelances() {
             onChange={(e) => setRecherche(e.target.value)}
             placeholder="Nom, compétence, filière, ville…"
             aria-label="Rechercher un freelance"
-            className="h-11 w-full rounded-full border border-ink/15 bg-paper-light pl-9 pr-3 text-sm text-ink outline-none transition placeholder:text-ink-soft/50 focus:border-bleu focus:ring-2 focus:ring-bleu/20"
+            className="kianja-field-control h-11 w-full rounded-full border-0 bg-paper-light pl-9 pr-3 text-sm text-ink outline-none transition placeholder:text-ink-soft/50"
           />
         </div>
 

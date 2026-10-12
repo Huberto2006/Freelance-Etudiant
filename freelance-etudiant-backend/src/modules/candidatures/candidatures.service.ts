@@ -597,6 +597,7 @@ export class CandidaturesService {
 
         candidatureVerrouillee.statut = StatutCandidature.ACCEPTEE;
         candidatureVerrouillee.mission = mission;
+        candidatureVerrouillee.etudiant = candidatureInitiale.etudiant;
 
         return {
           candidature: candidatureVerrouillee,

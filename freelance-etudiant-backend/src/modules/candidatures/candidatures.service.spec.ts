@@ -63,7 +63,15 @@ describe('CandidaturesService accepter', () => {
       missionId: 'mission-1',
       statut: StatutCandidature.EN_ATTENTE,
       mission: { id: 'mission-1', clientId: 'client-1', titre: 'Mission test' },
-      etudiant: { utilisateurId: 'etudiant-1' },
+      etudiant: {
+        utilisateurId: 'etudiant-1',
+        utilisateur: { email: 'etudiant@example.com', nom: 'Etudiant Test' },
+      },
+    });
+    const candidatureVerrouillee = Object.assign(new Candidature(), {
+      id: 'candidature-1',
+      missionId: 'mission-1',
+      statut: StatutCandidature.EN_ATTENTE,
     });
     const mission = Object.assign(new Mission(), {
       id: 'mission-1',
@@ -83,7 +91,7 @@ describe('CandidaturesService accepter', () => {
       findOne: jest
         .fn()
         .mockResolvedValueOnce(mission)
-        .mockResolvedValueOnce(candidature),
+        .mockResolvedValueOnce(candidatureVerrouillee),
       update: jest.fn().mockResolvedValue({ affected: 1 }),
       find: jest.fn().mockResolvedValue([]),
       createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
@@ -95,7 +103,10 @@ describe('CandidaturesService accepter', () => {
 
     await expect(
       service.accepter('candidature-1', 'client-1'),
-    ).resolves.toMatchObject({ statut: StatutCandidature.ACCEPTEE });
+    ).resolves.toMatchObject({
+      statut: StatutCandidature.ACCEPTEE,
+      etudiant: { utilisateurId: 'etudiant-1' },
+    });
 
     expect(manager.findOne).toHaveBeenNthCalledWith(
       1,

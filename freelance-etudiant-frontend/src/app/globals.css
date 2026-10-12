@@ -284,6 +284,18 @@ body {
   outline-offset: 2px;
 }
 
+.kianja-field-control:focus-visible {
+  outline-color: var(--color-bleu);
+}
+
+.kianja-field-control[aria-invalid="true"] {
+  box-shadow: 0 0 0 1px var(--color-brique);
+}
+
+.kianja-field-control[aria-invalid="true"]:focus-visible {
+  outline-color: var(--color-brique);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;

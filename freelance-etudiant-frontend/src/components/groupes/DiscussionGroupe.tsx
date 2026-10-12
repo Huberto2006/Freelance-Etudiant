@@ -161,7 +161,7 @@ export function DiscussionGroupe({
           aria-label="Message du groupe"
           rows={2}
           disabled={envoi}
-          className="min-w-0 flex-1 resize-none rounded-lg border border-ink/20 bg-paper-light px-3 py-2 text-sm outline-none focus:border-bleu-dark"
+          className="kianja-field-control min-w-0 flex-1 resize-none rounded-lg border-0 bg-paper-light px-3 py-2 text-sm outline-none"
         />
         <Button type="submit" size="sm" disabled={envoi || !texte.trim()} aria-label="Envoyer le message" className="flex items-center gap-1.5">
           {envoi ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}

@@ -50,8 +50,8 @@ export function Field({
 }) {
   const [focused, setFocused] = useState(false);
 
-  const child = isValidElement<Record<string, any>>(children) ? children : null;
-  const childProps = (child?.props ?? {}) as Record<string, any>;
+  const child = isValidElement<Record<string, unknown>>(children) ? children : null;
+  const childProps = (child?.props ?? {}) as Record<string, unknown>;
   const childClassName = typeof childProps.className === "string" ? childProps.className : "";
   const isTextarea = child?.type === Textarea;
   const isSelect = child?.type === Select;
@@ -59,7 +59,7 @@ export function Field({
   const labelFloated = isSelect || hasValue;
 
   const enhancedChild = child
-    ? cloneElement<any>(child, {
+    ? cloneElement(child, {
         id: htmlFor,
         placeholder: " ",
         "aria-invalid": Boolean(error) || childProps["aria-invalid"],
@@ -75,7 +75,7 @@ export function Field({
         ),
         className: clsx(
           childClassName,
-          "peer w-full text-sm text-ink transition-all duration-200 placeholder:text-transparent focus:outline-none",
+          "kianja-field-control peer w-full text-sm text-ink transition-all duration-200 placeholder:text-transparent focus:outline-none disabled:cursor-not-allowed disabled:opacity-60",
           labelFloated ? "pt-5 pb-2" : "py-2.5",
           isTextarea ? "min-h-[120px] resize-y" : "",
           isSelect ? "appearance-none pr-10 text-ink" : "",
@@ -130,7 +130,7 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={clsx(
-        "w-full rounded-xl border border-ink/30 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 transition-colors focus:border-bleu focus:outline-none focus:ring-2 focus:ring-bleu/10",
+        "kianja-field-control w-full rounded-xl border-0 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-60",
         props.className,
       )}
     />
@@ -148,7 +148,7 @@ export function PasswordInput(
         {...props}
         type={visible ? "text" : "password"}
         className={clsx(
-          "w-full rounded-xl border border-ink/30 bg-paper-light px-3 py-2.5 pr-11 text-sm text-ink placeholder:text-ink-soft/50 transition-colors focus:border-bleu focus:outline-none focus:ring-2 focus:ring-bleu/10",
+          "kianja-field-control w-full rounded-xl border-0 bg-paper-light px-3 py-2.5 pr-11 text-sm text-ink placeholder:text-ink-soft/50 transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-60",
           props.className,
         )}
       />
@@ -181,7 +181,7 @@ export function Textarea({
       ref={ref}
       {...props}
       className={clsx(
-        "w-full rounded-xl border border-ink/30 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 transition-colors focus:border-bleu focus:outline-none focus:ring-2 focus:ring-bleu/10",
+        "kianja-field-control w-full rounded-xl border-0 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
     />
@@ -196,7 +196,7 @@ export function Select({
     <select
       {...props}
       className={clsx(
-        "w-full rounded-xl border border-ink/30 bg-paper-light px-3 py-2.5 text-sm text-ink transition-colors focus:border-bleu focus:outline-none focus:ring-2 focus:ring-bleu/10",
+        "kianja-field-control w-full rounded-xl border-0 bg-paper-light px-3 py-2.5 text-sm text-ink transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
     />

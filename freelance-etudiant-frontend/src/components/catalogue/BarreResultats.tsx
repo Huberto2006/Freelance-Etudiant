@@ -45,7 +45,7 @@ export function BarreResultats<T extends string>({
           id="tri-catalogue"
           value={tri}
           onChange={(e) => onTri(e.target.value as T)}
-          className="h-10 rounded-[10px] border border-ink/20 bg-paper-light px-3 text-sm text-ink outline-none transition focus:border-bleu focus:ring-2 focus:ring-bleu/20"
+          className="kianja-field-control h-10 rounded-[10px] border-0 bg-paper-light px-3 text-sm text-ink outline-none transition"
         >
           {options.map((o) => (
             <option key={o.valeur} value={o.valeur}>

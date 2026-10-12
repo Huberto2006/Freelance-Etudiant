@@ -876,7 +876,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-ocre-dark">Import CV</p>
                 <h3 className="mt-1 font-display text-xl font-semibold">Importer mon CV</h3>
               </div>
-              <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-ink/30 bg-white px-3 py-2 text-sm text-ink hover:border-ocre">
+              <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-ink/15 bg-paper px-3 py-2 text-sm text-ink transition-colors hover:bg-ink/5">
                 <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" className="hidden" onChange={importerCv} disabled={importCvEnCours} />
                 {importCvEnCours ? "Analyse…" : "Choisir un fichier"}
               </label>
@@ -927,9 +927,9 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 </div>
 
                 {cvDraft.warnings.length > 0 && (
-                  <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3">
-                    <p className="text-xs font-mono uppercase tracking-[0.2em] text-amber-700">Vérification</p>
-                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-900">
+                  <div className="mt-4 rounded-lg border border-ocre/30 bg-ocre/10 p-3">
+                    <p className="text-xs font-mono uppercase tracking-[0.2em] text-ocre-dark">Vérification</p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink">
                       {cvDraft.warnings.map((warning) => <li key={warning}>{warning}</li>)}
                     </ul>
                   </div>
@@ -1463,18 +1463,17 @@ function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
 
           <form onSubmit={onSubmit} className="flex max-w-md flex-col gap-5">
             <Field label="Type de compte" htmlFor="typeClient">
-              <select
+              <Select
                 id="typeClient"
                 value={typeClient}
                 onChange={(e) =>
                   setTypeClient(e.target.value as "particulier" | "entreprise")
                 }
-                className="rounded-lg border border-ink/30 bg-paper-light px-3 py-2.5 text-sm"
               >
                 <option value="particulier">Particulier</option>
 
                 <option value="entreprise">Entreprise</option>
-              </select>
+              </Select>
             </Field>
 
             {typeClient === "entreprise" && (

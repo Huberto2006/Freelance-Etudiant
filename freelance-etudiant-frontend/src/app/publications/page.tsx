@@ -455,7 +455,7 @@ function PublicationsContent() {
             id="select-tri-publications"
             value={triOption}
             onChange={(e) => setTriOption(e.target.value as OptionTri)}
-            className="h-9 rounded-lg border border-ink/20 bg-paper-light px-2.5 text-xs text-ink outline-none transition focus:border-bleu focus:ring-1 focus:ring-bleu"
+            className="kianja-field-control h-9 rounded-lg border-0 bg-paper-light px-2.5 text-xs text-ink outline-none transition"
           >
             <option value="recent">Plus récentes d&apos;abord</option>
             <option value="meilleurs">Mieux notés / budget</option>
