@@ -708,7 +708,7 @@ function Stepper({
                 {done ? <Check size={14} /> : n}
               </span>
               <span
-                className={`hidden max-w-[6rem] text-center text-[11px] leading-tight sm:block ${
+                className={`hidden max-w-[6rem] text-center text-[0.6875rem] leading-tight sm:block ${
                   active ? "text-ink" : "text-ink-soft/70"
                 }`}
               >

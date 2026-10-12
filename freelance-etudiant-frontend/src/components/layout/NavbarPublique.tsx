@@ -164,7 +164,7 @@ export function NavbarPublique() {
             {/* La signature n'apparaît que lorsqu'il y a la place : hors
                 plage lg (où la navigation desktop prend l'espace) puis
                 de nouveau à partir de xl. */}
-            <span className="hidden whitespace-nowrap text-[10px] uppercase tracking-wider text-ink-soft/70 sm:block lg:hidden xl:block">
+            <span className="hidden whitespace-nowrap text-[0.65rem] uppercase tracking-wider text-ink-soft/70 sm:block lg:hidden xl:block">
               {SIGNATURE}
             </span>
           </span>
@@ -276,7 +276,7 @@ export function NavbarPublique() {
                     <span className="block truncate text-xs font-medium text-ink">
                       {utilisateur.nom}
                     </span>
-                    <span className="block truncate text-[9px] uppercase tracking-wider text-ink-soft/60">
+                    <span className="block truncate text-[0.625rem] uppercase tracking-wider text-ink-soft/60">
                       {roleLabel(utilisateur.role)}
                     </span>
                   </span>
@@ -430,7 +430,7 @@ function GroupeMobile({
     <div role="group" aria-labelledby={titreId} className="py-1">
       <p
         id={titreId}
-        className="px-3 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-soft/70"
+        className="px-3 pb-1 pt-2 font-mono text-[0.65rem] uppercase tracking-[0.2em] text-ink-soft/70"
       >
         {menu.label}
       </p>

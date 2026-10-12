@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function PageContact() {
   return (
-    <div className="mx-auto max-w-5xl px-5 pb-8 pt-10 sm:pt-14">
+    <div className="mx-auto max-w-5xl px-5 pb-7 pt-8 sm:pt-11">
       <EnTetePagePublique
         icon={LifeBuoy}
         eyebrow="Centre d'aide"
@@ -21,7 +21,7 @@ export default function PageContact() {
         introduction="Une question, un souci avec votre compte ou une suggestion ? Écrivez-nous en remplissant le formulaire."
       />
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
+      <div className="grid gap-7 lg:grid-cols-[1fr_20rem]">
         <FormulaireContact />
 
         <aside className="h-fit rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-xs">

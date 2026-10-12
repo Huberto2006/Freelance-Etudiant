@@ -132,7 +132,7 @@ export function DiscussionGroupe({
             Chargement de la discussion…
           </p>
         ) : messages.length === 0 ? (
-          <p className="py-8 text-center text-sm text-ink-soft/70">Aucun message dans cette discussion.</p>
+          <p className="py-7 text-center text-sm text-ink-soft/70">Aucun message dans cette discussion.</p>
         ) : (
           messages.map((message) => {
             const estMoi = message.expediteurId === utilisateur?.id;
@@ -141,11 +141,11 @@ export function DiscussionGroupe({
               <div key={message.id} className={`flex gap-2 ${estMoi ? "justify-end" : ""}`}>
                 {!estMoi && <Avatar nom={nom} photoUrl={message.expediteur?.photoUrl} size={30} />}
                 <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${estMoi ? "bg-ink text-paper-light" : "bg-ink/5 text-ink"}`}>
-                  <p className="mb-1 text-[11px] font-medium opacity-70">{nom}</p>
+                  <p className="mb-1 text-[0.6875rem] font-medium opacity-70">{nom}</p>
                   <p className={message.estSupprime ? "italic opacity-60" : "whitespace-pre-wrap break-words"}>
                     {message.estSupprime ? "Message supprimé" : message.contenu}
                   </p>
-                  <p className="mt-1 text-[10px] opacity-60">{formatDateCourte(message.dateEnvoi)}</p>
+                  <p className="mt-1 text-[0.65rem] opacity-60">{formatDateCourte(message.dateEnvoi)}</p>
                 </div>
               </div>
             );

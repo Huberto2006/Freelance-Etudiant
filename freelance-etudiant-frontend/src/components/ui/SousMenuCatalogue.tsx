@@ -18,7 +18,7 @@ export type ModeTriCatalogue = "tous" | "recommande" | "meilleurs";
 
 export type OngletCatalogue =
   | { type: "mode"; valeur: ModeTriCatalogue }
-  | { type: "categorie"; valeur: string };
+  | { type: "categorie"; valeur: string; tri?: ModeTriCatalogue };
 
 interface OngletBoutonProps {
   onglet: OngletCatalogue;

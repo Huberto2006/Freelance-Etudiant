@@ -18,7 +18,7 @@ export function EnTetePagePublique({
   introduction?: ReactNode;
 }) {
   return (
-    <header className="animate-in mb-10">
+    <header className="animate-in mb-8">
       <div className="flex items-center gap-3">
         <span
           aria-hidden="true"

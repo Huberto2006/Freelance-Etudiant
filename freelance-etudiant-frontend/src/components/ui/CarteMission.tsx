@@ -49,15 +49,15 @@ export function CarteMission({
 
         <span className="absolute left-3 top-3 flex flex-wrap gap-1.5">
           {afficherType && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-bleu/30 bg-bleu/90 px-2.5 py-0.5 text-[11px] font-mono font-semibold uppercase tracking-wide text-white shadow-xs backdrop-blur-sm">
+            <span className="inline-flex items-center gap-1 rounded-full border border-bleu/30 bg-bleu/90 px-2.5 py-0.5 text-[0.6875rem] font-mono font-semibold uppercase tracking-wide text-white shadow-xs backdrop-blur-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" aria-hidden="true" />
               Mission
             </span>
           )}
-          <span className="inline-flex items-center rounded-full border border-ink/10 bg-paper-light/90 px-2.5 py-0.5 text-[11px] font-mono uppercase tracking-wide text-ink-soft backdrop-blur-sm">
+          <span className="inline-flex items-center rounded-full border border-ink/10 bg-paper-light/90 px-2.5 py-0.5 text-[0.6875rem] font-mono uppercase tracking-wide text-ink-soft backdrop-blur-sm">
             {libelleCategorie(mission.categorie)}
           </span>
-          <span className="inline-flex items-center rounded-full border border-ink/10 bg-paper-light/90 px-2.5 py-0.5 text-[11px] font-mono uppercase tracking-wide text-ink-soft backdrop-blur-sm">
+          <span className="inline-flex items-center rounded-full border border-ink/10 bg-paper-light/90 px-2.5 py-0.5 text-[0.6875rem] font-mono uppercase tracking-wide text-ink-soft backdrop-blur-sm">
             {statutMissionLabel[mission.statut] ?? mission.statut}
           </span>
         </span>
@@ -118,7 +118,7 @@ export function CarteMission({
                 <p className="truncate text-xs font-medium text-ink">
                   {auteur?.nom ?? "Client"}
                 </p>
-                <p className="text-[11px] text-ink-soft">Client</p>
+                <p className="text-[0.6875rem] text-ink-soft">Client</p>
               </div>
             </div>
 

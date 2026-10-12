@@ -43,7 +43,7 @@ export function SelecteurTheme({
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs font-medium text-ink">Mode d&apos;affichage</p>
-            <p className="text-[11px] text-ink-soft">
+            <p className="text-[0.6875rem] text-ink-soft">
               {mode === "sombre" ? "Sombre" : "Clair"}
             </p>
           </div>
@@ -73,7 +73,7 @@ export function SelecteurTheme({
 
         {/* Ligne 2 : Pastilles des thèmes de couleurs */}
         <div>
-          <p className="mb-2 text-[11px] font-medium text-ink-soft">
+          <p className="mb-2 text-[0.6875rem] font-medium text-ink-soft">
             Palette & Typographie
           </p>
 
@@ -105,7 +105,7 @@ export function SelecteurTheme({
                       <Check size={11} className="stroke-[3] text-white" />
                     )}
                   </span>
-                  <span className="mt-1 max-w-full truncate text-[9px] font-medium text-ink-soft">
+                  <span className="mt-1 max-w-full truncate text-[0.625rem] font-medium text-ink-soft">
                     {t.nom.split(" ")[0]}
                   </span>
                 </button>
@@ -266,7 +266,7 @@ function CarteThemeItem({
         <div className="flex items-center justify-between gap-2">
           {/* Badge police */}
           <span
-            className="truncate rounded-md px-2 py-0.5 text-[11px] font-medium"
+            className="truncate rounded-md px-2 py-0.5 text-[0.6875rem] font-medium"
             style={{
               backgroundColor: palette.primarySoft,
               color: palette.primary,
@@ -278,7 +278,7 @@ function CarteThemeItem({
 
           {/* Mini simulation bouton */}
           <span
-            className="rounded-md px-2 py-0.5 text-[10px] font-bold text-white shadow-xs"
+            className="rounded-md px-2 py-0.5 text-[0.65rem] font-bold text-white shadow-xs"
             style={{
               backgroundColor: palette.primary,
             }}

@@ -243,9 +243,23 @@
 
 html {
   scroll-behavior: smooth;
+  /*
+   * Taille de base FLUIDE : toute l'interface (texte et espacements Tailwind,
+   * exprimes en rem) suit cette valeur. 16px des ~1000px de large, puis
+   * decroit doucement jusqu'a 14px sur petit ecran ou en zoom eleve
+   * (zoom 200 % sur un ecran de 1280px = 640px de large). Le texte reste
+   * lisible et le contenu a plus de place pour se reorganiser.
+   */
+  font-size: clamp(14px, 11.5px + 0.45vw, 16px);
+  /* Respecte le reglage de taille de texte du navigateur / de l'OS. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
+  /* Un mot trop long (email, URL) ne doit jamais creer de defilement horizontal. */
+  overflow-wrap: break-word;
+  overflow-x: clip;
   background-color: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-body);

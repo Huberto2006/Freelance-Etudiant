@@ -30,7 +30,7 @@ export function SectionTitre({
   return (
     <div
       className={clsx(
-        "mb-8 flex flex-wrap items-end justify-between gap-4",
+        "mb-7 flex flex-wrap items-end justify-between gap-4",
         className,
       )}
     >

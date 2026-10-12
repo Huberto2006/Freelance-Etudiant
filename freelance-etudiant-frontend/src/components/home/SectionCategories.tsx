@@ -25,7 +25,7 @@ export function SectionCategories({
   categories: CategorieAccueil[];
 }) {
   return (
-    <section id="categories" className="mx-auto max-w-6xl px-4 pb-8 sm:px-5 sm:pb-12">
+    <section id="categories" className="mx-auto max-w-7xl px-4 pb-7 sm:px-5 sm:pb-10">
       <SectionTitre
         icon={LayoutGrid}
         eyebrow="Domaines de compétences · Filières"

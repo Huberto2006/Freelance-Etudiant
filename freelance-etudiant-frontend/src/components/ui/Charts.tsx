@@ -81,7 +81,7 @@ export function BarreMensuelle({
         <p className="text-xs text-ink-soft/70 mb-3">{sous_titre}</p>
       )}
       {vide ? (
-        <p className="py-10 text-center text-sm text-ink-soft/70">
+        <p className="py-8 text-center text-sm text-ink-soft/70">
           Pas encore de données à afficher.
         </p>
       ) : (
@@ -146,7 +146,7 @@ export function AnneauRepartition({
         <p className="text-xs text-ink-soft/70 mb-3">{sous_titre}</p>
       )}
       {total === 0 ? (
-        <p className="py-10 text-center text-sm text-ink-soft/70">
+        <p className="py-8 text-center text-sm text-ink-soft/70">
           Pas encore de données à afficher.
         </p>
       ) : (

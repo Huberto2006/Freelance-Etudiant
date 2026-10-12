@@ -103,7 +103,7 @@ export function MessagesLink() {
             bg-brique
             px-1
             font-mono
-            text-[9px]
+            text-[0.625rem]
             font-bold
             leading-none
             text-paper-light

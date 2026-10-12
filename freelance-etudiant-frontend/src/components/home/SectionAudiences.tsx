@@ -1,16 +1,5 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  BriefcaseBusiness,
-  GraduationCap,
-  Layers,
-  Search,
-  Sparkles,
-} from "lucide-react";
-
-import type { Mission, ServiceOffert } from "@/lib/types";
-import { CarteMission } from "@/components/ui/CarteMission";
-import { CarteService } from "@/components/ui/CarteService";
+import { BriefcaseBusiness, GraduationCap, Layers } from "lucide-react";
 
 import { SectionTitre } from "./SectionTitre";
 
@@ -55,17 +44,81 @@ const PILIERS_ETUDIANT: Pilier[] = [
   },
 ];
 
-export function SectionAudiences({
-  missions = [],
-  services = [],
+function Volet({
+  accent,
+  icone: Icone,
+  etiquette,
+  titre,
+  intro,
+  piliers,
+  lienHref,
+  lienLabel,
 }: {
-  /** Quelques missions ouvertes réelles, mises en avant côté étudiant. */
-  missions?: Mission[];
-  /** Quelques services réels d'étudiants, mis en avant côté client. */
-  services?: ServiceOffert[];
+  accent: "bleu" | "ocre";
+  icone: typeof BriefcaseBusiness;
+  etiquette: string;
+  titre: string;
+  intro: string;
+  piliers: Pilier[];
+  lienHref: string;
+  lienLabel: string;
 }) {
+  const couleur = accent === "bleu" ? "text-bleu-dark" : "text-ocre-dark";
+  const fond = accent === "bleu" ? "bg-bleu/10" : "bg-ocre/10";
+
   return (
-    <section id="audiences" className="mx-auto max-w-6xl px-4 pb-8 sm:px-5 sm:pb-12">
+    <div className="flex flex-col rounded-xl border border-ink/10 bg-paper-light p-6 sm:p-8">
+      <div className="flex items-center gap-2.5">
+        <span
+          className={`flex h-8 w-8 items-center justify-center rounded-lg ${fond} ${couleur}`}
+          aria-hidden="true"
+        >
+          <Icone size={16} />
+        </span>
+        <span
+          className={`font-mono text-[11px] font-semibold uppercase tracking-[0.18em] ${couleur}`}
+        >
+          {etiquette}
+        </span>
+      </div>
+
+      <h3 className="mt-4 font-display text-2xl font-semibold text-ink">
+        {titre}
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-ink-soft">{intro}</p>
+
+      <ul className="mt-6 divide-y divide-ink/10 border-y border-ink/10">
+        {piliers.map((pilier) => (
+          <li key={pilier.titre} className="py-4">
+            <h4 className="text-sm font-semibold text-ink">{pilier.titre}</h4>
+            <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+              {pilier.description}
+            </p>
+          </li>
+        ))}
+      </ul>
+
+      <Link
+        href={lienHref}
+        className={`mt-6 text-sm font-medium underline-offset-4 hover:underline ${couleur}`}
+      >
+        {lienLabel} →
+      </Link>
+    </div>
+  );
+}
+
+/**
+ * Les deux côtés de la marketplace, présentés sans bouton : une liste
+ * de bénéfices et un unique lien par côté. Les aperçus de missions et de
+ * services vivent dans leurs sections dédiées juste en dessous.
+ */
+export function SectionAudiences() {
+  return (
+    <section
+      id="audiences"
+      className="mx-auto max-w-6xl px-4 pb-12 pt-10 sm:px-5 sm:pb-16 sm:pt-14"
+    >
       <SectionTitre
         icon={Layers}
         eyebrow="Une marketplace bilatérale"
@@ -74,179 +127,26 @@ export function SectionAudiences({
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* ========================================================
-            VOLET CLIENT
-           ======================================================== */}
-        <div className="notice-card relative flex flex-col p-6 sm:p-8">
-          <span className="notice-pin" aria-hidden="true" />
-
-          {/* En-tête de carte */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-bleu/10 text-bleu-dark">
-                <BriefcaseBusiness size={24} aria-hidden="true" />
-              </span>
-              <div>
-                <span className="inline-flex items-center rounded-full border border-bleu/20 bg-bleu/5 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-bleu-dark">
-                  Côté Client
-                </span>
-                <h3 className="mt-1 font-display text-2xl font-bold text-ink">
-                  Des étudiants prêts à vous aider
-                </h3>
-              </div>
-            </div>
-          </div>
-
-          <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-            Entreprises, startups, associations ou particuliers : accédez aux
-            futurs diplômés pour donner vie à vos projets
-            avec un excellent rapport qualité-prix.
-          </p>
-
-          {/* Les 3 piliers clients demandés */}
-          <div className="mt-6 space-y-4">
-            {PILIERS_CLIENT.map((pilier, idx) => (
-              <div
-                key={pilier.titre}
-                className="flex items-start gap-3 rounded-lg border border-ink/5 bg-paper/60 p-3.5 transition-colors hover:border-bleu/20 hover:bg-paper-light"
-              >
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-bleu/10 font-mono text-xs font-semibold text-bleu-dark">
-                  {idx + 1}
-                </span>
-                <div className="min-w-0">
-                  <h4 className="text-sm font-semibold text-ink">
-                    {pilier.titre}
-                  </h4>
-                  <p className="mt-0.5 text-xs leading-relaxed text-ink-soft">
-                    {pilier.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Aperçu réel : profils, compétences, portfolio, évaluations */}
-          {services.length > 0 && (
-            <div className="mt-6">
-              <p className="mb-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-ink-soft">
-                Étudiants disponibles en ce moment
-              </p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {services.map((service) => (
-                  <CarteService key={service.id} service={service} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Actions Côté Client */}
-          <div className="mt-auto pt-6">
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              <Link
-                href="/services"
-                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-bleu px-4 text-xs font-medium text-white transition hover:bg-bleu-dark"
-              >
-                <Search size={14} aria-hidden="true" />
-                <span>Trouver un étudiant</span>
-              </Link>
-
-              <Link
-                href="/missions"
-                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-ink/15 bg-paper-light px-4 text-xs font-medium text-ink transition hover:border-bleu/40 hover:text-bleu-dark"
-              >
-                <BriefcaseBusiness size={14} aria-hidden="true" />
-                <span>Publier une mission</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* ========================================================
-            VOLET ÉTUDIANT / FREELANCE
-           ======================================================== */}
-        <div className="notice-card relative flex flex-col p-6 sm:p-8">
-          <span className="notice-pin" aria-hidden="true" />
-
-          {/* En-tête de carte */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-ocre/10 text-ocre-dark">
-                <GraduationCap size={24} aria-hidden="true" />
-              </span>
-              <div>
-                <span className="inline-flex items-center rounded-full border border-ocre/20 bg-ocre/5 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
-                  Côté Étudiant
-                </span>
-                <h3 className="mt-1 font-display text-2xl font-bold text-ink">
-                  Des projets à réaliser
-                </h3>
-              </div>
-            </div>
-          </div>
-
-          <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-            Étudiants : mettez en pratique vos acquis académiques,
-            générez des revenus durant votre cursus et démarrez votre carrière
-            avec une expérience concrète et vérifiée.
-          </p>
-
-          {/* Les 3 piliers étudiants demandés */}
-          <div className="mt-6 space-y-4">
-            {PILIERS_ETUDIANT.map((pilier, idx) => (
-              <div
-                key={pilier.titre}
-                className="flex items-start gap-3 rounded-lg border border-ink/5 bg-paper/60 p-3.5 transition-colors hover:border-ocre/20 hover:bg-paper-light"
-              >
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ocre/10 font-mono text-xs font-semibold text-ocre-dark">
-                  {idx + 1}
-                </span>
-                <div className="min-w-0">
-                  <h4 className="text-sm font-semibold text-ink">
-                    {pilier.titre}
-                  </h4>
-                  <p className="mt-0.5 text-xs leading-relaxed text-ink-soft">
-                    {pilier.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Aperçu réel : missions, projets, clients, budgets */}
-          {missions.length > 0 && (
-            <div className="mt-6">
-              <p className="mb-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-ink-soft">
-                Missions ouvertes en ce moment
-              </p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {missions.map((mission) => (
-                  <CarteMission key={mission.id} mission={mission} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Actions Côté Étudiant */}
-          <div className="mt-auto pt-6">
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              <Link
-                href="/missions"
-                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-ink px-4 text-xs font-medium text-paper-light transition hover:bg-ink/85"
-              >
-                <ArrowRight size={14} aria-hidden="true" />
-                <span>Trouver des missions</span>
-              </Link>
-
-              <Link
-                href="/inscription"
-                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-ink/15 bg-paper-light px-4 text-xs font-medium text-ink transition hover:border-ocre/40 hover:text-ocre-dark"
-              >
-                <Sparkles size={14} aria-hidden="true" />
-                <span>Proposer mes services</span>
-              </Link>
-            </div>
-          </div>
-        </div>
+        <Volet
+          accent="bleu"
+          icone={BriefcaseBusiness}
+          etiquette="Côté client"
+          titre="Des étudiants prêts à vous aider"
+          intro="Entreprises, startups, associations ou particuliers : accédez aux futurs diplômés pour donner vie à vos projets avec un excellent rapport qualité-prix."
+          piliers={PILIERS_CLIENT}
+          lienHref="/services"
+          lienLabel="Trouver un étudiant"
+        />
+        <Volet
+          accent="ocre"
+          icone={GraduationCap}
+          etiquette="Côté étudiant"
+          titre="Des projets à réaliser"
+          intro="Mettez en pratique vos acquis académiques, générez des revenus durant votre cursus et démarrez votre carrière avec une expérience concrète et vérifiée."
+          piliers={PILIERS_ETUDIANT}
+          lienHref="/missions"
+          lienLabel="Trouver une mission"
+        />
       </div>
     </section>
   );

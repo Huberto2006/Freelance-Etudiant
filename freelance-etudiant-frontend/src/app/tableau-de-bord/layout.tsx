@@ -172,11 +172,11 @@ export default function TableauDeBordLayout({
           className={`
             mx-auto
             w-full
-            max-w-7xl
-            px-5
-            py-8
-            md:px-8
-            md:py-10
+            max-w-[90rem]
+            px-4
+            py-6
+            md:px-6
+            md:py-7
 
             ${
               estPageMessages

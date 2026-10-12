@@ -94,7 +94,7 @@ export default function MoyensPaiementClientPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       <PageHeader
         icon={Wallet}
         eyebrow="Paiements"

@@ -26,7 +26,7 @@ export default function MissionsPage() {
   return (
     <Suspense
       fallback={
-        <div className="container mx-auto max-w-6xl px-4 pb-10 pt-8">
+        <div className="container mx-auto max-w-7xl px-4 pb-8 pt-7">
           <SqueletteCatalogue nombre={6} />
         </div>
       }
@@ -194,7 +194,7 @@ function MissionsContent() {
   }, [rechercher, cleParams]);
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 pb-10 pt-8">
+    <div className="container mx-auto max-w-7xl px-4 pb-8 pt-7">
       {/* ---------------------------------------- EN-TETE */}
       <div className="mb-4">
         <BoutonRetour
@@ -254,7 +254,7 @@ function MissionsContent() {
             </NoticeCard>
           ) : missions.length === 0 ? (
             <NoticeCard>
-              <div className="flex flex-col items-center gap-3 py-8 text-center">
+              <div className="flex flex-col items-center gap-3 py-7 text-center">
                 <span
                   className="flex h-12 w-12 items-center justify-center rounded-full bg-ocre/10 text-ocre-dark"
                   aria-hidden="true"

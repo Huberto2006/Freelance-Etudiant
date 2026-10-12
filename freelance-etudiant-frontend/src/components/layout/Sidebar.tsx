@@ -375,7 +375,7 @@ export function Sidebar({
                 px-3
                 pb-2
                 pt-2
-                text-[10px]
+                text-[0.65rem]
                 font-semibold
                 uppercase
                 tracking-[0.16em]
@@ -582,7 +582,7 @@ export function Sidebar({
             className="
               px-3
               pb-2.5
-              text-[10px]
+              text-[0.65rem]
               font-semibold
               uppercase
               tracking-[0.16em]
@@ -623,8 +623,8 @@ export function Sidebar({
 
         ${
           collapsed
-            ? "w-[76px]"
-            : "w-[260px]"
+            ? "w-[4.75rem]"
+            : "w-[16.25rem]"
         }
       `}
     >
@@ -681,7 +681,7 @@ export function Sidebar({
                 Kianja
               </span>
 
-              <span className="block text-[9px] text-white/55">
+              <span className="block text-[0.625rem] text-white/55">
                 Freelances étudiants
               </span>
             </span>
@@ -851,7 +851,7 @@ export function Sidebar({
                 Mon profil
               </span>
 
-              <span className="block truncate text-[10px] font-normal text-white/50">
+              <span className="block truncate text-[0.65rem] font-normal text-white/50">
                 {utilisateur.nom}
               </span>
             </span>
@@ -1009,7 +1009,7 @@ export function Sidebar({
               relative
               z-[71]
               h-full
-              w-[260px]
+              w-[16.25rem]
             "
           >
             {sidebarContent}

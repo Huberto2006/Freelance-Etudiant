@@ -68,7 +68,7 @@ export default function ProfilPage() {
   if (!utilisateur) return null;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       {utilisateur.role === "etudiant" ? (
         <ProfilEtudiant utilisateur={utilisateur} />
       ) : utilisateur.role === "client" ? (
@@ -873,7 +873,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
           <div className="mb-6 flex flex-col gap-4 rounded-xl border border-ink/10 bg-paper-light p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ocre-dark">Import CV</p>
+                <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-ocre-dark">Import CV</p>
                 <h3 className="mt-1 font-display text-xl font-semibold">Importer mon CV</h3>
               </div>
               <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-ink/30 bg-white px-3 py-2 text-sm text-ink hover:border-ocre">
@@ -918,9 +918,9 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                     const value = Array.isArray(field.value) ? field.value.join(", ") : field.value;
                     return (
                       <div key={key} className="rounded-lg border border-ink/10 bg-paper p-3">
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-ink-soft">{label}</p>
+                        <p className="text-[0.65rem] uppercase tracking-[0.2em] text-ink-soft">{label}</p>
                         <p className="mt-2 text-sm text-ink">{value}</p>
-                        <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-ocre-dark">Niveau: {field.confidence}</p>
+                        <p className="mt-1 text-[0.65rem] uppercase tracking-[0.2em] text-ocre-dark">Niveau: {field.confidence}</p>
                       </div>
                     );
                   })}

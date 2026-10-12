@@ -2264,7 +2264,7 @@ function MessagesContent() {
 
         <aside
           className={clsx(
-            "w-full shrink-0 flex-col border-r border-ink/10 bg-paper lg:flex lg:w-[320px]",
+            "w-full shrink-0 flex-col border-r border-ink/10 bg-paper lg:flex lg:w-[20rem]",
             voirConversationMobile
               ? "hidden"
               : "flex",
@@ -2370,7 +2370,7 @@ function MessagesContent() {
                         )
                       }
                       className={clsx(
-                        "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-colors",
+                        "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider transition-colors",
                         estActif
                           ? "border-ink bg-ink text-paper-light"
                           : "border-ink/20 bg-paper-light text-ink-soft hover:border-ink/50 hover:text-ink",
@@ -2382,7 +2382,7 @@ function MessagesContent() {
 
                       <span
                         className={clsx(
-                          "rounded-full px-1.5 py-px text-[10px] leading-none",
+                          "rounded-full px-1.5 py-px text-[0.65rem] leading-none",
                           estActif
                             ? "bg-paper-light/20 text-paper-light"
                             : "bg-ink/10 text-ink-soft",
@@ -2527,7 +2527,7 @@ function MessagesContent() {
 
                             {ligne.nonLus >
                               0 && (
-                              <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brique px-1 font-mono text-[9px] font-bold leading-none text-paper-light ring-2 ring-paper">
+                              <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brique px-1 font-mono text-[0.625rem] font-bold leading-none text-paper-light ring-2 ring-paper">
                                 {ligne.nonLus >
                                 9
                                   ? "9+"
@@ -2567,7 +2567,7 @@ function MessagesContent() {
 
                               {ligne.dernierDate &&
                                 !ligne.conversationVide && (
-                                  <span className="shrink-0 text-[10px] font-mono text-ink-soft/60">
+                                  <span className="shrink-0 text-[0.65rem] font-mono text-ink-soft/60">
                                     {formaterDateListe(
                                       ligne.dernierDate,
                                     )}
@@ -2724,7 +2724,7 @@ function MessagesContent() {
                 "INDIVIDUEL" &&
                 missionAffichee && (
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-ink/10 bg-paper px-4 py-2.5 text-xs">
-                    <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-ink-soft">
+                    <span className="inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-wider text-ink-soft">
                       <Briefcase
                         size={13}
                         aria-hidden="true"
@@ -2842,7 +2842,7 @@ function MessagesContent() {
                         >
                           {nouveauJour && (
                             <div className="flex justify-center py-2">
-                              <span className="rounded-full bg-ink/5 px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-ink-soft/70">
+                              <span className="rounded-full bg-ink/5 px-3 py-1 text-[0.65rem] font-mono uppercase tracking-wider text-ink-soft/70">
                                 {formaterJourSeparateur(
                                   message.dateEnvoi,
                                 )}
@@ -2892,7 +2892,7 @@ function MessagesContent() {
                                 !estMoi &&
                                 message.expediteur
                                   ?.nom && (
-                                  <p className="mb-1 text-[10px] font-semibold text-primary">
+                                  <p className="mb-1 text-[0.65rem] font-semibold text-primary">
                                     {
                                       message.expediteur
                                         .nom
@@ -2946,7 +2946,7 @@ function MessagesContent() {
 
                               <div
                                 className={clsx(
-                                  "mt-1 flex items-center justify-end gap-1 text-[10px] font-mono leading-none",
+                                  "mt-1 flex items-center justify-end gap-1 text-[0.65rem] font-mono leading-none",
                                   estMoi
                                     ? "text-paper-light/70"
                                     : "text-ink-soft/60",
@@ -2991,7 +2991,7 @@ function MessagesContent() {
                                       message.id
                                     }
                                     aria-label="Supprimer ce message"
-                                    className="absolute -right-2 -top-2 hidden h-5 w-5 cursor-pointer items-center justify-center rounded-full border border-ink/15 bg-paper text-[10px] text-ink-soft opacity-0 transition-opacity hover:border-brique/50 hover:text-brique group-hover:flex group-hover:opacity-100"
+                                    className="absolute -right-2 -top-2 hidden h-5 w-5 cursor-pointer items-center justify-center rounded-full border border-ink/15 bg-paper text-[0.65rem] text-ink-soft opacity-0 transition-opacity hover:border-brique/50 hover:text-brique group-hover:flex group-hover:opacity-100"
                                   >
                                     ×
                                   </button>
@@ -3091,7 +3091,7 @@ function MessagesContent() {
                   </p>
                 )}
 
-                <p className="mt-2 hidden text-[10px] font-mono text-ink-soft/50 sm:block">
+                <p className="mt-2 hidden text-[0.65rem] font-mono text-ink-soft/50 sm:block">
                   Entrée pour envoyer · Maj+Entrée pour une nouvelle ligne
                 </p>
               </form>
@@ -3105,7 +3105,7 @@ function MessagesContent() {
 
         {conversationActive &&
           panneauVisible && (
-            <aside className="hidden w-[330px] shrink-0 flex-col gap-4 overflow-y-auto border-l border-ink/10 bg-paper p-4 xl:flex">
+            <aside className="hidden w-[20.5rem] shrink-0 flex-col gap-4 overflow-y-auto border-l border-ink/10 bg-paper p-4 xl:flex">
               <PanneauDetailsConversation
                 conversation={
                   conversationActive
@@ -3264,7 +3264,7 @@ function PanneauDetailsConversation({
     return (
       <>
         <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
-          <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft">
+          <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-ink-soft">
             <Users
               size={13}
               aria-hidden="true"
@@ -3303,7 +3303,7 @@ function PanneauDetailsConversation({
         {piecesJointes.length >
           0 && (
           <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
-            <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft">
+            <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-ink-soft">
               <FileText
                 size={13}
               />
@@ -3332,7 +3332,7 @@ function PanneauDetailsConversation({
                       }
                     />
 
-                    <p className="mt-1.5 text-[10px] font-mono text-ink-soft/60">
+                    <p className="mt-1.5 text-[0.65rem] font-mono text-ink-soft/60">
                       {
                         piece.auteur
                       }{" "}
@@ -3359,7 +3359,7 @@ function PanneauDetailsConversation({
     <>
       {missionAffichee && (
         <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
-          <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft">
+          <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-ink-soft">
             <Briefcase
               size={13}
             />
@@ -3441,7 +3441,7 @@ function PanneauDetailsConversation({
       )}
 
       <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
-        <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft">
+        <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-ink-soft">
           <User
             size={13}
           />
@@ -3532,7 +3532,7 @@ function PanneauDetailsConversation({
       {piecesJointes.length >
         0 && (
         <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
-          <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft">
+          <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-ink-soft">
             <FileText
               size={13}
             />
@@ -3561,7 +3561,7 @@ function PanneauDetailsConversation({
                     }
                   />
 
-                  <p className="mt-1.5 text-[10px] font-mono text-ink-soft/60">
+                  <p className="mt-1.5 text-[0.65rem] font-mono text-ink-soft/60">
                     {
                       piece.auteur
                     }{" "}

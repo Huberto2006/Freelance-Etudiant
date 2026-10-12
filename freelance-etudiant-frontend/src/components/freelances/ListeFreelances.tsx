@@ -155,7 +155,7 @@ export function ListeFreelances() {
   // ---------------------------------------------------------------
   if (!utilisateur) {
     return (
-      <NoticeCard className="flex flex-col items-center gap-3 py-10 text-center">
+      <NoticeCard className="flex flex-col items-center gap-3 py-8 text-center">
         <span
           aria-hidden="true"
           className="flex h-11 w-11 items-center justify-center rounded-full bg-bleu-soft text-bleu-dark"
@@ -239,7 +239,7 @@ export function ListeFreelances() {
       {chargement ? (
         <SqueletteListe />
       ) : resultats.length === 0 ? (
-        <NoticeCard className="flex flex-col items-center gap-2 py-10 text-center">
+        <NoticeCard className="flex flex-col items-center gap-2 py-8 text-center">
           <Users size={22} aria-hidden="true" className="text-ink-soft/60" />
           <p className="text-sm text-ink-soft">
             {etudiants.length === 0
@@ -263,7 +263,7 @@ export function ListeFreelances() {
           </ul>
 
           {peutCharger && (
-            <div className="mt-8 text-center">
+            <div className="mt-7 text-center">
               <button
                 type="button"
                 onClick={() => void chargerPlus()}

@@ -136,7 +136,7 @@ export default function ProfilEtudiantPage({
 
   if (chargementAffiche) {
     return (
-      <div className="mx-auto max-w-5xl px-5 py-16">
+      <div className="mx-auto max-w-5xl px-5 py-12">
         <div className="rounded-2xl border border-ink/10 bg-paper-light p-8 text-sm text-ink-soft shadow-sm">
           Chargement du profil…
         </div>
@@ -146,8 +146,8 @@ export default function ProfilEtudiantPage({
 
   if (!etudiant) {
     return (
-      <div className="mx-auto max-w-5xl px-5 py-16">
-        <NoticeCard className="flex flex-col items-center gap-3 py-10 text-center">
+      <div className="mx-auto max-w-5xl px-5 py-12">
+        <NoticeCard className="flex flex-col items-center gap-3 py-8 text-center">
           {connexionRequiseAffichee ? (
             <>
               <p className="text-sm text-ink-soft">
@@ -175,7 +175,7 @@ export default function ProfilEtudiantPage({
     etudiant.universite ?? "Étudiant freelance";
 
   return (
-    <div className="mx-auto max-w-5xl px-5 pb-16 pt-6">
+    <div className="mx-auto max-w-5xl px-5 pb-12 pt-6">
       {/* =====================================================
           RETOUR
           ===================================================== */}
@@ -349,7 +349,7 @@ export default function ProfilEtudiantPage({
               <div className="h-8 w-1 rounded-full bg-ink" />
 
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
                   Présentation
                 </p>
 
@@ -379,7 +379,7 @@ export default function ProfilEtudiantPage({
                 <div className="h-8 w-1 rounded-full bg-ink" />
 
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                  <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
                     Expertise
                   </p>
 
@@ -460,7 +460,7 @@ export default function ProfilEtudiantPage({
                 <div className="h-8 w-1 rounded-full bg-ink" />
 
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                  <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
                     Réalisations
                   </p>
 
@@ -484,7 +484,7 @@ export default function ProfilEtudiantPage({
                 <div className="h-8 w-1 rounded-full bg-ink" />
 
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                  <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
                     Présence en ligne
                   </p>
 
@@ -550,7 +550,7 @@ export default function ProfilEtudiantPage({
                 <div className="h-8 w-1 rounded-full bg-ink" />
 
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                  <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
                     Prestations
                   </p>
 
@@ -597,7 +597,7 @@ export default function ProfilEtudiantPage({
                 <div className="h-8 w-1 rounded-full bg-ink" />
 
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                  <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
                     Réputation
                   </p>
 
@@ -668,7 +668,7 @@ export default function ProfilEtudiantPage({
         <aside className="space-y-6">
           {/* DISPONIBILITÉ */}
           <section className="animate-in delay-1 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
               Disponibilité
             </p>
 
@@ -736,7 +736,7 @@ export default function ProfilEtudiantPage({
 
           {/* FORMATION */}
           <section className="animate-in delay-2 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
               Formation
             </p>
 
@@ -773,7 +773,7 @@ export default function ProfilEtudiantPage({
 
           {/* STATISTIQUES */}
           <section className="animate-in delay-3 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
               Statistiques
             </p>
 
@@ -829,7 +829,7 @@ export default function ProfilEtudiantPage({
 
           {/* LANGUES / INFOS */}
           <section className="animate-in delay-4 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
               Profil
             </p>
 

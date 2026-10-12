@@ -46,11 +46,11 @@ export default function FavorisPage() {
   const etudiants = donnees?.etudiants ?? {};
 
   if (chargement) {
-    return <p className="mx-auto max-w-3xl px-5 py-16 text-sm text-ink-soft">Chargement…</p>;
+    return <p className="mx-auto max-w-3xl px-5 py-12 text-sm text-ink-soft">Chargement…</p>;
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-14">
+    <div className="mx-auto max-w-3xl px-5 py-11">
       <div className="mb-4">
         <BoutonRetour repli="/tableau-de-bord" forcer />
       </div>

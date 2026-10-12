@@ -1,11 +1,9 @@
 import { clsx } from "clsx";
 
 /**
- * Squelette de chargement du catalogue (missions / services) : réplique
- * la géométrie des cartes (couverture + titre + description + pied) avec
- * des blocs pulsés, pour éviter le saut visuel au chargement des données.
- * Utilisé par les pages publiques /missions et /services, ainsi que par
- * leur fallback Suspense.
+ * Squelette de chargement du catalogue : réplique la géométrie des cartes
+ * (couverture, étiquette, titre, description, pied auteur/prix) avec des
+ * blocs pulsés, pour éviter le saut visuel au chargement.
  */
 export function SqueletteCatalogue({
   nombre = 6,
@@ -19,28 +17,28 @@ export function SqueletteCatalogue({
     <div
       role="status"
       aria-label="Chargement du catalogue"
-      className={clsx("grid gap-5 sm:grid-cols-2 xl:grid-cols-3", className)}
+      className={clsx("grid gap-4 sm:grid-cols-2 xl:grid-cols-3", className)}
     >
       {Array.from({ length: nombre }).map((_, index) => (
         <div
           key={index}
           aria-hidden="true"
-          className="overflow-hidden rounded-[15px] border border-ink/10 bg-paper-light shadow-[0_1px_0_rgba(15,23,42,0.04),0_8px_16px_-12px_rgba(15,23,42,0.20)]"
+          className="overflow-hidden rounded-xl border border-ink/10 bg-paper-light"
         >
-          {/* Couverture */}
-          <div className="h-32 animate-pulse bg-ink/5 sm:h-36" />
+          <div className="h-28 animate-pulse bg-ink/5 sm:h-32" />
 
-          <div className="flex flex-col gap-3 p-4">
-            {/* Titre */}
+          <div className="flex flex-col gap-2.5 p-4">
+            <div className="h-2.5 w-20 animate-pulse rounded bg-ink/5" />
             <div className="h-4 w-3/4 animate-pulse rounded bg-ink/5" />
-            {/* Description */}
             <div className="h-3 w-full animate-pulse rounded bg-ink/5" />
             <div className="h-3 w-2/3 animate-pulse rounded bg-ink/5" />
 
-            {/* Pied : prix + méta */}
-            <div className="mt-auto flex items-center justify-between border-t border-ink/10 pt-3">
-              <div className="h-4 w-24 animate-pulse rounded bg-ink/5" />
-              <div className="h-3 w-16 animate-pulse rounded bg-ink/5" />
+            <div className="mt-2 flex items-center justify-between border-t border-ink/10 pt-3">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 animate-pulse rounded-full bg-ink/5" />
+                <div className="h-3 w-16 animate-pulse rounded bg-ink/5" />
+              </div>
+              <div className="h-4 w-20 animate-pulse rounded bg-ink/5" />
             </div>
           </div>
         </div>

@@ -146,7 +146,7 @@ function EtatVide({
     action?: React.ReactNode;
 }) {
     return (
-        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-ink/15 bg-paper-light px-6 py-12 text-center">
+        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-ink/15 bg-paper-light px-6 py-10 text-center">
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-ink/5 text-ink-soft">
                 {icon}
             </div>
@@ -185,7 +185,7 @@ function OngletButton({
             onClick={onClick}
             className={[
                 "inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5",
-                "font-mono text-[11px] uppercase tracking-wider transition-colors",
+                "font-mono text-[0.6875rem] uppercase tracking-wider transition-colors",
                 actif
                     ? "border-ink bg-ink text-paper-light"
                     : "border-ink/20 bg-paper text-ink-soft hover:border-ink/50 hover:text-ink",
@@ -196,7 +196,7 @@ function OngletButton({
             {typeof compteur === "number" && compteur > 0 ? (
                 <span
                     className={[
-                        "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-px text-[10px] leading-none",
+                        "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-px text-[0.65rem] leading-none",
                         actif
                             ? "bg-paper-light/20 text-paper-light"
                             : "bg-ink/10 text-ink-soft",
@@ -307,14 +307,14 @@ function CarteAmi({
                             {profil.competences.slice(0, 3).map((competence) => (
                                 <span
                                     key={competence}
-                                    className="rounded-md bg-ink/5 px-2 py-1 text-[11px] font-medium text-ink-soft ring-1 ring-inset ring-ink/15"
+                                    className="rounded-md bg-ink/5 px-2 py-1 text-[0.6875rem] font-medium text-ink-soft ring-1 ring-inset ring-ink/15"
                                 >
                                     {competence}
                                 </span>
                             ))}
 
                             {profil.competences.length > 3 ? (
-                                <span className="rounded-md px-1 py-1 text-[11px] text-ink-soft/70">
+                                <span className="rounded-md px-1 py-1 text-[0.6875rem] text-ink-soft/70">
                                     +{profil.competences.length - 3}
                                 </span>
                             ) : null}
@@ -518,14 +518,14 @@ function CarteEtudiant({
                     {etudiant.competences.slice(0, 3).map((competence) => (
                         <span
                             key={competence}
-                            className="rounded-md bg-ink/5 px-2 py-1 text-[11px] font-medium text-ink-soft ring-1 ring-inset ring-ink/15"
+                            className="rounded-md bg-ink/5 px-2 py-1 text-[0.6875rem] font-medium text-ink-soft ring-1 ring-inset ring-ink/15"
                         >
                             {competence}
                         </span>
                     ))}
 
                     {etudiant.competences.length > 3 ? (
-                        <span className="rounded-md px-1 py-1 text-[11px] text-ink-soft/70">
+                        <span className="rounded-md px-1 py-1 text-[0.6875rem] text-ink-soft/70">
                             +{etudiant.competences.length - 3}
                         </span>
                     ) : null}

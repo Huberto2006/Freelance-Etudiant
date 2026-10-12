@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { Sparkles, Wrench } from "lucide-react";
+import { Wrench } from "lucide-react";
 
 import type { ServiceOffert } from "@/lib/types";
 
@@ -44,13 +43,6 @@ export function SectionServices({ services }: { services: ServiceOffert[] }) {
             <p className="max-w-md text-sm text-ink-soft">
               Aucun service n&apos;est encore publié. Étudiants : publiez votre premier service pour être visible auprès des clients.
             </p>
-            <Link
-              href="/inscription"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-3.5 py-2 text-xs font-medium text-paper-light transition hover:bg-ink/85"
-            >
-              <Sparkles size={14} aria-hidden="true" />
-              <span>Proposer un service</span>
-            </Link>
           </div>
         </NoticeCard>
       ) : (
@@ -59,19 +51,6 @@ export function SectionServices({ services }: { services: ServiceOffert[] }) {
             {populaires.map((service) => (
               <CarteService key={service.id} service={service} />
             ))}
-          </div>
-
-          <div className="mt-6 flex flex-col items-center justify-between gap-3 rounded-xl border border-ink/10 bg-paper-light px-5 py-3.5 text-center sm:flex-row sm:text-left">
-            <p className="text-xs text-ink-soft">
-              Vous êtes étudiant et vous souhaitez proposer vos services ?
-            </p>
-            <Link
-              href="/inscription"
-              className="inline-flex shrink-0 items-center gap-1.5 font-mono text-xs font-semibold text-ocre-dark transition hover:text-ocre"
-            >
-              <Sparkles size={13} aria-hidden="true" />
-              <span>Créer mon offre de service →</span>
-            </Link>
           </div>
         </>
       )}
