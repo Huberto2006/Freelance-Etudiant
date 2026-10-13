@@ -83,6 +83,7 @@ export const statutTransactionLabel: Record<string, string> = {
 };
 
 export const methodePaiementLabel: Record<string, string> = {
+  papi: "Papi",
   mvola: "Mvola",
   orange_money: "Orange Money",
   airtel_money: "Airtel Money",

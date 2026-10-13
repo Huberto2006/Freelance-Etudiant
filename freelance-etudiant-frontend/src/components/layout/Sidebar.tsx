@@ -4,30 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
-  Gauge,
   BriefcaseBusiness,
-  FolderKanban,
   ShoppingBag,
-  HandHelping,
   Layers3,
   ClipboardList,
-  FileText,
   Package,
-  PackageCheck,
   Wallet,
-  CreditCard,
-  WalletCards,
+  FileText,
   Star,
-  BadgeCheck,
   User,
-  CircleUserRound,
   Users,
   UserRoundPlus,
-  Wrench,
-  Heart,
-  Shield,
-  ShieldCheck,
-  Flag,
   LogOut,
   Settings,
   ChevronLeft,
@@ -58,45 +45,41 @@ const ICONS: Record<
   React.ElementType
 > = {
   "Tableau de bord": Home,
-  Dashboard: Gauge,
+  Dashboard: Home,
 
   Missions: BriefcaseBusiness,
-  "Mes missions": FolderKanban,
 
   Services: ShoppingBag,
-  "Mes services": HandHelping,
 
   "Mes publications": Layers3,
 
   Candidatures: ClipboardList,
-  "Mes candidatures": FileText,
+  "Mes candidatures": ClipboardList,
 
   Groupes: Users,
 
   Amis: UserRoundPlus,
 
-  "Demandes de service": Wrench,
+  "Demandes de service": ClipboardList,
 
   Livraisons: Package,
-  "Mes livraisons": PackageCheck,
+  "Mes livraisons": Package,
 
   Paiements: Wallet,
-  "Mes paiements": CreditCard,
-  "Moyens de paiement": WalletCards,
+  "Mes paiements": Wallet,
+  Factures: FileText,
+  "Moyens de paiement": Wallet,
 
   "Évaluations": Star,
   Evaluations: Star,
-  "Mes évaluations": BadgeCheck,
+  "Mes évaluations": Star,
 
   Profil: User,
-  "Mon profil": CircleUserRound,
+  "Mon profil": User,
 
-  Favoris: Heart,
+  Favoris: Star,
 
   Paramètres: Settings,
-  Administration: Shield,
-  Gestion: ShieldCheck,
-  Signalements: Flag,
 };
 
 function getIcon(label: string) {
@@ -310,6 +293,7 @@ export function Sidebar({
     "Mes livraisons",
     "Paiements",
     "Mes paiements",
+    "Factures",
     "Évaluations",
     "Mes évaluations",
     "Evaluations",

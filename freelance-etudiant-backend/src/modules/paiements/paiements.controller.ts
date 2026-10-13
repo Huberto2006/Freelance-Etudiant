@@ -49,7 +49,7 @@ export class PaiementsController {
   @Post('candidatures/:candidatureId/paiement')
   @ApiOperation({
     summary:
-      "Payer une candidature acceptee : MVola en ligne (reel) ou declaration de virement",
+      "Payer une candidature acceptee : Papi ou MVola en ligne (reel), ou declaration de virement",
   })
   async creer(
     @Param('candidatureId', ParseUUIDPipe) candidatureId: string,
@@ -72,31 +72,38 @@ export class PaiementsController {
     @Req() req: Request,
     @Headers('x-kianja-signature') signature?: string,
   ) {
-    const secret = this.configService.get<string>('PAIEMENT_WEBHOOK_SECRET');
-    if (!secret) {
-      throw new ServiceUnavailableException('Webhook non configure');
-    }
-    if (!signature || !signature.startsWith('sha256=')) {
-      throw new UnauthorizedException('Signature webhook manquante');
-    }
+    verifierSignatureWebhook(
+      req,
+      signature,
+      this.configService.get<string>('PAIEMENT_WEBHOOK_SECRET'),
+    );
+    return this.paiementsService.traiterWebhook(req.body, 'mvola');
+  }
 
-    const corpsBrut = (req as Request & { rawBody?: Buffer }).rawBody;
-    const attendu = crypto
-      .createHmac('sha256', secret)
-      .update(corpsBrut ?? Buffer.alloc(0))
-      .digest('hex');
-    const recu = signature.slice('sha256='.length);
+  /**
+   * Webhook Papi (public mais signe HMAC-SHA256 du corps brut).
+   * Secret : PAPI_WEBHOOK_SECRET ; en-tete : PAPI_SIGNATURE_HEADER
+   * (defaut "x-papi-signature", a confirmer dans la documentation Papi).
+   * Comme pour MVola, la notification n'est qu'un declencheur : le statut
+   * reel est relu aupres de Papi avant toute confirmation.
+   */
+  @Public()
+  @Post('paiements/webhook/papi')
+  @ApiExcludeEndpoint()
+  async webhookPapi(@Req() req: Request) {
+    const nomEntete = (
+      this.configService.get<string>('PAPI_SIGNATURE_HEADER') ||
+      'x-papi-signature'
+    ).toLowerCase();
+    const brut = req.headers[nomEntete];
+    const signature = Array.isArray(brut) ? brut[0] : brut;
 
-    const a = Buffer.from(attendu, 'hex');
-    const b = Buffer.from(recu, 'hex');
-    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
-      throw new UnauthorizedException('Signature webhook invalide');
-    }
-
-    if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
-      throw new BadRequestException('Notification invalide');
-    }
-    return this.paiementsService.traiterWebhook(req.body);
+    verifierSignatureWebhook(
+      req,
+      signature,
+      this.configService.get<string>('PAPI_WEBHOOK_SECRET'),
+    );
+    return this.paiementsService.traiterWebhook(req.body, 'papi');
   }
 
   @Roles(Role.CLIENT, Role.ADMIN)
@@ -195,5 +202,42 @@ export class PaiementsController {
   @ApiOperation({ summary: 'Annuler un paiement declare a tort' })
   async annuler(@Param('id', ParseUUIDPipe) id: string) {
     return this.paiementsService.annuler(id);
+  }
+}
+
+
+/**
+ * Verifie la signature HMAC-SHA256 (hex, prefixe optionnel "sha256=") du
+ * corps BRUT d'un webhook fournisseur, en temps constant. Echoue ferme :
+ * secret absent -> 503, signature absente/invalide -> 401, corps non objet
+ * -> 400.
+ */
+export function verifierSignatureWebhook(
+  req: Request,
+  signature: string | undefined,
+  secret: string | undefined,
+): void {
+  if (!secret) {
+    throw new ServiceUnavailableException('Webhook non configure');
+  }
+  if (!signature) {
+    throw new UnauthorizedException('Signature webhook manquante');
+  }
+
+  const corpsBrut = (req as Request & { rawBody?: Buffer }).rawBody;
+  const attendu = crypto
+    .createHmac('sha256', secret)
+    .update(corpsBrut ?? Buffer.alloc(0))
+    .digest('hex');
+  const recu = signature.trim().replace(/^sha256=/i, '');
+
+  const a = Buffer.from(attendu, 'hex');
+  const b = /^[0-9a-fA-F]+$/.test(recu) ? Buffer.from(recu, 'hex') : Buffer.alloc(0);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    throw new UnauthorizedException('Signature webhook invalide');
+  }
+
+  if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+    throw new BadRequestException('Notification invalide');
   }
 }

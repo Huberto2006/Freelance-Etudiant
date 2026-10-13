@@ -14,6 +14,8 @@ export enum StatutTransaction {
 }
 
 export enum MethodePaiement {
+  /** Passerelle Papi (papi.mg) : mobile money + carte, via lien de paiement. */
+  PAPI = 'papi',
   MVOLA = 'mvola',
   ORANGE_MONEY = 'orange_money',
   AIRTEL_MONEY = 'airtel_money',

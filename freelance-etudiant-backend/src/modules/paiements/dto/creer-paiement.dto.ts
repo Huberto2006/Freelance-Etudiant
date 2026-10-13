@@ -34,7 +34,7 @@ export class CreerPaiementDto {
   @ApiProperty({
     enum: MethodePaiement,
     description:
-      'mvola = paiement en ligne reel (via l\'API MVola). virement = declaration manuelle d\'un transfert hors plateforme, verifiee par un administrateur. orange_money / airtel_money : indisponible (pas d\'API self-service pour Madagascar).',
+      'papi = paiement en ligne via la passerelle Papi (lien de paiement, mobile money ou carte). mvola = paiement en ligne reel (via l\'API MVola). virement = declaration manuelle d\'un transfert hors plateforme, verifiee par un administrateur. orange_money / airtel_money : indisponible (pas d\'API self-service pour Madagascar).',
   })
   @IsEnum(MethodePaiement)
   methode!: MethodePaiement;

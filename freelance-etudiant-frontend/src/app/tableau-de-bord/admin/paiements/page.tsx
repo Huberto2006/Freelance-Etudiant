@@ -107,22 +107,30 @@ export default function AdminPaiementsPage() {
                   <p className="font-mono text-sm text-ocre-dark">
                     {formatArgent(t.montant)}
                   </p>
-                  <div className="flex gap-2 mt-1">
-                    <Button
-                      variant="secondary"
-                      disabled={enCours === t.id}
-                      onClick={() => confirmer(t.id)}
-                    >
-                      Confirmer
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      disabled={enCours === t.id}
-                      onClick={() => annuler(t.id)}
-                    >
-                      Annuler
-                    </Button>
-                  </div>
+                  {t.provider === "papi" || t.provider === "mvola" ? (
+                    <p className="mt-1 text-xs text-ink-soft">
+                      Paiement en ligne : son statut est vérifié
+                      automatiquement auprès du fournisseur
+                      (aucune confirmation manuelle).
+                    </p>
+                  ) : (
+                    <div className="flex gap-2 mt-1">
+                      <Button
+                        variant="secondary"
+                        disabled={enCours === t.id}
+                        onClick={() => confirmer(t.id)}
+                      >
+                        Confirmer
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        disabled={enCours === t.id}
+                        onClick={() => annuler(t.id)}
+                      >
+                        Annuler
+                      </Button>
+                    </div>
+                  )}
                 </NoticeCard>
               ))}
             </div>

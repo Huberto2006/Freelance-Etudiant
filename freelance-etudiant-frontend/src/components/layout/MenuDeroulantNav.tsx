@@ -99,7 +99,7 @@ export function MenuDeroulantNav({
   return (
     <div
       ref={conteneurRef}
-      className="relative"
+      className="relative shrink-0"
       onKeyDown={surToucheConteneur}
       onBlur={(event) => {
         // Le focus quitte entièrement le menu (Tab, clic ailleurs).
@@ -119,7 +119,7 @@ export function MenuDeroulantNav({
         onClick={() => onOuvrirChange(!ouvert)}
         onKeyDown={surToucheBouton}
         className={clsx(
-          "inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu",
+          "inline-flex items-center gap-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu",
           actif || ouvert
             ? "text-bleu-dark"
             : "text-ink-soft hover:bg-ink/5 hover:text-ink",

@@ -90,6 +90,11 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
     },
 
     {
+      label: "Factures",
+      href: "/tableau-de-bord/factures",
+    },
+
+    {
       label: "Notifications",
       href: "/tableau-de-bord/notifications",
       icon: Bell,
@@ -182,6 +187,11 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
         {
           href: "/tableau-de-bord/paiements",
           label: "Paiements",
+        },
+
+        {
+          href: "/tableau-de-bord/factures",
+          label: "Factures",
         },
 
         {

@@ -135,7 +135,7 @@ const THEMES: Theme[] = [
       {
         question: "Quels moyens de paiement sont disponibles ?",
         reponse:
-          "Le paiement en ligne est disponible via MVola. Un virement effectué hors plateforme peut aussi être déclaré ; il reste en attente jusqu'à sa vérification par l'équipe d'administration. Orange Money et Airtel Money ne sont pas encore disponibles en paiement en ligne.",
+          "Le paiement en ligne est disponible via Papi (MVola, Orange Money, Airtel Money ou carte Visa) et directement via MVola. Un virement effectué hors plateforme peut aussi être déclaré ; il reste en attente jusqu'à sa vérification par l'équipe d'administration.",
       },
       {
         question: "Que dois-je configurer pour être payé en tant qu'étudiant ?",
