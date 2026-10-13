@@ -1144,34 +1144,39 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               </Field>
             </div>
 
-            <Field
-              label="Portfolio"
-              htmlFor="portfolioUrl"
-              hint="Lien vers un projet, un site ou une image (https://…)"
-            >
-              <div className="flex gap-2">
-                <Input
-                  id="portfolioUrl"
-                  value={nouvelleUrlPortfolio}
-                  onChange={(e) => setNouvelleUrlPortfolio(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      ajouterUrlPortfolio();
-                    }
-                  }}
-                />
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={ajouterUrlPortfolio}
-                  disabled={envoi || !nouvelleUrlPortfolio.trim()}
+            <div className="flex items-start gap-2">
+              <div className="min-w-0 flex-1">
+                <Field
+                  label="Portfolio"
+                  htmlFor="portfolioUrl"
+                  hint="Lien vers un projet, un site ou une image (https://…)"
                 >
-                  Ajouter
-                </Button>
+                  <Input
+                    id="portfolioUrl"
+                    value={nouvelleUrlPortfolio}
+                    onChange={(e) =>
+                      setNouvelleUrlPortfolio(e.target.value)
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        ajouterUrlPortfolio();
+                      }
+                    }}
+                  />
+                </Field>
               </div>
-            </Field>
+
+              <Button
+                type="button"
+                variant="ghost"
+                className="mt-1"
+                onClick={ajouterUrlPortfolio}
+                disabled={envoi || !nouvelleUrlPortfolio.trim()}
+              >
+                Ajouter
+              </Button>
+            </div>
 
             {erreurUrlPortfolio && (
               <p className="text-xs text-brique">{erreurUrlPortfolio}</p>

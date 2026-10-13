@@ -1022,24 +1022,35 @@ function LivraisonEtudiant({
   const [etape, setEtape] = useState<1 | 2 | 3>(1);
 
   function etapeSuivante() {
-    if (etape === 2) {
-      const lien = lienLivrable.trim();
-      if (methode === "depot" && !lien) {
-        setErreur("Veuillez renseigner le lien vers votre livrable.");
-        return;
-      }
-      if (methode === "fichiers" && !piecesJointes.length) {
-        setErreur("Ajoutez au moins un fichier avant de continuer.");
-        return;
-      }
+    if (etape === 1) {
+      setErreur(null);
+      setEtape(2);
+      return;
     }
+
+    if (etape !== 2) return;
+
+    const lien = lienLivrable.trim();
+    if (methode === "depot" && !lien) {
+      setErreur("Veuillez renseigner le lien vers votre livrable.");
+      return;
+    }
+    if (methode === "fichiers" && !piecesJointes.length) {
+      setErreur("Ajoutez au moins un fichier avant de continuer.");
+      return;
+    }
+
     setErreur(null);
-    setEtape((precedente) => (precedente < 3 ? ((precedente + 1) as 1 | 2 | 3) : precedente));
+    setEtape(3);
   }
 
   function etapePrecedente() {
     setErreur(null);
-    setEtape((precedente) => (precedente > 1 ? ((precedente - 1) as 1 | 2 | 3) : precedente));
+    if (etape === 3) {
+      setEtape(2);
+    } else if (etape === 2) {
+      setEtape(1);
+    }
   }
 
   // ==========================================================
@@ -1348,7 +1359,7 @@ function LivraisonEtudiant({
                 key={item.numero}
                 className={`flex items-center ${index < 2 ? "flex-1" : ""}`}
               >
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center gap-1 sm:gap-2">
                   <span
                     className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-mono ${
                       etape === item.numero
@@ -1361,13 +1372,13 @@ function LivraisonEtudiant({
                     {etape > item.numero ? <Check size={13} aria-hidden="true" /> : item.numero}
                   </span>
                   <span
-                    className={`hidden text-xs sm:inline ${etape === item.numero ? "font-medium text-ink" : "text-ink-soft"}`}
+                    className={`text-[10px] leading-tight sm:text-xs ${etape === item.numero ? "font-medium text-ink" : "text-ink-soft"}`}
                   >
                     {item.label}
                   </span>
                 </div>
                 {index < 2 && (
-                  <span className="mx-2 h-px flex-1 bg-ink/15" aria-hidden="true" />
+                  <span className="mx-1.5 h-px flex-1 bg-ink/15 sm:mx-2" aria-hidden="true" />
                 )}
               </div>
             ))}

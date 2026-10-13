@@ -68,7 +68,13 @@ type MoyenPaiement = {
   numero: string;
   nomTitulaire: string;
   principal: boolean;
-  actif: boolean;
+};
+
+type ReponseMoyensPaiementCandidature = {
+  candidatureId: string;
+  missionTitre: string;
+  montant: number;
+  moyensPaiement: MoyenPaiement[];
 };
 
 // ============================================================
@@ -494,23 +500,19 @@ function FormulairePaiement({
       setMoyenPaiementId("");
 
       try {
-        const moyens = await api.get<MoyenPaiement[]>(
+        const reponse = await api.get<ReponseMoyensPaiementCandidature>(
           `/candidatures/${candidature.id}/moyens-paiement`,
         );
 
         if (!actif) return;
 
-        const moyensActifs = moyens.filter(
-          (moyen) => moyen.actif,
-        );
-
-        setMoyensPaiement(moyensActifs);
+        setMoyensPaiement(reponse.moyensPaiement);
 
         // Le principal est sélectionné automatiquement.
         const principal =
-          moyensActifs.find(
+          reponse.moyensPaiement.find(
             (moyen) => moyen.principal,
-          ) ?? moyensActifs[0];
+          ) ?? reponse.moyensPaiement[0];
 
         if (principal) {
           setMoyenPaiementId(principal.id);
