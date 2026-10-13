@@ -239,19 +239,11 @@ export default function ServiceDetailPage({
           {etudiant && (
             <NoticeCard>
               <div className="flex items-center gap-4">
-                <div className="relative shrink-0">
-                  <Avatar
-                    nom={etudiant.utilisateur?.nom ?? "Étudiant"}
-                    photoUrl={etudiant.utilisateur?.photoUrl}
-                    size={64}
-                  />
-                  <span className="absolute -bottom-1 -right-1">
-                    <StampBadge
-                      score={Number(etudiant.scoreReputation) || 0}
-                      size={30}
-                    />
-                  </span>
-                </div>
+                <Avatar
+                  nom={etudiant.utilisateur?.nom ?? "Étudiant"}
+                  photoUrl={etudiant.utilisateur?.photoUrl}
+                  size={64}
+                />
                 <div className="min-w-0">
                   <p className="truncate font-display text-lg font-medium">
                     {etudiant.utilisateur?.nom}
@@ -264,6 +256,18 @@ export default function ServiceDetailPage({
                     {etudiant.nombreMissionsTerminees} projet(s) livré(s) ·
                     note moyenne {Number(etudiant.noteMoyenne).toFixed(1)}/5
                   </p>
+                  <div className="mt-2 flex items-center gap-2 text-xs text-ink-soft">
+                    <StampBadge
+                      score={Number(etudiant.scoreReputation) || 0}
+                      size={30}
+                    />
+                    <span>
+                      Réputation{" "}
+                      <span className="font-mono font-semibold text-ink">
+                        {Number(etudiant.scoreReputation) || 0}/100
+                      </span>
+                    </span>
+                  </div>
                 </div>
               </div>
               <Link href={`/etudiants/${etudiant.utilisateurId}`}>
