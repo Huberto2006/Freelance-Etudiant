@@ -7,6 +7,8 @@ import { PaiementsController } from './paiements.controller';
 import { CandidaturesModule } from '../candidatures/candidatures.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { MvolaService } from './mvola.service';
+import { PapiService } from './papi.service';
+import { FacturesModule } from '../factures/factures.module';
 import { UsersModule } from '../users/users.module';
 import { MoyensPaiementModule } from '../moyens-paiement/moyens-paiement.module';
 import { MoyensPaiementClientModule } from '../moyens-paiement-client/moyens-paiement-client.module';
@@ -29,8 +31,10 @@ import { MoyensPaiementClientModule } from '../moyens-paiement-client/moyens-pai
     // RG-PAY-012 : resolution/verification du moyen de paiement CLIENT
     // (numero a debiter), symetrique a MoyensPaiementModule.
     MoyensPaiementClientModule,
+    // Facture emise a la confirmation d'un paiement.
+    FacturesModule,
   ],
-  providers: [PaiementsService, MvolaService],
+  providers: [PaiementsService, MvolaService, PapiService],
   controllers: [PaiementsController],
   exports: [PaiementsService],
 })

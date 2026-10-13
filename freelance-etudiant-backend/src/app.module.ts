@@ -29,6 +29,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { ReactionsModule } from './modules/reactions/reactions.module';
 import { FavorisModule } from './modules/favoris/favoris.module';
 import { PaiementsModule } from './modules/paiements/paiements.module';
+import { FacturesModule } from './modules/factures/factures.module';
 import { MoyensPaiementModule } from './modules/moyens-paiement/moyens-paiement.module';
 import { MoyensPaiementClientModule } from './modules/moyens-paiement-client/moyens-paiement-client.module';
 import { DemandesServiceModule } from './modules/demandes-service/demandes-service.module';
@@ -100,6 +101,7 @@ import { HealthController } from './health.controller';
     ReactionsModule,
     FavorisModule,
     PaiementsModule,
+    FacturesModule,
     MoyensPaiementModule,
     MoyensPaiementClientModule,
     DemandesServiceModule,

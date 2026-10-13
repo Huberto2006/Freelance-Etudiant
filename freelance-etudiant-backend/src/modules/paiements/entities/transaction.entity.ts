@@ -81,8 +81,8 @@ export class Transaction {
   statut: StatutTransaction;
 
   /**
-   * Fournisseur du paiement : 'mvola' (paiement en ligne verifie par
-   * le backend aupres de l'API) ou 'manuel' (declaration d'un transfert
+   * Fournisseur du paiement : 'papi' ou 'mvola' (paiements en ligne
+   * verifies par le backend aupres de l'API du fournisseur) ou 'manuel' (declaration d'un transfert
    * hors plateforme, verifiee par un administrateur).
    */
   @Column({ type: 'varchar', length: 30, nullable: true })
@@ -117,6 +117,13 @@ export class Transaction {
 
   @Column({ name: 'moyen_paiement_client_id', type: 'uuid', nullable: true })
   moyenPaiementClientId?: string | null;
+
+  /**
+   * Lien de paiement securise renvoye par la passerelle (Papi) : permet au
+   * client de reprendre un paiement en attente sans en recreer un.
+   */
+  @Column({ name: 'lien_paiement', type: 'varchar', length: 500, nullable: true })
+  lienPaiement?: string | null;
 
   /** Dernier statut brut renvoye par le fournisseur (traçabilite). */
   @Column({ name: 'provider_statut', type: 'varchar', length: 50, nullable: true })

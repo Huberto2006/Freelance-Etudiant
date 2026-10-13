@@ -198,13 +198,6 @@ export default function ProfilEtudiantPage({
                   photoUrl={etudiant.utilisateur?.photoUrl}
                   size={104}
                 />
-
-                <span className="absolute -bottom-2 -right-2">
-                  <StampBadge
-                    score={scoreReputation}
-                    size={42}
-                  />
-                </span>
               </div>
 
               <div className="min-w-0">
@@ -284,12 +277,22 @@ export default function ProfilEtudiantPage({
                 </div>
 
                 {/* Informations CV */}
-                <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-xs text-ink-soft/75">
+                <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-ink-soft/75">
                   <span className="inline-flex items-center gap-1.5">
                     <BriefcaseBusiness size={14} />
                     {missionsTerminees} projet
                     {missionsTerminees > 1 ? "s" : ""} livré
                     {missionsTerminees > 1 ? "s" : ""}
+                  </span>
+
+                  <span className="inline-flex items-center gap-2">
+                    <StampBadge score={scoreReputation} size={42} />
+                    <span>
+                      <span className="block font-semibold text-ink">
+                        Réputation
+                      </span>
+                      <span>{scoreReputation.toFixed(1)}/100</span>
+                    </span>
                   </span>
 
                   <span className="inline-flex items-center gap-1.5">
@@ -799,16 +802,6 @@ export default function ProfilEtudiantPage({
                     className="fill-ocre-dark text-ocre-dark"
                   />
                   {noteMoyenne.toFixed(1)}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between py-3">
-                <span className="text-xs text-ink-soft">
-                  Réputation
-                </span>
-
-                <span className="font-mono text-sm font-semibold">
-                  {scoreReputation.toFixed(1)}
                 </span>
               </div>
 

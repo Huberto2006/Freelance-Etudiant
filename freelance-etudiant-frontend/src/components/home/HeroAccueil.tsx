@@ -59,11 +59,11 @@ export function HeroAccueil({
         <img
           src="/images/hero-kianja.png"
           alt=""
-          className="block h-auto w-full max-w-none"
+          className="block h-auto w-full max-w-none brightness-110 contrast-105 saturate-125"
         />
       </div>
       <div
-        className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-paper-light/10 via-paper-light to-paper-light"
+        className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-paper-light/40 via-paper-light/80 to-paper-light"
         aria-hidden="true"
       />
 

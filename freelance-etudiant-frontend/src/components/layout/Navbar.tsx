@@ -127,6 +127,7 @@ export function Navbar({
       (link) =>
         ![
           "Paiements",
+          "Factures",
           "Favoris",
         ].includes(link.label),
     );
@@ -382,11 +383,11 @@ export function Navbar({
                 placeholder="Rechercher un service…"
                 aria-label="Rechercher un service"
                 className="
-                  kianja-field-control
                   h-9
                   w-full
                   rounded-full
-                  border-0
+                  border
+                  border-ink/15
                   bg-paper-light
                   pl-9
                   pr-3

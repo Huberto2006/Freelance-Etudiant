@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Wallet,
   X,
@@ -115,6 +115,23 @@ function IconeMoyenPaiement({
 // CARTE D'UNE TRANSACTION
 // ============================================================
 
+/**
+ * Lien de paiement fourni par le backend : n'est utilisé que s'il s'agit
+ * d'un URL https valide (ou http vers localhost en développement).
+ */
+function lienPaiementSur(lien?: string | null): string | null {
+  if (!lien) return null;
+  try {
+    const url = new URL(lien);
+    const local =
+      url.protocol === "http:" &&
+      (url.hostname === "localhost" || url.hostname === "127.0.0.1");
+    return url.protocol === "https:" || local ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 function CarteTransaction({
   transaction,
   onVerifie,
@@ -131,10 +148,24 @@ function CarteTransaction({
   // Paiement MVola encore en attente :
   // le frontend demande au backend de vérifier le statut réel
   // auprès du fournisseur.
+  const enLigne =
+    transaction.provider === "mvola" ||
+    transaction.provider === "papi";
+  const fournisseur =
+    transaction.provider === "papi" ? "Papi" : "MVola";
+
   const verifiable =
-    transaction.provider === "mvola" &&
+    enLigne &&
     transaction.statut === "en_attente" &&
     Boolean(onVerifie);
+
+  // Lien Papi : seulement s'il est bien en https (jamais de lien
+  // arbitraire dans l'interface).
+  const lienReprise =
+    transaction.provider === "papi" &&
+    transaction.statut === "en_attente"
+      ? lienPaiementSur(transaction.lienPaiement)
+      : null;
 
   async function verifier() {
     if (!onVerifie) return;
@@ -149,10 +180,12 @@ function CarteTransaction({
 
       setMessageVerification(
         maj.statut === "confirmee"
-          ? "Paiement confirmé par MVola."
+          ? `Paiement confirmé par ${fournisseur}.`
           : maj.statut === "annulee"
-            ? "Paiement refusé par MVola."
-            : "MVola n'a pas encore confirmé le paiement. Réessayez après avoir validé la demande USSD.",
+            ? `Paiement refusé par ${fournisseur}.`
+            : transaction.provider === "papi"
+              ? "Papi n'a pas encore confirmé le paiement. Terminez-le sur la page Papi, puis réessayez."
+              : "MVola n'a pas encore confirmé le paiement. Réessayez après avoir validé la demande USSD.",
       );
 
       onVerifie();
@@ -179,9 +212,7 @@ function CarteTransaction({
           <p className="mt-0.5 font-mono text-xs text-ink-soft/70">
             {methodePaiementLabel[transaction.methode]} · réf.{" "}
             {transaction.reference}
-            {transaction.provider === "mvola"
-              ? " · en ligne"
-              : ""}
+            {enLigne ? " · en ligne" : ""}
           </p>
         </div>
 
@@ -200,17 +231,39 @@ function CarteTransaction({
         </p>
       </div>
 
-      {verifiable && (
-        <Button
-          variant="secondary"
-          className="self-start"
-          disabled={verification}
-          onClick={() => void verifier()}
+      {(transaction.statut === "confirmee" ||
+        transaction.statut === "liberee") && (
+        <a
+          href={`/tableau-de-bord/paiements/${transaction.id}/facture`}
+          className="self-start text-sm text-ink-soft underline underline-offset-4 hover:text-ink"
         >
-          {verification
-            ? "Vérification…"
-            : "Vérifier le statut auprès de MVola"}
-        </Button>
+          Voir la facture
+        </a>
+      )}
+
+      {(verifiable || lienReprise) && (
+        <div className="flex flex-wrap items-center gap-3">
+          {lienReprise && (
+            <a
+              href={lienReprise}
+              className="inline-flex min-h-10 items-center rounded-lg bg-ink px-4 text-sm font-medium text-paper-light"
+            >
+              Reprendre le paiement
+            </a>
+          )}
+
+          {verifiable && (
+            <Button
+              variant="secondary"
+              disabled={verification}
+              onClick={() => void verifier()}
+            >
+              {verification
+                ? "Vérification…"
+                : `Vérifier le statut auprès de ${fournisseur}`}
+            </Button>
+          )}
+        </div>
       )}
 
       {messageVerification && (
@@ -393,7 +446,7 @@ function FormulairePaiement({
   const montant = String(candidature.prixPropose);
 
   const [methode, setMethode] =
-    useState<MethodePaiement>("mvola");
+    useState<MethodePaiement>("papi");
 
   const [telephone, setTelephone] = useState("");
   const [reference, setReference] = useState("");
@@ -528,6 +581,7 @@ function FormulairePaiement({
   // ==========================================================
 
   const paiementMvola = methode === "mvola";
+  const paiementPapi = methode === "papi";
 
   // ==========================================================
   // SOUMISSION
@@ -564,9 +618,15 @@ function FormulairePaiement({
     setEnvoi(true);
 
     try {
-      await api.post(
+      const creee = await api.post<Transaction>(
         `/candidatures/${candidature.id}/paiement`,
-        paiementMvola
+        paiementPapi
+          ? {
+              montant: Number(montant),
+              methode,
+              moyenPaiementId,
+            }
+          : paiementMvola
           ? {
               montant: Number(montant),
               methode,
@@ -582,6 +642,16 @@ function FormulairePaiement({
               moyenPaiementId,
             },
       );
+
+      // Papi : le client termine son paiement sur la page sécurisée de
+      // la passerelle ; il revient ensuite sur cette page (retour=papi).
+      const lien = paiementPapi
+        ? lienPaiementSur(creee?.lienPaiement)
+        : null;
+      if (lien) {
+        window.location.assign(lien);
+        return;
+      }
 
       onEnvoye();
     } catch (err) {
@@ -696,7 +766,15 @@ function FormulairePaiement({
          ------------------------------------------------------ */}
 
       <p className="mb-4 text-sm text-ink-soft">
-        {paiementMvola ? (
+        {paiementPapi ? (
+          <>
+            Vous serez redirigé vers la page de paiement
+            sécurisée de Papi, où vous choisirez MVola,
+            Orange Money, Airtel Money ou carte Visa. Au
+            retour, la plateforme vérifie le paiement
+            directement auprès de Papi.
+          </>
+        ) : paiementMvola ? (
           <>
             Vous serez débité depuis votre numéro MVola.
             Une demande de confirmation sera envoyée sur
@@ -756,6 +834,10 @@ function FormulairePaiement({
                   )
                 }
               >
+                <option value="papi">
+                  Papi (mobile money ou carte)
+                </option>
+
                 <option value="mvola">
                   MVola (paiement en ligne)
                 </option>
@@ -783,7 +865,7 @@ function FormulairePaiement({
 
           {/* NUMÉRO MVOLA DU CLIENT */}
 
-          {paiementMvola ? (
+          {paiementPapi ? null : paiementMvola ? (
             <div className="w-full sm:w-56">
               <Field label="Votre numéro MVola" htmlFor="telephone">
                 {!saisieLibre && moyensClient.length > 0 ? (
@@ -919,10 +1001,14 @@ function FormulairePaiement({
             }
           >
             {envoi
-              ? "Envoi…"
-              : paiementMvola
-                ? "Payer avec MVola"
-                : "Déclarer le paiement"}
+              ? paiementPapi
+                ? "Redirection…"
+                : "Envoi…"
+              : paiementPapi
+                ? "Payer avec Papi"
+                : paiementMvola
+                  ? "Payer avec MVola"
+                  : "Déclarer le paiement"}
           </Button>
 
           {moyensPaiement.length === 0 &&
@@ -1069,6 +1155,56 @@ export default function PaiementsPage() {
   };
 
   // ==========================================================
+  // RETOUR DE LA PAGE DE PAIEMENT PAPI (?retour=papi&ref=KIANJA-…)
+  // Le retour du navigateur n'est PAS une preuve de paiement : on
+  // demande au backend de relire le statut réel auprès de Papi.
+  // ==========================================================
+
+  const retourTraite = useRef(false);
+  const [messageRetour, setMessageRetour] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (retourTraite.current || chargement) return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("retour") !== "papi") return;
+
+    retourTraite.current = true;
+    const ref = params.get("ref");
+    window.history.replaceState(null, "", window.location.pathname);
+
+    const transaction = transactions.find(
+      (t) => t.reference === ref && t.provider === "papi",
+    );
+    if (!transaction) return;
+
+    async function verifierRetour(id: string) {
+      try {
+        const maj = await api.post<Transaction>(
+          `/paiements/${id}/verifier`,
+        );
+        setMessageRetour(
+          maj.statut === "confirmee" || maj.statut === "liberee"
+            ? "Paiement confirmé par Papi. Merci !"
+            : maj.statut === "annulee"
+              ? "Le paiement a été refusé ou annulé."
+              : "Papi n'a pas encore confirmé le paiement. Il apparaîtra comme confirmé dès réception ; vous pouvez aussi relancer la vérification ci-dessous.",
+        );
+        void recharger();
+      } catch {
+        setMessageRetour(
+          "Vérification impossible pour le moment : relancez-la depuis « En attente ».",
+        );
+      }
+    }
+
+    void verifierRetour(transaction.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chargement, transactions]);
+
+  // ==========================================================
   // PROTECTION
   // ==========================================================
 
@@ -1125,6 +1261,14 @@ export default function PaiementsPage() {
         eyebrow="Suivi financier"
         title="Paiements"
       />
+
+      {messageRetour && (
+        <NoticeCard className="mb-4">
+          <p role="status" className="text-sm text-ink">
+            {messageRetour}
+          </p>
+        </NoticeCard>
+      )}
 
       {/* ======================================================
           TOTAL ÉTUDIANT

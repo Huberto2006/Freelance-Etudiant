@@ -279,21 +279,14 @@ body {
   color: var(--color-paper-light);
 }
 
+option {
+  background-color: var(--color-paper-light);
+  color: var(--color-ink);
+}
+
 :focus-visible {
   outline: 2px solid var(--color-ocre);
   outline-offset: 2px;
-}
-
-.kianja-field-control:focus-visible {
-  outline-color: var(--color-bleu);
-}
-
-.kianja-field-control[aria-invalid="true"] {
-  box-shadow: 0 0 0 1px var(--color-brique);
-}
-
-.kianja-field-control[aria-invalid="true"]:focus-visible {
-  outline-color: var(--color-brique);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -407,4 +400,33 @@ body {
 
 .torn-edge {
   mask-image: linear-gradient(to bottom, black calc(100% - 6px), transparent 100%);
+}
+/* ------------------------------------------------------------------
+   Impression d'une facture : seule la feuille #facture-imprimable est
+   imprimée (navbar, menu latéral et boutons masqués). Règles actives
+   uniquement quand la page ajoute la classe body.impression-facture.
+   ------------------------------------------------------------------ */
+@page {
+  margin: 14mm;
+}
+
+@media print {
+  body.impression-facture * {
+    visibility: hidden;
+  }
+
+  body.impression-facture #facture-imprimable,
+  body.impression-facture #facture-imprimable * {
+    visibility: visible;
+  }
+
+  body.impression-facture #facture-imprimable {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+  }
+
+  body.impression-facture {
+    background: #ffffff !important;
+  }
 }

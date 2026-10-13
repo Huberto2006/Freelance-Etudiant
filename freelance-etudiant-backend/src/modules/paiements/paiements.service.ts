@@ -23,6 +23,9 @@ import { CandidaturesService } from '../candidatures/candidatures.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TypeNotification } from '../../common/enums/type-notification.enum';
 import { MvolaService } from './mvola.service';
+import { PapiService, type StatutFournisseur } from './papi.service';
+import { ConfigService } from '@nestjs/config';
+import { FacturesService } from '../factures/factures.service';
 import { EmailService } from '../email/email.service';
 import { UsersService } from '../users/users.service';
 import { MoyensPaiementService } from '../moyens-paiement/moyens-paiement.service';
@@ -36,6 +39,10 @@ import {
 export interface WebhookPaiementPayload {
   transactionReference?: string;
   serverCorrelationId?: string;
+  /** Papi : reference Kianja et identifiant fournisseur (noms a confirmer). */
+  reference?: string;
+  id?: string;
+  paymentId?: string;
   status?: string;
   amount?: number | string;
   currency?: string;
@@ -74,6 +81,10 @@ export class PaiementsService {
 
     private readonly mvolaService: MvolaService,
 
+    private readonly papiService: PapiService,
+
+    private readonly configService: ConfigService,
+
     private readonly emailService: EmailService,
 
     private readonly usersService: UsersService,
@@ -81,6 +92,8 @@ export class PaiementsService {
     private readonly moyensPaiementService: MoyensPaiementService,
 
     private readonly moyensPaiementClientService: MoyensPaiementClientService,
+
+    private readonly facturesService: FacturesService,
   ) {}
 
   /**
@@ -223,6 +236,23 @@ export class PaiementsService {
     );
 
     // ============================================================
+    // PAIEMENT PAPI (lien de paiement : mobile money / carte)
+    // Le client choisit son moyen directement sur la page Papi : aucun
+    // numero a saisir ici.
+    // ============================================================
+
+    if (dto.methode === MethodePaiement.PAPI) {
+      return this.creerPaiementPapi(
+        candidature,
+        candidatureId,
+        clientId,
+        montantConvenu,
+        snapshot,
+        dto.moyenPaiementClientId,
+      );
+    }
+
+    // ============================================================
     // PAIEMENT MVOLA
     // ============================================================
 
@@ -342,8 +372,146 @@ export class PaiementsService {
   }
 
   /**
-   * Paiement MVola réel. La réservation locale est persistée avant tout
-   * appel fournisseur afin que chaque tentative soit traçable et unique.
+   * Paiement en ligne via la passerelle Papi.
+   *
+   * La demande est creee chez Papi AVANT l'enregistrement local, avec le
+   * montant calcule par le backend ; la reference Kianja sert de cle
+   * d'idempotence. Le client est ensuite redirige vers `lienPaiement`.
+   */
+  private async creerPaiementPapi(
+    candidature: Awaited<ReturnType<CandidaturesService['findOne']>>,
+    candidatureId: string,
+    clientId: string,
+    montantConvenu: number,
+    snapshot: Partial<SnapshotMoyenPaiement> = {},
+    moyenPaiementClientId?: string,
+  ): Promise<Transaction> {
+    if (!this.papiService.estConfigure) {
+      throw new ServiceUnavailableException(
+        "Le paiement Papi n'est pas actif sur la plateforme. Configurez PAPI_BASE_URL et PAPI_API_KEY, ou utilisez un autre moyen de paiement.",
+      );
+    }
+
+    if (moyenPaiementClientId) {
+      // Verifie propriete + actif (meme garde que MVola) ; le numero n'est
+      // pas utilise : Papi le demande au client sur sa page de paiement.
+      await this.moyensPaiementClientService.trouverPourPaiement(
+        moyenPaiementClientId,
+        clientId,
+      );
+    }
+
+    const reference = `KIANJA-${crypto
+      .randomBytes(6)
+      .toString('hex')
+      .toUpperCase()}`;
+
+    const frontend = (
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001'
+    ).replace(/\/+$/, '');
+    const apiPublique = this.configService
+      .get<string>('API_PUBLIC_URL')
+      ?.replace(/\/+$/, '');
+
+    let creation: {
+      idFournisseur: string;
+      lienPaiement: string;
+      statut: string;
+    };
+
+    try {
+      creation = await this.papiService.creerPaiement({
+        montantAr: montantConvenu,
+        reference,
+        description: `Paiement mission "${candidature.mission.titre}" - KIANJA`,
+        urlRetour: `${frontend}/tableau-de-bord/paiements?retour=papi&ref=${encodeURIComponent(reference)}`,
+        urlNotification: apiPublique
+          ? `${apiPublique}/paiements/webhook/papi`
+          : undefined,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Echec de creation Papi pour la candidature ${candidatureId} : ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      throw new ServiceUnavailableException(
+        'La passerelle de paiement Papi a refuse la transaction. Reessayez dans un instant.',
+      );
+    }
+
+    const transaction = this.repo.create({
+      candidatureId,
+      clientId,
+      etudiantId: candidature.etudiant.utilisateurId,
+      montant: montantConvenu,
+      methode: MethodePaiement.PAPI,
+      reference,
+      statut: StatutTransaction.EN_ATTENTE,
+      provider: 'papi',
+      providerCorrelationId: creation.idFournisseur,
+      providerStatut: creation.statut,
+      lienPaiement: creation.lienPaiement,
+      moyenPaiementClientId: moyenPaiementClientId ?? null,
+      ...snapshot,
+    });
+
+    let saved: Transaction;
+    try {
+      saved = await this.repo.save(transaction);
+    } catch (error) {
+      if (
+        error instanceof QueryFailedError &&
+        (error as unknown as { code?: string }).code === '23505'
+      ) {
+        throw new ConflictException(
+          'Un paiement existe deja pour cette candidature',
+        );
+      }
+      throw error;
+    }
+
+    await this.notificationsService.creer({
+      destinataireId: candidature.etudiant.utilisateurId,
+      type: TypeNotification.PAIEMENT_INITIE,
+      titre: 'Paiement initié',
+      message: `Un paiement de ${montantConvenu} Ar est en cours pour "${candidature.mission.titre}".`,
+      lienUrl: '/tableau-de-bord/paiements',
+    });
+
+    await this.emailService.envoyerPaiementInitie(
+      await this.emailDeUtilisateur(candidature.etudiant.utilisateurId),
+      {
+        nom: candidature.etudiant.utilisateur?.nom ?? 'Etudiant',
+        titreMission: candidature.mission.titre,
+        montant: montantConvenu,
+        reference,
+      },
+    );
+
+    return saved;
+  }
+
+  /** Fournisseurs en ligne : leur statut est gere par le fournisseur. */
+  private estEnLigne(transaction: Transaction): boolean {
+    return transaction.provider === 'mvola' || transaction.provider === 'papi';
+  }
+
+  /** Interroge le bon fournisseur (source de verite du statut). */
+  private async statutAupresDuFournisseur(
+    transaction: Transaction,
+  ): Promise<StatutFournisseur> {
+    const id = transaction.providerCorrelationId as string;
+    return transaction.provider === 'papi'
+      ? this.papiService.verifierStatut(id)
+      : this.mvolaService.verifierStatut(id);
+  }
+
+  /**
+   * Paiement MVola réel.
+   *
+   * L'initiation est effectuée auprès du fournisseur avant
+   * l'enregistrement de la transaction.
    */
   private async creerPaiementMvola(
     candidature: Awaited<
@@ -367,6 +535,32 @@ export class PaiementsService {
       .toString('hex')
       .toUpperCase()}`;
 
+    let initiation: {
+      serverCorrelationId: string;
+      statut: string;
+    };
+
+    try {
+      initiation = await this.mvolaService.initierPaiement({
+        montantAr: montantConvenu,
+        transactionReference: reference,
+        telephoneDebite,
+        description: `Paiement mission "${candidature.mission.titre}" - KIANJA`,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Echec d'initiation MVola pour la candidature ${candidatureId} : ${
+          error instanceof Error
+            ? error.message
+            : String(error)
+        }`,
+      );
+
+      throw new ServiceUnavailableException(
+        'Le fournisseur de paiement MVola a refuse la transaction. Verifiez votre numero et reessayez.',
+      );
+    }
+
     const transaction = this.repo.create({
       candidatureId,
       clientId,
@@ -376,8 +570,9 @@ export class PaiementsService {
       reference,
       statut: StatutTransaction.EN_ATTENTE,
       provider: 'mvola',
+      providerCorrelationId: initiation.serverCorrelationId,
       telephoneDebite,
-      providerStatut: 'initiation_en_cours',
+      providerStatut: initiation.statut,
       moyenPaiementClientId: moyenPaiementClientId ?? null,
 
       // Snapshot du moyen bénéficiaire.
@@ -400,56 +595,6 @@ export class PaiementsService {
 
       throw error;
     }
-
-    let initiation: {
-      serverCorrelationId: string;
-      statut: string;
-    };
-
-    try {
-      initiation = await this.mvolaService.initierPaiement({
-        montantAr: montantConvenu,
-        transactionReference: reference,
-        telephoneDebite,
-        description: `Paiement mission "${candidature.mission.titre}" - KIANJA`,
-      });
-    } catch (error) {
-      this.logger.error(
-        `Echec d'initiation MVola pour la candidature ${candidatureId}, reference ${reference} : ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-      await this.marquerInitiationMvolaIncertaine(saved.id, reference);
-      throw new ServiceUnavailableException(
-        `Le resultat de la demande MVola est incertain (reference ${reference}). Ne relancez pas le paiement avant verification aupres du fournisseur.`,
-      );
-    }
-
-    try {
-      const resultatMiseAJour = await this.repo.update(
-        { id: saved.id, statut: StatutTransaction.EN_ATTENTE },
-        {
-          providerCorrelationId: initiation.serverCorrelationId,
-          providerStatut: initiation.statut,
-        },
-      );
-      if (!resultatMiseAJour.affected) {
-        throw new Error('La reservation du paiement MVola a disparu');
-      }
-    } catch (error) {
-      this.logger.error(
-        `Initiation MVola effectuee mais non rattachee a la reference ${reference} : ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-      await this.marquerInitiationMvolaIncertaine(saved.id, reference);
-      throw new ServiceUnavailableException(
-        `La demande MVola a ete transmise, mais son suivi n'a pas pu etre enregistre (reference ${reference}). Ne relancez pas le paiement avant reconciliation.`,
-      );
-    }
-
-    saved.providerCorrelationId = initiation.serverCorrelationId;
-    saved.providerStatut = initiation.statut;
 
     await this.notificationsService.creer({
       destinataireId: candidature.etudiant.utilisateurId,
@@ -474,29 +619,6 @@ export class PaiementsService {
     );
 
     return saved;
-  }
-
-  private async marquerInitiationMvolaIncertaine(
-    transactionId: string,
-    reference: string,
-  ): Promise<void> {
-    try {
-      const resultat = await this.repo.update(
-        { id: transactionId, statut: StatutTransaction.EN_ATTENTE },
-        { providerStatut: 'initiation_inconnue' },
-      );
-      if (!resultat.affected) {
-        this.logger.error(
-          `La reservation MVola ${reference} n'a pas pu etre mise a jour pour tracer le resultat incertain`,
-        );
-      }
-    } catch (error) {
-      this.logger.error(
-        `Impossible de marquer la reservation MVola ${reference} comme incertaine : ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
   }
 
   /**
@@ -912,9 +1034,7 @@ export class PaiementsService {
       return transaction;
     }
 
-    if (
-      transaction.provider !== 'mvola'
-    ) {
+    if (!this.estEnLigne(transaction)) {
       throw new BadRequestException(
         'Ce paiement est une declaration manuelle : sa verification se fait par un administrateur.',
       );
@@ -927,9 +1047,7 @@ export class PaiementsService {
     }
 
     const statutFournisseur =
-      await this.mvolaService.verifierStatut(
-        transaction.providerCorrelationId,
-      );
+      await this.statutAupresDuFournisseur(transaction);
 
     transaction.providerStatut =
       statutFournisseur;
@@ -966,12 +1084,19 @@ export class PaiementsService {
    */
   async traiterWebhook(
     payload: WebhookPaiementPayload,
+    fournisseurAttendu: 'mvola' | 'papi' = 'mvola',
   ): Promise<{ status: string }> {
     const texteCourt = (v: unknown): string | undefined =>
       typeof v === 'string' && v.length > 0 && v.length <= 100 ? v : undefined;
 
-    const correlationId = texteCourt(payload?.serverCorrelationId);
-    const reference = texteCourt(payload?.transactionReference);
+    const correlationId =
+      fournisseurAttendu === 'papi'
+        ? (texteCourt(payload?.id) ?? texteCourt(payload?.paymentId))
+        : texteCourt(payload?.serverCorrelationId);
+    const reference =
+      fournisseurAttendu === 'papi'
+        ? texteCourt(payload?.reference)
+        : texteCourt(payload?.transactionReference);
 
     if (!correlationId && !reference) {
       throw new BadRequestException('Notification invalide');
@@ -999,16 +1124,18 @@ export class PaiementsService {
 
     // Seules les transactions en ligne MVola sont concernees ; les
     // declarations manuelles sont verifiees par un administrateur.
-    if (transaction.provider !== 'mvola' || !transaction.providerCorrelationId) {
+    // Un webhook ne peut agir que sur une transaction de SON fournisseur.
+    if (
+      transaction.provider !== fournisseurAttendu ||
+      !transaction.providerCorrelationId
+    ) {
       throw new BadRequestException('Transaction non eligible a une notification');
     }
 
     // Verification aupres du fournisseur (source de verite).
-    let statutFournisseur: 'completed' | 'pending' | 'failed';
+    let statutFournisseur: StatutFournisseur;
     try {
-      statutFournisseur = await this.mvolaService.verifierStatut(
-        transaction.providerCorrelationId,
-      );
+      statutFournisseur = await this.statutAupresDuFournisseur(transaction);
     } catch (error) {
       this.logger.error(
         `Webhook paiement : verification fournisseur impossible pour ${transaction.reference} : ${
@@ -1060,11 +1187,9 @@ export class PaiementsService {
       );
     }
 
-    if (
-      transaction.provider === 'mvola'
-    ) {
+    if (this.estEnLigne(transaction)) {
       throw new BadRequestException(
-        'Un paiement MVola en ligne ne peut pas etre confirme manuellement : utilisez la verification fournisseur.',
+        'Un paiement en ligne (MVola / Papi) ne peut pas etre confirme manuellement : utilisez la verification fournisseur.',
       );
     }
 
@@ -1103,11 +1228,9 @@ export class PaiementsService {
       );
     }
 
-    if (
-      transaction.provider === 'mvola'
-    ) {
+    if (this.estEnLigne(transaction)) {
       throw new BadRequestException(
-        'Un paiement MVola en ligne ne peut pas etre annule manuellement : son statut est gere par le fournisseur.',
+        'Un paiement en ligne (MVola / Papi) ne peut pas etre annule manuellement : son statut est gere par le fournisseur.',
       );
     }
 
@@ -1120,7 +1243,12 @@ export class PaiementsService {
       );
     }
 
-    return this.marquerAnnulee(transaction);
+    transaction.statut =
+      StatutTransaction.ANNULEE;
+
+    return this.repo.save(
+      transaction,
+    );
   }
 
   /**
@@ -1190,6 +1318,10 @@ export class PaiementsService {
 
     const saved =
       transaction;
+
+    // Facture du paiement confirme : jamais bloquante (si elle echoue,
+    // elle est creee a la premiere consultation).
+    await this.facturesService.genererSansBloquer(transaction.id);
 
     const titreMission =
       transaction.candidature?.mission

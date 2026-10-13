@@ -1160,7 +1160,6 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                       ajouterUrlPortfolio();
                     }
                   }}
-                  placeholder="https://monportfolio.com"
                 />
 
                 <Button

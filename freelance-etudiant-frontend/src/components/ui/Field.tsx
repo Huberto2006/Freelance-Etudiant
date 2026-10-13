@@ -75,7 +75,7 @@ export function Field({
         ),
         className: clsx(
           childClassName,
-          "kianja-field-control peer w-full text-sm text-ink transition-all duration-200 placeholder:text-transparent focus:outline-none disabled:cursor-not-allowed disabled:opacity-60",
+          "kianja-field-control peer w-full rounded-xl border border-ink/15 bg-paper-light text-sm text-ink transition-all duration-200 placeholder:text-transparent hover:border-ink/25 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-brique/50",
           labelFloated ? "pt-5 pb-2" : "py-2.5",
           isTextarea ? "min-h-[120px] resize-y" : "",
           isSelect ? "appearance-none pr-10 text-ink" : "",
@@ -89,9 +89,9 @@ export function Field({
 
   const labelStyle: React.CSSProperties = labelFloated
     ? {
-        top: "0.62rem",
+        top: 0,
         left: "0.7rem",
-        transform: "none",
+        transform: "translateY(-50%)",
         fontSize: "0.68rem",
         lineHeight: "1.1",
         backgroundColor: "var(--color-paper-light)",
@@ -130,7 +130,7 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={clsx(
-        "kianja-field-control w-full rounded-xl border-0 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-60",
+        "kianja-field-control w-full rounded-xl border border-ink/15 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 transition-colors hover:border-ink/25 focus:outline-none aria-invalid:border-brique/50 disabled:cursor-not-allowed disabled:opacity-60",
         props.className,
       )}
     />
@@ -148,7 +148,7 @@ export function PasswordInput(
         {...props}
         type={visible ? "text" : "password"}
         className={clsx(
-          "kianja-field-control w-full rounded-xl border-0 bg-paper-light px-3 py-2.5 pr-11 text-sm text-ink placeholder:text-ink-soft/50 transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-60",
+          "kianja-field-control w-full rounded-xl border border-ink/15 bg-paper-light px-3 py-2.5 pr-11 text-sm text-ink placeholder:text-ink-soft/50 transition-colors hover:border-ink/25 focus:outline-none aria-invalid:border-brique/50 disabled:cursor-not-allowed disabled:opacity-60",
           props.className,
         )}
       />
@@ -181,7 +181,7 @@ export function Textarea({
       ref={ref}
       {...props}
       className={clsx(
-        "kianja-field-control w-full rounded-xl border-0 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-60",
+        "kianja-field-control w-full rounded-xl border border-ink/15 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 transition-colors hover:border-ink/25 focus:outline-none aria-invalid:border-brique/50 disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
     />
@@ -196,7 +196,7 @@ export function Select({
     <select
       {...props}
       className={clsx(
-        "kianja-field-control w-full rounded-xl border-0 bg-paper-light px-3 py-2.5 text-sm text-ink transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-60",
+        "kianja-field-control w-full rounded-xl border border-ink/15 bg-paper-light px-3 py-2.5 text-sm text-ink transition-colors hover:border-ink/25 focus:outline-none aria-invalid:border-brique/50 disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
     />
