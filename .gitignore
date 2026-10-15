@@ -9,6 +9,7 @@ freelance-etudiant-backend/uploads/
 
 # Sauvegardes temporaires de dépendances
 *.audit-backup
+<<<<<<< HEAD
 
 # Fichiers téléversés et données privées
 freelance-etudiant-backend/uploads/
@@ -21,3 +22,5 @@ freelance-etudiant-backend/uploads/
 
 # Sauvegardes temporaires de dépendances
 *.audit-backup
+=======
+>>>>>>> 1ecfb0d (security: exclude uploaded profiles and audit backups)
