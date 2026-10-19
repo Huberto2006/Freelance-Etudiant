@@ -15,3 +15,9 @@ freelance-etudiant-backend/uploads/
 
 # Sauvegardes temporaires de dépendances
 *.audit-backup
+
+# Fichiers téléversés et données privées
+freelance-etudiant-backend/uploads/
+
+# Sauvegardes temporaires de dépendances
+*.audit-backup
