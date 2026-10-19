@@ -14,6 +14,8 @@ export enum TypeNotification {
   PAIEMENT_INITIE = 'paiement_initie',
   PAIEMENT_CONFIRME = 'paiement_confirme',
   PAIEMENT_LIBERE = 'paiement_libere',
+  /** Paiement refuse, expire ou annule par le fournisseur (jamais un succes). */
+  PAIEMENT_ECHOUE = 'paiement_echoue',
   NOUVELLE_REACTION = 'nouvelle_reaction',
   NOUVELLE_DEMANDE_AMITIE = 'nouvelle_demande_amitie',
   NOUVELLE_INVITATION_GROUPE = 'nouvelle_invitation_groupe',

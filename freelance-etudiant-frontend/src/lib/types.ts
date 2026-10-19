@@ -420,6 +420,7 @@
     | "paiement_initie"
     | "paiement_confirme"
     | "paiement_libere"
+    | "paiement_echoue"
     | "nouvelle_reaction"
     | "mission_expiree"
     | "mention";

@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
-import { QueryFailedError, Repository } from 'typeorm';
+import { Not, QueryFailedError, Repository } from 'typeorm';
 
 import { Transaction } from './entities/transaction.entity';
 import { Livraison } from '../livraisons/entities/livraison.entity';
@@ -23,7 +23,7 @@ import { CandidaturesService } from '../candidatures/candidatures.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TypeNotification } from '../../common/enums/type-notification.enum';
 import { MvolaService } from './mvola.service';
-import { PapiService, type StatutFournisseur } from './papi.service';
+import { PapiError, PapiService, type StatutFournisseur } from './papi.service';
 import { ConfigService } from '@nestjs/config';
 import { FacturesService } from '../factures/factures.service';
 import { EmailService } from '../email/email.service';
@@ -39,8 +39,11 @@ import {
 export interface WebhookPaiementPayload {
   transactionReference?: string;
   serverCorrelationId?: string;
-  /** Papi : reference Kianja et identifiant fournisseur (noms a confirmer). */
+  /** Papi : reference marchande Kianja / reference Papi (noms non verifies, tous lus). */
   reference?: string;
+  merchantPaymentReference?: string;
+  papiPaymentReference?: string;
+  paymentReference?: string;
   id?: string;
   paymentId?: string;
   status?: string;
@@ -174,13 +177,17 @@ export class PaiementsService {
     // ============================================================
 
     const existante = await this.repo.findOne({
-      where: { candidatureId },
+      where: { candidatureId, statut: Not(StatutTransaction.ANNULEE) },
     });
 
-    if (
-      existante &&
-      existante.statut !== StatutTransaction.ANNULEE
-    ) {
+    // Exception : un paiement Papi encore EN ATTENTE peut etre repris
+    // (meme reference, meme lien) au lieu de creer un second paiement.
+    const reprisePapi =
+      dto.methode === MethodePaiement.PAPI &&
+      existante?.provider === 'papi' &&
+      existante.statut === StatutTransaction.EN_ATTENTE;
+
+    if (existante && !reprisePapi) {
       throw new BadRequestException(
         'Un paiement existe deja pour cette candidature',
       );
@@ -249,6 +256,7 @@ export class PaiementsService {
         montantConvenu,
         snapshot,
         dto.moyenPaiementClientId,
+        reprisePapi ? existante : null,
       );
     }
 
@@ -374,9 +382,20 @@ export class PaiementsService {
   /**
    * Paiement en ligne via la passerelle Papi.
    *
-   * La demande est creee chez Papi AVANT l'enregistrement local, avec le
-   * montant calcule par le backend ; la reference Kianja sert de cle
-   * d'idempotence. Le client est ensuite redirige vers `lienPaiement`.
+   * ORDRE VOLONTAIRE : la transaction (EN_ATTENTE, sans lien) est creee
+   * AVANT l'appel a Papi. L'index unique « une transaction active par
+   * candidature » devient ainsi un verrou : deux requetes concurrentes ne
+   * peuvent pas creer deux liens de paiement.
+   *
+   * Issue de l'appel Papi :
+   *  - succes            : lien + reference Papi enregistres ;
+   *  - refus definitif   : (HTTP 4xx) transaction ANNULEE, creneau libere ;
+   *  - resultat incertain: (timeout, 5xx, reponse mal formee, echec de
+   *    sauvegarde) la transaction reste EN_ATTENTE SANS lien et n'est
+   *    JAMAIS declaree echouee. Le client peut relancer : la meme
+   *    transaction et la meme reference marchande sont reutilisees
+   *    (creation idempotente cote Papi), jamais de nouvelle tentative
+   *    automatique.
    */
   private async creerPaiementPapi(
     candidature: Awaited<ReturnType<CandidaturesService['findOne']>>,
@@ -385,111 +404,204 @@ export class PaiementsService {
     montantConvenu: number,
     snapshot: Partial<SnapshotMoyenPaiement> = {},
     moyenPaiementClientId?: string,
+    existante: Transaction | null = null,
   ): Promise<Transaction> {
-    if (!this.papiService.estConfigure) {
+    const diagnostic = this.papiService.diagnostic();
+    if (!diagnostic.ok) {
+      this.logger.error(
+        `Paiement Papi indisponible (configuration) : ${diagnostic.problemes.join(' ; ')}`,
+      );
       throw new ServiceUnavailableException(
-        "Le paiement Papi n'est pas actif sur la plateforme. Configurez PAPI_BASE_URL et PAPI_API_KEY, ou utilisez un autre moyen de paiement.",
+        "Le paiement Papi n'est pas disponible pour le moment. Utilisez un autre moyen de paiement ou reessayez plus tard.",
+      );
+    }
+
+    // Reprise : lien deja obtenu -> on le renvoie tel quel.
+    if (existante?.lienPaiement) {
+      return existante;
+    }
+
+    if (!Number.isFinite(montantConvenu) || montantConvenu <= 0) {
+      throw new BadRequestException('Montant du paiement invalide.');
+    }
+
+    // Nom du client : relation reelle mission -> client (profil) -> utilisateur.
+    const nomClient = candidature.mission.client?.utilisateur?.nom?.trim();
+    if (!nomClient) {
+      this.logger.error(
+        `Paiement Papi : nom du client introuvable (candidature ${candidatureId})`,
+      );
+      throw new BadRequestException(
+        'Le nom du client est introuvable : completez votre profil avant de payer.',
       );
     }
 
     if (moyenPaiementClientId) {
-      // Verifie propriete + actif (meme garde que MVola) ; le numero n'est
-      // pas utilise : Papi le demande au client sur sa page de paiement.
+      // Verifie propriete + actif ; le numero n'est pas utilise (Papi le
+      // demande au client sur sa page de paiement).
       await this.moyensPaiementClientService.trouverPourPaiement(
         moyenPaiementClientId,
         clientId,
       );
     }
 
-    const reference = `KIANJA-${crypto
-      .randomBytes(6)
-      .toString('hex')
-      .toUpperCase()}`;
+    // 1) Transaction locale (ou reprise de l'existante sans lien).
+    let transaction: Transaction;
+    let premiereCreation = false;
 
+    if (existante) {
+      transaction = existante;
+    } else {
+      const reference = `KIANJA-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
+      try {
+        transaction = await this.repo.save(
+          this.repo.create({
+            candidatureId,
+            clientId,
+            etudiantId: candidature.etudiant.utilisateurId,
+            montant: montantConvenu,
+            methode: MethodePaiement.PAPI,
+            reference,
+            statut: StatutTransaction.EN_ATTENTE,
+            provider: 'papi',
+            providerStatut: 'creation_en_cours',
+            moyenPaiementClientId: moyenPaiementClientId ?? null,
+            ...snapshot,
+          }),
+        );
+      } catch (error) {
+        if (
+          error instanceof QueryFailedError &&
+          (error as unknown as { code?: string }).code === '23505'
+        ) {
+          throw new ConflictException(
+            'Un paiement existe deja pour cette candidature',
+          );
+        }
+        throw error;
+      }
+      premiereCreation = true;
+    }
+
+    // 2) Creation du lien chez Papi (un seul essai).
     const frontend = (
       this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001'
     ).replace(/\/+$/, '');
     const apiPublique = this.configService
       .get<string>('API_PUBLIC_URL')
       ?.replace(/\/+$/, '');
+    const retour = `${frontend}/tableau-de-bord/paiements?retour=papi&ref=${encodeURIComponent(transaction.reference)}`;
 
-    let creation: {
-      idFournisseur: string;
-      lienPaiement: string;
-      statut: string;
-    };
-
+    let creation: Awaited<ReturnType<PapiService['creerPaiement']>>;
     try {
       creation = await this.papiService.creerPaiement({
-        montantAr: montantConvenu,
-        reference,
+        montantAr: Number(transaction.montant),
+        reference: transaction.reference,
+        nomClient,
         description: `Paiement mission "${candidature.mission.titre}" - KIANJA`,
-        urlRetour: `${frontend}/tableau-de-bord/paiements?retour=papi&ref=${encodeURIComponent(reference)}`,
+        urlSucces: `${retour}&resultat=succes`,
+        urlEchec: `${retour}&resultat=echec`,
         urlNotification: apiPublique
           ? `${apiPublique}/paiements/webhook/papi`
           : undefined,
       });
     } catch (error) {
+      await this.traiterEchecCreationPapi(transaction, error);
+      throw new ServiceUnavailableException(
+        error instanceof PapiError && error.refusDefinitif
+          ? 'Papi a refuse la transaction. Verifiez vos informations ou utilisez un autre moyen de paiement.'
+          : 'Papi ne repond pas correctement pour le moment. Votre paiement n\'a pas ete debite ; reessayez dans un instant.',
+      );
+    }
+
+    // 3) Enregistrement du lien (mise a jour ciblee : ne touche jamais au statut).
+    try {
+      await this.repo.update(
+        { id: transaction.id, statut: StatutTransaction.EN_ATTENTE },
+        {
+          providerCorrelationId: creation.referencePapi,
+          lienPaiement: creation.lienPaiement,
+          providerStatut: 'pending',
+        },
+      );
+    } catch (error) {
+      // Papi a cree le lien mais la sauvegarde a echoue : etat incertain,
+      // a reconcilier. La transaction reste EN_ATTENTE ; un nouvel essai
+      // reutilise la meme reference marchande.
       this.logger.error(
-        `Echec de creation Papi pour la candidature ${candidatureId} : ${
+        `INCOHERENCE A RECONCILIER : lien Papi cree mais non enregistre (ref=${transaction.reference}, paymentReference=${creation.referencePapi}) : ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
       throw new ServiceUnavailableException(
-        'La passerelle de paiement Papi a refuse la transaction. Reessayez dans un instant.',
+        'Le paiement a ete initie mais son enregistrement a echoue. Reessayez : votre paiement sera repris sans doublon.',
       );
     }
 
-    const transaction = this.repo.create({
-      candidatureId,
-      clientId,
-      etudiantId: candidature.etudiant.utilisateurId,
-      montant: montantConvenu,
-      methode: MethodePaiement.PAPI,
-      reference,
-      statut: StatutTransaction.EN_ATTENTE,
-      provider: 'papi',
-      providerCorrelationId: creation.idFournisseur,
-      providerStatut: creation.statut,
-      lienPaiement: creation.lienPaiement,
-      moyenPaiementClientId: moyenPaiementClientId ?? null,
-      ...snapshot,
-    });
+    transaction.providerCorrelationId = creation.referencePapi;
+    transaction.lienPaiement = creation.lienPaiement;
+    transaction.providerStatut = 'pending';
 
-    let saved: Transaction;
-    try {
-      saved = await this.repo.save(transaction);
-    } catch (error) {
-      if (
-        error instanceof QueryFailedError &&
-        (error as unknown as { code?: string }).code === '23505'
-      ) {
-        throw new ConflictException(
-          'Un paiement existe deja pour cette candidature',
-        );
-      }
-      throw error;
+    // Notifications metier : une seule fois, a la premiere obtention du lien.
+    if (premiereCreation) {
+      await this.notificationsService.creer({
+        destinataireId: candidature.etudiant.utilisateurId,
+        type: TypeNotification.PAIEMENT_INITIE,
+        titre: 'Paiement initié',
+        message: `Un paiement de ${montantConvenu} Ar est en cours pour "${candidature.mission.titre}".`,
+        lienUrl: '/tableau-de-bord/paiements',
+      });
+
+      await this.emailService.envoyerPaiementInitie(
+        await this.emailDeUtilisateur(candidature.etudiant.utilisateurId),
+        {
+          nom: candidature.etudiant.utilisateur?.nom ?? 'Etudiant',
+          titreMission: candidature.mission.titre,
+          montant: montantConvenu,
+          reference: transaction.reference,
+        },
+      );
     }
 
-    await this.notificationsService.creer({
-      destinataireId: candidature.etudiant.utilisateurId,
-      type: TypeNotification.PAIEMENT_INITIE,
-      titre: 'Paiement initié',
-      message: `Un paiement de ${montantConvenu} Ar est en cours pour "${candidature.mission.titre}".`,
-      lienUrl: '/tableau-de-bord/paiements',
-    });
+    return transaction;
+  }
 
-    await this.emailService.envoyerPaiementInitie(
-      await this.emailDeUtilisateur(candidature.etudiant.utilisateurId),
-      {
-        nom: candidature.etudiant.utilisateur?.nom ?? 'Etudiant',
-        titreMission: candidature.mission.titre,
-        montant: montantConvenu,
-        reference,
-      },
+  /**
+   * Echec de creation du lien Papi : refus definitif -> annulation ;
+   * resultat incertain -> la transaction reste en attente (jamais
+   * « echouee » par hypothese).
+   */
+  private async traiterEchecCreationPapi(
+    transaction: Transaction,
+    error: unknown,
+  ): Promise<void> {
+    const papi = error instanceof PapiError ? error : null;
+    this.logger.error(
+      `Echec creation Papi (ref=${transaction.reference}) : nature=${papi?.nature ?? 'inconnue'}, http=${papi?.statutHttp ?? '-'}, definitif=${papi?.refusDefinitif ?? false} : ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
 
-    return saved;
+    try {
+      if (papi?.refusDefinitif || papi?.nature === 'parametres') {
+        // Rien n'a pu etre cree chez Papi : on libere le creneau.
+        await this.repo.update(
+          { id: transaction.id, statut: StatutTransaction.EN_ATTENTE },
+          { statut: StatutTransaction.ANNULEE, providerStatut: 'refuse_par_papi' },
+        );
+      } else {
+        await this.repo.update(
+          { id: transaction.id, statut: StatutTransaction.EN_ATTENTE },
+          { providerStatut: 'creation_incertaine' },
+        );
+      }
+    } catch (majError) {
+      this.logger.error(
+        `Mise a jour du statut de creation impossible (ref=${transaction.reference}) : ${
+          majError instanceof Error ? majError.message : String(majError)
+        }`,
+      );
+    }
   }
 
   /** Fournisseurs en ligne : leur statut est gere par le fournisseur. */
@@ -501,10 +613,15 @@ export class PaiementsService {
   private async statutAupresDuFournisseur(
     transaction: Transaction,
   ): Promise<StatutFournisseur> {
-    const id = transaction.providerCorrelationId as string;
-    return transaction.provider === 'papi'
-      ? this.papiService.verifierStatut(id)
-      : this.mvolaService.verifierStatut(id);
+    if (transaction.provider === 'papi') {
+      return this.papiService.verifierStatut({
+        paymentReference: transaction.providerCorrelationId,
+        reference: transaction.reference,
+      });
+    }
+    return this.mvolaService.verifierStatut(
+      transaction.providerCorrelationId as string,
+    );
   }
 
   /**
@@ -1040,14 +1157,27 @@ export class PaiementsService {
       );
     }
 
-    if (!transaction.providerCorrelationId) {
+    // Papi peut etre interroge par la reference marchande meme si la reference
+    // Papi n'a pas pu etre enregistree (creation incertaine).
+    if (transaction.provider !== 'papi' && !transaction.providerCorrelationId) {
       throw new BadRequestException(
         "Cette transaction n'a pas d'identifiant fournisseur : verification impossible",
       );
     }
 
-    const statutFournisseur =
-      await this.statutAupresDuFournisseur(transaction);
+    let statutFournisseur: StatutFournisseur;
+    try {
+      statutFournisseur = await this.statutAupresDuFournisseur(transaction);
+    } catch (error) {
+      this.logger.error(
+        `Verification fournisseur impossible pour ${transaction.reference} (${transaction.provider}) : ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      throw new ServiceUnavailableException(
+        'La verification aupres du fournisseur est indisponible pour le moment. Reessayez dans un instant.',
+      );
+    }
 
     transaction.providerStatut =
       statutFournisseur;
@@ -1068,7 +1198,12 @@ export class PaiementsService {
       );
     }
 
-    await this.repo.save(transaction);
+    // Mise a jour ciblee : un `save` complet pourrait ecraser une
+    // confirmation survenue entre-temps (statut perime en memoire).
+    await this.repo.update(
+      { id: transaction.id, statut: StatutTransaction.EN_ATTENTE },
+      { providerStatut: statutFournisseur },
+    );
 
     return transaction;
   }
@@ -1091,11 +1226,15 @@ export class PaiementsService {
 
     const correlationId =
       fournisseurAttendu === 'papi'
-        ? (texteCourt(payload?.id) ?? texteCourt(payload?.paymentId))
+        ? (texteCourt(payload?.papiPaymentReference) ??
+          texteCourt(payload?.paymentReference) ??
+          texteCourt(payload?.paymentId) ??
+          texteCourt(payload?.id))
         : texteCourt(payload?.serverCorrelationId);
     const reference =
       fournisseurAttendu === 'papi'
-        ? texteCourt(payload?.reference)
+        ? (texteCourt(payload?.merchantPaymentReference) ??
+          texteCourt(payload?.reference))
         : texteCourt(payload?.transactionReference);
 
     if (!correlationId && !reference) {
@@ -1125,11 +1264,27 @@ export class PaiementsService {
     // Seules les transactions en ligne MVola sont concernees ; les
     // declarations manuelles sont verifiees par un administrateur.
     // Un webhook ne peut agir que sur une transaction de SON fournisseur.
+    // Papi s'interroge aussi par la reference marchande : la reference Papi
+    // n'est donc pas indispensable (creation incertaine).
     if (
       transaction.provider !== fournisseurAttendu ||
-      !transaction.providerCorrelationId
+      (fournisseurAttendu !== 'papi' && !transaction.providerCorrelationId)
     ) {
       throw new BadRequestException('Transaction non eligible a une notification');
+    }
+
+    // Coherence du montant annonce (quand la notification en contient un).
+    if (payload.amount !== undefined && payload.amount !== null) {
+      const annonce = Number(payload.amount);
+      if (
+        !Number.isFinite(annonce) ||
+        Math.round(annonce * 100) !== Math.round(Number(transaction.montant) * 100)
+      ) {
+        this.logger.error(
+          `Webhook paiement : montant incoherent pour ${transaction.reference} (annonce=${String(payload.amount)}, attendu=${String(transaction.montant)}) : notification ignoree`,
+        );
+        throw new BadRequestException('Montant de la notification incoherent');
+      }
     }
 
     // Verification aupres du fournisseur (source de verite).
@@ -1158,7 +1313,11 @@ export class PaiementsService {
       return { status: 'cancelled' };
     }
 
-    await this.repo.save(transaction);
+    // Mise a jour ciblee : ne jamais ecraser un statut deja change.
+    await this.repo.update(
+      { id: transaction.id, statut: StatutTransaction.EN_ATTENTE },
+      { providerStatut: statutFournisseur },
+    );
     return { status: 'pending' };
   }
 
@@ -1511,7 +1670,7 @@ export class PaiementsService {
         transaction.clientId,
 
       type:
-        TypeNotification.PAIEMENT_CONFIRME,
+        TypeNotification.PAIEMENT_ECHOUE,
 
       titre:
         'Paiement non abouti',

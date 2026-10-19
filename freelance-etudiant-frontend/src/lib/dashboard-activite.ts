@@ -35,6 +35,7 @@ const LIBELLES_PAR_TYPE: Record<
   paiement_initie: { label: "Paiement déclaré", ton: "ink" },
   paiement_confirme: { label: "Paiement confirmé", ton: "rice" },
   paiement_libere: { label: "Paiement libéré", ton: "rice" },
+  paiement_echoue: { label: "Paiement non abouti", ton: "brique" },
   nouvelle_reaction: { label: "Nouvelle réaction", ton: "ink" },
   mention: { label: "Nouvelle mention", ton: "ocre" },
   mission_expiree: { label: "Mission arrivée à échéance", ton: "brique" },
