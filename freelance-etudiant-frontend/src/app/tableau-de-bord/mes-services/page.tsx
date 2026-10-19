@@ -319,7 +319,7 @@ function FormulaireService({
               )
             }
             disabled={chargement}
-            className="h-4 w-4"
+            className="h-4 w-4 accent-ocre"
           />
 
           <div>

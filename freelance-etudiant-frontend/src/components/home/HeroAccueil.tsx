@@ -97,7 +97,7 @@ export function HeroAccueil({
             id="cible-recherche"
             value={cible}
             onChange={(e) => setCible(e.target.value as CibleRecherche)}
-            className="kianja-field-control cursor-pointer bg-transparent py-3 pl-4 pr-2 text-sm font-medium text-ink outline-none"
+            className="kianja-field-control cursor-pointer bg-transparent py-3 pl-4 pr-2 text-sm font-medium text-ink outline-none focus:outline-none"
           >
             <option value="services">Services</option>
             <option value="missions">Missions</option>
@@ -117,7 +117,7 @@ export function HeroAccueil({
                 ? "Rechercher un service étudiant"
                 : "Rechercher une mission de client"
             }
-            className="kianja-field-control min-w-0 flex-1 bg-transparent px-3 text-sm text-ink outline-none placeholder:text-ink-soft/60"
+            className="kianja-field-control min-w-0 flex-1 bg-transparent px-3 text-sm text-ink outline-none focus:outline-none placeholder:text-ink-soft/60"
           />
 
           <button

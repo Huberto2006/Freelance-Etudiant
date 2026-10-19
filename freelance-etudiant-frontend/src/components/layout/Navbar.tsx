@@ -383,6 +383,7 @@ export function Navbar({
                 placeholder="Rechercher un service…"
                 aria-label="Rechercher un service"
                 className="
+                  kianja-field-control
                   h-9
                   w-full
                   rounded-full
@@ -394,6 +395,7 @@ export function Navbar({
                   text-xs
                   text-ink
                   outline-none
+                  focus:outline-none
                   transition
                   placeholder:text-ink-soft/50
                 "

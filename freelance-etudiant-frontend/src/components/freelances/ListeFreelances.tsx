@@ -212,7 +212,7 @@ export function ListeFreelances() {
             onChange={(e) => setRecherche(e.target.value)}
             placeholder="Nom, compétence, filière, ville…"
             aria-label="Rechercher un freelance"
-            className="kianja-field-control h-11 w-full rounded-full border-0 bg-paper-light pl-9 pr-3 text-sm text-ink outline-none transition placeholder:text-ink-soft/50"
+            className="kianja-field-control h-11 w-full rounded-full border-0 bg-paper-light pl-9 pr-3 text-sm text-ink outline-none focus:outline-none transition placeholder:text-ink-soft/50"
           />
         </div>
 
@@ -221,7 +221,7 @@ export function ListeFreelances() {
             type="checkbox"
             checked={disponiblesSeulement}
             onChange={(e) => setDisponiblesSeulement(e.target.checked)}
-            className="h-4 w-4 accent-[var(--theme-bleu)]"
+            className="h-4 w-4 accent-ocre"
           />
           Disponibles uniquement
         </label>

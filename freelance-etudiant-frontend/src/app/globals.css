@@ -289,6 +289,56 @@ option {
   outline-offset: 2px;
 }
 
+/* ==========================================================================
+   NEUTRALISATION DES EFFETS BLEUS ET ÉPAISSISSEMENTS SUR LES CHAMPS
+   (inputs, textareas, selects, .kianja-field-control)
+   ========================================================================== */
+
+/* Tous les champs de formulaire :
+   - Neutralise le halo bleu mobile (-webkit-tap-highlight-color)
+   - Ajuste le curseur textuel pour suivre la couleur de texte normale */
+input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]),
+textarea,
+select,
+.kianja-field-control {
+  -webkit-tap-highlight-color: transparent;
+  caret-color: var(--color-ink);
+}
+
+/* Au focus, focus-visible, clic, sélection ou active :
+   La bordure conserve exactement son apparence normale d'origine :
+   - Aucun effet de couleur bleue sur la bordure
+   - Aucun épaississement de bordure
+   - Aucun contour (outline) bleu ou épais
+   - Aucune ombre / anneau (ring / box-shadow) */
+input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]):focus,
+input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]):focus-visible,
+input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]):active,
+textarea:focus,
+textarea:focus-visible,
+textarea:active,
+select:focus,
+select:focus-visible,
+select:active,
+.kianja-field-control:focus,
+.kianja-field-control:focus-visible,
+.kianja-field-control:active,
+.kianja-field-control:focus-within {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-shadow: 0 0 #0000 !important;
+}
+
+/* Cases à cocher et boutons radio : utilisation de la couleur ocre
+   au lieu de l'accent bleu natif du navigateur */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--color-ocre);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;

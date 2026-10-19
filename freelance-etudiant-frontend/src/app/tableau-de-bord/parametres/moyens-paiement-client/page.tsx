@@ -555,7 +555,7 @@ function FormulaireMoyen({
             checked={principal}
             onChange={(e) => setPrincipal(e.target.checked)}
             disabled={envoi}
-            className="h-4 w-4 rounded border-ink/30"
+            className="h-4 w-4 rounded border-ink/30 accent-ocre"
           />
           Définir comme moyen principal
         </label>

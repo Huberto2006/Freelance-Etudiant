@@ -215,7 +215,7 @@ export function NavbarPublique() {
                 name="q"
                 placeholder="Rechercher un service…"
                 aria-label="Rechercher un service"
-                className="kianja-field-control h-9 w-full rounded-full border-0 bg-paper-light pl-9 pr-3 text-xs text-ink outline-none transition placeholder:text-ink-soft/50"
+                className="kianja-field-control h-9 w-full rounded-full border-0 bg-paper-light pl-9 pr-3 text-xs text-ink outline-none focus:outline-none transition placeholder:text-ink-soft/50"
               />
             </div>
           </form>
