@@ -117,7 +117,7 @@ export function SectionAudiences() {
   return (
     <section
       id="audiences"
-      className="mx-auto max-w-6xl px-4 pb-12 pt-10 sm:px-5 sm:pb-16 sm:pt-14"
+      className="mx-auto w-full max-w-7xl px-5 pb-12 pt-10 sm:px-8 sm:pb-16 sm:pt-14 lg:px-10"
     >
       <SectionTitre
         icon={Layers}

@@ -13,7 +13,6 @@ export function NoticeCard({
 }) {
   return (
     <div className={clsx("notice-card p-5", className)} onClick={onClick}>
-      <span className="notice-pin" aria-hidden="true" />
       {children}
     </div>
   );
@@ -27,6 +26,7 @@ export function StampBadge({
   size?: number;
 }) {
   const arrondi = Math.round(score);
+
   return (
     <div
       className="stamp shrink-0"
@@ -34,7 +34,9 @@ export function StampBadge({
       title={`Score de reputation : ${arrondi}/100`}
     >
       <span className="text-lg font-bold leading-none">{arrondi}</span>
-      <span className="text-[0.625rem] uppercase tracking-wider mt-0.5">score</span>
+      <span className="mt-0.5 text-[0.625rem] uppercase tracking-wider">
+        score
+      </span>
     </div>
   );
 }
@@ -57,6 +59,7 @@ export function Tag({
     brique: "border-brique/50 text-brique bg-brique/10",
     bleu: "border-bleu-dark/40 text-bleu-dark bg-bleu-soft",
   };
+
   return (
     <span
       className={clsx(
@@ -76,44 +79,32 @@ export function Tag({
  * ============================================================
  */
 
-/**
- * Correspondance statut métier -> ton visuel du badge.
- * Aucune statut n'est créée ici : uniquement la mise en forme des
- * statuts déjà définis par le backend (types.ts / format.ts).
- *
- * Convention Kianja :
- * - attente / neutre        -> "ocre"
- * - positif / en cours      -> "rice"
- * - négatif / erreur        -> "brique"
- * - ouvert / disponible     -> "bleu" (interaction disponible)
- * - terminé / archivé       -> "ink"
- */
 const TONS_PAR_STATUT: Record<string, ToneTag> = {
-  // --- Missions ---
+  // Missions
   ouverte: "bleu",
   en_cours: "rice",
   terminee: "ink",
   fermee: "ink",
   expiree: "brique",
 
-  // --- Candidatures / demandes de service / invitations ---
+  // Candidatures / demandes de service / invitations
   en_attente: "ocre",
   acceptee: "rice",
   refusee: "brique",
 
-  // --- Livraisons ---
+  // Livraisons
   validee: "rice",
   correction_demandee: "brique",
 
-  // --- Transactions / paiements ---
+  // Transactions / paiements
   confirmee: "rice",
   liberee: "rice",
   annulee: "brique",
 
-  // --- Services ---
+  // Services
   disponible: "bleu",
 
-  // --- Signalements (admin) ---
+  // Signalements (admin)
   ouvert: "bleu",
   traite: "rice",
 };
@@ -122,19 +113,12 @@ export function toneStatut(statut: string): ToneTag {
   return TONS_PAR_STATUT[statut] ?? "ink";
 }
 
-/**
- * Badge de statut standard : ton automatique selon le statut métier
- * (toneStatut) + libellé français issu des cartes de format.ts.
- * Réutilisée par missions, services, candidatures, livraisons,
- * paiements, évaluations, groupes… pour une mise en forme homogène.
- */
 export function BadgeStatut({
   statut,
   labels,
   className,
 }: {
   statut: string;
-  /** Carte de libellés (ex. statutCandidatureLabel). */
   labels: Record<string, string>;
   className?: string;
 }) {
@@ -145,14 +129,6 @@ export function BadgeStatut({
   );
 }
 
-/**
- * Intertitre standard des pages publiques (profil étudiant, profil client…)
- * : une seule source de vérité pour l'échelle de texte et la marge basse,
- * évite les h2 aux tailles/espacements disparates.
- *
- * À ne pas confondre avec components/home/SectionTitre.tsx, qui est
- * l'en-tête de bloc illustré de la page d'accueil (médaillon + eyebrow).
- */
 export function SousTitreSection({
   children,
   className,
@@ -167,10 +143,6 @@ export function SousTitreSection({
   );
 }
 
-/**
- * Message d'état vide standard (« Aucun avis pour le moment. », etc.),
- * réutilisé par toutes les listes potentiellement vides.
- */
 export function MessageVide({
   children,
   className,
@@ -178,13 +150,13 @@ export function MessageVide({
   children: ReactNode;
   className?: string;
 }) {
-  return <p className={clsx("text-sm text-ink-soft/70", className)}>{children}</p>;
+  return (
+    <p className={clsx("text-sm text-ink-soft/70", className)}>
+      {children}
+    </p>
+  );
 }
 
-/**
- * En-tete de page standard : medaillon-icone + eyebrow + titre.
- * Reprend le meme rythme visuel sur tout le tableau de bord.
- */
 export function PageHeader({
   icon: Icon,
   eyebrow,
@@ -204,6 +176,7 @@ export function PageHeader({
     brique: "bg-brique/10 text-brique",
     ink: "bg-ink/10 text-ink",
   };
+
   return (
     <div className={clsx("mb-7 flex items-center gap-3", className)}>
       <span
@@ -215,8 +188,9 @@ export function PageHeader({
       >
         <Icon size={20} />
       </span>
+
       <div>
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark mb-1">
+        <p className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
           {eyebrow}
         </p>
         <h1 className="font-display text-3xl font-semibold">{title}</h1>
@@ -225,17 +199,6 @@ export function PageHeader({
   );
 }
 
-/**
- * État vide standard (liste sans résultat) : médaillon-icône + texte
- * centré, dans une NoticeCard. Avant ce composant, ce même geste visuel
- * (icône dans un médaillon `bg-ink/5`, texte `text-ink-soft/70`, `py-8
- * text-center`) était réécrit à la main dans chaque page — avec de
- * légères variations (icône nue vs médaillon, tailles différentes) qui
- * le rendaient visuellement moins cohérent d'une page à l'autre.
- * `MessageVide` ci-dessus reste approprié pour une simple ligne de texte
- * dans un contexte déjà encadré (ex. sous un `SousTitreSection`) ; ce
- * composant-ci est pour un état vide qui occupe toute la zone de liste.
- */
 export function EtatVide({
   icon: Icon,
   children,
@@ -244,7 +207,6 @@ export function EtatVide({
 }: {
   icon: ComponentType<LucideProps>;
   children: ReactNode;
-  /** Bouton optionnel sous le texte (ex. « Publier une mission »). */
   action?: ReactNode;
   className?: string;
 }) {
@@ -261,30 +223,22 @@ export function EtatVide({
       >
         <Icon size={22} />
       </span>
+
       <p className="text-sm text-ink-soft/70">{children}</p>
+
       {action}
     </NoticeCard>
   );
 }
 
-/**
- * Écran de chargement standard (page ou section en attente de données).
- * Avant ce composant, le même `<p className="text-sm text-ink-soft">
- * Chargement…</p>` était répété tel quel dans une vingtaine de fichiers —
- * toute évolution (icône animée, délai avant affichage...) aurait dû être
- * appliquée partout à la main.
- */
 export function ChargementPage({ className }: { className?: string }) {
   return (
-    <p className={clsx("text-sm text-ink-soft", className)}>Chargement…</p>
+    <p className={clsx("text-sm text-ink-soft", className)}>
+      Chargement…
+    </p>
   );
 }
 
-/**
- * Carte de statistique "punaisee" : icone dans un medaillon,
- * label mono, grande valeur en display, et une sous-legende
- * optionnelle. Base de toutes les tuiles de statistiques.
- */
 export function StatCard({
   icon: Icon,
   label,
@@ -306,6 +260,7 @@ export function StatCard({
     brique: "bg-brique/10 text-brique",
     ink: "bg-ink/10 text-ink",
   };
+
   return (
     <NoticeCard className={clsx("flex flex-col gap-3", className)}>
       <div className="flex items-center gap-2.5">
@@ -318,11 +273,14 @@ export function StatCard({
         >
           <Icon size={18} strokeWidth={2} />
         </span>
-        <p className="text-xs font-mono uppercase tracking-wider text-ink-soft">
+
+        <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
           {label}
         </p>
       </div>
+
       <p className="font-display text-3xl leading-none">{value}</p>
+
       {sublabel && (
         <p className="text-xs text-ink-soft/70">{sublabel}</p>
       )}

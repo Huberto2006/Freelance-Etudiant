@@ -64,7 +64,7 @@ const VALEURS = [
 
 export default function PageAPropos() {
   return (
-    <div className="mx-auto max-w-4xl px-5 pb-7 pt-8 sm:pt-11">
+    <div className="mx-auto w-full max-w-7xl px-5 pb-12 pt-10 sm:px-8 sm:pb-16 sm:pt-14 lg:px-10">
       <EnTetePagePublique
         icon={Info}
         eyebrow="À propos"

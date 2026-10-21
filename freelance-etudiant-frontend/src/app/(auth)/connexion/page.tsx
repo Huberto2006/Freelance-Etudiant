@@ -17,21 +17,18 @@ import { BoutonGoogle } from "@/components/auth/BoutonGoogle";
 export default function ConnexionPage() {
   const { connecter, connecterAvecGoogle } = useAuth();
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
 
-  // Jeton Turnstile (a usage unique) et garde contre les doubles envois.
+  // Jeton Turnstile et protection contre les doubles envois.
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnstile = useRef<TurnstileHandle>(null);
   const enCours = useRef(false);
 
-  /*
-   * Cas specifique "email non verifie" : le backend refuse la connexion
-   * (401) avec un message clair. On affiche ce message et on propose de
-   * renvoyer l'email de verification avec l'adresse saisie.
-   */
+  // Gestion de la vérification de l'adresse email.
   const [erreurVerification, setErreurVerification] = useState<string | null>(
     null,
   );
@@ -40,17 +37,22 @@ export default function ConnexionPage() {
 
   async function onGoogle(idToken: string) {
     if (enCours.current) return;
+
     if (!turnstileToken) {
       setErreur("Complétez d'abord la vérification anti-robot ci-dessous.");
       return;
     }
+
     enCours.current = true;
     setErreur(null);
     setErreurVerification(null);
+    setRenvoiMessage(null);
     setEnvoi(true);
+
     try {
       const { role, completionProfil, premiereConnexion } =
         await connecterAvecGoogle(idToken, turnstileToken);
+
       router.push(
         role === "a_definir"
           ? "/choix-role"
@@ -69,25 +71,29 @@ export default function ConnexionPage() {
     } finally {
       enCours.current = false;
       setEnvoi(false);
-      // Le jeton Turnstile est a usage unique : on en demande un nouveau.
       turnstile.current?.reset();
+      setTurnstileToken(null);
     }
   }
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
     if (enCours.current || !turnstileToken) return;
+
     enCours.current = true;
     setErreur(null);
     setErreurVerification(null);
     setRenvoiMessage(null);
     setEnvoi(true);
+
     try {
       const { completionProfil, premiereConnexion } = await connecter(
         email,
         motDePasse,
         turnstileToken,
       );
+
       router.push(
         premiereConnexion &&
           completionProfil?.role === "etudiant" &&
@@ -113,18 +119,23 @@ export default function ConnexionPage() {
       enCours.current = false;
       setEnvoi(false);
       turnstile.current?.reset();
+      setTurnstileToken(null);
     }
   }
 
   async function renvoyerEmailVerification() {
+    if (renvoiEnCours) return;
+
     setRenvoiEnCours(true);
     setRenvoiMessage(null);
+
     try {
       const reponse = await api.post<{ message: string }>(
         "/auth/resend-verification",
         { email },
         { auth: false },
       );
+
       setRenvoiMessage(reponse.message);
     } catch (err) {
       setRenvoiMessage(
@@ -140,10 +151,6 @@ export default function ConnexionPage() {
   return (
     <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center px-5 pb-12">
       <div className="w-full">
-        <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
-          Bon retour
-        </p>
-
         <h1 className="mb-7 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
           Se connecter
         </h1>
@@ -155,11 +162,18 @@ export default function ConnexionPage() {
               texte="continue_with"
               disabled={envoi}
             />
+
             {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
               <div className="flex items-center gap-3 text-xs text-ink-soft">
-                <span className="h-px flex-1 bg-ink/10" aria-hidden="true" />
+                <span
+                  className="h-px flex-1 bg-ink/10"
+                  aria-hidden="true"
+                />
                 ou avec votre email
-                <span className="h-px flex-1 bg-ink/10" aria-hidden="true" />
+                <span
+                  className="h-px flex-1 bg-ink/10"
+                  aria-hidden="true"
+                />
               </div>
             )}
           </div>
@@ -174,6 +188,7 @@ export default function ConnexionPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="vous@exemple.mg"
+                className="focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
               />
             </Field>
 
@@ -185,6 +200,7 @@ export default function ConnexionPage() {
                 value={motDePasse}
                 onChange={(e) => setMotDePasse(e.target.value)}
                 placeholder="••••••••"
+                className="focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
               />
             </Field>
 
@@ -195,14 +211,22 @@ export default function ConnexionPage() {
               Mot de passe oublié ?
             </Link>
 
-            {erreur && <p className="text-sm text-brique">{erreur}</p>}
+            {erreur && (
+              <p className="text-sm text-brique" role="alert">
+                {erreur}
+              </p>
+            )}
 
             {erreurVerification && (
               <div className="flex flex-col gap-3">
-                <p className="text-sm text-brique">{erreurVerification}</p>
+                <p className="text-sm text-brique" role="alert">
+                  {erreurVerification}
+                </p>
 
                 {renvoiMessage && (
-                  <p className="text-xs text-ink-soft">{renvoiMessage}</p>
+                  <p className="text-xs text-ink-soft" role="status">
+                    {renvoiMessage}
+                  </p>
                 )}
 
                 <Button

@@ -45,7 +45,7 @@ export function SectionAvantages() {
   const { utilisateur, chargement } = useAuth();
 
   return (
-    <section id="avantages" className="mx-auto max-w-6xl px-4 pb-8 sm:px-5 sm:pb-12">
+    <section id="avantages" className="mx-auto w-full max-w-7xl px-5 pb-12 pt-10 sm:px-8 sm:pb-16 sm:pt-14 lg:px-10">
       <SectionTitre
         icon={ShieldCheck}
         eyebrow="Garanties & Valeurs"

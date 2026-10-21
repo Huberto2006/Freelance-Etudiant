@@ -67,7 +67,7 @@ export function HeroAccueil({
         aria-hidden="true"
       />
 
-      <div className="relative z-20 mx-auto max-w-3xl px-5 py-16 text-center sm:px-10 sm:py-24">
+      <div className="relative z-20 mx-auto w-full max-w-7xl px-5 py-16 text-center sm:px-8 lg:px-10 sm:py-24">
         <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-soft">
           Kianja · Marketplace des étudiants freelances
         </p>

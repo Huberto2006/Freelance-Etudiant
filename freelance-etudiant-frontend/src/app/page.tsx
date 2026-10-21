@@ -11,8 +11,6 @@ import {
   SectionCategories,
   type CategorieAccueil,
 } from "@/components/home/SectionCategories";
-import { SectionServices } from "@/components/home/SectionServices";
-import { SectionMissions } from "@/components/home/SectionMissions";
 import { SectionAvantages } from "@/components/home/SectionAvantages";
 import { SectionAudiences } from "@/components/home/SectionAudiences";
 import { SectionFonctionnement } from "@/components/home/SectionFonctionnement";
@@ -95,12 +93,6 @@ export default function PageAccueil() {
 
       {/* 2. Audiences : mise en valeur immédiate des deux côtés de la marketplace */}
       <SectionAudiences />
-
-      {/* 3. Besoins des clients : missions ouvertes aux étudiants */}
-      <SectionMissions missions={missions} />
-
-      {/* 4. Compétences étudiantes : services prêts à l'emploi */}
-      <SectionServices services={services} />
 
       {/* 5. Catégories : exploration par domaine de compétences / filière */}
       <SectionCategories

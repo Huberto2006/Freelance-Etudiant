@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -19,18 +20,20 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  Newspaper,
+  FolderKanban,
+  MessageCircle,
+  Bell,
+  ShieldCheck,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import {
-  useAuth,
-} from "@/lib/auth-context";
-
-import {
-  navigationParRole,
-} from "@/lib/nav-links";
-
+import { useAuth } from "@/lib/auth-context";
+import { navigationParRole } from "@/lib/nav-links";
 import { getFileUrl } from "@/lib/api";
+import type { GroupeNav } from "@/lib/nav-links";
+import type { LucideIcon } from "lucide-react";
 
 type SidebarProps = {
   mobileOpen?: boolean;
@@ -40,96 +43,230 @@ type SidebarProps = {
 const SIDEBAR_OPEN_WIDTH = "260px";
 const SIDEBAR_CLOSED_WIDTH = "76px";
 
-const ICONS: Record<
-  string,
-  React.ElementType
-> = {
+const ICONS: Record<string, LucideIcon> = {
   "Tableau de bord": Home,
   Dashboard: Home,
-
+  Publications: Newspaper,
   Missions: BriefcaseBusiness,
-
   Services: ShoppingBag,
 
+  "Mon activité": FolderKanban,
   "Mes publications": Layers3,
-
+  "Mes services": ShoppingBag,
+  "Mes missions": BriefcaseBusiness,
   Candidatures: ClipboardList,
   "Mes candidatures": ClipboardList,
-
-  Groupes: Users,
-
-  Amis: UserRoundPlus,
-
   "Demandes de service": ClipboardList,
-
   Livraisons: Package,
   "Mes livraisons": Package,
 
+  Finances: Wallet,
   Paiements: Wallet,
   "Mes paiements": Wallet,
   Factures: FileText,
   "Moyens de paiement": Wallet,
 
-  "Évaluations": Star,
+  Communication: MessageCircle,
+  Messages: MessageCircle,
+  Notifications: Bell,
+
+  Communauté: Users,
+  Groupes: Users,
+  Amis: UserRoundPlus,
+  Favoris: Star,
+
+  Administration: ShieldCheck,
+  Évaluations: Star,
   Evaluations: Star,
   "Mes évaluations": Star,
 
   Profil: User,
   "Mon profil": User,
-
-  Favoris: Star,
-
   Paramètres: Settings,
 };
 
-function getIcon(label: string) {
-  return (
-    ICONS[label] ??
-    BriefcaseBusiness
-  );
+function getIcon(label: string): LucideIcon {
+  return ICONS[label] ?? BriefcaseBusiness;
 }
 
-function isActive(
-  pathname: string,
-  href: string,
-) {
-  if (pathname === href) {
-    return true;
-  }
+function isActive(pathname: string, href: string): boolean {
+  if (pathname === href) return true;
 
-  if (
-    href === "/tableau-de-bord"
-  ) {
-    return false;
-  }
+  if (href === "/tableau-de-bord") return false;
 
-  return pathname.startsWith(
-    `${href}/`,
-  );
+  return pathname.startsWith(`${href}/`);
 }
+
+type NavSection = {
+  title: string;
+  items: GroupeNav[];
+};
 
 export function Sidebar({
   mobileOpen = false,
   onMobileClose,
 }: SidebarProps) {
-  const {
-    utilisateur,
-    deconnecter,
-    chargement,
-  } = useAuth();
+  const { utilisateur, deconnecter, chargement } = useAuth();
+  const pathname = usePathname();
 
-  const pathname =
-    usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<
+    Record<string, boolean>
+  >({});
 
-  const [collapsed, setCollapsed] =
-    useState(false);
+  const navigation = utilisateur
+    ? navigationParRole[utilisateur.role] ?? []
+    : [];
 
-  /*
-   * ==========================================================
-   * SYNCHRONISATION DE LA LARGEUR
-   * ==========================================================
-   */
+  // Les messages et notifications peuvent rester dans le Navbar
+  // lorsqu'ils sont déclarés comme liens principaux séparés.
+  // Ils restent visibles ici s'ils appartiennent à un groupe.
+  const navigationSidebar = navigation.filter(
+    (item) =>
+      !["Messages", "Notifications"].includes(item.label),
+  );
 
+  const dashboard = navigationSidebar.find(
+    (item) =>
+      item.href === "/tableau-de-bord" ||
+      item.label === "Tableau de bord" ||
+      item.label === "Dashboard",
+  );
+
+  const parametres = navigationSidebar.find(
+    (item) => item.label === "Paramètres",
+  );
+
+  const profilDansNavigation = navigationSidebar.find(
+    (item) =>
+      item.label === "Profil" || item.label === "Mon profil",
+  );
+
+  const items = navigationSidebar.filter(
+    (item) =>
+      item !== dashboard &&
+      item !== parametres &&
+      item !== profilDansNavigation,
+  );
+
+  const trouverLabels = [
+    "Publications",
+    "Missions",
+    "Services",
+    "Explorer",
+  ];
+
+  const activiteLabels = [
+    "Mon activité",
+    "Mes publications",
+    "Mes services",
+    "Mes missions",
+    "Mes candidatures",
+    "Candidatures",
+    "Demandes de service",
+    "Livraisons",
+    "Mes livraisons",
+    "Finances",
+    "Paiements",
+    "Mes paiements",
+    "Factures",
+    "Évaluations",
+    "Mes évaluations",
+    "Evaluations",
+  ];
+
+  const communicationLabels = ["Communication"];
+  const communauteLabels = ["Communauté", "Groupes", "Amis", "Favoris"];
+  const administrationLabels = ["Administration"];
+
+  const trouver = items.filter((item) =>
+    trouverLabels.includes(item.label),
+  );
+
+  const activite = items.filter((item) =>
+    activiteLabels.includes(item.label),
+  );
+
+  const communication = items.filter((item) =>
+    communicationLabels.includes(item.label),
+  );
+
+  const communaute = items.filter((item) =>
+    communauteLabels.includes(item.label),
+  );
+
+  const administration = items.filter((item) =>
+    administrationLabels.includes(item.label),
+  );
+
+  const labelsClasses = [
+    ...trouverLabels,
+    ...activiteLabels,
+    ...communicationLabels,
+    ...communauteLabels,
+    ...administrationLabels,
+  ];
+
+  const autres = items.filter(
+    (item) => !labelsClasses.includes(item.label),
+  );
+
+  const sections: NavSection[] = [
+    {
+      title: "PRINCIPAL",
+      items: dashboard ? [dashboard] : [],
+    },
+    {
+      title: "EXPLORER",
+      items: trouver,
+    },
+    {
+      title: "MON ACTIVITÉ",
+      items: activite,
+    },
+    {
+      title: "COMMUNICATION",
+      items: communication,
+    },
+    {
+      title: "COMMUNAUTÉ",
+      items: communaute,
+    },
+    {
+      title: "ADMINISTRATION",
+      items: administration,
+    },
+    {
+      title: "AUTRES",
+      items: autres,
+    },
+  ];
+
+  // Ouvre automatiquement tout groupe contenant la page active.
+  useEffect(() => {
+    if (!pathname) return;
+
+    setExpandedGroups((previous) => {
+      const next = { ...previous };
+      let changed = false;
+
+      for (const item of navigationSidebar) {
+        if (
+          item.liens?.some((link) =>
+            isActive(pathname, link.href),
+          ) &&
+          !next[item.label]
+        ) {
+          next[item.label] = true;
+          changed = true;
+        }
+      }
+
+      return changed ? next : previous;
+    });
+  }, [pathname, utilisateur?.role]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Synchronise la largeur utilisée par le layout.
   useEffect(() => {
     const width = collapsed
       ? SIDEBAR_CLOSED_WIDTH
@@ -147,394 +284,147 @@ export function Sidebar({
     };
   }, [collapsed]);
 
-  /*
-   * ==========================================================
-   * ESCAPE — MOBILE
-   * ==========================================================
-   */
+  const closeMobile = useCallback(() => {
+    onMobileClose?.();
+  }, [onMobileClose]);
 
   useEffect(() => {
-    if (!mobileOpen) {
-      return;
-    }
+    if (!mobileOpen) return;
 
-    function handleKeyboard(
-      event: KeyboardEvent,
-    ) {
+    function handleKeyboard(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        onMobileClose?.();
+        closeMobile();
       }
     }
 
-    document.addEventListener(
-      "keydown",
-      handleKeyboard,
-    );
+    document.addEventListener("keydown", handleKeyboard);
 
     return () => {
-      document.removeEventListener(
-        "keydown",
-        handleKeyboard,
-      );
+      document.removeEventListener("keydown", handleKeyboard);
     };
-  }, [
-    mobileOpen,
-    onMobileClose,
-  ]);
-
-  /*
-   * ==========================================================
-   * CHARGEMENT AUTHENTIFICATION
-   * ==========================================================
-   */
-
-  if (
-    chargement ||
-    !utilisateur
-  ) {
-    return null;
-  }
-
-  /*
-   * ==========================================================
-   * NAVIGATION SELON LE RÔLE
-   * ==========================================================
-   */
-
-  const navigation =
-    navigationParRole[
-      utilisateur.role
-    ] ?? [];
-
-  /*
-   * ==========================================================
-   * ÉLÉMENTS GÉRÉS PAR LE NAVBAR
-   * ==========================================================
-   */
-
-  const navigationSidebar =
-    navigation.filter(
-      (item) =>
-        ![
-          "Messages",
-          "Notifications",
-        ].includes(item.label),
-    );
-
-  /*
-   * ==========================================================
-   * TABLEAU DE BORD
-   * ==========================================================
-   */
-
-  const dashboard =
-    navigationSidebar.find(
-      (item) =>
-        item.href ===
-          "/tableau-de-bord" ||
-        item.label ===
-          "Tableau de bord" ||
-        item.label ===
-          "Dashboard",
-    );
-
-  /*
-   * ==========================================================
-   * AUTRES ITEMS
-   * ==========================================================
-   */
-
-  const autresItems =
-    navigationSidebar.filter(
-      (item) =>
-        item !== dashboard,
-    );
-
-  const parametres =
-    autresItems.find(
-      (item) =>
-        item.label === "Paramètres",
-    );
-
-  /*
-   * Le profil est toujours affiché
-   * dans la partie inférieure.
-   */
-
-  const items =
-    autresItems.filter(
-      (item) =>
-        item.label !== "Profil" &&
-        item.label !== "Mon profil" &&
-        item.label !== "Paramètres",
-    );
-
-  /*
-   * ==========================================================
-   * SECTIONS
-   * ==========================================================
-   */
-
-  const trouverLabels = [
-    "Publications",
-    "Missions",
-    "Services",
-    "Explorer",
-  ];
-
-  const activiteLabels = [
-    "Mes publications",
-    "Mes services",
-    "Mes missions",
-    "Mes candidatures",
-    "Candidatures",
-    "Demandes de service",
-    "Livraisons",
-    "Mes livraisons",
-    "Paiements",
-    "Mes paiements",
-    "Factures",
-    "Évaluations",
-    "Mes évaluations",
-    "Evaluations",
-  ];
-
-  const communauteLabels = [
-    "Groupes",
-    "Amis",
-    "Favoris",
-  ];
-
-  const trouver = items.filter((item) =>
-    trouverLabels.includes(item.label),
-  );
-
-  const activite = items.filter((item) =>
-    activiteLabels.includes(item.label),
-  );
-
-  const communaute = items.filter((item) =>
-    communauteLabels.includes(item.label),
-  );
-
-  const principal = [
-    ...(dashboard ? [dashboard] : []),
-    ...items.filter(
-      (item) =>
-        !trouverLabels.includes(item.label) &&
-        !activiteLabels.includes(item.label) &&
-        !communauteLabels.includes(item.label),
-    ),
-  ];
-
-  /*
-   * ==========================================================
-   * ACTIONS
-   * ==========================================================
-   */
-
-  function closeMobile() {
-    onMobileClose?.();
-  }
+  }, [mobileOpen, closeMobile]);
 
   function logout() {
     closeMobile();
     deconnecter();
   }
 
-  /*
-   * ==========================================================
-   * RENDRE UN ITEM
-   * ==========================================================
-   */
+  function toggleGroup(label: string, containsActiveLink: boolean) {
+    if (collapsed) {
+      setCollapsed(false);
+      setExpandedGroups((previous) => ({
+        ...previous,
+        [label]: true,
+      }));
+      return;
+    }
 
-  function renderItem(
-    item: (typeof navigationSidebar)[number],
-  ) {
-    const Icon =
-      getIcon(item.label);
+    setExpandedGroups((previous) => ({
+      ...previous,
+      [label]: !(previous[label] ?? containsActiveLink),
+    }));
+  }
 
-    /*
-     * ========================================================
-     * GROUPE AVEC SOUS-LIENS
-     * ========================================================
-     */
+  function renderItem(item: GroupeNav) {
+    const Icon = item.icon ?? getIcon(item.label);
 
-    if (
-      item.liens &&
-      item.liens.length > 0
-    ) {
+    // Menu parent avec sous-menus.
+    if (item.liens && item.liens.length > 0) {
+      const containsActiveLink = item.liens.some((link) =>
+        isActive(pathname, link.href),
+      );
+
+      const expanded =
+        expandedGroups[item.label] ?? containsActiveLink;
+
       return (
-        <div
-          key={item.label}
-          className="space-y-1"
-        >
-          {!collapsed ? (
-            <div
-              className="
-                flex
-                items-center
-                gap-2
-                px-3
-                pb-2
-                pt-2
-                text-[0.65rem]
-                font-semibold
-                uppercase
-                tracking-[0.16em]
-                text-white/45
-              "
-            >
-              <Icon size={13} strokeWidth={2} />
-              <span>{item.label}</span>
-            </div>
-          ) : (
-            <div
-              className="
-                flex
-                justify-center
-                pb-1
-                text-white/45
-              "
-              title={item.label}
-              aria-label={item.label}
-            >
-              <Icon size={16} strokeWidth={2} />
-            </div>
-          )}
+        <div key={item.label} className="space-y-1">
+          <button
+            type="button"
+            onClick={() =>
+              toggleGroup(item.label, containsActiveLink)
+            }
+            title={collapsed ? item.label : undefined}
+            aria-expanded={collapsed ? false : expanded}
+            className={`
+              flex min-h-10 w-full items-center gap-3
+              rounded-lg px-3 py-2 text-sm font-medium
+              transition-colors
+              ${collapsed ? "justify-center" : ""}
+              ${
+                containsActiveLink
+                  ? "bg-white/10 text-white"
+                  : "text-white/75 hover:bg-white/10 hover:text-white"
+              }
+            `}
+          >
+            <Icon size={18} className="shrink-0" />
 
-          {item.liens.map(
-            (link) => {
-              const active =
-                isActive(
-                  pathname,
-                  link.href,
-                );
+            {!collapsed && (
+              <>
+                <span className="flex-1 truncate text-left">
+                  {item.label}
+                </span>
+                <ChevronDown
+                  size={15}
+                  className={`shrink-0 transition-transform ${
+                    expanded ? "rotate-180" : ""
+                  }`}
+                />
+              </>
+            )}
+          </button>
 
-              const LinkIcon =
-                getIcon(
-                  link.label,
-                );
+          {!collapsed && expanded && (
+            <div className="ml-4 space-y-1 border-l border-white/10 pl-3">
+              {item.liens.map((link) => {
+                const active = isActive(pathname, link.href);
+                const LinkIcon = getIcon(link.label);
 
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={
-                    closeMobile
-                  }
-                  title={
-                    collapsed
-                      ? link.label
-                      : undefined
-                  }
-                  aria-current={
-                    active
-                      ? "page"
-                      : undefined
-                  }
-                  className={`
-                    group
-                    flex
-                    min-h-10
-                    items-center
-                    gap-3
-                    rounded-lg
-                    px-3
-                    py-2
-                    text-sm
-                    font-medium
-                    transition-all
-                    duration-150
-
-                    ${
-                      collapsed
-                        ? "justify-center"
-                        : ""
-                    }
-
-                    ${
-                      active
-                        ? "bg-bleu text-white dark:text-slate-900 shadow-sm"
-                        : "text-white/75 hover:bg-white/10 hover:text-white"
-                    }
-                  `}
-                >
-                  <LinkIcon
-                    size={18}
-                    strokeWidth={
-                      active
-                        ? 2.4
-                        : 2
-                    }
-                    className="shrink-0"
-                  />
-
-                  {!collapsed && (
-                    <span className="truncate pl-1">
-                      {
-                        link.label
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={closeMobile}
+                    aria-current={active ? "page" : undefined}
+                    className={`
+                      flex min-h-9 items-center gap-3
+                      rounded-lg px-3 py-2 text-sm
+                      transition-colors
+                      ${
+                        active
+                          ? "bg-bleu text-white dark:text-slate-900"
+                          : "text-white/70 hover:bg-white/10 hover:text-white"
                       }
-                    </span>
-                  )}
-                </Link>
-              );
-            },
+                    `}
+                  >
+                    <LinkIcon size={16} className="shrink-0" />
+                    <span className="truncate">{link.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
           )}
         </div>
       );
     }
 
-    /*
-     * ========================================================
-     * LIEN SIMPLE
-     * ========================================================
-     */
+    // Lien simple.
+    if (!item.href) return null;
 
-    if (!item.href) {
-      return null;
-    }
-
-    const active =
-      isActive(
-        pathname,
-        item.href,
-      );
+    const active = isActive(pathname, item.href);
 
     return (
       <Link
         key={item.href}
         href={item.href}
         onClick={closeMobile}
-        title={
-          collapsed
-            ? item.label
-            : undefined
-        }
-        aria-current={
-          active
-            ? "page"
-            : undefined
-        }
+        title={collapsed ? item.label : undefined}
+        aria-current={active ? "page" : undefined}
         className={`
-          group
-          flex
-          items-center
-          gap-3
-          rounded-lg
-          px-3
-          py-2
-          text-sm
-          font-medium
-          transition-all
-          duration-150
-
-          ${
-            collapsed
-              ? "justify-center"
-              : ""
-          }
-
+          flex min-h-10 items-center gap-3 rounded-lg
+          px-3 py-2 text-sm font-medium transition-colors
+          ${collapsed ? "justify-center" : ""}
           ${
             active
               ? "bg-bleu text-white dark:text-slate-900 shadow-sm"
@@ -544,138 +434,65 @@ export function Sidebar({
       >
         <Icon
           size={18}
-          strokeWidth={
-            active
-              ? 2.4
-              : 2
-          }
+          strokeWidth={active ? 2.4 : 2}
           className="shrink-0"
         />
 
         {!collapsed && (
-          <span className="truncate">
-            {item.label}
-          </span>
+          <span className="truncate">{item.label}</span>
         )}
       </Link>
     );
   }
 
-  /*
-   * ==========================================================
-   * RENDRE UNE SECTION
-   * ==========================================================
-   */
-
-  function renderSection(
-    title: string,
-    sectionItems:
-      typeof navigationSidebar,
-  ) {
-    if (
-      sectionItems.length === 0
-    ) {
-      return null;
-    }
+  function renderSection(title: string, sectionItems: GroupeNav[]) {
+    if (sectionItems.length === 0) return null;
 
     return (
-      <div className="mb-6">
+      <div key={title} className="mb-5">
         {!collapsed && (
-          <p
-            className="
-              px-3
-              pb-2.5
-              text-[0.65rem]
-              font-semibold
-              uppercase
-              tracking-[0.16em]
-              text-white/45
-            "
-          >
+          <p className="px-3 pb-2.5 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-white/45">
             {title}
           </p>
         )}
 
         <div className="space-y-1">
-          {sectionItems.map(
-            renderItem,
-          )}
+          {sectionItems.map((item) => renderItem(item))}
         </div>
       </div>
     );
   }
 
-  /*
-   * ==========================================================
-   * CONTENU SIDEBAR
-   * ==========================================================
-   */
+  if (chargement || !utilisateur) {
+    return null;
+  }
 
   const sidebarContent = (
     <aside
       className={`
-        flex
-        h-full
-        flex-col
-        border-r
-        border-white/10
-        bg-panel
-        transition-[width]
-        duration-200
-        ease-in-out
-
-        ${
-          collapsed
-            ? "w-[4.75rem]"
-            : "w-[16.25rem]"
-        }
+        flex h-full flex-col border-r border-white/10
+        bg-panel transition-[width] duration-200 ease-in-out
+        ${collapsed ? "w-[4.75rem]" : "w-[16.25rem]"}
       `}
     >
-      {/* =====================================================
-          LOGO
-          ===================================================== */}
-
+      {/* En-tête et logo */}
       <div
         className={`
-          flex
-          h-16
-          shrink-0
-          items-center
-          border-b
-          border-white/10
-
-          ${
-            collapsed
-              ? "justify-center"
-              : "justify-between px-5"
-          }
+          flex h-16 shrink-0 items-center border-b border-white/10
+          ${collapsed ? "justify-center" : "justify-between px-5"}
         `}
       >
         <Link
           href="/tableau-de-bord"
           onClick={closeMobile}
-          className="
-            flex
-            items-center
-            gap-3
-          "
+          className="flex items-center gap-3"
           aria-label="Kianja"
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/logo-kianja.png"
             alt="Logo Kianja"
-            className="
-              h-9
-              w-9
-              shrink-0
-              rounded-xl
-              border
-              border-white/15
-              bg-white
-              object-contain
-              p-1
-              shadow-sm
-            "
+            className="h-9 w-9 shrink-0 rounded-xl border border-white/15 bg-white object-contain p-1 shadow-sm"
           />
 
           {!collapsed && (
@@ -683,7 +500,6 @@ export function Sidebar({
               <span className="block text-base font-semibold tracking-tight">
                 Kianja
               </span>
-
               <span className="block text-[0.625rem] text-white/55">
                 Freelances étudiants
               </span>
@@ -691,155 +507,60 @@ export function Sidebar({
           )}
         </Link>
 
-        {/* Bouton réduire */}
-
         {!collapsed && (
           <button
             type="button"
-            onClick={() =>
-              setCollapsed(true)
-            }
+            onClick={() => setCollapsed(true)}
             aria-label="Réduire la barre latérale"
             title="Réduire le menu"
-            className="
-              hidden
-              h-8
-              w-8
-              items-center
-              justify-center
-              rounded-lg
-              text-white/70
-              transition
-              hover:bg-white/10
-              hover:text-white
-              lg:flex
-            "
+            className="hidden h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white lg:flex"
           >
-            <ChevronLeft
-              size={17}
-            />
+            <ChevronLeft size={17} />
           </button>
         )}
       </div>
 
-      {/* =====================================================
-          NAVIGATION
-          ===================================================== */}
-
+      {/* Navigation */}
       <nav
         aria-label="Navigation principale"
-        className="
-          flex-1
-          min-h-0
-          overflow-y-auto
-          px-3
-          py-4
-        "
+        className="min-h-0 flex-1 overflow-y-auto px-3 py-4"
       >
-        {renderSection(
-          "PRINCIPAL",
-          principal,
-        )}
-
-        {!collapsed && (
-          <div className="mb-5 h-px bg-white/10" />
-        )}
-
-        {renderSection(
-          "TROUVER",
-          trouver,
-        )}
-
-        {renderSection(
-          "MON ACTIVITÉ",
-          activite,
-        )}
-
-        {renderSection(
-          "COMMUNAUTÉ",
-          communaute,
+        {sections.map((section) =>
+          renderSection(section.title, section.items),
         )}
 
         {parametres && (
-          <div className="mb-6">
+          <div className="mb-5 border-t border-white/10 pt-4">
             {renderItem(parametres)}
           </div>
         )}
       </nav>
 
-      {/* =====================================================
-          BAS SIDEBAR
-          ===================================================== */}
-
-      <div
-        className="
-          shrink-0
-          border-t
-          border-white/10
-          bg-panel-dark
-          p-3
-        "
-      >
-        {/* Profil */}
-
+      {/* Profil et déconnexion */}
+      <div className="shrink-0 border-t border-white/10 bg-panel-dark p-3">
         <Link
-          href="/tableau-de-bord/profil"
-          onClick={closeMobile}
-          title={
-            collapsed
-              ? "Mon profil"
-              : undefined
+          href={
+            profilDansNavigation?.href ??
+            "/tableau-de-bord/profil"
           }
+          onClick={closeMobile}
+          title={collapsed ? "Mon profil" : undefined}
           className={`
-            mb-1
-            flex
-            items-center
-            gap-3
-            rounded-lg
-            px-3
-            py-2
-            text-sm
-            font-medium
-            transition-colors
-
+            mb-1 flex items-center gap-3 rounded-lg px-3 py-2
+            text-sm font-medium transition-colors
+            ${collapsed ? "justify-center" : ""}
             ${
-              collapsed
-                ? "justify-center"
-                : ""
-            }
-
-            ${
-              isActive(
-                pathname,
-                "/tableau-de-bord/profil",
-              )
+              isActive(pathname, "/tableau-de-bord/profil")
                 ? "bg-bleu text-white dark:text-slate-900"
                 : "text-white/75 hover:bg-white/10 hover:text-white"
             }
           `}
         >
-          <span
-            className="
-              flex
-              h-8
-              w-8
-              shrink-0
-              items-center
-              justify-center
-              overflow-hidden
-              rounded-full
-              bg-white/10
-              text-white/80
-            "
-          >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10 text-white/80">
             {utilisateur.photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={
-                  getFileUrl(
-                    utilisateur.photoUrl,
-                  ) ?? undefined
-                }
+                src={getFileUrl(utilisateur.photoUrl) ?? undefined}
                 alt={utilisateur.nom}
                 className="h-full w-full object-cover"
               />
@@ -850,10 +571,7 @@ export function Sidebar({
 
           {!collapsed && (
             <span className="min-w-0 truncate">
-              <span className="block truncate">
-                Mon profil
-              </span>
-
+              <span className="block truncate">Mon profil</span>
               <span className="block truncate text-[0.65rem] font-normal text-white/50">
                 {utilisateur.nom}
               </span>
@@ -861,160 +579,57 @@ export function Sidebar({
           )}
         </Link>
 
-        {/* Déconnexion */}
-
         <button
           type="button"
           onClick={logout}
-          title={
-            collapsed
-              ? "Se déconnecter"
-              : undefined
-          }
+          title={collapsed ? "Se déconnecter" : undefined}
           className={`
-            flex
-            w-full
-            items-center
-            gap-3
-            rounded-lg
-            px-3
-            py-2
-            text-sm
-            font-medium
-            text-white/75
-            transition-colors
-            hover:bg-white/10
-
-            ${
-              collapsed
-                ? "justify-center"
-                : ""
-            }
+            flex min-h-10 w-full items-center gap-3 rounded-lg
+            px-3 py-2 text-sm font-medium text-white/75
+            transition-colors hover:bg-white/10 hover:text-white
+            ${collapsed ? "justify-center" : ""}
           `}
         >
-          <LogOut
-            size={18}
-            className="shrink-0"
-          />
-
-          {!collapsed && (
-            <span>
-              Se déconnecter
-            </span>
-          )}
+          <LogOut size={18} className="shrink-0" />
+          {!collapsed && <span>Se déconnecter</span>}
         </button>
       </div>
     </aside>
   );
 
-  /*
-   * ==========================================================
-   * RENDU
-   * ==========================================================
-   */
-
   return (
     <>
-      {/* =====================================================
-          DESKTOP
-          ===================================================== */}
-
+      {/* Sidebar desktop */}
       <div
-        className="
-          fixed
-          left-0
-          top-0
-          z-[60]
-          hidden
-          h-screen
-          lg:block
-        "
-        style={{
-          width:
-            "var(--sidebar-width)",
-        }}
+        className="fixed left-0 top-0 z-[60] hidden h-screen lg:block"
+        style={{ width: "var(--sidebar-width)" }}
       >
         {sidebarContent}
-
-        {/* ===================================================
-            BOUTON ROUVRIR
-            =================================================== */}
 
         {collapsed && (
           <button
             type="button"
-            onClick={() =>
-              setCollapsed(false)
-            }
+            onClick={() => setCollapsed(false)}
             aria-label="Ouvrir la barre latérale"
             title="Ouvrir le menu"
-            className="
-              absolute
-              right-[-14px]
-              top-1/2
-              flex
-              h-8
-              w-8
-              -translate-y-1/2
-              items-center
-              justify-center
-              rounded-full
-              border
-              border-ink/10
-              bg-paper
-              text-ink-soft
-              shadow-md
-              transition-all
-              duration-150
-              hover:scale-105
-              hover:bg-ink
-              hover:text-paper-light
-            "
+            className="absolute right-[-14px] top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-ink/10 bg-paper text-ink-soft shadow-md transition-all duration-150 hover:scale-105 hover:bg-ink hover:text-paper-light"
           >
-            <ChevronRight
-              size={16}
-            />
+            <ChevronRight size={16} />
           </button>
         )}
       </div>
 
-      {/* =====================================================
-          MOBILE
-          ===================================================== */}
-
+      {/* Sidebar mobile */}
       {mobileOpen && (
-        <div
-          className="
-            fixed
-            inset-0
-            z-[70]
-            lg:hidden
-          "
-        >
-          {/* Overlay */}
-
+        <div className="fixed inset-0 z-[70] lg:hidden">
           <button
             type="button"
             aria-label="Fermer le menu"
             onClick={closeMobile}
-            className="
-              absolute
-              inset-0
-              bg-ink/30
-              backdrop-blur-sm
-            "
+            className="absolute inset-0 bg-ink/30 backdrop-blur-sm"
           />
 
-          {/* Sidebar mobile */}
-
-          <div
-            className="
-              relative
-              z-[71]
-              h-full
-              w-[16.25rem]
-            "
-          >
+          <div className="relative z-[71] h-full w-[16.25rem]">
             {sidebarContent}
           </div>
         </div>
