@@ -62,9 +62,8 @@ export function SelecteurTheme({
             }
             className="
               flex h-8 w-8 items-center justify-center rounded-lg border border-ink/15
-              text-ink-soft transition-all duration-150
-              hover:border-ocre hover:bg-ocre/10 hover:text-ocre-dark
-              focus:outline-none focus:ring-2 focus:ring-ocre/30
+              text-ink-soft transition-colors duration-150
+              hover:border-ink/30 hover:bg-ink/5 hover:text-ink
             "
           >
             {mode === "sombre" ? (

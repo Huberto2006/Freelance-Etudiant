@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Moon, Sun } from "lucide-react";
 
 import { useTheme } from "@/lib/theme-context";
 
@@ -23,8 +24,8 @@ export function BasculeTheme() {
         className="
           flex h-9 w-9
           items-center justify-center
-          rounded-full
-          border border-ink/20
+          rounded-lg
+          border border-ink/15
           text-ink-soft
           opacity-50
         "
@@ -58,22 +59,16 @@ export function BasculeTheme() {
           : t("switchToDark")
       }
       className="
-￼
-
         group
         flex h-9 w-9
         items-center justify-center
-        rounded-full
-        border border-ink/20
+        rounded-lg
+        border border-ink/15
         text-ink-soft
-        transition-all duration-200
-        hover:border-ocre
-        hover:bg-ocre/10
-        hover:text-ocre-dark
-        hover:shadow-sm
-        focus:outline-none
-        focus:ring-2
-        focus:ring-ocre/30
+        transition-colors duration-150
+        hover:border-ink/30
+        hover:bg-ink/5
+        hover:text-ink
         active:scale-95
       "
     >
@@ -86,52 +81,9 @@ export function BasculeTheme() {
         "
       >
         {modeSombre ? (
-          /* MODE SOMBRE → soleil */
-          <svg
-            viewBox="0 0 24 24"
-            className="h-[18px] w-[18px]"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="12" r="4" />
-            <path
-              strokeLinecap="round"
-              d="
-                M12 2v2
-                M12 20v2
-                M2 12h2
-                M20 12h2
-                M4.93 4.93l1.41 1.41
-                M17.66 17.66l1.41 1.41
-                M19.07 4.93l-1.41 1.41
-                M6.34 17.66l-1.41 1.41
-              "
-            />
-          </svg>
+          <Sun size={18} strokeWidth={1.85} aria-hidden="true" />
         ) : (
-          /* MODE CLAIR → lune */
-          <svg
-            viewBox="0 0 24 24"
-            className="h-[18px] w-[18px]"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="
-                M20.5 14.5
-                A8.5 8.5 0 1 1
-                9.5 3.5
-                A6.8 6.8 0 0 0
-                20.5 14.5Z
-              "
-            />
-          </svg>
+          <Moon size={18} strokeWidth={1.85} aria-hidden="true" />
         )}
       </span>
     </button>

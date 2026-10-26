@@ -323,10 +323,6 @@ function PublicationsContent() {
 
   return (
     <div className="container mx-auto max-w-7xl px-4 pb-10 pt-7">
-      {/* ---------------------------------------------------- RETOUR */}
-      <div className="mb-4">
-        <BoutonRetour repli="/" forcer />
-      </div>
 
       {/* ---------------------------------------------------- EN-TÊTE */}
       <header className="mb-6 flex flex-col justify-between gap-4 border-b border-ink/10 pb-6 sm:flex-row sm:items-end">

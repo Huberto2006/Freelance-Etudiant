@@ -284,9 +284,78 @@ option {
   color: var(--color-ink);
 }
 
+/* Neutralisation des halos tactiles natifs sur tous les éléments cliquables */
+button,
+a,
+summary,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ==========================================================================
+   FOCUS CLAVIER DISCRET, NEUTRE ET ACCESSIBLE (WCAG)
+   - Clic souris / tactile : aucun contour parasite, halo ou marque résiduelle
+   - Navigation clavier (Tab) : indicateur net, sobre et sans effet bleu
+   ========================================================================== */
+
+:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 :focus-visible {
-  outline: 2px solid var(--color-ocre);
-  outline-offset: 2px;
+  outline: 2px solid var(--color-ink-soft);
+  outline-offset: 1px;
+}
+
+/* Focus neutre et lisible dans les surfaces sombres permanentes (ex: Sidebar) */
+.bg-panel :focus-visible,
+.bg-panel-dark :focus-visible,
+aside :focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.45);
+  outline-offset: 1px;
+}
+
+/* ==========================================================================
+   BARRES DE DÉFILEMENT ÉLÉGANTES ET DISCRÈTES (Sidebar & tiroirs de navigation)
+   ========================================================================== */
+
+.kianja-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.kianja-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.kianja-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+.kianja-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+.kianja-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+.kianja-scrollbar-light::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.kianja-scrollbar-light::-webkit-scrollbar-track {
+  background: transparent;
+}
+.kianja-scrollbar-light::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.12);
+  border-radius: 9999px;
+}
+.kianja-scrollbar-light::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.22);
+}
+.kianja-scrollbar-light {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15, 23, 42, 0.12) transparent;
 }
 
 /* ==========================================================================

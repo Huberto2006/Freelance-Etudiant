@@ -121,19 +121,20 @@ export function MenuDeroulantNav({
         onClick={() => onOuvrirChange(!ouvert)}
         onKeyDown={surToucheBouton}
         className={clsx(
-          "inline-flex items-center gap-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu",
+          "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors",
           actif || ouvert
-            ? "text-bleu-dark"
+            ? "text-ink font-semibold bg-ink/5"
             : "text-ink-soft hover:bg-ink/5 hover:text-ink",
         )}
       >
         {tn.label(menu.label)}
         <ChevronDown
           size={14}
+          strokeWidth={1.85}
           aria-hidden="true"
           className={clsx(
-            "transition-transform motion-reduce:transition-none",
-            ouvert && "rotate-180",
+            "transition-transform motion-reduce:transition-none text-ink-soft/70",
+            ouvert && "rotate-180 text-ink",
           )}
         />
       </button>
@@ -141,7 +142,7 @@ export function MenuDeroulantNav({
       {ouvert && (
         <ul
           id={panneauId}
-          className="absolute left-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-ink/10 bg-paper-light p-1.5 shadow-xl"
+          className="absolute left-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-ink/10 bg-paper-light p-1.5 shadow-lg"
         >
           {menu.elements.map((element) => {
             const Icone = element.icon;
@@ -150,13 +151,13 @@ export function MenuDeroulantNav({
                 <Link
                   href={element.href}
                   onClick={() => onOuvrirChange(false)}
-                  className="flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-ink/5 focus-visible:bg-ink/5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-bleu"
+                  className="group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-ink/5 focus-visible:bg-ink/5"
                 >
                   <span
                     aria-hidden="true"
-                    className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-bleu-soft text-bleu-dark"
+                    className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ink/5 text-ink-soft transition-colors group-hover:bg-ink/10 group-hover:text-ink"
                   >
-                    <Icone size={16} />
+                    <Icone size={18} strokeWidth={1.85} />
                   </span>
                   <span className="min-w-0">
                     <span className="block text-sm font-medium text-ink">

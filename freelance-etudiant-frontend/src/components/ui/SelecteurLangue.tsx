@@ -93,9 +93,9 @@ export function SelecteurLangue({
               aria-pressed={actif}
               onClick={() => choisir(code)}
               className={clsx(
-                "flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu disabled:opacity-60",
+                "flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors disabled:opacity-60",
                 actif
-                  ? "bg-bleu-soft text-bleu-dark"
+                  ? "bg-ink/10 text-ink font-semibold shadow-2xs"
                   : "text-ink-soft hover:bg-ink/5 hover:text-ink",
               )}
             >
@@ -123,7 +123,7 @@ export function SelecteurLangue({
         aria-label={`${t("choose")} — ${t("current", { langue: courante.nom })}`}
         title={t("choose")}
         disabled={enCours}
-        className="flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu disabled:opacity-60"
+        className="flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink disabled:opacity-60"
       >
         <Globe size={16} aria-hidden="true" />
         <span aria-hidden="true">{courante.code}</span>
@@ -137,7 +137,7 @@ export function SelecteurLangue({
       {ouvert && (
         <ul
           id={panneauId}
-          className="absolute right-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-xl border border-ink/10 bg-paper-light py-1 shadow-xl"
+          className="absolute right-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-xl border border-ink/10 bg-paper-light py-1 shadow-lg"
         >
           {LOCALES.map((code) => {
             const actif = code === locale;
@@ -149,8 +149,8 @@ export function SelecteurLangue({
                   aria-current={actif ? "true" : undefined}
                   onClick={() => choisir(code)}
                   className={clsx(
-                    "flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm transition-colors hover:bg-ink/5 focus-visible:bg-ink/5 focus-visible:outline-none",
-                    actif ? "font-semibold text-bleu-dark" : "text-ink-soft",
+                    "flex min-h-10 w-full items-center gap-2 px-3 text-left text-sm transition-colors hover:bg-ink/5 focus-visible:bg-ink/5",
+                    actif ? "font-semibold text-ink bg-ink/[0.04]" : "text-ink-soft",
                   )}
                 >
                   <span aria-hidden="true">{LANGUES[code].drapeau}</span>

@@ -416,7 +416,7 @@ export function NotificationBell() {
           w-9
           items-center
           justify-center
-          rounded-full
+          rounded-lg
           transition-colors
 
           ${

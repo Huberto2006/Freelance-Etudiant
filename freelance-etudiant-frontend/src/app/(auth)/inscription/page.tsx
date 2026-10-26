@@ -255,7 +255,7 @@ function FormulaireInscription() {
           aria-pressed={role === "etudiant"}
           onClick={() => setRole("etudiant")}
           className={clsx(
-            "min-h-10 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu",
+            "min-h-10 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
             role === "etudiant"
               ? "bg-paper-light text-ink shadow-sm"
               : "text-ink-soft hover:text-ink",
@@ -268,7 +268,7 @@ function FormulaireInscription() {
           aria-pressed={role === "client"}
           onClick={() => setRole("client")}
           className={clsx(
-            "min-h-10 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu",
+            "min-h-10 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
             role === "client"
               ? "bg-paper-light text-ink shadow-sm"
               : "text-ink-soft hover:text-ink",

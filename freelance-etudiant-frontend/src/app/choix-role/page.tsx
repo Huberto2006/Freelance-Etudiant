@@ -105,7 +105,7 @@ function ChoixRole() {
               onClick={() => setChoix(valeur)}
               disabled={envoi}
               className={clsx(
-                "flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu disabled:cursor-not-allowed disabled:opacity-60",
+                "flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60",
                 choix === valeur
                   ? "border-ink bg-ink/5"
                   : "border-ink/15 hover:border-ink/40",

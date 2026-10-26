@@ -313,6 +313,7 @@ export function Navbar({
             "
             aria-label="Kianja"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/logo-kianja.png"
               alt={t("logoAlt")}
@@ -326,7 +327,7 @@ export function Navbar({
                 bg-white
                 object-contain
                 p-1
-                shadow-sm
+                shadow-xs
                 sm:h-11
                 sm:w-11
               "
@@ -402,10 +403,10 @@ export function Navbar({
                   pr-3
                   text-xs
                   text-ink
-                  outline-none
-                  focus:outline-none
-                  transition
-                  placeholder:text-ink-soft/50
+                  transition-colors
+                  placeholder:text-ink-soft/45
+                  hover:border-ink/25
+                  focus:border-ink/40
                 "
               />
             </div>
@@ -552,11 +553,11 @@ export function Navbar({
                   title={t("profile")}
                   className="
                     flex
+                    h-9
                     items-center
-                    gap-1.5
+                    gap-2
                     rounded-lg
-                    px-1.5
-                    py-1
+                    px-2
                     transition-colors
                     hover:bg-ink/5
                   "
@@ -575,10 +576,10 @@ export function Navbar({
                       justify-center
                       overflow-hidden
                       rounded-full
-                      bg-ocre/10
-                      text-ocre-dark
-                      ring-1
-                      ring-ink/10
+                      border
+                      border-ink/15
+                      bg-ink/5
+                      text-ink-soft
                     "
                   >
                     {utilisateur.photoUrl ? (
@@ -610,7 +611,7 @@ export function Navbar({
                   <div
                     className="
                       hidden
-                      max-w-32
+                      max-w-36
                       text-left
                       leading-tight
                       sm:block
@@ -645,12 +646,14 @@ export function Navbar({
                     size={13}
                     className={`
                       hidden
+                      text-ink-soft/70
                       transition-transform
+                      duration-150
                       sm:block
 
                       ${
                         menuProfilOuvert
-                          ? "rotate-180"
+                          ? "rotate-180 text-ink"
                           : ""
                       }
                     `}
@@ -676,7 +679,7 @@ export function Navbar({
                       border
                       border-ink/10
                       bg-paper-light
-                      shadow-xl
+                      shadow-lg
                     "
                   >
                     {/* ==========================================
@@ -687,6 +690,7 @@ export function Navbar({
                       className="
                         border-b
                         border-ink/10
+                        bg-ink/[0.02]
                         px-4
                         py-3
                       "

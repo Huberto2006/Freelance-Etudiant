@@ -1,7 +1,7 @@
 import {
   CircleHelp,
-  Layers3,
-  LifeBuoy,
+  Mail,
+  Newspaper,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -53,7 +53,7 @@ export const MENU_EXPLORER: MenuPublicDeroulant = {
       href: "/publications",
       label: "Toutes les publications",
       description: "Missions et services au même endroit",
-      icon: Layers3,
+      icon: Newspaper,
     },
     {
       href: "/freelances",
@@ -79,7 +79,7 @@ export const MENU_AIDE: MenuPublicDeroulant = {
       href: "/contact",
       label: "Contact et assistance",
       description: "Besoin d'aide ? Contacte-nous",
-      icon: LifeBuoy,
+      icon: Mail,
     },
   ],
 };

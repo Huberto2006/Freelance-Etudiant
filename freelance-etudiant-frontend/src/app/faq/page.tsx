@@ -77,7 +77,7 @@ export default async function PageFaq() {
             <div className="mt-4 divide-y divide-ink/10 overflow-hidden rounded-xl border border-ink/10 bg-paper-light shadow-xs">
               {theme.questions.map((element) => (
                 <details key={element} className="group">
-                  <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 text-sm font-medium text-ink marker:content-none hover:bg-ink/5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-bleu [&::-webkit-details-marker]:hidden">
+                  <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 text-sm font-medium text-ink marker:content-none hover:bg-ink/5 focus-visible:outline-2 focus-visible:-outline-offset-2 [&::-webkit-details-marker]:hidden">
                     <span>{cle(theme.id, element, "question")}</span>
                     <ChevronDown
                       size={16}

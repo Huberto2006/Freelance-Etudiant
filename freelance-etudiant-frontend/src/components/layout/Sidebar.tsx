@@ -441,13 +441,12 @@ export function Sidebar({
                   }
                   className={`
                     group
+                    relative
                     flex
                     min-h-10
                     items-center
                     gap-3
                     rounded-lg
-                    px-3
-                    py-2
                     text-sm
                     font-medium
                     transition-all
@@ -455,14 +454,14 @@ export function Sidebar({
 
                     ${
                       collapsed
-                        ? "justify-center"
-                        : ""
+                        ? "justify-center px-0 w-10 h-10 mx-auto"
+                        : "px-3 py-2"
                     }
 
                     ${
                       active
-                        ? "bg-bleu text-white dark:text-slate-900 shadow-sm"
-                        : "text-white/75 hover:bg-white/10 hover:text-white"
+                        ? "bg-white/12 text-white font-medium shadow-2xs"
+                        : "text-white/70 hover:bg-white/8 hover:text-white"
                     }
                   `}
                 >
@@ -470,8 +469,8 @@ export function Sidebar({
                     size={18}
                     strokeWidth={
                       active
-                        ? 2.4
-                        : 2
+                        ? 2.2
+                        : 1.8
                     }
                     className="shrink-0"
                   />
@@ -522,12 +521,12 @@ export function Sidebar({
         }
         className={`
           group
+          relative
           flex
+          min-h-10
           items-center
           gap-3
           rounded-lg
-          px-3
-          py-2
           text-sm
           font-medium
           transition-all
@@ -535,14 +534,14 @@ export function Sidebar({
 
           ${
             collapsed
-              ? "justify-center"
-              : ""
+              ? "justify-center px-0 w-10 h-10 mx-auto"
+              : "px-3 py-2"
           }
 
           ${
             active
-              ? "bg-bleu text-white dark:text-slate-900 shadow-sm"
-              : "text-white/75 hover:bg-white/10 hover:text-white"
+              ? "bg-white/12 text-white font-medium shadow-2xs"
+              : "text-white/70 hover:bg-white/8 hover:text-white"
           }
         `}
       >
@@ -550,8 +549,8 @@ export function Sidebar({
           size={18}
           strokeWidth={
             active
-              ? 2.4
-              : 2
+              ? 2.2
+              : 1.8
           }
           className="shrink-0"
         />
@@ -583,12 +582,13 @@ export function Sidebar({
     }
 
     return (
-      <div className="mb-6">
-        {!collapsed && (
+      <div className="mb-4">
+        {!collapsed ? (
           <p
             className="
               px-3
-              pb-2.5
+              pb-1.5
+              pt-2
               text-[0.65rem]
               font-semibold
               uppercase
@@ -598,6 +598,8 @@ export function Sidebar({
           >
             {title}
           </p>
+        ) : (
+          <div className="my-2 h-px bg-white/8" />
         )}
 
         <div className="space-y-1">
@@ -665,6 +667,7 @@ export function Sidebar({
           "
           aria-label="Kianja"
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/logo-kianja.png"
             alt={t("sidebar.logoAlt")}
@@ -678,7 +681,7 @@ export function Sidebar({
               bg-white
               object-contain
               p-1
-              shadow-sm
+              shadow-xs
             "
           />
 
@@ -733,11 +736,12 @@ export function Sidebar({
       <nav
         aria-label={t("sidebar.mainNav")}
         className="
+          kianja-scrollbar
           flex-1
           min-h-0
           overflow-y-auto
           px-3
-          py-4
+          py-3
         "
       >
         {renderSection(
@@ -800,16 +804,14 @@ export function Sidebar({
             items-center
             gap-3
             rounded-lg
-            px-3
-            py-2
             text-sm
             font-medium
             transition-colors
 
             ${
               collapsed
-                ? "justify-center"
-                : ""
+                ? "justify-center px-0 w-10 h-10 mx-auto"
+                : "px-3 py-2"
             }
 
             ${
@@ -817,8 +819,8 @@ export function Sidebar({
                 pathname,
                 "/tableau-de-bord/profil",
               )
-                ? "bg-bleu text-white dark:text-slate-900"
-                : "text-white/75 hover:bg-white/10 hover:text-white"
+                ? "bg-white/12 text-white font-medium shadow-2xs"
+                : "text-white/70 hover:bg-white/8 hover:text-white"
             }
           `}
         >
@@ -881,18 +883,17 @@ export function Sidebar({
             items-center
             gap-3
             rounded-lg
-            px-3
-            py-2
             text-sm
             font-medium
-            text-white/75
+            text-white/70
             transition-colors
-            hover:bg-white/10
+            hover:bg-white/8
+            hover:text-white
 
             ${
               collapsed
-                ? "justify-center"
-                : ""
+                ? "justify-center px-0 w-10 h-10 mx-auto"
+                : "px-3 py-2"
             }
           `}
         >
@@ -954,29 +955,29 @@ export function Sidebar({
             title={t("sidebar.expandTitle")}
             className="
               absolute
-              right-[-14px]
+              right-[-12px]
               top-1/2
               flex
-              h-8
-              w-8
+              h-6
+              w-6
               -translate-y-1/2
               items-center
               justify-center
               rounded-full
               border
-              border-ink/10
-              bg-paper
-              text-ink-soft
+              border-white/20
+              bg-panel-dark
+              text-white/80
               shadow-md
               transition-all
               duration-150
-              hover:scale-105
-              hover:bg-ink
-              hover:text-paper-light
+              hover:scale-110
+              hover:bg-panel
+              hover:text-white
             "
           >
             <ChevronRight
-              size={16}
+              size={14}
             />
           </button>
         )}

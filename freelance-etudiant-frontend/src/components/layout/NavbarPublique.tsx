@@ -6,9 +6,12 @@ import {
   ChevronDown,
   Info,
   LayoutDashboard,
+  LogIn,
+  LogOut,
   Menu,
   Search,
-  User,
+  UserPlus,
+  UserRound,
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -37,10 +40,10 @@ import { MenuDeroulantNav } from "@/components/layout/MenuDeroulantNav";
 
 
 const styleBoutonConnexion =
-  "inline-flex items-center justify-center rounded-lg border border-ink/30 px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:border-ink hover:bg-ink/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu";
+  "inline-flex items-center justify-center rounded-lg border border-ink/20 px-3.5 py-1.5 text-sm font-medium text-ink transition-colors hover:border-ink/40 hover:bg-ink/5";
 
 const styleBoutonRejoindre =
-  "inline-flex items-center justify-center rounded-lg border border-ink bg-ink px-3 py-1.5 text-sm font-medium text-paper-light transition-colors hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu";
+  "inline-flex items-center justify-center rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-paper-light transition-colors hover:bg-ink-soft shadow-2xs";
 
 /**
  * Un état d'ouverture n'est valable que pour la route sur laquelle il a
@@ -126,16 +129,16 @@ export function NavbarPublique() {
 
   const classeLien = (actif: boolean) =>
     clsx(
-      "rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu",
+      "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
       actif
-        ? "text-bleu-dark"
+        ? "text-ink font-semibold bg-ink/5"
         : "text-ink-soft hover:bg-ink/5 hover:text-ink",
     );
 
   return (
     <header
       ref={navbarRef}
-      className="fixed inset-x-0 top-0 z-50 border-b border-ink/10 bg-paper-light/95 shadow-[0_2px_12px_rgba(15,23,42,0.06)] backdrop-blur-md"
+      className="fixed inset-x-0 top-0 z-50 h-16 border-b border-ink/10 bg-paper-light/95 shadow-[0_2px_12px_rgba(15,23,42,0.06)] backdrop-blur-md"
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:gap-6">
         <button
@@ -149,7 +152,7 @@ export function NavbarPublique() {
           aria-label={menuMobileOuvert ? t("publicNav.closeMenu") : t("publicNav.openMenu")}
           aria-expanded={menuMobileOuvert}
           aria-controls="menu-mobile-public"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu lg:hidden"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink lg:hidden"
         >
           {menuMobileOuvert ? <X size={20} /> : <Menu size={20} />}
         </button>
@@ -157,14 +160,14 @@ export function NavbarPublique() {
         <Link
           href="/"
           aria-label={t("publicNav.homeAria")}
-          className="flex min-w-0 shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu"
+          className="flex min-w-0 shrink-0 items-center gap-2.5 rounded-lg"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/logo-kianja.png"
             alt=""
             aria-hidden="true"
-            className="h-10 w-10 shrink-0 rounded-xl border border-ink/10 bg-paper-light p-1 object-contain shadow-sm"
+            className="h-10 w-10 shrink-0 rounded-xl border border-ink/10 bg-paper-light p-1 object-contain shadow-xs"
           />
           <span className="hidden min-w-0 leading-tight min-[400px]:block">
             <span className="block text-base font-semibold tracking-tight text-ink">
@@ -223,7 +226,7 @@ export function NavbarPublique() {
                 name="q"
                 placeholder={t("publicNav.searchPlaceholder")}
                 aria-label={t("publicNav.search")}
-                className="kianja-field-control h-9 w-full rounded-full border-0 bg-paper-light pl-9 pr-3 text-xs text-ink outline-none focus:outline-none transition placeholder:text-ink-soft/50"
+                className="kianja-field-control h-9 w-full rounded-full border border-ink/15 bg-paper-light pl-9 pr-3 text-xs text-ink transition-colors hover:border-ink/25 focus:border-ink/40 placeholder:text-ink-soft/50"
               />
             </div>
           </form>
@@ -232,7 +235,7 @@ export function NavbarPublique() {
             href="/services"
             aria-label={t("publicNav.search")}
             title={t("publicNav.search")}
-            className="flex h-11 w-11 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu lg:h-9 lg:w-9 2xl:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink 2xl:hidden"
           >
             <Search size={18} />
           </Link>
@@ -249,9 +252,9 @@ export function NavbarPublique() {
                   title={tn(LIEN_A_PROPOS.label)}
                   aria-current={aProposActif ? "page" : undefined}
                   className={clsx(
-                    "flex h-9 w-9 items-center justify-center rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu",
+                    "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
                     aProposActif
-                      ? "bg-bleu-soft text-bleu-dark"
+                      ? "bg-ink/10 text-ink font-semibold"
                       : "text-ink-soft hover:bg-ink/5 hover:text-ink",
                   )}
                 >
@@ -274,9 +277,9 @@ export function NavbarPublique() {
                   aria-label={t("publicNav.profileMenu")}
                   aria-haspopup="menu"
                   aria-expanded={menuProfilOuvert}
-                  className="flex h-9 items-center gap-1.5 rounded-lg px-1.5 transition-colors hover:bg-ink/5"
+                  className="flex h-9 items-center gap-2 rounded-lg px-2 transition-colors hover:bg-ink/5"
                 >
-                  <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-ocre/10 text-ocre-dark ring-1 ring-ink/10">
+                  <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-ink/15 bg-ink/5 text-ink-soft">
                     {utilisateur.photoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -285,7 +288,7 @@ export function NavbarPublique() {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <User size={15} />
+                      <UserRound size={15} strokeWidth={1.85} />
                     )}
                   </span>
                   <span className="hidden max-w-28 text-left leading-tight sm:block">
@@ -298,8 +301,9 @@ export function NavbarPublique() {
                   </span>
                   <ChevronDown
                     size={13}
-                    className={`hidden transition-transform sm:block ${
-                      menuProfilOuvert ? "rotate-180" : ""
+                    strokeWidth={1.85}
+                    className={`hidden text-ink-soft/70 transition-transform duration-150 sm:block ${
+                      menuProfilOuvert ? "rotate-180 text-ink" : ""
                     }`}
                   />
                 </button>
@@ -307,7 +311,7 @@ export function NavbarPublique() {
                 {menuProfilOuvert && (
                   <div
                     role="menu"
-                    className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-ink/10 bg-paper-light shadow-xl"
+                    className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-ink/10 bg-paper-light shadow-lg"
                   >
                     <Link
                       href="/tableau-de-bord"
@@ -317,7 +321,7 @@ export function NavbarPublique() {
                       role="menuitem"
                       className="flex items-center gap-3 px-4 py-3 text-sm text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink"
                     >
-                      <LayoutDashboard size={15} /> {tn("Tableau de bord")}
+                      <LayoutDashboard size={15} strokeWidth={1.85} /> {tn("Tableau de bord")}
                     </Link>
                     <Link
                       href="/tableau-de-bord/profil"
@@ -327,14 +331,15 @@ export function NavbarPublique() {
                       role="menuitem"
                       className="flex items-center gap-3 border-t border-ink/10 px-4 py-3 text-sm text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink"
                     >
-                      <User size={15} /> {tn("Mon profil")}
+                      <UserRound size={15} strokeWidth={1.85} /> {tn("Mon profil")}
                     </Link>
                     <button
                       type="button"
                       onClick={deconnecter}
                       role="menuitem"
-                      className="w-full border-t border-ink/10 px-4 py-3 text-left text-sm text-brique transition-colors hover:bg-brique/5"
+                      className="flex w-full items-center gap-2.5 border-t border-ink/10 px-4 py-3 text-left text-sm text-brique transition-colors hover:bg-brique/5"
                     >
+                      <LogOut size={15} strokeWidth={1.85} />
                       {t("sidebar.logout")}
                     </button>
                   </div>
@@ -349,20 +354,22 @@ export function NavbarPublique() {
                 title={tn(LIEN_A_PROPOS.label)}
                 aria-current={aProposActif ? "page" : undefined}
                 className={clsx(
-                  "flex h-9 w-9 items-center justify-center rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bleu",
+                  "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
                   aProposActif
-                    ? "bg-bleu-soft text-bleu-dark"
+                    ? "bg-ink/10 text-ink font-semibold"
                     : "text-ink-soft hover:bg-ink/5 hover:text-ink",
                 )}
               >
-                <Info size={18} aria-hidden="true" />
+                <Info size={18} strokeWidth={1.85} aria-hidden="true" />
               </Link>
               <SelecteurLangue />
               <BasculeTheme />
               <Link href="/connexion" className={styleBoutonConnexion}>
+                <LogIn size={15} strokeWidth={1.85} className="mr-1.5 shrink-0" />
                 {tn("Connexion")}
               </Link>
               <Link href="/inscription" className={styleBoutonRejoindre}>
+                <UserPlus size={15} strokeWidth={1.85} className="mr-1.5 shrink-0" />
                 {tn("Rejoindre Kianja")}
               </Link>
             </div>
@@ -373,7 +380,7 @@ export function NavbarPublique() {
       {menuMobileOuvert && (
         <div
           id="menu-mobile-public"
-          className="max-h-[calc(100dvh-4rem)] overflow-y-auto overflow-x-hidden border-t border-ink/10 bg-paper-light px-4 py-3 lg:hidden"
+          className="kianja-scrollbar-light max-h-[calc(100dvh-4rem)] overflow-y-auto overflow-x-hidden border-t border-ink/10 bg-paper-light px-4 py-3 lg:hidden"
         >
           <SelecteurLangue variant="inline" className="pb-3" />
           <nav aria-label={t("publicNav.mobileNav")} className="space-y-1">
@@ -382,9 +389,9 @@ export function NavbarPublique() {
               onClick={fermerMenuMobile}
               aria-current={accueilActif ? "page" : undefined}
               className={clsx(
-                "block rounded-lg px-3 py-3 text-sm font-medium",
+                "block rounded-lg px-3 py-3 text-sm font-medium transition-colors",
                 accueilActif
-                  ? "bg-bleu-soft text-bleu-dark"
+                  ? "bg-ink/10 text-ink font-semibold"
                   : "text-ink-soft hover:bg-ink/5 hover:text-ink",
               )}
             >
@@ -402,9 +409,9 @@ export function NavbarPublique() {
               onClick={fermerMenuMobile}
               aria-current={aProposActif ? "page" : undefined}
               className={clsx(
-                "block rounded-lg px-3 py-3 text-sm font-medium",
+                "block rounded-lg px-3 py-3 text-sm font-medium transition-colors",
                 aProposActif
-                  ? "bg-bleu-soft text-bleu-dark"
+                  ? "bg-ink/10 text-ink font-semibold"
                   : "text-ink-soft hover:bg-ink/5 hover:text-ink",
               )}
             >
@@ -422,17 +429,19 @@ export function NavbarPublique() {
                 <Link
                   href="/connexion"
                   onClick={fermerMenuMobile}
-                  className={clsx(styleBoutonConnexion, "min-h-11 w-full")}
+                  className={clsx(styleBoutonConnexion, "min-h-11 w-full gap-2")}
                 >
+                  <LogIn size={16} strokeWidth={1.85} />
                   {tn("Connexion")}
-              </Link>
+                </Link>
                 <Link
                   href="/inscription"
                   onClick={fermerMenuMobile}
-                  className={clsx(styleBoutonRejoindre, "min-h-11 w-full")}
+                  className={clsx(styleBoutonRejoindre, "min-h-11 w-full gap-2")}
                 >
+                  <UserPlus size={16} strokeWidth={1.85} />
                   {tn("Rejoindre Kianja")}
-              </Link>
+                </Link>
               </div>
             )}
           </nav>
@@ -478,9 +487,9 @@ function GroupeMobile({
                 onClick={onNavigate}
                 aria-current={actif ? "page" : undefined}
                 className={clsx(
-                  "flex min-h-11 items-start gap-3 rounded-lg px-3 py-2.5",
+                  "flex min-h-11 items-start gap-3 rounded-lg px-3 py-2.5 transition-colors",
                   actif
-                    ? "bg-bleu-soft text-bleu-dark"
+                    ? "bg-ink/10 text-ink font-semibold"
                     : "text-ink-soft hover:bg-ink/5 hover:text-ink",
                 )}
               >
