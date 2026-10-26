@@ -1,0 +1,80 @@
+{
+  "favoriteButton": {
+    "add": "Add to favourites",
+    "remove": "Remove from favourites"
+  },
+  "profileReaction": {
+    "react": "React to this profile",
+    "loginRequired": "Log in to react to this profile",
+    "label": "React"
+  },
+  "upload": {
+    "errFormat": "Unsupported format. Use JPG, PNG or WebP.",
+    "errNoUrl": "The server did not return the image URL.",
+    "errSend": "Unable to upload the image.",
+    "hint": "JPG, PNG or WebP · 5 MB max",
+    "replaceTitle": "Click to replace the image",
+    "previewAlt": "Preview of the main image",
+    "errDisplay": "Unable to display this image. Check the URL returned by the server.",
+    "removeImage": "Remove the image",
+    "sendingShort": "Sending…",
+    "addImage": "Add an image",
+    "errMax": "Maximum {max} images: only the first {count} will be added.",
+    "errSize": "An image exceeds the maximum size of 5 MB.",
+    "removeThis": "Remove this image",
+    "cover": "Cover",
+    "add": "Add",
+    "multiHint": "JPG, PNG or WebP · 5 MB max · {max} images max, the first one is the cover",
+    "photoAlt": "Profile photo of {nom}",
+    "photoFileSize": "The image exceeds the maximum size of 5 MB.",
+    "errPhoto": "Unable to upload the photo.",
+    "changePhoto": "Change profile photo"
+  },
+  "portfolio": {
+    "previewOf": "Preview: {legende}",
+    "closePreview": "Close the preview",
+    "imageFallback": "Portfolio image",
+    "enlarge": "Enlarge the image",
+    "viewProject": "View the project"
+  },
+  "shared": {
+    "categoryFilters": "Category filters",
+    "subNav": "Sub-navigation",
+    "reputationScore": "Reputation score: {score}/100",
+    "score": "score",
+    "messages": "Messages",
+    "messagesUnread": "Messages ({count} unread)",
+    "mentionSuggestions": "Suggested users to mention",
+    "catalogLoading": "Loading the catalog"
+  },
+  "freelanceList": {
+    "availability": {
+      "disponible": "Available",
+      "occupe": "Busy",
+      "en_mission": "On a mission",
+      "indisponible": "Unavailable"
+    },
+    "errLoad": "Unable to load freelancers at the moment.",
+    "errMore": "Unable to load the rest of the list.",
+    "membersOnlyTitle": "Profiles are reserved for members",
+    "membersOnlyText": "To protect students, the freelancer directory is visible once logged in. In the meantime, you can browse the services they offer.",
+    "browseServices": "Browse services",
+    "login": "Log in",
+    "join": "Join Kianja",
+    "searchPlaceholder": "Name, skill, field of study, city…",
+    "searchAria": "Search for a freelancer",
+    "availableOnly": "Available only",
+    "emptyAll": "No freelancers to display at the moment.",
+    "emptySearch": "No freelancer matches your search.",
+    "shown": "{count, plural, one {# freelancer shown} other {# freelancers shown}}",
+    "loading": "Loading…",
+    "seeMore": "See more freelancers",
+    "student": "Student",
+    "skills": "Skills",
+    "missionsDone": "{note} · {count, plural, one {# mission} other {# missions}}",
+    "newOnKianja": "New on Kianja",
+    "viewProfileOf": "View {nom}'s profile",
+    "viewProfile": "View profile",
+    "skeletonLoading": "Loading freelancers"
+  }
+}

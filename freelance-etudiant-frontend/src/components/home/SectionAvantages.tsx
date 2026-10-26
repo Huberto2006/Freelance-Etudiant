@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   GraduationCap,
   HandCoins,
@@ -15,42 +16,23 @@ import { useAuth } from "@/lib/auth-context";
 import { SectionTitre } from "./SectionTitre";
 
 const AVANTAGES = [
-  {
-    icon: GraduationCap,
-    titre: "Des talents étudiants qualifiés",
-    texte:
-      "Des étudiants formés aux standards actuels, aux compétences validées et notés par leurs clients après chaque livraison.",
-  },
-  {
-    icon: Rocket,
-    titre: "Un tremplin professionnel réel",
-    texte:
-      "Chaque mission réalisée enrichit concrètement le portfolio, développe le réseau et consolide le score de réputation certifié.",
-  },
-  {
-    icon: MessagesSquare,
-    titre: "Un cadre d'échange sécurisé",
-    texte:
-      "Une messagerie interne dédiée s'active dès l'acceptation de la candidature pour cadrer les échanges, fichiers et livrables.",
-  },
-  {
-    icon: HandCoins,
-    titre: "Des budgets adaptés et équitables",
-    texte:
-      "Des tarifs compétitifs et transparents pour les clients, et une juste rémunération pour financer les études des freelances.",
-  },
+  { icon: GraduationCap, cle: "talents" },
+  { icon: Rocket, cle: "springboard" },
+  { icon: MessagesSquare, cle: "secure" },
+  { icon: HandCoins, cle: "budgets" },
 ] as const;
 
 export function SectionAvantages() {
+  const t = useTranslations("home.benefits");
   const { utilisateur, chargement } = useAuth();
 
   return (
-    <section id="avantages" className="mx-auto w-full max-w-7xl px-5 pb-12 pt-10 sm:px-8 sm:pb-16 sm:pt-14 lg:px-10">
+    <section id="avantages" className="mx-auto max-w-6xl px-4 pb-8 sm:px-5 sm:pb-12">
       <SectionTitre
         icon={ShieldCheck}
-        eyebrow="Garanties & Valeurs"
-        titre="Pourquoi choisir la marketplace Kianja ?"
-        sousTitre="Étudiants en quête d'expérience, clients en quête d'expertise : une plateforme pensée pour la réussite mutuelle."
+        eyebrow={t("eyebrow")}
+        titre={t("title")}
+        sousTitre={t("subtitle")}
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -58,7 +40,7 @@ export function SectionAvantages() {
           const Icone = avantage.icon;
 
           return (
-            <NoticeCard key={avantage.titre} className="flex items-start gap-4">
+            <NoticeCard key={avantage.cle} className="flex items-start gap-4">
               <span
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bleu/10 text-bleu-dark"
                 aria-hidden="true"
@@ -68,10 +50,10 @@ export function SectionAvantages() {
 
               <div>
                 <h3 className="font-display font-semibold text-ink">
-                  {avantage.titre}
+                  {t(`${avantage.cle}.title`)}
                 </h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
-                  {avantage.texte}
+                  {t(`${avantage.cle}.text`)}
                 </p>
               </div>
             </NoticeCard>
@@ -83,21 +65,20 @@ export function SectionAvantages() {
       {!chargement && !utilisateur && (
         <div className="mt-14 rounded-2xl border border-ink/10 bg-paper-light px-6 py-10 text-center sm:px-10">
           <h3 className="font-display text-2xl font-semibold sm:text-3xl">
-            Prêt à démarrer sur Kianja ?
+            {t("ctaTitle")}
           </h3>
           <p className="mx-auto mt-2 max-w-lg text-sm text-ink-soft">
-            Confiez un besoin à des étudiants qualifiés ou valorisez vos
-            compétences auprès de vrais clients.
+            {t("ctaText")}
           </p>
           <div className="mt-7 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
             <Button href="/inscription" size="lg">
-              Créer un compte gratuitement
+              {t("ctaButton")}
             </Button>
             <Link
               href="/publications"
               className="text-sm font-medium text-ink underline-offset-4 hover:underline"
             >
-              Explorer les publications →
+              {t("explorePublications")}
             </Link>
           </div>
         </div>

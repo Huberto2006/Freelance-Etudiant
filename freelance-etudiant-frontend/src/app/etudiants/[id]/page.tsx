@@ -2,6 +2,7 @@
 
 import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   BriefcaseBusiness,
   CalendarDays,
@@ -24,7 +25,8 @@ import type {
   Evaluation,
   ServiceOffert,
 } from "@/lib/types";
-import { formatArgent, formatDateCourte } from "@/lib/format";
+import { useFormats } from "@/i18n/use-formats";
+import { useOptionLabels } from "@/i18n/use-option-labels";
 
 import {
   MessageVide,
@@ -39,13 +41,6 @@ import { FavoriBouton } from "@/components/ui/FavoriBouton";
 import { SignalerBouton } from "@/components/ui/SignalerBouton";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { Button } from "@/components/ui/Button";
-
-const LABELS_STATUT_DISPONIBILITE: Record<string, string> = {
-  disponible: "Disponible",
-  occupe: "Occupé",
-  en_mission: "En mission",
-  indisponible: "Indisponible",
-};
 
 const TONS_STATUT_DISPONIBILITE: Record<
   string,
@@ -63,6 +58,9 @@ export default function ProfilEtudiantPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const t = useTranslations("profile");
+  const { argent: formatArgent, dateCourte: formatDateCourte, nombre } = useFormats();
+  const { competence: libelleCompetence, langue: libelleLangue, specialite: libelleSpecialite } = useOptionLabels();
   // RG-VIS-001 : les profils étudiants ne sont consultables que par un
   // utilisateur connecté (backend : GET /etudiants/:id exige un JWT).
   const { utilisateur, chargement: chargementSession } = useAuth();
@@ -138,7 +136,7 @@ export default function ProfilEtudiantPage({
     return (
       <div className="mx-auto max-w-5xl px-5 py-12">
         <div className="rounded-2xl border border-ink/10 bg-paper-light p-8 text-sm text-ink-soft shadow-sm">
-          Chargement du profil…
+          {t("public.student.loading")}
         </div>
       </div>
     );
@@ -151,28 +149,28 @@ export default function ProfilEtudiantPage({
           {connexionRequiseAffichee ? (
             <>
               <p className="text-sm text-ink-soft">
-                Connectez-vous pour consulter les profils des étudiants.
+                {t("public.student.loginRequired")}
               </p>
               <div className="flex gap-2.5">
                 <Button variant="primary" size="sm" href="/connexion">
-                  Se connecter
+                  {t("public.student.login")}
                 </Button>
                 <Button variant="secondary" size="sm" href="/inscription">
-                  Créer un compte
+                  {t("public.student.signup")}
                 </Button>
               </div>
             </>
           ) : (
-            <p className="text-sm text-brique">Profil introuvable.</p>
+            <p className="text-sm text-brique">{t("public.student.notFound")}</p>
           )}
         </NoticeCard>
       </div>
     );
   }
 
-  const nom = etudiant.utilisateur?.nom ?? "Étudiant";
+  const nom = etudiant.utilisateur?.nom ?? t("public.student.fallbackName");
   const universite =
-    etudiant.universite ?? "Étudiant freelance";
+    etudiant.universite ?? t("public.student.freelanceStudent");
 
   return (
     <div className="mx-auto max-w-5xl px-5 pb-12 pt-6">
@@ -202,7 +200,7 @@ export default function ProfilEtudiantPage({
 
               <div className="min-w-0">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-ink-soft/60">
-                  Profil professionnel
+                  {t("public.student.professionalProfile")}
                 </p>
 
                 <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -212,7 +210,7 @@ export default function ProfilEtudiantPage({
                 <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-base text-ink-soft">
                   <span>
                     {etudiant.niveauEtude ??
-                      "Étudiant en informatique"}
+                      t("public.student.defaultLevel")}
                   </span>
 
                   {etudiant.filiere && (
@@ -241,7 +239,7 @@ export default function ProfilEtudiantPage({
                       size={13}
                       className="mr-1.5 inline"
                     />
-                    Étudiant
+                    {t("public.student.studentTag")}
                   </Tag>
 
                   {etudiant.statutDisponibilite ? (
@@ -253,9 +251,13 @@ export default function ProfilEtudiantPage({
                       }
                     >
                       <Clock size={13} className="mr-1.5 inline" />
-                      {LABELS_STATUT_DISPONIBILITE[
-                        etudiant.statutDisponibilite
-                      ] ?? etudiant.statutDisponibilite}
+                      {t.has(
+                        `public.student.availabilityStatus.${etudiant.statutDisponibilite}` as never,
+                      )
+                        ? t(
+                            `public.student.availabilityStatus.${etudiant.statutDisponibilite}` as never,
+                          )
+                        : etudiant.statutDisponibilite}
                     </Tag>
                   ) : etudiant.disponibilite ? (
                     <Tag tone="rice">
@@ -263,11 +265,11 @@ export default function ProfilEtudiantPage({
                         size={13}
                         className="mr-1.5 inline"
                       />
-                      Disponible
+                      {t("public.student.availabilityStatus.disponible")}
                     </Tag>
                   ) : (
                     <Tag tone="ocre">
-                      Indisponible
+                      {t("public.student.availabilityStatus.indisponible")}
                     </Tag>
                   )}
 
@@ -280,18 +282,23 @@ export default function ProfilEtudiantPage({
                 <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-ink-soft/75">
                   <span className="inline-flex items-center gap-1.5">
                     <BriefcaseBusiness size={14} />
-                    {missionsTerminees} projet
-                    {missionsTerminees > 1 ? "s" : ""} livré
-                    {missionsTerminees > 1 ? "s" : ""}
+                    {t("public.student.projectsDelivered", { count: missionsTerminees })}
                   </span>
 
                   <span className="inline-flex items-center gap-2">
                     <StampBadge score={scoreReputation} size={42} />
                     <span>
                       <span className="block font-semibold text-ink">
-                        Réputation
+                        {t("public.student.reputation")}
                       </span>
-                      <span>{scoreReputation.toFixed(1)}/100</span>
+                      <span>
+                        {t("public.student.reputationScore", {
+                          score: nombre(scoreReputation, {
+                            minimumFractionDigits: 1,
+                            maximumFractionDigits: 1,
+                          }),
+                        })}
+                      </span>
                     </span>
                   </span>
 
@@ -300,20 +307,28 @@ export default function ProfilEtudiantPage({
                       size={14}
                       className="fill-ocre-dark text-ocre-dark"
                     />
-                    {noteMoyenne.toFixed(1)}/5
+                    {t("public.student.ratingOutOfFive", {
+                      note: nombre(noteMoyenne, {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 1,
+                      }),
+                    })}
                   </span>
 
                   {etudiant.tarifHoraire != null && (
                     <span>
-                      {formatArgent(etudiant.tarifHoraire)}/h
+                      {t("public.student.hourlyRate", {
+                        montant: formatArgent(etudiant.tarifHoraire),
+                      })}
                     </span>
                   )}
 
                   {etudiant.experience != null && (
                     <span className="inline-flex items-center gap-1.5">
                       <Clock size={14} />
-                      {etudiant.experience} an
-                      {etudiant.experience > 1 ? "s" : ""} d&apos;expérience
+                      {t("public.student.experienceYears", {
+                        count: etudiant.experience,
+                      })}
                     </span>
                   )}
                 </div>
@@ -353,11 +368,11 @@ export default function ProfilEtudiantPage({
 
               <div>
                 <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
-                  Présentation
+                  {t("public.student.presentation")}
                 </p>
 
                 <h2 className="font-display text-xl font-semibold">
-                  À propos
+                  {t("public.student.about")}
                 </h2>
               </div>
             </div>
@@ -368,7 +383,7 @@ export default function ProfilEtudiantPage({
               </p>
             ) : (
               <MessageVide>
-                Aucune présentation renseignée.
+                {t("public.student.noPresentation")}
               </MessageVide>
             )}
           </section>
@@ -383,11 +398,11 @@ export default function ProfilEtudiantPage({
 
                 <div>
                   <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
-                    Expertise
+                    {t("public.student.expertise")}
                   </p>
 
                   <h2 className="font-display text-xl font-semibold">
-                    Compétences & langues
+                    {t("public.student.skillsAndLanguages")}
                   </h2>
                 </div>
               </div>
@@ -398,14 +413,14 @@ export default function ProfilEtudiantPage({
                     <div className="mb-3 flex items-center gap-2">
                       <BriefcaseBusiness size={16} />
                       <h3 className="text-sm font-semibold">
-                        Compétences
+                        {t("public.student.skills")}
                       </h3>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
                       {etudiant.competences.map((competence) => (
                         <Tag key={competence}>
-                          {competence}
+                          {libelleCompetence(competence)}
                         </Tag>
                       ))}
                     </div>
@@ -417,7 +432,7 @@ export default function ProfilEtudiantPage({
                     <div className="mb-3 flex items-center gap-2">
                       <Languages size={16} />
                       <h3 className="text-sm font-semibold">
-                        Langues
+                        {t("public.student.languages")}
                       </h3>
                     </div>
 
@@ -427,7 +442,7 @@ export default function ProfilEtudiantPage({
                           key={langue}
                           tone="ocre"
                         >
-                          {langue}
+                          {libelleLangue(langue)}
                         </Tag>
                       ))}
                     </div>
@@ -439,14 +454,14 @@ export default function ProfilEtudiantPage({
                     <div className="mb-3 flex items-center gap-2">
                       <Sparkles size={16} />
                       <h3 className="text-sm font-semibold">
-                        Spécialités
+                        {t("public.student.specialities")}
                       </h3>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
                       {(etudiant.specialites ?? []).map((specialite) => (
                         <Tag key={specialite} tone="bleu">
-                          {specialite}
+                          {libelleSpecialite(specialite)}
                         </Tag>
                       ))}
                     </div>
@@ -464,11 +479,11 @@ export default function ProfilEtudiantPage({
 
                 <div>
                   <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
-                    Réalisations
+                    {t("public.student.achievements")}
                   </p>
 
                   <h2 className="font-display text-xl font-semibold">
-                    Portfolio
+                    {t("public.student.portfolio")}
                   </h2>
                 </div>
               </div>
@@ -488,7 +503,7 @@ export default function ProfilEtudiantPage({
 
                 <div>
                   <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
-                    Présence en ligne
+                    {t("public.extra.onlinePresence")}
                   </p>
 
                   <h2 className="font-display text-xl font-semibold">
@@ -539,7 +554,7 @@ export default function ProfilEtudiantPage({
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
                   >
                     <Globe size={13} />
-                    Site web
+                    {t("public.extra.website")}
                   </a>
                 )}
               </div>
@@ -554,11 +569,11 @@ export default function ProfilEtudiantPage({
 
                 <div>
                   <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
-                    Prestations
+                    {t("public.extra.offers")}
                   </p>
 
                   <h2 className="font-display text-xl font-semibold">
-                    Services proposés
+                    {t("public.extra.servicesOffered")}
                   </h2>
                 </div>
               </div>
@@ -582,7 +597,7 @@ export default function ProfilEtudiantPage({
                           </p>
 
                           <p className="mt-1 text-xs text-ink-soft/60">
-                            Voir le service →
+                            {t("public.extra.viewService")}
                           </p>
                         </div>
                       </div>
@@ -605,7 +620,7 @@ export default function ProfilEtudiantPage({
                   </p>
 
                   <h2 className="font-display text-xl font-semibold">
-                    Avis clients
+                    {t("public.extra.clientReviews")}
                   </h2>
                 </div>
               </div>
@@ -618,7 +633,7 @@ export default function ProfilEtudiantPage({
 
             {evaluations.length === 0 ? (
               <MessageVide>
-                Aucun avis pour le moment.
+                {t("public.extra.noReviews")}
               </MessageVide>
             ) : (
               <div className="flex flex-col gap-3">
@@ -686,12 +701,16 @@ export default function ProfilEtudiantPage({
 
               <span className="text-sm font-semibold">
                 {etudiant.statutDisponibilite
-                  ? LABELS_STATUT_DISPONIBILITE[
-                      etudiant.statutDisponibilite
-                    ] ?? etudiant.statutDisponibilite
+                  ? t.has(
+                      `public.student.availabilityStatus.${etudiant.statutDisponibilite}` as never,
+                    )
+                    ? t(
+                        `public.student.availabilityStatus.${etudiant.statutDisponibilite}` as never,
+                      )
+                    : etudiant.statutDisponibilite
                   : etudiant.disponibilite
-                    ? "Disponible pour des projets"
-                    : "Actuellement indisponible"}
+                    ? t("public.student.availableForProjects")
+                    : t("public.student.currentlyUnavailable")}
               </span>
             </div>
 
@@ -704,14 +723,14 @@ export default function ProfilEtudiantPage({
             {etudiant.tarifHoraire != null ? (
               <div className="mt-4 border-t border-ink/10 pt-4">
                 <p className="text-xs text-ink-soft/60">
-                  Tarif horaire
+                  {t("public.extra.hourlyRate")}
                 </p>
 
                 <p className="mt-1 font-mono text-lg font-semibold text-ocre-dark">
                   {formatArgent(etudiant.tarifHoraire)}
                   <span className="text-xs text-ink-soft">
                     {" "}
-                    / heure
+                    {t("public.extra.perHour")}
                   </span>
                 </p>
               </div>
@@ -720,7 +739,7 @@ export default function ProfilEtudiantPage({
                 etudiant.tarifMaximum != null) && (
                 <div className="mt-4 border-t border-ink/10 pt-4">
                   <p className="text-xs text-ink-soft/60">
-                    Fourchette tarifaire
+                    {t("public.extra.priceRange")}
                   </p>
 
                   <p className="mt-1 font-mono text-lg font-semibold text-ocre-dark">
@@ -751,7 +770,7 @@ export default function ProfilEtudiantPage({
               <div>
                 <p className="text-sm font-semibold">
                   {etudiant.niveauEtude ??
-                    "Formation informatique"}
+                    t("public.extra.defaultStudy")}
                   {etudiant.anneeEtude && (
                     <span className="font-normal text-ink-soft">
                       {" "}

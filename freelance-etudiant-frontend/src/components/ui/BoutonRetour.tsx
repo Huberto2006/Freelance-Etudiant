@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /**
  * Bouton « ← Retour » des pages internes.
@@ -24,7 +25,7 @@ import { ArrowLeft } from "lucide-react";
  * n'améliore pas la navigation.
  */
 export function BoutonRetour({
-  label = "Retour",
+  label,
   repli = "/tableau-de-bord",
   forcer = false,
   className = "",
@@ -36,6 +37,7 @@ export function BoutonRetour({
   forcer?: boolean;
   className?: string;
 }) {
+  const t = useTranslations("common.back");
   const router = useRouter();
 
   function retour() {
@@ -57,7 +59,7 @@ export function BoutonRetour({
     <button
       type="button"
       onClick={retour}
-      aria-label="Revenir à la page précédente"
+      aria-label={t("ariaLabel")}
       className={`
         inline-flex items-center gap-1.5 rounded-lg border border-ink/15
         bg-paper px-3 py-1.5 font-mono text-xs uppercase tracking-wider
@@ -67,7 +69,7 @@ export function BoutonRetour({
       `}
     >
       <ArrowLeft size={14} aria-hidden="true" />
-      {label}
+      {label ?? t("label")}
     </button>
   );
 }

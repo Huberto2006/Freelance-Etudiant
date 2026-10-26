@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Flag } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import type { Signalement } from "@/lib/types";
-import { formatDateCourte, statutSignalementLabel } from "@/lib/format";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Field";
 import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
@@ -17,6 +19,9 @@ const toneParStatut: Record<string, "ocre" | "rice" | "brique" | "ink"> = {
 };
 
 export default function AdminSignalementsPage() {
+  const t = useTranslations("admin");
+  const { dateCourte } = useFormats();
+  const { statutSignalement } = useLabels();
   const [signalements, setSignalements] = useState<Signalement[]>([]);
   const [chargement, setChargement] = useState(true);
   const [resolutions, setResolutions] = useState<Record<string, string>>({});
@@ -48,7 +53,7 @@ export default function AdminSignalementsPage() {
       });
       charger();
     } catch (err) {
-      setErreur(err instanceof ApiError ? err.message : "Erreur");
+      setErreur(err instanceof ApiError ? err.message : t("reports.genericError"));
     } finally {
       setEnCours(null);
     }
@@ -63,19 +68,19 @@ export default function AdminSignalementsPage() {
         <BoutonRetour repli="/tableau-de-bord/admin" forcer />
       </div>
 
-      <PageHeader icon={Flag} eyebrow="Administration" title="Signalements" />
+      <PageHeader icon={Flag} eyebrow={t("eyebrow")} title={t("reports.title")} />
       {erreur && <p className="text-sm text-brique mb-4">{erreur}</p>}
 
       {chargement ? (
-        <p className="text-sm text-ink-soft">Chargement…</p>
+        <p className="text-sm text-ink-soft">{t("reports.loading")}</p>
       ) : (
         <>
           <h2 className="font-display text-lg font-semibold mb-3">
-            À traiter ({ouverts.length})
+            {t("reports.toProcess", { count: ouverts.length })}
           </h2>
           {ouverts.length === 0 ? (
             <NoticeCard className="mb-7">
-              <p className="text-sm text-ink-soft/70">Aucun signalement en attente.</p>
+              <p className="text-sm text-ink-soft/70">{t("reports.noneWaiting")}</p>
             </NoticeCard>
           ) : (
             <div className="flex flex-col gap-3 mb-7">
@@ -84,16 +89,16 @@ export default function AdminSignalementsPage() {
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-display font-medium">{s.motif}</p>
                     <Tag tone={toneParStatut[s.statut]}>
-                      {statutSignalementLabel[s.statut]}
+                      {statutSignalement(s.statut)}
                     </Tag>
                   </div>
                   <p className="text-sm text-ink-soft">{s.description}</p>
                   <p className="text-xs text-ink-soft/60 font-mono">
-                    {s.cibleType} · {formatDateCourte(s.dateSignalement)}
+                    {s.cibleType} · {dateCourte(s.dateSignalement)}
                   </p>
                   <Textarea
                     rows={2}
-                    placeholder="Note de résolution (optionnel)…"
+                    placeholder={t("reports.resolutionPlaceholder")}
                     value={resolutions[s.id] ?? ""}
                     onChange={(e) =>
                       setResolutions((prev) => ({ ...prev, [s.id]: e.target.value }))
@@ -105,14 +110,14 @@ export default function AdminSignalementsPage() {
                     disabled={enCours === s.id}
                     onClick={() => traiter(s.id)}
                   >
-                    Marquer comme traité
+                    {t("reports.markProcessed")}
                   </Button>
                 </NoticeCard>
               ))}
             </div>
           )}
 
-          <h2 className="font-display text-lg font-semibold mb-3">Traités</h2>
+          <h2 className="font-display text-lg font-semibold mb-3">{t("reports.processed")}</h2>
           <div className="flex flex-col gap-3">
             {traites.map((s) => (
               <NoticeCard key={s.id} className="flex flex-col gap-1.5">
@@ -120,7 +125,7 @@ export default function AdminSignalementsPage() {
                 <p className="text-sm text-ink-soft">{s.description}</p>
                 {s.resolution && (
                   <p className="text-xs text-ink-soft/70 italic">
-                    Résolution : {s.resolution}
+                    {t("reports.resolution", { text: s.resolution })}
                   </p>
                 )}
               </NoticeCard>

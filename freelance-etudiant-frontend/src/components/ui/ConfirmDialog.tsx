@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 import { NoticeCard } from "@/components/ui/Notice";
 import { Button } from "@/components/ui/Button";
@@ -28,8 +29,8 @@ export function ConfirmDialog({
   ouvert,
   titre,
   description,
-  libelleConfirmer = "Confirmer",
-  libelleAnnuler = "Annuler",
+  libelleConfirmer,
+  libelleAnnuler,
   destructif = true,
   onConfirmer,
   onAnnuler,
@@ -44,6 +45,8 @@ export function ConfirmDialog({
   onConfirmer: () => void;
   onAnnuler: () => void;
 }) {
+  const t = useTranslations("common");
+
   // Échap ferme la boîte, comme window.confirm() le faisait implicitement.
   useEffect(() => {
     if (!ouvert) return;
@@ -94,14 +97,14 @@ export function ConfirmDialog({
 
         <div className="mt-5 flex justify-end gap-2.5">
           <Button variant="ghost" size="sm" onClick={onAnnuler}>
-            {libelleAnnuler}
+            {libelleAnnuler ?? t("actions.cancel")}
           </Button>
           <Button
             variant={destructif ? "danger" : "primary"}
             size="sm"
             onClick={onConfirmer}
           >
-            {libelleConfirmer}
+            {libelleConfirmer ?? t("actions.confirm")}
           </Button>
         </div>
       </NoticeCard>

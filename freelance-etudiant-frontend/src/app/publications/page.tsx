@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   ArrowUpDown,
   BriefcaseBusiness,
@@ -89,6 +90,7 @@ function filtresDepuisUrl(searchParams: URLSearchParams): Filtres {
 }
 
 function PublicationsContent() {
+  const t = useTranslations("publications.catalog");
   const { utilisateur } = useAuth();
   const searchParams = useSearchParams();
 
@@ -140,11 +142,11 @@ function PublicationsContent() {
         }
 
         if (resMissions.status === "rejected" && resServices.status === "rejected") {
-          setErreur("Impossible de charger le catalogue de publications pour le moment.");
+          setErreur(t("errors.full"));
         } else if (resMissions.status === "rejected") {
-          setErreurPartielle("Les missions n'ont pas pu être chargées ; seuls les services sont affichés.");
+          setErreurPartielle(t("errors.missionsPartial"));
         } else if (resServices.status === "rejected") {
-          setErreurPartielle("Les services n'ont pas pu être chargés ; seules les missions sont affichées.");
+          setErreurPartielle(t("errors.servicesPartial"));
         } else {
           setErreurPartielle(null);
         }
@@ -154,7 +156,7 @@ function PublicationsContent() {
         setErreur(
           err instanceof ApiError
             ? err.message
-            : "Une erreur est survenue lors du chargement des publications.",
+            : t("errors.generic"),
         );
       } finally {
         if (!annule) setChargement(false);
@@ -166,7 +168,7 @@ function PublicationsContent() {
     return () => {
       annule = true;
     };
-  }, [declencheur]);
+  }, [declencheur, t]);
 
   /**
    * Filtrage et tri côté client des publications combinées.
@@ -331,31 +333,29 @@ function PublicationsContent() {
         <div>
           <p className="mb-1 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-bleu-dark">
             <Layers3 size={15} aria-hidden="true" />
-            Catalogue général · Kianja Marketplace
+            {t("eyebrow")}
           </p>
 
           <h1 className="font-display text-3xl font-bold sm:text-4xl text-ink">
-            Publications
+            {t("title")}
           </h1>
 
           <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-ink-soft">
-            Découvrez les besoins des clients et les compétences des étudiants
-            sur Kianja. Un espace unifié pour explorer l&apos;ensemble des
-            opportunités et des prestations disponibles.
+            {t("intro")}
           </p>
 
           {/* Badges de synthèse en direct */}
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
             <span className="inline-flex items-center rounded-full border border-ink/15 bg-paper-light px-2.5 py-0.5 font-mono text-[0.6875rem] font-medium text-ink">
-              {chargement ? "…" : `${nbTotal} publications`}
+              {chargement ? "…" : t("badges.total", { count: nbTotal })}
             </span>
             <span className="inline-flex items-center gap-1 rounded-full border border-bleu/20 bg-bleu/10 px-2.5 py-0.5 font-mono text-[0.6875rem] font-medium text-bleu-dark">
               <BriefcaseBusiness size={11} aria-hidden="true" />
-              {chargement ? "…" : `${nbMissionsTotal} missions ouvertes`}
+              {chargement ? "…" : t("badges.missions", { count: nbMissionsTotal })}
             </span>
             <span className="inline-flex items-center gap-1 rounded-full border border-ocre/20 bg-ocre/10 px-2.5 py-0.5 font-mono text-[0.6875rem] font-medium text-ocre-dark">
               <Wrench size={11} aria-hidden="true" />
-              {chargement ? "…" : `${nbServicesTotal} services proposés`}
+              {chargement ? "…" : t("badges.services", { count: nbServicesTotal })}
             </span>
           </div>
 
@@ -371,7 +371,7 @@ function PublicationsContent() {
               <Link href="/tableau-de-bord/mes-missions">
                 <Button variant="primary" size="sm" className="gap-1.5 text-xs">
                   <Plus size={14} aria-hidden="true" />
-                  Publier une mission
+                  {t("actions.publishMission")}
                 </Button>
               </Link>
             )}
@@ -379,7 +379,7 @@ function PublicationsContent() {
               <Link href="/tableau-de-bord/mes-services">
                 <Button variant="primary" size="sm" className="gap-1.5 text-xs">
                   <Sparkles size={14} aria-hidden="true" />
-                  Proposer un service
+                  {t("actions.offerService")}
                 </Button>
               </Link>
             )}
@@ -392,7 +392,7 @@ function PublicationsContent() {
         {/* Commutateur de Type de publication */}
         <div
           role="tablist"
-          aria-label="Filtrer par type de publication"
+          aria-label={t("tabs.ariaLabel")}
           className="inline-flex rounded-xl border border-ink/15 bg-paper-light p-1 shadow-xs"
         >
           <button
@@ -407,7 +407,7 @@ function PublicationsContent() {
             }`}
           >
             <Layers3 size={14} aria-hidden="true" />
-            <span>Toutes ({chargement ? "…" : nbTotal})</span>
+            <span>{t("tabs.all", { count: chargement ? "…" : nbTotal })}</span>
           </button>
 
           <button
@@ -422,7 +422,7 @@ function PublicationsContent() {
             }`}
           >
             <BriefcaseBusiness size={14} aria-hidden="true" />
-            <span>Missions clients ({chargement ? "…" : nbMissionsTotal})</span>
+            <span>{t("tabs.missions", { count: chargement ? "…" : nbMissionsTotal })}</span>
           </button>
 
           <button
@@ -437,7 +437,7 @@ function PublicationsContent() {
             }`}
           >
             <Wrench size={14} aria-hidden="true" />
-            <span>Services étudiants ({chargement ? "…" : nbServicesTotal})</span>
+            <span>{t("tabs.services", { count: chargement ? "…" : nbServicesTotal })}</span>
           </button>
         </div>
 
@@ -448,7 +448,7 @@ function PublicationsContent() {
             className="flex items-center gap-1 font-mono text-xs uppercase tracking-wider text-ink-soft"
           >
             <ArrowUpDown size={13} aria-hidden="true" />
-            <span className="hidden sm:inline">Trier par</span>
+            <span className="hidden sm:inline">{t("sort.label")}</span>
           </label>
 
           <select
@@ -457,10 +457,10 @@ function PublicationsContent() {
             onChange={(e) => setTriOption(e.target.value as OptionTri)}
             className="kianja-field-control h-9 rounded-lg border-0 bg-paper-light px-2.5 text-xs text-ink outline-none focus:outline-none transition"
           >
-            <option value="recent">Plus récentes d&apos;abord</option>
-            <option value="meilleurs">Mieux notés / budget</option>
-            <option value="prix_asc">Prix / Budget croissant</option>
-            <option value="prix_desc">Prix / Budget décroissant</option>
+            <option value="recent">{t("sort.options.recent")}</option>
+            <option value="meilleurs">{t("sort.options.best")}</option>
+            <option value="prix_asc">{t("sort.options.priceAsc")}</option>
+            <option value="prix_desc">{t("sort.options.priceDesc")}</option>
           </select>
         </div>
       </div>
@@ -479,16 +479,16 @@ function PublicationsContent() {
         <aside className="w-full shrink-0 lg:sticky lg:top-[7.5rem] lg:w-72 lg:max-h-[calc(100vh-7.5rem-1.5rem)] lg:overflow-y-auto">
           <PanneauFiltres
             filtresInitiaux={filtresAvances}
-            placeholder="Rechercher par mot-clé…"
-            labelBudget="Budget ou Tarif (Ar)"
+            placeholder={t("filters.searchPlaceholder")}
+            labelBudget={t("filters.budgetLabel")}
             onFiltrer={(nouveauxFiltres) => setFiltresAvances(nouveauxFiltres)}
           />
 
           {/* Raccourci vers les catalogues spécialisés */}
           <div className="mt-4 rounded-xl border border-ink/10 bg-paper-light p-4 text-xs text-ink-soft">
-            <p className="font-semibold text-ink">Navigation ciblée</p>
+            <p className="font-semibold text-ink">{t("targeted.title")}</p>
             <p className="mt-1 leading-relaxed">
-              Consultez nos catalogues dédiés avec options avancées :
+              {t("targeted.intro")}
             </p>
             <div className="mt-2.5 flex flex-col gap-1.5">
               <Link
@@ -496,14 +496,14 @@ function PublicationsContent() {
                 className="inline-flex items-center gap-1.5 text-bleu-dark hover:underline"
               >
                 <BriefcaseBusiness size={13} aria-hidden="true" />
-                <span>Voir uniquement les missions</span>
+                <span>{t("targeted.missionsOnly")}</span>
               </Link>
               <Link
                 href="/services"
                 className="inline-flex items-center gap-1.5 text-bleu-dark hover:underline"
               >
                 <Wrench size={13} aria-hidden="true" />
-                <span>Voir uniquement les services</span>
+                <span>{t("targeted.servicesOnly")}</span>
               </Link>
             </div>
           </div>
@@ -528,7 +528,7 @@ function PublicationsContent() {
                   className="mt-3"
                 >
                   <RotateCcw size={13} className="mr-1.5" />
-                  Réessayer
+                  {t("actions.retry")}
                 </Button>
               </div>
             </NoticeCard>
@@ -544,15 +544,14 @@ function PublicationsContent() {
 
                 <h3 className="font-display text-base font-semibold text-ink">
                   {typeActif === "missions"
-                    ? "Aucune mission ne correspond à vos critères."
+                    ? t("empty.missions")
                     : typeActif === "services"
-                    ? "Aucun service ne correspond à vos critères."
-                    : "Aucune publication ne correspond à votre recherche."}
+                    ? t("empty.services")
+                    : t("empty.all")}
                 </h3>
 
                 <p className="max-w-md text-xs leading-relaxed text-ink-soft">
-                  Essayez d&apos;élargir vos termes de recherche, de réinitialiser vos
-                  filtres ou de changer de catégorie.
+                  {t("empty.hint")}
                 </p>
 
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -563,7 +562,7 @@ function PublicationsContent() {
                     className="gap-1 text-xs"
                   >
                     <RotateCcw size={13} />
-                    Réinitialiser les filtres
+                    {t("empty.reset")}
                   </Button>
 
                   {typeActif !== "toutes" && (
@@ -573,7 +572,7 @@ function PublicationsContent() {
                       onClick={() => setTypeActif("toutes")}
                       className="text-xs"
                     >
-                      Afficher tout le catalogue
+                      {t("empty.showAll")}
                     </Button>
                   )}
                 </div>
@@ -583,11 +582,12 @@ function PublicationsContent() {
             <>
               <div className="mb-3 flex items-center justify-between text-xs text-ink-soft">
                 <p>
-                  <span className="font-semibold text-ink">
-                    {publicationsFiltrees.length}
-                  </span>{" "}
-                  publication{publicationsFiltrees.length > 1 ? "s" : ""} trouvée
-                  {publicationsFiltrees.length > 1 ? "s" : ""}
+                  {t.rich("results.found", {
+                    count: publicationsFiltrees.length,
+                    b: (morceaux) => (
+                      <span className="font-semibold text-ink">{morceaux}</span>
+                    ),
+                  })}
                 </p>
               </div>
 

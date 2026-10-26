@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Lock, MapPin, Search, Star, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -15,12 +16,12 @@ import { Skeleton } from "@/components/ui/Skeleton";
 const TAILLE_PAGE = 24;
 const COMPETENCES_AFFICHEES = 5;
 
-const LABELS_DISPONIBILITE: Record<string, string> = {
-  disponible: "Disponible",
-  occupe: "Occupé",
-  en_mission: "En mission",
-  indisponible: "Indisponible",
-};
+const STATUTS_DISPONIBILITE = [
+  "disponible",
+  "occupe",
+  "en_mission",
+  "indisponible",
+] as const;
 
 const TONS_DISPONIBILITE: Record<
   string,
@@ -43,6 +44,11 @@ const TONS_DISPONIBILITE: Record<
  * le champ `telephone` du type partagé n'est jamais lu ni affiché ici.
  */
 export function ListeFreelances() {
+  const t = useTranslations("extras.freelanceList");
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
   const { utilisateur, chargement: chargementSession } = useAuth();
 
   const [etudiants, setEtudiants] = useState<EtudiantProfile[]>([]);
@@ -82,7 +88,7 @@ export function ListeFreelances() {
         setErreur(
           error instanceof ApiError && error.status !== 401
             ? error.message
-            : "Impossible de charger les freelances pour le moment.",
+            : tRef.current("errLoad"),
         );
       } finally {
         if (!annule) setChargement(false);
@@ -112,7 +118,7 @@ export function ListeFreelances() {
       setPage(suivante);
       setPeutCharger(liste.length === TAILLE_PAGE);
     } catch {
-      setErreur("Impossible de charger la suite de la liste.");
+      setErreur(t("errMore"));
     } finally {
       setChargementPlus(false);
     }
@@ -163,31 +169,29 @@ export function ListeFreelances() {
           <Lock size={19} />
         </span>
         <h2 className="font-display text-xl font-semibold text-ink">
-          Les profils sont réservés aux membres
+          {t("membersOnlyTitle")}
         </h2>
         <p className="max-w-md text-sm leading-relaxed text-ink-soft">
-          Pour protéger les étudiants, l&apos;annuaire des freelances est
-          visible une fois connecté. En attendant, vous pouvez parcourir
-          les services qu&apos;ils proposent.
+          {t("membersOnlyText")}
         </p>
         <div className="mt-2 flex flex-col gap-2.5 sm:flex-row">
           <Link
             href="/services"
             className="inline-flex items-center justify-center rounded-lg border border-ink/30 px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink hover:bg-ink/5"
           >
-            Parcourir les services
+            {t("browseServices")}
           </Link>
           <Link
             href="/connexion"
             className="inline-flex items-center justify-center rounded-lg border border-ink/30 px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink hover:bg-ink/5"
           >
-            Connexion
+            {t("login")}
           </Link>
           <Link
             href="/inscription"
             className="inline-flex items-center justify-center rounded-lg border border-ink bg-ink px-4 py-2.5 text-sm font-medium text-paper-light transition-colors hover:bg-ink-soft"
           >
-            Rejoindre Kianja
+            {t("join")}
           </Link>
         </div>
       </NoticeCard>
@@ -210,8 +214,8 @@ export function ListeFreelances() {
             type="search"
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
-            placeholder="Nom, compétence, filière, ville…"
-            aria-label="Rechercher un freelance"
+            placeholder={t("searchPlaceholder")}
+            aria-label={t("searchAria")}
             className="kianja-field-control h-11 w-full rounded-full border-0 bg-paper-light pl-9 pr-3 text-sm text-ink outline-none focus:outline-none transition placeholder:text-ink-soft/50"
           />
         </div>
@@ -223,7 +227,7 @@ export function ListeFreelances() {
             onChange={(e) => setDisponiblesSeulement(e.target.checked)}
             className="h-4 w-4 accent-ocre"
           />
-          Disponibles uniquement
+          {t("availableOnly")}
         </label>
       </div>
 
@@ -243,15 +247,14 @@ export function ListeFreelances() {
           <Users size={22} aria-hidden="true" className="text-ink-soft/60" />
           <p className="text-sm text-ink-soft">
             {etudiants.length === 0
-              ? "Aucun freelance à afficher pour le moment."
-              : "Aucun freelance ne correspond à votre recherche."}
+              ? t("emptyAll")
+              : t("emptySearch")}
           </p>
         </NoticeCard>
       ) : (
         <>
           <p className="mb-4 text-xs text-ink-soft/70" aria-live="polite">
-            {resultats.length} freelance{resultats.length > 1 ? "s" : ""}{" "}
-            affiché{resultats.length > 1 ? "s" : ""}
+            {t("shown", { count: resultats.length })}
           </p>
 
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -270,7 +273,7 @@ export function ListeFreelances() {
                 disabled={chargementPlus}
                 className="inline-flex items-center justify-center rounded-lg border border-ink/30 px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink hover:bg-ink/5 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {chargementPlus ? "Chargement…" : "Voir plus de freelances"}
+                {chargementPlus ? t("loading") : t("seeMore")}
               </button>
             </div>
           )}
@@ -281,7 +284,8 @@ export function ListeFreelances() {
 }
 
 function CarteFreelance({ etudiant }: { etudiant: EtudiantProfile }) {
-  const nom = etudiant.utilisateur?.nom ?? "Étudiant";
+  const t = useTranslations("extras.freelanceList");
+  const nom = etudiant.utilisateur?.nom ?? t("student");
   const formation = [etudiant.filiere, etudiant.universite]
     .filter(Boolean)
     .join(" · ");
@@ -314,16 +318,16 @@ function CarteFreelance({ etudiant }: { etudiant: EtudiantProfile }) {
         </div>
       </div>
 
-      {statut && LABELS_DISPONIBILITE[statut] && (
+      {statut && STATUTS_DISPONIBILITE.includes(statut as (typeof STATUTS_DISPONIBILITE)[number]) && (
         <div className="mt-3">
           <Tag tone={TONS_DISPONIBILITE[statut] ?? "ink"}>
-            {LABELS_DISPONIBILITE[statut]}
+            {t(`availability.${statut}` as never)}
           </Tag>
         </div>
       )}
 
       {affichees.length > 0 && (
-        <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="Compétences">
+        <ul className="mt-3 flex flex-wrap gap-1.5" aria-label={t("skills")}>
           {affichees.map((competence) => (
             <li key={competence}>
               <Tag>{competence}</Tag>
@@ -347,21 +351,20 @@ function CarteFreelance({ etudiant }: { etudiant: EtudiantProfile }) {
                 className="text-ocre-dark"
               />
               <span>
-                {note.toFixed(1)} · {missions} mission
-                {missions > 1 ? "s" : ""}
+                {t("missionsDone", { note: note.toFixed(1), count: missions })}
               </span>
             </>
           ) : (
-            <span className="text-ink-soft/60">Nouveau sur Kianja</span>
+            <span className="text-ink-soft/60">{t("newOnKianja")}</span>
           )}
         </p>
 
         <Link
           href={`/etudiants/${etudiant.utilisateurId}`}
           className="inline-flex min-h-9 items-center rounded-lg border border-ink/30 px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-ink hover:bg-ink/5"
-          aria-label={`Voir le profil de ${nom}`}
+          aria-label={t("viewProfileOf", { nom })}
         >
-          Voir le profil
+          {t("viewProfile")}
         </Link>
       </div>
     </article>
@@ -369,11 +372,12 @@ function CarteFreelance({ etudiant }: { etudiant: EtudiantProfile }) {
 }
 
 function SqueletteListe() {
+  const t = useTranslations("extras.freelanceList");
   return (
     <div
       className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
       aria-busy="true"
-      aria-label="Chargement des freelances"
+      aria-label={t("skeletonLoading")}
     >
       {Array.from({ length: 6 }).map((_, index) => (
         <Skeleton key={index} className="h-44 w-full rounded-xl" />

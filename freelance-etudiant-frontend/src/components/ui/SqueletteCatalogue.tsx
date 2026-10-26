@@ -1,4 +1,5 @@
 import { clsx } from "clsx";
+import { useTranslations } from "next-intl";
 
 /**
  * Squelette de chargement du catalogue : réplique la géométrie des cartes
@@ -13,10 +14,11 @@ export function SqueletteCatalogue({
   nombre?: number;
   className?: string;
 }) {
+  const t = useTranslations("extras.shared");
   return (
     <div
       role="status"
-      aria-label="Chargement du catalogue"
+      aria-label={t("catalogLoading")}
       className={clsx("grid gap-4 sm:grid-cols-2 xl:grid-cols-3", className)}
     >
       {Array.from({ length: nombre }).map((_, index) => (

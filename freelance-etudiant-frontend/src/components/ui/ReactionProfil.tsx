@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ThumbsUp } from "lucide-react";
 import { clsx } from "clsx";
 import { api, ApiError } from "@/lib/api";
@@ -13,6 +14,7 @@ import type { ReactionInfo } from "@/lib/types";
  * profil ; un second clic retire la réaction.
  */
 export function ReactionProfil({ utilisateurId }: { utilisateurId: string }) {
+  const t = useTranslations("extras.profileReaction");
   const { utilisateur } = useAuth();
   const [info, setInfo] = useState<ReactionInfo | null>(null);
   const [envoi, setEnvoi] = useState(false);
@@ -50,11 +52,7 @@ export function ReactionProfil({ utilisateurId }: { utilisateurId: string }) {
       type="button"
       onClick={toggle}
       disabled={!utilisateur || envoi}
-      title={
-        utilisateur
-          ? "Réagir à ce profil"
-          : "Connectez-vous pour réagir à ce profil"
-      }
+      title={utilisateur ? t("react") : t("loginRequired")}
       className={clsx(
         "inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60",
         info.jaiReagi
@@ -63,7 +61,7 @@ export function ReactionProfil({ utilisateurId }: { utilisateurId: string }) {
       )}
     >
       <ThumbsUp size={15} fill={info.jaiReagi ? "currentColor" : "none"} />
-      {info.total > 0 ? info.total : "Réagir"}
+      {info.total > 0 ? info.total : t("label")}
     </button>
   );
 }

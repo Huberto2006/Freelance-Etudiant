@@ -1,0 +1,113 @@
+{
+  "statutMission": {
+    "ouverte": "Misokatra",
+    "en_cours": "Mandeha",
+    "terminee": "Vita",
+    "fermee": "Mikatona",
+    "expiree": "Lany daty"
+  },
+  "statutCandidature": {
+    "en_attente": "Miandry",
+    "acceptee": "Eken'ny",
+    "refusee": "Nolavina"
+  },
+  "statutLivraison": {
+    "en_attente": "Miandry fankatoavana",
+    "validee": "Nankatoavina",
+    "correction_demandee": "Nangatahana fanitsiana"
+  },
+  "statutTransaction": {
+    "en_attente": "Miandry fanamarinana",
+    "confirmee": "Voamarina",
+    "liberee": "Nafahana",
+    "annulee": "Nofoanana"
+  },
+  "methodePaiement": {
+    "papi": "Papi",
+    "mvola": "Mvola",
+    "orange_money": "Orange Money",
+    "airtel_money": "Airtel Money",
+    "virement": "Famindrana banky"
+  },
+  "statutSignalement": {
+    "ouvert": "Misokatra",
+    "en_cours": "Eo am-pikarakarana",
+    "traite": "Voakarakara"
+  },
+  "statutDemandeService": {
+    "en_attente": "Miandry valiny",
+    "acceptee": "Eken'ny",
+    "refusee": "Nolavina"
+  },
+  "statutInvitationGroupe": {
+    "en_attente": "Miandry",
+    "acceptee": "Eken'ny",
+    "refusee": "Nolavina",
+    "annulee": "Nofoanana"
+  },
+  "roleMembreGroupe": {
+    "chef": "Lehibe",
+    "membre": "Mpikambana"
+  },
+  "role": {
+    "etudiant": "Mpianatra",
+    "client": "Mpanjifa",
+    "admin": "Mpitantana",
+    "a_definir": "Andraikitra safidina"
+  },
+  "categories": {
+    "developpement": "Fampandrosoana",
+    "design": "Famolavolana",
+    "redaction": "Fanoratana",
+    "traduction": "Fandikana",
+    "marketing": "Marketing",
+    "video": "Horonan-tsary",
+    "data": "Data",
+    "administratif": "Fitantanana",
+    "autre": "Hafa",
+    "marketingdigital": "Marketing nomerika",
+    "montagevideo": "Fanapahana horonan-tsary",
+    "multimedia": "Multimedia"
+  },
+  "categoriesDescriptions": {
+    "developpement": "Tranokala, rindranasa, script…",
+    "design": "Maketa UI/UX, logo, sary…",
+    "redaction": "Lahatsoratra, taratasy fanazaran-tena, votoaty tranonkala…",
+    "traduction": "Frantsay, anglisy, malagasy…",
+    "marketing": "Tambajotra sosialy, SEO, fampielezan-kevitra…",
+    "video": "Fanapahana, soratra ambany sary, motion design…",
+    "data": "Famakafakana, tabilao, fototra data…",
+    "administratif": "Fampidirana, fandaminana, fanampiana…"
+  },
+  "langues": {
+    "malagasy": "Malagasy",
+    "francais": "Frantsay",
+    "anglais": "Anglisy",
+    "allemand": "Alemanina",
+    "espagnol": "Espaniola",
+    "italien": "Italiana",
+    "portugais": "Portiogey",
+    "arabe": "Arabo",
+    "chinois": "Sinoa",
+    "japonais": "Japoney",
+    "coreen": "Koreana",
+    "russe": "Rosiana"
+  },
+  "specialites": {
+    "developpementweb": "Fampandrosoana tranonkala",
+    "developpementmobile": "Fampandrosoana rindranasa finday",
+    "uiux": "UI/UX",
+    "branding": "Branding",
+    "graphisme": "Zavakanto an-tsary",
+    "marketingdigital": "Marketing nomerika",
+    "seo": "SEO",
+    "motiondesign": "Motion design",
+    "reseauxsociaux": "Tambajotra sosialy",
+    "data": "Data",
+    "productdesign": "Product design"
+  },
+  "competences": {
+    "design": "Famolavolana",
+    "uiux": "UI/UX"
+  }
+}

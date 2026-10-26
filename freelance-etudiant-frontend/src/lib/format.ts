@@ -1,7 +1,36 @@
-export function formatArgent(valeur: number | string): string {
+import { DEFAULT_LOCALE, etiquetteIntl, type Locale } from "@/i18n/config";
+
+/*
+ * Formatage dépendant de la langue de l'interface.
+ *
+ * Toutes les fonctions acceptent la langue en dernier argument (français par
+ * défaut). Dans un composant React, utiliser le hook `useFormats()`
+ * (src/i18n/use-formats.ts) qui les lie à la langue courante.
+ *
+ * RÈGLE FINANCIÈRE : un montant est toujours affiché en ariary malagasy (Ar).
+ * Changer de langue ne convertit JAMAIS une somme dans une autre devise : seuls
+ * les séparateurs (milliers, décimales) et la place du nombre changent.
+ */
+
+export function formatNombre(
+  valeur: number | string,
+  locale: Locale = DEFAULT_LOCALE,
+  options?: Intl.NumberFormatOptions,
+): string {
   const nombre = typeof valeur === "string" ? parseFloat(valeur) : valeur;
   if (Number.isNaN(nombre)) return "—";
-  return `${new Intl.NumberFormat("fr-FR").format(nombre)} Ar`;
+  return new Intl.NumberFormat(etiquetteIntl(locale), options).format(nombre);
+}
+
+export function formatArgent(
+  valeur: number | string,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
+  const nombre = typeof valeur === "string" ? parseFloat(valeur) : valeur;
+  if (Number.isNaN(nombre)) return "—";
+  return `${new Intl.NumberFormat(etiquetteIntl(locale), {
+    maximumFractionDigits: 2,
+  }).format(nombre)} Ar`;
 }
 
 /**
@@ -32,9 +61,12 @@ export function dateLimiteDepassee(dateLimite: string): boolean {
   return Date.now() >= finDuJour.getTime();
 }
 
-export function formatDate(date: string): string {
+export function formatDate(
+  date: string,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
   try {
-    return new Intl.DateTimeFormat("fr-FR", {
+    return new Intl.DateTimeFormat(etiquetteIntl(locale), {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -44,9 +76,12 @@ export function formatDate(date: string): string {
   }
 }
 
-export function formatDateCourte(date: string): string {
+export function formatDateCourte(
+  date: string,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
   try {
-    return new Intl.DateTimeFormat("fr-FR", {
+    return new Intl.DateTimeFormat(etiquetteIntl(locale), {
       day: "numeric",
       month: "short",
     }).format(versDate(date));
@@ -55,61 +90,39 @@ export function formatDateCourte(date: string): string {
   }
 }
 
-export const statutMissionLabel: Record<string, string> = {
-  ouverte: "Ouverte",
-  en_cours: "En cours",
-  terminee: "Terminée",
-  fermee: "Fermée",
-  expiree: "Expirée",
-};
+/** Date et heure (fuseau de Madagascar), par exemple pour les messages. */
+export function formatDateHeure(
+  date: string | Date,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
+  try {
+    const d = typeof date === "string" ? versDate(date) : date;
+    return new Intl.DateTimeFormat(etiquetteIntl(locale), {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Indian/Antananarivo",
+    }).format(d);
+  } catch {
+    return typeof date === "string" ? date : "";
+  }
+}
 
-export const statutCandidatureLabel: Record<string, string> = {
-  en_attente: "En attente",
-  acceptee: "Acceptée",
-  refusee: "Refusée",
-};
-
-export const statutLivraisonLabel: Record<string, string> = {
-  en_attente: "En attente de validation",
-  validee: "Validée",
-  correction_demandee: "Correction demandée",
-};
-
-export const statutTransactionLabel: Record<string, string> = {
-  en_attente: "En attente de vérification",
-  confirmee: "Confirmé",
-  liberee: "Libéré",
-  annulee: "Annulé",
-};
-
-export const methodePaiementLabel: Record<string, string> = {
-  papi: "Papi",
-  mvola: "Mvola",
-  orange_money: "Orange Money",
-  airtel_money: "Airtel Money",
-  virement: "Virement bancaire",
-};
-
-export const statutSignalementLabel: Record<string, string> = {
-  ouvert: "Ouvert",
-  en_cours: "En cours de traitement",
-  traite: "Traité",
-};
-
-export const statutDemandeServiceLabel: Record<string, string> = {
-  en_attente: "En attente de réponse",
-  acceptee: "Acceptée",
-  refusee: "Refusée",
-};
-
-export const statutInvitationGroupeLabel: Record<string, string> = {
-  en_attente: "En attente",
-  acceptee: "Acceptée",
-  refusee: "Refusée",
-  annulee: "Annulée",
-};
-
-export const roleMembreGroupeLabel: Record<string, string> = {
-  chef: "Chef",
-  membre: "Membre",
-};
+/** Heure seule (HH:mm), fuseau de Madagascar. */
+export function formatHeure(
+  date: string | Date,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
+  try {
+    const d = typeof date === "string" ? versDate(date) : date;
+    return new Intl.DateTimeFormat(etiquetteIntl(locale), {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Indian/Antananarivo",
+    }).format(d);
+  } catch {
+    return "";
+  }
+}

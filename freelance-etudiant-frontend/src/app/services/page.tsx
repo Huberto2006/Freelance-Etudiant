@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Wrench } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
@@ -65,6 +66,7 @@ function noteDuService(service: ServiceOffert): number {
 }
 
 function ServicesContent() {
+  const t = useTranslations("services");
   const { utilisateur } = useAuth();
   const searchParams = useSearchParams();
   const cleParams = searchParams.toString();
@@ -133,14 +135,14 @@ function ServicesContent() {
         setErreur(
           err instanceof ApiError
             ? err.message
-            : "Impossible de charger les services pour le moment.",
+            : t("list.loadError"),
         );
         setServices([]);
       } finally {
         setChargement(false);
       }
     },
-    [],
+    [t],
   );
 
   /*
@@ -179,17 +181,16 @@ function ServicesContent() {
       </div>
       <div className="mb-6">
         <p className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
-          Étals du kianja
+          {t("list.eyebrow")}
         </p>
-        <h1 className="font-display text-3xl font-bold">Services</h1>
+        <h1 className="font-display text-3xl font-bold">{t("list.title")}</h1>
         <p className="mt-1 text-sm text-ink-soft">
-          Les services proposés par les étudiants de la plateforme, prêts à
-          être commandés.
+          {t("list.intro")}
         </p>
         <p className="mt-0.5 text-xs text-ink-soft/70">
           {chargement
-            ? "Chargement des services…"
-            : `${services.length} service${services.length > 1 ? "s" : ""} disponible${services.length > 1 ? "s" : ""}`}
+            ? t("list.loading")
+            : t("list.count", { count: services.length })}
         </p>
       </div>
 
@@ -211,8 +212,8 @@ function ServicesContent() {
         >
           <PanneauFiltres
             filtresInitiaux={filtresAvances}
-            placeholder="Design, développement, rédaction…"
-            labelBudget="Prix (Ar)"
+            placeholder={t("list.filterPlaceholder")}
+            labelBudget={t("list.filterPrice")}
             onFiltrer={(nouveauxFiltres) => {
               setFiltresAvances(nouveauxFiltres);
               rechercher(onglet, nouveauxFiltres);
@@ -237,14 +238,13 @@ function ServicesContent() {
                   <Wrench size={22} />
                 </span>
                 <p className="text-sm text-ink-soft">
-                  Aucun service ne correspond à ces critères pour le moment.
+                  {t("list.emptyTitle")}
                 </p>
                 <p className="max-w-sm text-xs text-ink-soft/70">
-                  Essayez d&apos;élargir vos filtres ou revenez plus tard : de
-                  nouveaux services sont publiés régulièrement.
+                  {t("list.emptyHint")}
                 </p>
                 <Button variant="secondary" size="sm" href="/services">
-                  Voir tous les services
+                  {t("list.seeAll")}
                 </Button>
               </div>
             </NoticeCard>

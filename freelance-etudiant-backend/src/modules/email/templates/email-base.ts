@@ -5,7 +5,16 @@
  * - HTML inline (compatibilite maximale avec les clients mail).
  * - Aucune donnee sensible dans les templates (jamais de mot de passe,
  *   un lien a usage unique uniquement).
+ * - Langue : chaque email est rendu dans la langue du destinataire
+ *   (fr par defaut), attribut `lang` du HTML compris.
  */
+
+import {
+  choisir,
+  formaterMontantAr,
+} from '../../../common/i18n/formatage';
+import { normaliserLangue } from '../../../common/i18n/langues';
+import { BASE_I18N } from './i18n/base.i18n';
 
 const MARQUE = 'KIANJA';
 
@@ -27,9 +36,11 @@ export function entete(titre: string): string {
   </tr>`;
 }
 
-export function envelopper(interior: string): string {
+export function envelopper(interior: string, langue?: unknown): string {
+  const l = normaliserLangue(langue);
+  const textes = choisir(BASE_I18N, l);
   return `<!DOCTYPE html>
-<html lang="fr">
+<html lang="${l}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:${COULEURS.fond};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COULEURS.fond};padding:32px 12px;">
@@ -39,8 +50,8 @@ export function envelopper(interior: string): string {
         <tr>
           <td style="padding:16px 24px 28px 24px;border-top:1px solid #efe9dc;">
             <p style="margin:0;font-size:12px;color:${COULEURS.doux};line-height:1.6;">
-              Vous recevez cet email car une action a ete effectuee sur votre compte ${MARQUE}.<br/>
-              Si vous n'en etes pas l'auteur, contactez rapidement le support.
+              ${textes.piedPage}<br/>
+              ${textes.piedPageSecurite}
             </p>
           </td>
         </tr>
@@ -51,6 +62,7 @@ export function envelopper(interior: string): string {
 </html>`;
 }
 
-export function formaterArgentEmail(montant: number): string {
-  return `${new Intl.NumberFormat('fr-FR').format(montant)} Ar`;
+/** Montant en Ariary uniquement (jamais de conversion), selon la langue. */
+export function formaterArgentEmail(montant: number, langue?: unknown): string {
+  return formaterMontantAr(montant, langue);
 }

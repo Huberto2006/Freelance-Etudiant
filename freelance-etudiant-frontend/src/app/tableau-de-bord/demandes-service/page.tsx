@@ -6,7 +6,9 @@ import { FileText, MessageCircle } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import type { DemandeService } from "@/lib/types";
-import { formatArgent, formatDateCourte, statutDemandeServiceLabel } from "@/lib/format";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
 import { Button } from "@/components/ui/Button";
 import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
 import { PieceJointeAffichage } from "@/components/ui/PieceJointe";
@@ -23,6 +25,9 @@ const toneParStatut: Record<string, "ocre" | "rice" | "brique" | "ink"> = {
    ========================================================= */
 
 function VueClient() {
+  const t = useTranslations("dashboardPages.serviceRequests");
+  const { argent: formatArgent, dateCourte: formatDateCourte } = useFormats();
+  const { statutDemandeService } = useLabels();
   const [demandes, setDemandes] = useState<DemandeService[]>([]);
   const [chargement, setChargement] = useState(true);
   const [onglet, setOnglet] = useState("toutes");
@@ -34,15 +39,13 @@ function VueClient() {
       .finally(() => setChargement(false));
   }, []);
 
-  if (chargement) return <p className="text-sm text-ink-soft">Chargement…</p>;
+  if (chargement) return <p className="text-sm text-ink-soft">{t("loading")}</p>;
 
   if (demandes.length === 0) {
     return (
       <NoticeCard>
         <p className="text-sm text-ink-soft/70">
-          Vous n&apos;avez pas encore commandé de service. Rendez-vous sur la
-          page « Services » pour trouver un étudiant et lui envoyer un
-          cahier des charges.
+          {t("client.empty")}
         </p>
       </NoticeCard>
     );
@@ -59,10 +62,10 @@ function VueClient() {
     <div>
       <SousNavigation
         onglets={[
-          { valeur: "toutes", label: "Toutes", compte: demandes.length },
-          { valeur: "en_attente", label: "En attente", compte: enAttente },
-          { valeur: "acceptee", label: "Acceptées", compte: acceptees },
-          { valeur: "refusee", label: "Refusées", compte: refusees },
+          { valeur: "toutes", label: t("tabs.all"), compte: demandes.length },
+          { valeur: "en_attente", label: t("tabs.pending"), compte: enAttente },
+          { valeur: "acceptee", label: t("tabs.accepted"), compte: acceptees },
+          { valeur: "refusee", label: t("tabs.refused"), compte: refusees },
         ]}
         actif={onglet}
         onChanger={setOnglet}
@@ -71,7 +74,7 @@ function VueClient() {
       {demandesAffichees.length === 0 ? (
         <NoticeCard>
           <p className="text-sm text-ink-soft/70">
-            Aucune demande dans cette catégorie.
+            {t("emptyCategory")}
           </p>
         </NoticeCard>
       ) : (
@@ -82,11 +85,13 @@ function VueClient() {
             <div>
               <p className="font-display font-medium">{d.service?.titre}</p>
               <p className="text-xs text-ink-soft/70">
-                par {d.service?.etudiant?.utilisateur?.nom ?? "l'étudiant"}
+                {t("client.by", {
+                  nom: d.service?.etudiant?.utilisateur?.nom ?? t("client.studentFallback"),
+                })}
               </p>
             </div>
             <Tag tone={toneParStatut[d.statut]}>
-              {statutDemandeServiceLabel[d.statut]}
+              {statutDemandeService(d.statut)}
             </Tag>
           </div>
 
@@ -100,7 +105,7 @@ function VueClient() {
 
           <div className="flex items-center justify-between border-t border-ink/10 pt-3 text-sm">
             <span className="font-mono text-ocre-dark">
-              {formatArgent(d.budgetPropose)} · {d.delaiSouhaite} j
+              {formatArgent(d.budgetPropose)} · {t("daysShort", { count: d.delaiSouhaite })}
             </span>
             <span className="text-xs text-ink-soft/60">
               {formatDateCourte(d.dateCreation)}
@@ -111,7 +116,7 @@ function VueClient() {
             <Link href="/tableau-de-bord/mes-missions">
               <Button size="sm" variant="secondary" className="self-start gap-2">
                 <MessageCircle size={14} />
-                Suivre le projet dans « Mes missions »
+                {t("client.followProject")}
               </Button>
             </Link>
           )}
@@ -128,6 +133,9 @@ function VueClient() {
    ========================================================= */
 
 function VueEtudiant() {
+  const t = useTranslations("dashboardPages.serviceRequests");
+  const { argent: formatArgent, dateCourte: formatDateCourte } = useFormats();
+  const { statutDemandeService } = useLabels();
   const [demandes, setDemandes] = useState<DemandeService[]>([]);
   const [chargement, setChargement] = useState(true);
   const [enCours, setEnCours] = useState<string | null>(null);
@@ -157,7 +165,7 @@ function VueEtudiant() {
       await api.patch(`/demandes-service/${id}/accepter`);
       charger();
     } catch (err) {
-      setErreur(err instanceof ApiError ? err.message : "Erreur");
+      setErreur(err instanceof ApiError ? err.message : t("genericError"));
     } finally {
       setEnCours(null);
     }
@@ -170,19 +178,19 @@ function VueEtudiant() {
       await api.patch(`/demandes-service/${id}/refuser`);
       charger();
     } catch (err) {
-      setErreur(err instanceof ApiError ? err.message : "Erreur");
+      setErreur(err instanceof ApiError ? err.message : t("genericError"));
     } finally {
       setEnCours(null);
     }
   }
 
-  if (chargement) return <p className="text-sm text-ink-soft">Chargement…</p>;
+  if (chargement) return <p className="text-sm text-ink-soft">{t("loading")}</p>;
 
   if (demandes.length === 0) {
     return (
       <NoticeCard>
         <p className="text-sm text-ink-soft/70">
-          Aucune demande reçue pour l&apos;instant sur vos services.
+          {t("student.empty")}
         </p>
       </NoticeCard>
     );
@@ -199,10 +207,10 @@ function VueEtudiant() {
     <div>
       <SousNavigation
         onglets={[
-          { valeur: "toutes", label: "Toutes", compte: demandes.length },
-          { valeur: "en_attente", label: "En attente", compte: enAttente },
-          { valeur: "acceptee", label: "Acceptées", compte: acceptees },
-          { valeur: "refusee", label: "Refusées", compte: refusees },
+          { valeur: "toutes", label: t("tabs.all"), compte: demandes.length },
+          { valeur: "en_attente", label: t("tabs.pending"), compte: enAttente },
+          { valeur: "acceptee", label: t("tabs.accepted"), compte: acceptees },
+          { valeur: "refusee", label: t("tabs.refused"), compte: refusees },
         ]}
         actif={onglet}
         onChanger={setOnglet}
@@ -213,7 +221,7 @@ function VueEtudiant() {
       {demandesAffichees.length === 0 ? (
         <NoticeCard>
           <p className="text-sm text-ink-soft/70">
-            Aucune demande dans cette catégorie.
+            {t("emptyCategory")}
           </p>
         </NoticeCard>
       ) : (
@@ -224,18 +232,18 @@ function VueEtudiant() {
             <div>
               <p className="font-display font-medium">{d.service?.titre}</p>
               <p className="text-xs text-ink-soft/70">
-                demande de {d.client?.nom ?? "un client"}
+                {t("student.requestFrom", { nom: d.client?.nom ?? t("student.clientFallback") })}
               </p>
             </div>
             <Tag tone={toneParStatut[d.statut]}>
-              {statutDemandeServiceLabel[d.statut]}
+              {statutDemandeService(d.statut)}
             </Tag>
           </div>
 
           <div className="rounded-lg border border-ink/10 bg-ink/[0.02] p-3">
             <p className="mb-1 flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-ink-soft">
               <FileText size={12} />
-              Cahier des charges
+              {t("student.specifications")}
             </p>
             <p className="text-sm text-ink-soft whitespace-pre-line">
               {d.cahierDesCharges}
@@ -249,7 +257,7 @@ function VueEtudiant() {
 
           <div className="flex items-center justify-between border-t border-ink/10 pt-3 text-sm">
             <span className="font-mono text-ocre-dark">
-              {formatArgent(d.budgetPropose)} · {d.delaiSouhaite} j
+              {formatArgent(d.budgetPropose)} · {t("daysShort", { count: d.delaiSouhaite })}
             </span>
             <span className="text-xs text-ink-soft/60">
               {formatDateCourte(d.dateCreation)}
@@ -259,7 +267,7 @@ function VueEtudiant() {
           {d.statut === "en_attente" && (
             <div className="flex gap-2">
               <Button size="sm" disabled={enCours === d.id} onClick={() => accepter(d.id)}>
-                Accepter
+                {t("student.accept")}
               </Button>
               <Button
                 size="sm"
@@ -267,7 +275,7 @@ function VueEtudiant() {
                 disabled={enCours === d.id}
                 onClick={() => refuser(d.id)}
               >
-                Refuser
+                {t("student.refuse")}
               </Button>
             </div>
           )}
@@ -276,7 +284,7 @@ function VueEtudiant() {
             <Link href="/tableau-de-bord/candidatures">
               <Button size="sm" variant="secondary" className="self-start gap-2">
                 <MessageCircle size={14} />
-                Suivre le projet dans « Mes candidatures »
+                {t("student.followProject")}
               </Button>
             </Link>
           )}
@@ -293,6 +301,7 @@ function VueEtudiant() {
    ========================================================= */
 
 export default function DemandesServicePage() {
+  const t = useTranslations("dashboardPages.serviceRequests");
   const { utilisateur } = useAuth();
 
   if (!utilisateur) return null;
@@ -302,8 +311,8 @@ export default function DemandesServicePage() {
 
       <PageHeader
         icon={FileText}
-        eyebrow="Commandes de service"
-        title="Demandes de service"
+        eyebrow={t("eyebrow")}
+        title={t("title")}
       />
 
       {utilisateur.role === "client" && <VueClient />}

@@ -1,0 +1,99 @@
+{
+  "catalog": {
+    "eyebrow": "Katalaogy ankapobeny · Kianja Marketplace",
+    "title": "Famoahana",
+    "intro": "Hitanisa ny filàn'ny mpanjifa sy ny fahaizan'ny mpianatra ao amin'ny Kianja. Toerana iray manontolo hijerena ny fahafahana sy ny serivisy rehetra misy.",
+    "badges": {
+      "total": "{count} famoahana",
+      "missions": "{count} asa misokatra",
+      "services": "{count} serivisy atolotra"
+    },
+    "errors": {
+      "full": "Tsy afaka naka ny katalaogin'ny famoahana amin'izao fotoana izao.",
+      "missionsPartial": "Tsy afaka naka ny asa ; serivisy ihany no aseho.",
+      "servicesPartial": "Tsy afaka naka ny serivisy ; asa ihany no aseho.",
+      "generic": "Nisy fahadisoana nitranga tamin'ny fakana ny famoahana."
+    },
+    "actions": {
+      "publishMission": "Hamoaka asa",
+      "offerService": "Hanolotra serivisy",
+      "retry": "Andramo indray"
+    },
+    "tabs": {
+      "ariaLabel": "Sivana araka ny karazan'ny famoahana",
+      "all": "Rehetra ({count})",
+      "missions": "Asan'ny mpanjifa ({count})",
+      "services": "Serivisin'ny mpianatra ({count})"
+    },
+    "sort": {
+      "label": "Alahatra araka ny",
+      "options": {
+        "recent": "Ny vao haingana aloha",
+        "best": "Tombana tsara indrindra / teti-bola",
+        "priceAsc": "Vidiny / teti-bola miakatra",
+        "priceDesc": "Vidiny / teti-bola midina"
+      }
+    },
+    "filters": {
+      "searchPlaceholder": "Mikaroka amin'ny teny fototra…",
+      "budgetLabel": "Teti-bola na saram-bola (Ar)"
+    },
+    "targeted": {
+      "title": "Fitetezana mifantoka",
+      "intro": "Jereo ireo katalaogy manokana misy safidy mandroso :",
+      "missionsOnly": "Jereo ny asa ihany",
+      "servicesOnly": "Jereo ny serivisy ihany"
+    },
+    "empty": {
+      "missions": "Tsy misy asa mifanaraka amin'ny fepetra nomenao.",
+      "services": "Tsy misy serivisy mifanaraka amin'ny fepetra nomenao.",
+      "all": "Tsy misy famoahana mifanaraka amin'ny fikarohanao.",
+      "hint": "Andramo ampivelaro ny teny karohina, averina amin'ny laoniny ny sivana, na ovay ny sokajy.",
+      "reset": "Averina ny sivana",
+      "showAll": "Asehoy ny katalaogy rehetra"
+    },
+    "results": {
+      "found": "<b>{count}</b> famoahana hita"
+    }
+  },
+  "mine": {
+    "eyebrow": "Tabilao fitantanana",
+    "title": "Ny famoahako",
+    "publishMission": "Hamoaka asa",
+    "offerService": "Hanolotra serivisy",
+    "adminNotice": "Tsy mamoaka asa na serivisy ny kaonty mpitantana. Hitanao ao amin'ny fizarana Fitantanana ny fitantanana ny sehatra.",
+    "ariaMissions": "Ny asako",
+    "ariaServices": "Ny serivisiko",
+    "tabMissions": "Asa ({count})",
+    "tabServices": "Serivisy ({count})",
+    "searchPlaceholder": "Mikaroka amin'ny famoahako…",
+    "budgetLabel": "Teti-bola na saram-bola (Ar)",
+    "loadError": "Tsy afaka naka ny famoahanao amin'izao fotoana izao.",
+    "retry": "Andramo indray",
+    "emptyMissions": "Mbola tsy nanao famoahana asa ianao.",
+    "emptyServices": "Mbola tsy nanolotra serivisy ianao.",
+    "noMatch": "Tsy misy famoahana mifanaraka amin'ny fikarohanao.",
+    "edit": "Ovay",
+    "service": {
+      "archived": "Voatahiry",
+      "hidden": "Nafenina",
+      "pause": "Atsahatra",
+      "activate": "Zarao",
+      "archive": "Tahirizina",
+      "restore": "Averina",
+      "delete": "Fafana",
+      "confirmDelete": "Tena hofafanao ve ny « {title} » ?",
+      "availabilityError": "Tsy afaka novaina ny fahafahana.",
+      "restoreError": "Tsy afaka naverina ny serivisy.",
+      "archiveError": "Tsy afaka natahiry ny serivisy.",
+      "deleteError": "Tsy afaka nofafana ity serivisy ity."
+    }
+  },
+  "favorites": {
+    "loading": "Eo am-pakana…",
+    "eyebrow": "Ny voatahiriko",
+    "title": "Tiana",
+    "empty": "Ampio asa, serivisy na mombamomba any amin'ny tiana mba hahitanao azy eto.",
+    "defaultStudent": "Mpianatra mpiasa an-kafa"
+  }
+}

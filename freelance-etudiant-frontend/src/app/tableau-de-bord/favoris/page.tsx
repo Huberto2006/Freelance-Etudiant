@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Heart } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Favori, Mission, ServiceOffert, EtudiantProfile } from "@/lib/types";
-import { formatArgent } from "@/lib/format";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
 import { EtatVide, NoticeCard, PageHeader } from "@/components/ui/Notice";
 import { FavoriBouton } from "@/components/ui/FavoriBouton";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
@@ -39,6 +40,8 @@ async function chargerFavoris(): Promise<FavorisEnrichis> {
 }
 
 export default function FavorisPage() {
+  const t = useTranslations("manage.favoritesPage");
+  const { argent } = useFormats();
   const { donnees, chargement, erreur } = useApiList(chargerFavoris);
   const favoris = donnees?.favoris ?? [];
   const missions = donnees?.missions ?? {};
@@ -46,7 +49,7 @@ export default function FavorisPage() {
   const etudiants = donnees?.etudiants ?? {};
 
   if (chargement) {
-    return <p className="mx-auto max-w-3xl px-5 py-12 text-sm text-ink-soft">Chargement…</p>;
+    return <p className="mx-auto max-w-3xl px-5 py-12 text-sm text-ink-soft">{t("loading")}</p>;
   }
 
   return (
@@ -55,7 +58,7 @@ export default function FavorisPage() {
         <BoutonRetour repli="/tableau-de-bord" forcer />
       </div>
 
-      <PageHeader icon={Heart} eyebrow="Mes sauvegardes" title="Favoris" />
+      <PageHeader icon={Heart} eyebrow={t("eyebrow")} title={t("title")} />
 
       {erreur && (
         <NoticeCard className="mb-4 text-sm text-brique">{erreur}</NoticeCard>
@@ -63,8 +66,7 @@ export default function FavorisPage() {
 
       {favoris.length === 0 && !erreur ? (
         <EtatVide icon={Heart}>
-          Ajoutez des missions, services ou profils à vos favoris pour les
-          retrouver ici.
+          {t("empty")}
         </EtatVide>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
@@ -77,7 +79,7 @@ export default function FavorisPage() {
                   <NoticeCard className="relative flex flex-col gap-2">
                     <p className="font-display font-medium pr-8">{mission.titre}</p>
                     <p className="font-mono text-sm text-ocre-dark">
-                      {formatArgent(mission.budget)}
+                      {argent(mission.budget)}
                     </p>
                     <div className="absolute right-4 top-4">
                       <FavoriBouton cibleType="mission" cibleId={mission.id} />
@@ -94,7 +96,7 @@ export default function FavorisPage() {
                   <NoticeCard className="relative flex flex-col gap-2">
                     <p className="font-display font-medium pr-8">{service.titre}</p>
                     <p className="font-mono text-sm text-ocre-dark">
-                      {formatArgent(service.prix)}
+                      {argent(service.prix)}
                     </p>
                     <div className="absolute right-4 top-4">
                       <FavoriBouton cibleType="service" cibleId={service.id} />
@@ -112,7 +114,7 @@ export default function FavorisPage() {
                     {etudiant.utilisateur?.nom}
                   </p>
                   <p className="text-sm text-ink-soft">
-                    {etudiant.universite ?? "Étudiant freelance"}
+                    {etudiant.universite ?? t("freelanceStudent")}
                   </p>
                   <div className="absolute right-4 top-4">
                     <FavoriBouton cibleType="etudiant" cibleId={etudiant.utilisateurId} />

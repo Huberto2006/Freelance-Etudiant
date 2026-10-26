@@ -33,6 +33,7 @@ import {
     type RelationAmitie,
     type RelationsAmitie,
 } from "@/lib/amitie";
+import { useTranslations } from "next-intl";
 import { api, ApiError } from "@/lib/api";
 import type { EtudiantProfile } from "@/lib/types";
 import { useAuth } from "@/lib/auth-context";
@@ -97,8 +98,8 @@ function AvatarEtudiant({
     etudiant: EtudiantProfile;
     taille?: "sm" | "md" | "lg";
 }) {
-    const nom = etudiant.utilisateur?.nom ?? "Étudiant";
-
+    const t = useTranslations("dashboardPages.friends");
+    const nom = etudiant.utilisateur?.nom ?? t("studentFallback");
     const dimensions = {
         sm: "h-10 w-10 text-sm",
         md: "h-12 w-12 text-base",
@@ -224,13 +225,14 @@ function MenuRetrait({
     onRetirer: () => void;
     chargement: boolean;
 }) {
+    const t = useTranslations("dashboardPages.friends");
     return (
         <div className="relative">
             <button
                 type="button"
                 onClick={onToggle}
                 disabled={chargement}
-                aria-label="Options de la relation"
+                aria-label={t("relationOptions")}
                 aria-expanded={ouvert}
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-soft transition hover:bg-ink/5 hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -250,7 +252,7 @@ function MenuRetrait({
                         ) : (
                             <X className="h-4 w-4" />
                         )}
-                        Retirer l&apos;ami
+                        {t("removeFriend")}
                     </button>
                 </div>
             ) : null}
@@ -271,6 +273,7 @@ function CarteAmi({
     onRetirer: (etudiantId: string) => void;
     retraitEnCours: boolean;
 }) {
+    const t = useTranslations("dashboardPages.friends");
     const [menuOuvert, setMenuOuvert] = useState(false);
     const profil = relation.ami;
 
@@ -298,7 +301,7 @@ function CarteAmi({
                         </p>
                     ) : (
                         <p className="mt-0.5 text-xs text-ink-soft/70">
-                            Étudiant Kianja
+                            {t("kianjaStudent")}
                         </p>
                     )}
 
@@ -339,7 +342,7 @@ function CarteAmi({
                     className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-ink/20 px-3 py-2 text-sm font-medium text-ink-soft transition hover:bg-ink/5"
                 >
                     <MessageCircle className="h-4 w-4" />
-                    Message
+                    {t("message")}
                 </Link>
             </div>
         </div>
@@ -361,6 +364,7 @@ function CarteDemandeRecue({
     onRefuser: (id: string) => void;
     actionEnCours: string | null;
 }) {
+    const t = useTranslations("dashboardPages.friends");
     const profil = demande.demandeur;
 
     if (!profil) return null;
@@ -382,7 +386,7 @@ function CarteDemandeRecue({
                     </Link>
 
                     <p className="mt-0.5 truncate text-xs text-ink-soft">
-                        {sousTitreProfilAmitie(profil) || "Étudiant Kianja"}
+                        {sousTitreProfilAmitie(profil) || t("kianjaStudent")}
                     </p>
                 </div>
             </div>
@@ -401,9 +405,8 @@ function CarteDemandeRecue({
                     ) : (
                         <Check className="mr-2 h-4 w-4" />
                     )}
-                    Accepter
+                    {t("accept")}
                 </Button>
-
                 <Button
                     type="button"
                     variant="secondary"
@@ -413,7 +416,7 @@ function CarteDemandeRecue({
                     className="flex-1"
                 >
                     <X className="mr-2 h-4 w-4" />
-                    Refuser
+                    {t("refuse")}
                 </Button>
             </div>
         </div>
@@ -429,10 +432,10 @@ function CarteDemandeEnvoyee({
 }: {
     demande: DemandeAmitie;
 }) {
+    const t = useTranslations("dashboardPages.friends");
     const profil = demande.receveur;
 
     if (!profil) return null;
-
     const nom = nomProfilAmitie(profil);
 
     return (
@@ -449,12 +452,11 @@ function CarteDemandeEnvoyee({
                     </Link>
 
                     <p className="mt-0.5 truncate text-xs text-ink-soft">
-                        {sousTitreProfilAmitie(profil) || "Étudiant Kianja"}
+                        {sousTitreProfilAmitie(profil) || t("kianjaStudent")}
                     </p>
                 </div>
-
                 <span className="shrink-0 rounded-full bg-ink/5 px-2.5 py-1 text-xs font-medium text-ink-soft">
-                    En attente
+                    {t("pending")}
                 </span>
             </div>
         </div>
@@ -482,8 +484,8 @@ function CarteEtudiant({
     onAccepter: (demandeId: string) => void;
     onRefuser: (demandeId: string) => void;
 }) {
-    const nom = etudiant.utilisateur?.nom ?? "Étudiant";
-
+    const t = useTranslations("dashboardPages.friends");
+    const nom = etudiant.utilisateur?.nom ?? t("studentFallback");
     const sousTitre = [
         etudiant.universite,
         etudiant.niveauEtude,
@@ -508,7 +510,7 @@ function CarteEtudiant({
                     </Link>
 
                     <p className="mt-0.5 truncate text-xs text-ink-soft">
-                        {sousTitre || "Étudiant Kianja"}
+                        {sousTitre || t("kianjaStudent")}
                     </p>
                 </div>
             </div>
@@ -547,7 +549,7 @@ function CarteEtudiant({
                         ) : (
                             <UserPlus className="h-4 w-4" />
                         )}
-                        Ajouter
+                        {t("add")}
                     </Button>
                 ) : null}
 
@@ -560,7 +562,7 @@ function CarteEtudiant({
                         className="w-full gap-2"
                     >
                         <Check className="h-4 w-4" />
-                        Demande envoyée
+                        {t("requestSent")}
                     </Button>
                 ) : null}
 
@@ -579,7 +581,7 @@ function CarteEtudiant({
                             ) : (
                                 <Check className="h-4 w-4" />
                             )}
-                            Accepter
+                            {t("accept")}
                         </Button>
 
                         <Button
@@ -591,7 +593,7 @@ function CarteEtudiant({
                             className="flex-1 gap-1.5"
                         >
                             <X className="h-4 w-4" />
-                            Refuser
+                            {t("refuse")}
                         </Button>
                     </div>
                 ) : null}
@@ -605,7 +607,7 @@ function CarteEtudiant({
                         className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-ink/20 px-3 py-2 text-sm font-medium text-ink-soft transition hover:bg-ink/5"
                     >
                         <MessageCircle className="h-4 w-4" />
-                        Message
+                        {t("message")}
                     </Link>
                 ) : null}
             </div>
@@ -618,6 +620,7 @@ function CarteEtudiant({
    ========================================================== */
 
 export default function AmisPage() {
+    const t = useTranslations("dashboardPages.friends");
     const { utilisateur, chargement: chargementAuth } = useAuth();
 
     const [onglet, setOnglet] = useState<Onglet>("amis");
@@ -688,7 +691,7 @@ export default function AmisPage() {
                 setErreur(
                     error instanceof ApiError
                         ? error.message
-                        : "Impossible de charger vos relations.",
+                        : t("loadRelationsError"),
                 );
             } finally {
                 if (!ignore) {
@@ -702,7 +705,7 @@ export default function AmisPage() {
         return () => {
             ignore = true;
         };
-    }, [chargementAuth, utilisateur?.id]);
+    }, [chargementAuth, utilisateur?.id, t]);
 
     /* ======================================================
        CHARGEMENT DE L'ANNUAIRE
@@ -736,7 +739,7 @@ export default function AmisPage() {
                     setErreur(
                         error instanceof ApiError
                             ? error.message
-                            : "Impossible de charger les étudiants.",
+                            : t("loadStudentsError"),
                     );
                 }
             } finally {
@@ -751,7 +754,7 @@ export default function AmisPage() {
         return () => {
             ignore = true;
         };
-    }, [chargementAuth, onglet, utilisateur?.id]);
+    }, [chargementAuth, onglet, utilisateur?.id, t]);
 
     /* ======================================================
        FILTRE RECHERCHE
@@ -814,18 +817,18 @@ export default function AmisPage() {
                 const envoyeesMaj = await listerDemandesEnvoyees();
                 setDemandesEnvoyees(envoyeesMaj);
 
-                setMessage("Demande d'amitié envoyée.");
+                setMessage(t("requestSentMessage"));
             } catch (error) {
                 setErreur(
                     error instanceof ApiError
                         ? error.message
-                        : "Impossible d'envoyer la demande d'amitié.",
+                        : t("sendRequestError"),
                 );
             } finally {
                 setActionEnCours(null);
             }
         },
-        [],
+        [t],
     );
 
     /* ======================================================
@@ -843,7 +846,7 @@ export default function AmisPage() {
             const nom = nomProfilAmitie(relation.ami);
 
             const confirme = window.confirm(
-                `Voulez-vous vraiment retirer ${nom} de vos amis ?`,
+                t("confirmRemove", { nom }),
             );
 
             if (!confirme) return;
@@ -865,19 +868,19 @@ export default function AmisPage() {
                 setRelations(relationsMaj);
 
                 setMessage(
-                    `${nom} a été retiré de vos amis.`,
+                    t("removedMessage", { nom }),
                 );
             } catch (error) {
                 setErreur(
                     error instanceof ApiError
                         ? error.message
-                        : "Impossible de retirer cet ami.",
+                        : t("removeError"),
                 );
             } finally {
                 setRetraitEnCours(null);
             }
         },
-        [amis],
+        [amis, t],
     );
 
     /* ======================================================
@@ -930,19 +933,19 @@ export default function AmisPage() {
 
                 setRelations(relationsMaj);
 
-                setMessage("Demande d'amitié acceptée.");
+                setMessage(t("acceptedMessage"));
                 setOnglet("amis");
             } catch (error) {
                 setErreur(
                     error instanceof ApiError
                         ? error.message
-                        : "Impossible d'accepter cette demande.",
+                        : t("acceptError"),
                 );
             } finally {
                 setActionEnCours(null);
             }
         },
-        [demandesRecues],
+        [demandesRecues, t],
     );
 
     /* ======================================================
@@ -969,18 +972,18 @@ export default function AmisPage() {
 
                 setRelations(relationsMaj);
 
-                setMessage("Demande d'amitié refusée.");
+                setMessage(t("refusedMessage"));
             } catch (error) {
                 setErreur(
                     error instanceof ApiError
                         ? error.message
-                        : "Impossible de refuser cette demande.",
+                        : t("refuseError"),
                 );
             } finally {
                 setActionEnCours(null);
             }
         },
-        [],
+        [t],
     );
 
     /* ======================================================
@@ -1008,7 +1011,7 @@ export default function AmisPage() {
                 <div className="flex min-h-[300px] items-center justify-center rounded-xl border border-ink/15 bg-paper-light">
                     <div className="flex items-center gap-3 text-sm text-ink-soft">
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        Chargement de vos relations...
+                        {t("loadingRelations")}
                     </div>
                 </div>
             );
@@ -1023,8 +1026,8 @@ export default function AmisPage() {
                 return (
                     <EtatVide
                         icon={<Users className="h-6 w-6" />}
-                        titre="Vous n'avez pas encore d'amis"
-                        description="Ajoutez d'autres étudiants de Kianja pour échanger avec eux et développer votre réseau."
+                        titre={t("noFriendsTitle")}
+                        description={t("noFriendsDescription")}
                         action={
                             <Button
                                 type="button"
@@ -1036,7 +1039,7 @@ export default function AmisPage() {
                                 className="gap-2"
                             >
                                 <UserPlus className="h-4 w-4" />
-                                Découvrir des étudiants
+                                {t("discoverStudents")}
                             </Button>
                         }
                     />
@@ -1069,8 +1072,8 @@ export default function AmisPage() {
                 return (
                     <EtatVide
                         icon={<UserPlus className="h-6 w-6" />}
-                        titre="Aucune demande reçue"
-                        description="Les demandes d'amitié que d'autres étudiants vous enverront apparaîtront ici."
+                        titre={t("noReceivedTitle")}
+                        description={t("noReceivedDescription")}
                     />
                 );
             }
@@ -1099,8 +1102,8 @@ export default function AmisPage() {
                 return (
                     <EtatVide
                         icon={<UserPlus className="h-6 w-6" />}
-                        titre="Aucune demande envoyée"
-                        description="Lorsque vous envoyez une demande d'amitié à un autre étudiant, elle apparaîtra ici."
+                        titre={t("noSentTitle")}
+                        description={t("noSentDescription")}
                         action={
                             <Button
                                 type="button"
@@ -1112,7 +1115,7 @@ export default function AmisPage() {
                                 className="gap-2"
                             >
                                 <UserPlus className="h-4 w-4" />
-                                Trouver des étudiants
+                                {t("findStudents")}
                             </Button>
                         }
                     />
@@ -1140,7 +1143,7 @@ export default function AmisPage() {
                 <div className="flex min-h-[300px] items-center justify-center rounded-xl border border-ink/15 bg-paper-light">
                     <div className="flex items-center gap-3 text-sm text-ink-soft">
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        Chargement des étudiants...
+                        {t("loadingStudents")}
                     </div>
                 </div>
             );
@@ -1162,8 +1165,8 @@ export default function AmisPage() {
                             onChange={(event) =>
                                 setRecherche(event.target.value)
                             }
-                            placeholder="Rechercher un étudiant par nom, université, niveau ou compétence..."
-                            aria-label="Rechercher un étudiant"
+                            placeholder={t("searchPlaceholder")}
+                            aria-label={t("searchLabel")}
                             className="pl-9"
                         />
                     </div>
@@ -1174,25 +1177,22 @@ export default function AmisPage() {
                 {etudiantsFiltres.length === 0 ? (
                     <EtatVide
                         icon={<Search className="h-6 w-6" />}
-                        titre="Aucun étudiant trouvé"
+                        titre={t("noStudentTitle")}
                         description={
                             recherche.trim()
-                                ? "Aucun étudiant ne correspond à votre recherche."
-                                : "Aucun autre étudiant n'est disponible dans l'annuaire."
+                                ? t("noStudentSearch")
+                                : t("noStudentDirectory")
                         }
                     />
                 ) : (
                     <>
                         <div className="mb-4 flex items-center justify-between">
                             <h2 className="text-sm font-semibold text-ink">
-                                Étudiants à découvrir
+                                {t("studentsToDiscover")}
                             </h2>
 
                             <span className="text-xs text-ink-soft">
-                                {etudiantsFiltres.length} étudiant
-                                {etudiantsFiltres.length > 1
-                                    ? "s"
-                                    : ""}
+                                {t("studentCount", { count: etudiantsFiltres.length })}
                             </span>
                         </div>
 
@@ -1234,6 +1234,7 @@ export default function AmisPage() {
     }, [
         accepter,
         actionEnCours,
+        ajouterAmi,
         amis,
         chargement,
         chargementAnnuaire,
@@ -1242,10 +1243,12 @@ export default function AmisPage() {
         etudiantsFiltres,
         obtenirStatut,
         onglet,
+        recherche,
         refuser,
         relations,
         retraitEnCours,
         retirer,
+        t,
     ]);
 
     /* ======================================================
@@ -1280,15 +1283,15 @@ export default function AmisPage() {
                         <div>
                             <div className="mb-2 flex items-center gap-2 text-sm text-ink-soft">
                                 <Users className="h-4 w-4" />
-                                Communauté
+                                {t("community")}
                             </div>
 
                             <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-                                Mes amis
+                                {t("title")}
                             </h1>
 
                             <p className="mt-1 max-w-2xl text-sm leading-6 text-ink-soft">
-                                Gérez vos relations avec les autres étudiants de Kianja.
+                                {t("subtitle")}
                             </p>
                         </div>
 
@@ -1302,7 +1305,7 @@ export default function AmisPage() {
                             className="gap-2"
                         >
                             <UserPlus className="h-4 w-4" />
-                            Trouver des étudiants
+                            {t("findStudents")}
                         </Button>
                     </div>
                 </div>
@@ -1319,7 +1322,7 @@ export default function AmisPage() {
                             type="button"
                             onClick={() => setErreur(null)}
                             className="ml-auto shrink-0 text-brique/70 hover:text-brique"
-                            aria-label="Fermer"
+                            aria-label={t("close")}
                         >
                             <X className="h-4 w-4" />
                         </button>
@@ -1338,7 +1341,7 @@ export default function AmisPage() {
                             type="button"
                             onClick={() => setMessage(null)}
                             className="ml-auto shrink-0 text-ink-soft/70 hover:text-ink"
-                            aria-label="Fermer"
+                            aria-label={t("close")}
                         >
                             <X className="h-4 w-4" />
                         </button>
@@ -1350,14 +1353,14 @@ export default function AmisPage() {
                 <div className="mb-6 overflow-x-auto">
                     <nav
                         className="flex min-w-max gap-6"
-                        aria-label="Relations"
+                        aria-label={t("relations")}
                     >
                         <OngletButton
                             actif={onglet === "amis"}
                             onClick={() => setOnglet("amis")}
                             compteur={amis.length}
                         >
-                            Amis
+                            {t("tabFriends")}
                         </OngletButton>
 
                         <OngletButton
@@ -1365,7 +1368,7 @@ export default function AmisPage() {
                             onClick={() => setOnglet("recues")}
                             compteur={demandesRecues.length}
                         >
-                            Demandes reçues
+                            {t("tabReceived")}
                         </OngletButton>
 
                         <OngletButton
@@ -1375,7 +1378,7 @@ export default function AmisPage() {
                             }
                             compteur={demandesEnvoyees.length}
                         >
-                            Demandes envoyées
+                            {t("tabSent")}
                         </OngletButton>
 
                         <OngletButton
@@ -1384,7 +1387,7 @@ export default function AmisPage() {
                                 setOnglet("decouvrir")
                             }
                         >
-                            Découvrir
+                            {t("tabDiscover")}
                         </OngletButton>
                     </nav>
                 </div>

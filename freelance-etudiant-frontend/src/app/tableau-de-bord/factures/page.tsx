@@ -7,17 +7,18 @@ import { FileText } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { Facture } from "@/lib/types";
-import {
-  formatArgent,
-  formatDate,
-  methodePaiementLabel,
-} from "@/lib/format";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
 
 import { NoticeCard, PageHeader } from "@/components/ui/Notice";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 export default function FacturesPage() {
   const { utilisateur } = useAuth();
+  const t = useTranslations("invoices");
+  const { argent, date } = useFormats();
+  const { methodePaiement } = useLabels();
 
   const [factures, setFactures] = useState<Facture[]>([]);
   const [chargement, setChargement] = useState(true);
@@ -36,7 +37,7 @@ export default function FacturesPage() {
           setErreur(
             err instanceof ApiError
               ? err.message
-              : "Impossible de charger les factures pour le moment.",
+              : t("list.loadError"),
           );
         }
       } finally {
@@ -48,7 +49,7 @@ export default function FacturesPage() {
     return () => {
       actif = false;
     };
-  }, [utilisateur]);
+  }, [utilisateur, t]);
 
   if (!utilisateur) return null;
 
@@ -62,18 +63,16 @@ export default function FacturesPage() {
 
       <PageHeader
         icon={FileText}
-        eyebrow="Suivi financier"
-        title="Factures"
+        eyebrow={t("list.eyebrow")}
+        title={t("list.title")}
       />
 
       <p className="mb-5 text-sm text-ink-soft">
-        {estEtudiant
-          ? "Les factures des paiements reçus pour vos missions et services."
-          : "Une facture est émise automatiquement pour chaque paiement confirmé."}
+        {estEtudiant ? t("list.introStudent") : t("list.introClient")}
       </p>
 
       {chargement ? (
-        <p className="text-sm text-ink-soft">Chargement…</p>
+        <p className="text-sm text-ink-soft">{t("list.loading")}</p>
       ) : erreur ? (
         <NoticeCard>
           <p role="alert" className="text-sm text-brique">
@@ -83,8 +82,7 @@ export default function FacturesPage() {
       ) : factures.length === 0 ? (
         <NoticeCard>
           <p className="py-6 text-center text-sm text-ink-soft">
-            Aucune facture pour le moment. Elle apparaîtra dès qu&apos;un
-            paiement sera confirmé.
+            {t("list.empty")}
           </p>
         </NoticeCard>
       ) : (
@@ -103,18 +101,20 @@ export default function FacturesPage() {
                     {f.titreMission}
                   </p>
                   <p className="text-xs text-ink-soft">
-                    {estEtudiant ? `Payée par ${f.clientNom}` : `Prestataire : ${f.etudiantNom}`}
+                    {estEtudiant
+                      ? t("list.paidBy", { nom: f.clientNom })
+                      : t("list.provider", { nom: f.etudiantNom })}
                     {" · "}
-                    {methodePaiementLabel[f.methode] ?? f.methode}
+                    {methodePaiement(f.methode)}
                   </p>
                 </div>
 
                 <div className="flex shrink-0 items-baseline justify-between gap-4 sm:flex-col sm:items-end sm:gap-0.5">
                   <p className="font-mono text-sm font-medium text-ink">
-                    {formatArgent(f.montant)}
+                    {argent(f.montant)}
                   </p>
                   <p className="text-xs text-ink-soft">
-                    {formatDate(f.dateEmission)}
+                    {date(f.dateEmission)}
                   </p>
                 </div>
               </Link>

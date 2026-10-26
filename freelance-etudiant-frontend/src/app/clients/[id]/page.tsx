@@ -2,6 +2,7 @@
 
 import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   Briefcase,
   BriefcaseBusiness,
@@ -13,7 +14,8 @@ import {
 
 import { api } from "@/lib/api";
 import type { ClientProfile, Mission } from "@/lib/types";
-import { formatArgent, formatDateCourte } from "@/lib/format";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
 import {
   MessageVide,
   NoticeCard,
@@ -25,20 +27,15 @@ import { ReactionProfil } from "@/components/ui/ReactionProfil";
 import { SignalerBouton } from "@/components/ui/SignalerBouton";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
-const LABELS_STATUT_MISSION: Record<string, string> = {
-  ouverte: "Ouverte",
-  en_cours: "En cours",
-  terminee: "Terminée",
-  fermee: "Fermée",
-  expiree: "Expirée",
-};
-
 export default function ProfilClientPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const t = useTranslations("profile");
+  const { argent: formatArgent, dateCourte: formatDateCourte } = useFormats();
+  const { statutMission } = useLabels();
   const [client, setClient] = useState<ClientProfile | null>(null);
   const [missions, setMissions] = useState<Mission[]>([]);
   const [chargement, setChargement] = useState(true);
@@ -81,7 +78,7 @@ export default function ProfilClientPage({
     return (
       <div className="mx-auto max-w-5xl px-5 py-12">
         <div className="animate-in-fade rounded-2xl border border-ink/10 bg-paper-light p-8 text-sm text-ink-soft shadow-sm">
-          Chargement du profil…
+          {t("public.client.loading")}
         </div>
       </div>
     );
@@ -91,13 +88,13 @@ export default function ProfilClientPage({
     return (
       <div className="mx-auto max-w-5xl px-5 py-12">
         <NoticeCard>
-          <p className="text-sm text-brique">Profil introuvable.</p>
+          <p className="text-sm text-brique">{t("public.client.notFound")}</p>
         </NoticeCard>
       </div>
     );
   }
 
-  const nom = client.nomEntreprise || client.utilisateur?.nom || "Client";
+  const nom = client.nomEntreprise || client.utilisateur?.nom || t("public.client.fallbackName");
   const estEntreprise = client.typeClient === "entreprise";
 
   return (
@@ -126,7 +123,9 @@ export default function ProfilClientPage({
 
               <div className="min-w-0">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-ink-soft/60">
-                  Profil {estEntreprise ? "entreprise" : "particulier"}
+                  {estEntreprise
+                    ? t("public.client.profileCompany")
+                    : t("public.client.profileIndividual")}
                 </p>
 
                 <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -135,7 +134,7 @@ export default function ProfilClientPage({
 
                 {estEntreprise && client.utilisateur?.nom && (
                   <p className="mt-2 text-base text-ink-soft">
-                    Représenté par {client.utilisateur.nom}
+                    {t("public.client.representedBy", { nom: client.utilisateur.nom })}
                   </p>
                 )}
 
@@ -146,13 +145,15 @@ export default function ProfilClientPage({
                     ) : (
                       <User size={13} className="mr-1.5 inline" />
                     )}
-                    {estEntreprise ? "Entreprise" : "Particulier"}
+                    {estEntreprise
+                      ? t("public.client.company")
+                      : t("public.client.individual")}
                   </Tag>
 
                   {client.utilisateur?.emailVerifie && (
                     <Tag tone="rice">
                       <ShieldCheck size={13} className="mr-1.5 inline" />
-                      Compte vérifié
+                      {t("public.client.verified")}
                     </Tag>
                   )}
                 </div>
@@ -161,16 +162,15 @@ export default function ProfilClientPage({
                 <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-xs text-ink-soft/75">
                   <span className="inline-flex items-center gap-1.5">
                     <BriefcaseBusiness size={14} />
-                    {missions.length} mission
-                    {missions.length > 1 ? "s" : ""} publiée
-                    {missions.length > 1 ? "s" : ""}
+                    {t("public.client.missionsPublished", { count: missions.length })}
                   </span>
 
                   {client.utilisateur?.dateInscription && (
                     <span className="inline-flex items-center gap-1.5">
                       <CalendarDays size={14} />
-                      Membre depuis{" "}
-                      {formatDateCourte(client.utilisateur.dateInscription)}
+                      {t("public.client.memberSince", {
+                        date: formatDateCourte(client.utilisateur.dateInscription),
+                      })}
                     </span>
                   )}
                 </div>
@@ -200,18 +200,18 @@ export default function ProfilClientPage({
 
               <div>
                 <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
-                  Activité
+                  {t("public.client.activity")}
                 </p>
 
                 <h2 className="font-display text-xl font-semibold">
-                  Missions publiées
+                  {t("public.client.publishedMissions")}
                 </h2>
               </div>
             </div>
 
             {missions.length === 0 ? (
               <MessageVide>
-                Aucune mission publiée pour le moment.
+                {t("public.client.noMissions")}
               </MessageVide>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
@@ -235,8 +235,7 @@ export default function ProfilClientPage({
 
                       <div className="mt-auto pt-2">
                         <Tag tone={toneStatut(mission.statut)}>
-                          {LABELS_STATUT_MISSION[mission.statut] ??
-                            mission.statut.replace("_", " ")}
+                          {statutMission(mission.statut)}
                         </Tag>
                       </div>
                     </NoticeCard>
@@ -254,7 +253,7 @@ export default function ProfilClientPage({
           {/* IDENTITÉ */}
           <section className="animate-in delay-1 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm">
             <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
-              Identité
+              {t("public.client.identity")}
             </p>
 
             <div className="mt-4 flex gap-3">
@@ -268,13 +267,15 @@ export default function ProfilClientPage({
 
               <div>
                 <p className="text-sm font-semibold">
-                  {estEntreprise ? "Entreprise" : "Particulier"}
+                  {estEntreprise
+                    ? t("public.client.company")
+                    : t("public.client.individual")}
                 </p>
 
                 <p className="mt-1 text-xs leading-5 text-ink-soft">
                   {estEntreprise
-                    ? "Publie des missions au nom de sa structure"
-                    : "Publie des missions à titre individuel"}
+                    ? t("public.client.companyDescription")
+                    : t("public.client.individualDescription")}
                 </p>
               </div>
             </div>
@@ -283,13 +284,13 @@ export default function ProfilClientPage({
           {/* STATISTIQUES */}
           <section className="animate-in delay-2 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm">
             <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
-              Statistiques
+              {t("public.client.statistics")}
             </p>
 
             <div className="mt-4 divide-y divide-ink/10">
               <div className="flex items-center justify-between py-3 first:pt-0">
                 <span className="text-xs text-ink-soft">
-                  Missions ouvertes
+                  {t("public.client.openMissions")}
                 </span>
 
                 <span className="font-mono text-sm font-semibold">
@@ -299,7 +300,7 @@ export default function ProfilClientPage({
 
               <div className="flex items-center justify-between py-3">
                 <span className="text-xs text-ink-soft">
-                  Missions en cours
+                  {t("public.client.ongoingMissions")}
                 </span>
 
                 <span className="font-mono text-sm font-semibold">
@@ -309,7 +310,7 @@ export default function ProfilClientPage({
 
               <div className="flex items-center justify-between py-3 last:pb-0">
                 <span className="text-xs text-ink-soft">
-                  Missions terminées
+                  {t("public.client.completedMissions")}
                 </span>
 
                 <span className="font-mono text-sm font-semibold">

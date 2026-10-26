@@ -77,6 +77,7 @@ describe('AuthService - Google', () => {
         id: 'u1',
         email: 'lanja@exemple.mg',
         role: Role.ETUDIANT,
+        langue: 'fr',
       });
       // Meme mecanisme de session que la connexion classique : refresh
       // token enregistre en base (revocable / rotatif).

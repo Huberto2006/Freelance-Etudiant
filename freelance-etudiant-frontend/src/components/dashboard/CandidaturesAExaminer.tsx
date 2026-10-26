@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Star } from "lucide-react";
 
 import type { Candidature } from "@/lib/types";
-import { formatArgent, formatDateCourte } from "@/lib/format";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
 import { versNombre } from "@/lib/dashboard";
 import type { EtatSection } from "@/lib/dashboard";
 import { Avatar } from "@/components/ui/Avatar";
@@ -27,10 +28,16 @@ export function CandidaturesAExaminer({
   max?: number;
   onReessayer: () => void;
 }) {
+  const t = useTranslations("dashboardPages.applicationsToReview");
+  const {
+    argent: formatArgent,
+    dateCourte: formatDateCourte,
+    nombre,
+  } = useFormats();
   if (etat.statut === "erreur") {
     return (
       <ErreurSection
-        message="Impossible de charger les candidatures reçues."
+        message={t("loadError")}
         onReessayer={onReessayer}
       />
     );
@@ -42,7 +49,7 @@ export function CandidaturesAExaminer({
     return (
       <div
         role="status"
-        aria-label="Chargement des candidatures"
+        aria-label={t("loading")}
         className="grid gap-3 sm:grid-cols-2"
       >
         <SkeletonCarte />
@@ -59,15 +66,15 @@ export function CandidaturesAExaminer({
     return (
       <NoticeCard className="flex flex-col items-start gap-3">
         <p className="font-display font-medium">
-          Aucune candidature en attente.
+          {t("emptyTitle")}
         </p>
         <p className="text-sm text-ink-soft">
-          Les nouvelles candidatures reçues sur vos missions apparaîtront ici.
+          {t("emptyDescription")}
         </p>
 
-        <Link href="/tableau-de-bord/mes-missions" aria-label="Voir mes missions">
+        <Link href="/tableau-de-bord/mes-missions" aria-label={t("viewMissions")}>
           <Button size="sm" variant="ghost">
-            Voir mes missions
+            {t("viewMissions")}
           </Button>
         </Link>
       </NoticeCard>
@@ -78,7 +85,7 @@ export function CandidaturesAExaminer({
     <div className="grid gap-3 sm:grid-cols-2">
       {enAttente.map((candidature) => {
         const nom =
-          candidature.etudiant?.utilisateur?.nom ?? "Candidat";
+          candidature.etudiant?.utilisateur?.nom ?? t("candidateFallback");
         const note = candidature.etudiant?.noteMoyenne;
         const tarif = candidature.etudiant?.tarifHoraire;
         const competences = candidature.etudiant?.competences ?? [];
@@ -97,10 +104,15 @@ export function CandidaturesAExaminer({
                 <p className="inline-flex flex-wrap items-center gap-1 text-xs text-ink-soft">
                   <Star size={12} className="text-ocre" aria-hidden="true" />
                   {note != null
-                    ? `${versNombre(note).toFixed(1)} / 5`
-                    : "Pas encore noté"}
+                    ? t("rating", {
+                        note: nombre(versNombre(note), {
+                          minimumFractionDigits: 1,
+                          maximumFractionDigits: 1,
+                        }),
+                      })
+                    : t("notRated")}
                   {tarif != null && versNombre(tarif) > 0 && (
-                    <> · {formatArgent(tarif)} / h</>
+                    <> · {t("hourlyRate", { montant: formatArgent(tarif) })}</>
                   )}
                 </p>
               </div>
@@ -111,18 +123,20 @@ export function CandidaturesAExaminer({
             </div>
 
             <p className="text-sm text-ink-soft">
-              Pour{" "}
-              <span className="font-medium text-ink">
-                {candidature.mission?.titre ?? "votre mission"}
-              </span>{" "}
-              · propose {formatArgent(candidature.prixPropose)} en{" "}
-              {candidature.delaiPropose} jour(s)
+              {t.rich("proposal", {
+                titre: candidature.mission?.titre ?? t("yourMission"),
+                prix: formatArgent(candidature.prixPropose),
+                count: candidature.delaiPropose,
+                mission: (chunks) => (
+                  <span className="font-medium text-ink">{chunks}</span>
+                ),
+              })}
             </p>
 
             {competences.length > 0 && (
               <ul
                 className="flex flex-wrap gap-1.5"
-                aria-label={`Compétences de ${nom}`}
+                aria-label={t("skillsOf", { nom })}
               >
                 {competences.slice(0, 3).map((competence) => (
                   <li key={competence}>
@@ -141,10 +155,10 @@ export function CandidaturesAExaminer({
             <Link
               href="/tableau-de-bord/mes-missions"
               className="mt-auto self-start"
-              aria-label={`Examiner la candidature de ${nom}`}
+              aria-label={t("reviewApplicationOf", { nom })}
             >
               <Button size="sm" variant="secondary">
-                Examiner
+                {t("review")}
               </Button>
             </Link>
           </NoticeCard>

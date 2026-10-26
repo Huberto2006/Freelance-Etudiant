@@ -3,11 +3,14 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { BriefcaseBusiness, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import type { Mission } from "@/lib/types";
-import { formatArgent, formatDate, statutMissionLabel } from "@/lib/format";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
+import { useOptionLabels } from "@/i18n/use-option-labels";
 import { getFileUrl } from "@/lib/api";
 import { NoticeCard, Tag } from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
@@ -26,6 +29,10 @@ export default function MissionDetailPage({
   const { id } = use(params);
   const { utilisateur } = useAuth();
   const router = useRouter();
+  const t = useTranslations("missions");
+  const { argent: formatArgent, date: formatDate } = useFormats();
+  const { statutMission } = useLabels();
+  const { categorie } = useOptionLabels();
 
   const [resultatMission, setResultatMission] = useState<{
     id: string;
@@ -80,7 +87,7 @@ export default function MissionDetailPage({
       setAfficherFormulaire(false);
     } catch (err) {
       setErreur(
-        err instanceof ApiError ? err.message : "Impossible d'envoyer la candidature",
+        err instanceof ApiError ? err.message : t("detail.applyError"),
       );
     } finally {
       setEnvoi(false);
@@ -91,7 +98,7 @@ export default function MissionDetailPage({
     return (
       <p className="mx-auto flex max-w-3xl items-center justify-center gap-2 px-5 py-12 text-sm text-ink-soft">
         <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-        Chargement…
+        {t("detail.loading")}
       </p>
     );
   }
@@ -109,11 +116,11 @@ export default function MissionDetailPage({
             </span>
             <p className="text-sm text-brique">
               {erreurChargement
-                ? "Impossible de charger cette mission pour le moment."
-                : "Cette mission est introuvable."}
+                ? t("detail.loadError")
+                : t("detail.notFound")}
             </p>
             <Button variant="secondary" size="sm" href="/missions">
-              Retour aux missions
+              {t("detail.backToMissions")}
             </Button>
           </div>
         </NoticeCard>
@@ -143,16 +150,18 @@ export default function MissionDetailPage({
       )}
 
       <div className="mb-4 flex items-center gap-3">
-        <Tag tone="ocre">{mission.categorie}</Tag>
-        <Tag tone="ink">{statutMissionLabel[mission.statut]}</Tag>
+        <Tag tone="ocre">{categorie(mission.categorie)}</Tag>
+        <Tag tone="ink">{statutMission(mission.statut)}</Tag>
       </div>
 
       <h1 className="mb-3 font-display text-3xl font-semibold sm:text-4xl">
         {mission.titre}
       </h1>
       <p className="mb-7 text-sm text-ink-soft">
-        Publiée le {formatDate(mission.dateCreation)} · candidatures ouvertes
-        jusqu&apos;au {formatDate(mission.dateLimite)}
+        {t("detail.publishedMeta", {
+          datePublication: formatDate(mission.dateCreation),
+          dateLimite: formatDate(mission.dateLimite),
+        })}
       </p>
 
       <div className="flex flex-col-reverse items-start gap-7 lg:flex-row lg:items-start">
@@ -161,7 +170,7 @@ export default function MissionDetailPage({
 
           <div className="mb-7">
             <h2 className="mb-3 font-display text-xl font-semibold">
-              Description
+              {t("detail.description")}
             </h2>
             <p className="text-sm leading-relaxed text-ink-soft whitespace-pre-line">
               {mission.description}
@@ -171,7 +180,7 @@ export default function MissionDetailPage({
           {mission.competencesRequises.length > 0 && (
             <div className="mb-8">
               <h2 className="mb-3 font-display text-xl font-semibold">
-                Compétences requises
+                {t("detail.requiredSkills")}
               </h2>
               <div className="flex flex-wrap gap-2">
                 {mission.competencesRequises.map((c) => (
@@ -197,14 +206,14 @@ export default function MissionDetailPage({
           {/* Carte annonce */}
           <NoticeCard>
             <p className="mb-1 text-xs font-mono uppercase tracking-wider text-ink-soft">
-              Budget
+              {t("detail.budget")}
             </p>
             <p className="font-display text-2xl text-ocre-dark">
               {formatArgent(mission.budget)}
             </p>
             <div className="mt-4 border-t border-ink/10 pt-4">
               <p className="mb-1 text-xs font-mono uppercase tracking-wider text-ink-soft">
-                Date limite de candidature
+                {t("detail.applicationDeadline")}
               </p>
               <p className="font-display text-2xl">
                 {formatDate(mission.dateLimite)}
@@ -220,25 +229,25 @@ export default function MissionDetailPage({
                 className="flex items-center gap-3"
               >
                 <Avatar
-                  nom={mission.client.utilisateur?.nom ?? "Client"}
+                  nom={mission.client.utilisateur?.nom ?? t("detail.clientFallback")}
                   photoUrl={mission.client.utilisateur?.photoUrl}
                   size={44}
                 />
                 <div className="min-w-0">
                   <p className="truncate font-display font-medium hover:underline">
-                    {mission.client.utilisateur?.nom ?? "Client Kianja"}
+                    {mission.client.utilisateur?.nom ?? t("detail.clientKianjaFallback")}
                   </p>
                   <p className="text-xs text-ink-soft/70">
                     {mission.client.nomEntreprise ??
                       (mission.client.typeClient === "entreprise"
-                        ? "Entreprise"
-                        : "Particulier")}
+                        ? t("detail.clientCompany")
+                        : t("detail.clientIndividual"))}
                   </p>
                 </div>
               </Link>
               <Link href={`/clients/${mission.client.utilisateurId}`}>
                 <Button variant="ghost" size="sm" className="mt-4 w-full">
-                  Voir le profil
+                  {t("detail.viewProfile")}
                 </Button>
               </Link>
             </NoticeCard>
@@ -248,19 +257,18 @@ export default function MissionDetailPage({
           {succes ? (
             <NoticeCard className="border-rice/50">
               <p className="font-medium text-rice">
-                Votre candidature a bien été envoyée. Le client pourra
-                maintenant l&apos;examiner.
+                {t("detail.applySuccess")}
               </p>
             </NoticeCard>
           ) : estEtudiant && !estProprietaire && mission.statut === "ouverte" ? (
             afficherFormulaire ? (
               <NoticeCard>
                 <h2 className="mb-4 font-display text-xl font-semibold">
-                  Postuler à cette mission
+                  {t("detail.applyTitle")}
                 </h2>
                 <form onSubmit={postuler} className="flex flex-col gap-5">
                   <div className="grid gap-5 sm:grid-cols-2">
-                    <Field label="Prix proposé (Ar)" htmlFor="prixPropose">
+                    <Field label={t("detail.proposedPrice")} htmlFor="prixPropose">
                       <Input
                         id="prixPropose"
                         type="number"
@@ -270,7 +278,7 @@ export default function MissionDetailPage({
                         onChange={(e) => setPrixPropose(e.target.value)}
                       />
                     </Field>
-                    <Field label="Délai proposé (jours)" htmlFor="delaiPropose">
+                    <Field label={t("detail.proposedDelay")} htmlFor="delaiPropose">
                       <Input
                         id="delaiPropose"
                         type="number"
@@ -281,13 +289,13 @@ export default function MissionDetailPage({
                       />
                     </Field>
                   </div>
-                  <Field label="Message (optionnel)" htmlFor="message">
+                  <Field label={t("detail.messageLabel")} htmlFor="message">
                     <Textarea
                       id="message"
                       rows={4}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Présentez brièvement votre approche…"
+                      placeholder={t("detail.messagePlaceholder")}
                     />
                   </Field>
                   {erreur && <p className="text-sm text-brique">{erreur}</p>}
@@ -297,14 +305,14 @@ export default function MissionDetailPage({
                       disabled={envoi}
                       className="flex-1"
                     >
-                      {envoi ? "Envoi…" : "Envoyer ma candidature"}
+                      {envoi ? t("detail.sending") : t("detail.submitApplication")}
                     </Button>
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={() => setAfficherFormulaire(false)}
                     >
-                      Annuler
+                      {t("detail.cancel")}
                     </Button>
                   </div>
                 </form>
@@ -315,19 +323,22 @@ export default function MissionDetailPage({
                 className="w-full"
                 onClick={() => setAfficherFormulaire(true)}
               >
-                Postuler à cette mission
+                {t("detail.applyTitle")}
               </Button>
             )
           ) : !utilisateur ? (
             <NoticeCard>
               <p className="text-sm text-ink-soft">
-                <button
-                  onClick={() => router.push("/connexion")}
-                  className="text-ocre-dark hover:underline"
-                >
-                  Connectez-vous
-                </button>{" "}
-                en tant qu&apos;étudiant pour postuler à cette mission.
+                {t.rich("detail.loginPrompt", {
+                  login: (chunks) => (
+                    <button
+                      onClick={() => router.push("/connexion")}
+                      className="text-ocre-dark hover:underline"
+                    >
+                      {chunks}
+                    </button>
+                  ),
+                })}
               </p>
             </NoticeCard>
           ) : null}

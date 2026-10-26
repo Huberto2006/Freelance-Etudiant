@@ -4,6 +4,7 @@ import type { ComponentType, ReactNode } from "react";
 import type { LucideProps } from "lucide-react";
 import { RefreshCw } from "lucide-react";
 import { clsx } from "clsx";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/Button";
 import { NoticeCard } from "@/components/ui/Notice";
@@ -54,16 +55,17 @@ export function DashboardSection({
  * l'échec du tableau de bord entier, les autres sections continuent.
  */
 export function ErreurSection({
-  message = "Impossible de charger cette section.",
+  message,
   onReessayer,
 }: {
   message?: string;
   onReessayer?: () => void;
 }) {
+  const t = useTranslations("dashboardPages.dashboardSection");
   return (
     <NoticeCard className="border-brique/40">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-brique">{message}</p>
+        <p className="text-sm text-brique">{message ?? t("loadError")}</p>
 
         {onReessayer && (
           <Button
@@ -73,7 +75,7 @@ export function ErreurSection({
             className="gap-2"
           >
             <RefreshCw size={14} aria-hidden="true" />
-            Réessayer
+            {t("retry")}
           </Button>
         )}
       </div>

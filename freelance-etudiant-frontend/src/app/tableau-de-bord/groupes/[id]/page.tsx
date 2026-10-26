@@ -15,11 +15,9 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import type { EtudiantProfile, Groupe, InvitationGroupe } from "@/lib/types";
-import {
-  formatDate,
-  roleMembreGroupeLabel,
-  statutInvitationGroupeLabel,
-} from "@/lib/format";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -34,6 +32,9 @@ export default function GroupeDetailPage({
 }) {
   const { id } = use(params);
   const { utilisateur } = useAuth();
+  const t = useTranslations("dashboardPages.groupDetail");
+  const { date: formatDate } = useFormats();
+  const { roleMembreGroupe, statutInvitationGroupe } = useLabels();
 
   const [groupe, setGroupe] = useState<Groupe | null>(null);
   const [chargement, setChargement] = useState(true);
@@ -72,7 +73,7 @@ export default function GroupeDetailPage({
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de charger ce groupe.",
+          : t("loadError"),
       );
     } finally {
       setChargement(false);
@@ -119,7 +120,7 @@ export default function GroupeDetailPage({
 
   function nomEtudiant(etudiantId: string): string {
     return (
-      annuaireParId.get(etudiantId)?.utilisateur?.nom ?? "Étudiant"
+      annuaireParId.get(etudiantId)?.utilisateur?.nom ?? t("studentFallback")
     );
   }
 
@@ -178,7 +179,7 @@ export default function GroupeDetailPage({
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Action impossible.",
+          : t("actionError"),
       );
     } finally {
       setActionEnCours(null);
@@ -203,7 +204,7 @@ export default function GroupeDetailPage({
           className="animate-spin"
           aria-hidden="true"
         />
-        Chargement du groupe…
+        {t("loading")}
       </p>
     );
   }
@@ -226,7 +227,7 @@ export default function GroupeDetailPage({
             </span>
 
             <p className="text-sm text-brique">
-              {erreur ?? "Ce groupe est introuvable."}
+              {erreur ?? t("notFound")}
             </p>
 
             <Button
@@ -234,7 +235,7 @@ export default function GroupeDetailPage({
               size="sm"
               href="/tableau-de-bord/groupes"
             >
-              Retour à mes groupes
+              {t("backToGroups")}
             </Button>
           </div>
         </NoticeCard>
@@ -253,7 +254,7 @@ export default function GroupeDetailPage({
 
       <PageHeader
         icon={Users}
-        eyebrow="Espace étudiant"
+        eyebrow={t("eyebrow")}
         title={groupe.nom}
       />
 
@@ -275,12 +276,12 @@ export default function GroupeDetailPage({
 
         <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-xs text-ink-soft/70">
           <p>
-            Mission : {groupe.mission?.titre ?? "Aucune"}
+            {t("mission", { titre: groupe.mission?.titre ?? t("noMission") })}
           </p>
 
           {groupe.dateCreation && (
             <p>
-              Créé le {formatDate(groupe.dateCreation)}
+              {t("createdOn", { date: formatDate(groupe.dateCreation) })}
             </p>
           )}
         </div>
@@ -303,12 +304,11 @@ export default function GroupeDetailPage({
 
               <div>
                 <h2 className="font-display text-lg font-semibold">
-                  Discussion du groupe
+                  {t("discussionTitle")}
                 </h2>
 
                 <p className="mt-1 text-sm text-ink-soft">
-                  Retrouvez les messages du groupe dans votre espace
-                  de messagerie.
+                  {t("discussionHint")}
                 </p>
               </div>
             </div>
@@ -321,7 +321,7 @@ export default function GroupeDetailPage({
               className="gap-2"
             >
               <MessageCircle size={15} aria-hidden="true" />
-              Ouvrir la discussion
+              {t("openDiscussion")}
             </Button>
           </div>
         </NoticeCard>
@@ -332,7 +332,7 @@ export default function GroupeDetailPage({
           ===================================================== */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
         <h2 className="font-display text-lg font-semibold">
-          Membres ({membres.length})
+          {t("members", { count: membres.length })}
         </h2>
 
         {estChef && (
@@ -345,12 +345,12 @@ export default function GroupeDetailPage({
             {afficherInvitation ? (
               <>
                 <X size={15} />
-                Fermer
+                {t("close")}
               </>
             ) : (
               <>
                 <UserPlus size={15} />
-                Inviter un étudiant
+                {t("inviteStudent")}
               </>
             )}
           </Button>
@@ -375,7 +375,7 @@ export default function GroupeDetailPage({
 
                 {membre.etudiantId === utilisateur?.id && (
                   <span className="ml-1 text-ink-soft/60">
-                    (vous)
+                    {t("you")}
                   </span>
                 )}
               </p>
@@ -395,7 +395,7 @@ export default function GroupeDetailPage({
                   />
                 )}
 
-                {roleMembreGroupeLabel[membre.role]}
+                {roleMembreGroupe(membre.role)}
               </Tag>
 
               {estChef &&
@@ -408,7 +408,7 @@ export default function GroupeDetailPage({
                       onClick={() => {
                         if (
                           !confirmer(
-                            "Transférer le rôle de chef à cet étudiant ?",
+                            t("confirmTransfer"),
                           )
                         ) {
                           return;
@@ -428,7 +428,7 @@ export default function GroupeDetailPage({
                         );
                       }}
                     >
-                      Chef
+                      {t("leader")}
                     </Button>
 
                     <Button
@@ -438,7 +438,7 @@ export default function GroupeDetailPage({
                       onClick={() => {
                         if (
                           !confirmer(
-                            "Retirer cet étudiant du groupe ?",
+                            t("confirmRemove"),
                           )
                         ) {
                           return;
@@ -454,7 +454,7 @@ export default function GroupeDetailPage({
                         );
                       }}
                     >
-                      Retirer
+                      {t("remove")}
                     </Button>
                   </div>
                 )}
@@ -469,12 +469,12 @@ export default function GroupeDetailPage({
       {estChef && (
         <NoticeCard className="mb-6">
           <h2 className="font-display text-lg font-semibold">
-            Invitations envoyées
+            {t("sentInvitations")}
           </h2>
 
           {invitations.length === 0 ? (
             <p className="mt-2 text-sm text-ink-soft/70">
-              Aucune invitation envoyée.
+              {t("noInvitations")}
             </p>
           ) : (
             <ul className="mt-3 flex flex-col divide-y divide-ink/10">
@@ -487,9 +487,7 @@ export default function GroupeDetailPage({
                     {nomEtudiant(invitation.inviteId)}
 
                     <span className="ml-2 text-xs text-ink-soft/70">
-                      {statutInvitationGroupeLabel[
-                        invitation.statut
-                      ]}{" "}
+                      {statutInvitationGroupe(invitation.statut)}{" "}
                       · {formatDate(invitation.dateCreation)}
                     </span>
                   </p>
@@ -502,7 +500,7 @@ export default function GroupeDetailPage({
                       onClick={() => {
                         if (
                           !confirmer(
-                            "Annuler cette invitation ?",
+                            t("confirmCancelInvitation"),
                           )
                         ) {
                           return;
@@ -536,7 +534,7 @@ export default function GroupeDetailPage({
                         );
                       }}
                     >
-                      Annuler
+                      {t("cancel")}
                     </Button>
                   )}
                 </li>
@@ -554,7 +552,7 @@ export default function GroupeDetailPage({
           variant="ghost"
           disabled={actionEnCours !== null}
           onClick={() => {
-            if (!confirmer("Quitter ce groupe ?")) {
+            if (!confirmer(t("confirmLeave"))) {
               return;
             }
 
@@ -566,7 +564,7 @@ export default function GroupeDetailPage({
           }}
           className="mb-6"
         >
-          Quitter le groupe
+          {t("leaveGroup")}
         </Button>
       )}
 
@@ -605,6 +603,7 @@ function PanneauInvitation({
   membresActuels: string[];
   moiId?: string;
 }) {
+  const t = useTranslations("dashboardPages.groupDetail");
   const [recherche, setRecherche] = useState("");
   const [envoiPourId, setEnvoiPourId] =
     useState<string | null>(null);
@@ -654,15 +653,12 @@ function PanneauInvitation({
           new Set(prev).add(etudiantId),
       );
     } catch (err) {
-      console.error(
-        "Erreur lors de l'envoi de l'invitation :",
-        err,
-      );
+      console.error("Invitation send error:", err);
 
       setErreur(
         err instanceof ApiError
           ? err.message
-          : "Erreur inattendue.",
+          : t("unexpectedError"),
       );
     } finally {
       setEnvoiPourId(null);
@@ -672,7 +668,7 @@ function PanneauInvitation({
   return (
     <NoticeCard>
       <h3 className="font-display text-lg font-semibold">
-        Inviter un étudiant
+        {t("inviteStudent")}
       </h3>
 
       {erreur && (
@@ -693,8 +689,8 @@ function PanneauInvitation({
           onChange={(e) =>
             setRecherche(e.target.value)
           }
-          placeholder="Rechercher un étudiant par nom…"
-          aria-label="Rechercher un étudiant"
+          placeholder={t("searchPlaceholder")}
+          aria-label={t("searchLabel")}
           className="pl-9"
         />
       </div>
@@ -702,7 +698,7 @@ function PanneauInvitation({
       <ul className="mt-4 flex max-h-80 flex-col divide-y divide-ink/10 overflow-y-auto">
         {candidats.length === 0 ? (
           <p className="py-4 text-sm text-ink-soft/70">
-            Aucun étudiant disponible à inviter.
+            {t("noCandidates")}
           </p>
         ) : (
           candidats.map((etudiant) => {
@@ -717,7 +713,7 @@ function PanneauInvitation({
                 <Avatar
                   nom={
                     etudiant.utilisateur?.nom ??
-                    "Étudiant"
+                    t("studentFallback")
                   }
                   photoUrl={
                     etudiant.utilisateur?.photoUrl
@@ -727,7 +723,7 @@ function PanneauInvitation({
 
                 <p className="flex-1 truncate text-sm">
                   {etudiant.utilisateur?.nom ??
-                    "Étudiant"}
+                    t("studentFallback")}
                 </p>
 
                 <Button
@@ -754,7 +750,7 @@ function PanneauInvitation({
                     />
                   )}
 
-                  Inviter
+                  {t("invite")}
                 </Button>
               </li>
             );
@@ -768,10 +764,7 @@ function PanneauInvitation({
               aria-hidden="true"
             />
 
-            {invitesEnvoyes.size} invitation
-            {invitesEnvoyes.size > 1 ? "s" : ""}{" "}
-            envoyée
-            {invitesEnvoyes.size > 1 ? "s" : ""}.
+            {t("invitationsSent", { count: invitesEnvoyes.size })}
           </li>
         )}
       </ul>

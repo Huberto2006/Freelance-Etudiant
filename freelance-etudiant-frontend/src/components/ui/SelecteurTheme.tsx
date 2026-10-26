@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Moon, Sun } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "@/lib/theme-context";
 import type { ThemeConfig } from "@/lib/theme-config";
 
@@ -13,6 +14,9 @@ export function SelecteurTheme({
   variante = "compact",
   className = "",
 }: SelecteurThemeProps) {
+  const tt = useTranslations("settings.theme");
+  const nomTheme = (id: string, repli: string) =>
+    tt.has(`names.${id}` as never) ? tt(`names.${id}` as never) : repli;
   const {
     themeId,
     setTheme,
@@ -42,9 +46,9 @@ export function SelecteurTheme({
         {/* Ligne 1 : Mode Clair / Sombre */}
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-medium text-ink">Mode d&apos;affichage</p>
+            <p className="text-xs font-medium text-ink">{tt("displayMode")}</p>
             <p className="text-[0.6875rem] text-ink-soft">
-              {mode === "sombre" ? "Sombre" : "Clair"}
+              {mode === "sombre" ? tt("dark") : tt("light")}
             </p>
           </div>
 
@@ -53,8 +57,8 @@ export function SelecteurTheme({
             onClick={basculerMode}
             aria-label={
               mode === "sombre"
-                ? "Passer en mode clair"
-                : "Passer en mode sombre"
+                ? tt("switchToLight")
+                : tt("switchToDark")
             }
             className="
               flex h-8 w-8 items-center justify-center rounded-lg border border-ink/15
@@ -74,10 +78,10 @@ export function SelecteurTheme({
         {/* Ligne 2 : Pastilles des thèmes de couleurs */}
         <div>
           <p className="mb-2 text-[0.6875rem] font-medium text-ink-soft">
-            Palette & Typographie
+            {tt("paletteShort")}
           </p>
 
-          <div className="grid grid-cols-5 gap-1.5" role="radiogroup" aria-label="Choisir un thème">
+          <div className="grid grid-cols-5 gap-1.5" role="radiogroup" aria-label={tt("chooseTheme")}>
             {themesDisponibles.map((t) => {
               const estActif = t.id === themeId;
               return (
@@ -87,7 +91,7 @@ export function SelecteurTheme({
                   role="radio"
                   aria-checked={estActif}
                   onClick={() => setTheme(t.id)}
-                  title={`${t.nom} — ${t.typographie.nomDisplay}`}
+                  title={`${nomTheme(t.id, t.nom)} — ${t.typographie.nomDisplay}`}
                   className={`
                     group relative flex flex-col items-center justify-center rounded-lg p-1.5 transition-all
                     ${
@@ -106,7 +110,7 @@ export function SelecteurTheme({
                     )}
                   </span>
                   <span className="mt-1 max-w-full truncate text-[0.625rem] font-medium text-ink-soft">
-                    {t.nom.split(" ")[0]}
+                    {nomTheme(t.id, t.nom).split(" ")[0]}
                   </span>
                 </button>
               );
@@ -125,10 +129,10 @@ export function SelecteurTheme({
       {/* 1. Sélection du mode d'affichage */}
       <div>
         <label className="block text-sm font-medium text-ink">
-          Mode d&apos;affichage
+          {tt("displayMode")}
         </label>
         <p className="mt-0.5 text-xs text-ink-soft">
-          Basculez entre le mode clair et le mode sombre selon vos préférences.
+          {tt("displayModeHint")}
         </p>
 
         <div className="mt-3 grid grid-cols-2 gap-3 sm:max-w-md">
@@ -148,8 +152,8 @@ export function SelecteurTheme({
               <Sun size={18} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-ink">Mode clair</p>
-              <p className="text-xs text-ink-soft">Fond lumineux</p>
+              <p className="text-sm font-semibold text-ink">{tt("lightMode")}</p>
+              <p className="text-xs text-ink-soft">{tt("lightHint")}</p>
             </div>
           </button>
 
@@ -169,8 +173,8 @@ export function SelecteurTheme({
               <Moon size={18} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-ink">Mode sombre</p>
-              <p className="text-xs text-ink-soft">Confort visuel</p>
+              <p className="text-sm font-semibold text-ink">{tt("darkMode")}</p>
+              <p className="text-xs text-ink-soft">{tt("darkHint")}</p>
             </div>
           </button>
         </div>
@@ -179,10 +183,10 @@ export function SelecteurTheme({
       {/* 2. Sélection de la palette & typographie */}
       <div>
         <label className="block text-sm font-medium text-ink">
-          Palette de couleurs & Typographie
+          {tt("palette")}
         </label>
         <p className="mt-0.5 text-xs text-ink-soft">
-          Chaque thème adapte automatiquement les couleurs principales, les cartes, les boutons et les polices de l&apos;interface.
+          {tt("paletteHint")}
         </p>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -215,6 +219,11 @@ function CarteThemeItem({
   modeActuel: "clair" | "sombre";
   onSelection: () => void;
 }) {
+  const tt = useTranslations("settings.theme");
+  const nomTheme = (id: string, repli: string) =>
+    tt.has(`names.${id}` as never) ? tt(`names.${id}` as never) : repli;
+  const descTheme = (id: string, repli: string) =>
+    tt.has(`descriptions.${id}` as never) ? tt(`descriptions.${id}` as never) : repli;
   const palette = modeActuel === "sombre" ? theme.sombre : theme.clair;
 
   return (
@@ -246,7 +255,7 @@ function CarteThemeItem({
               />
             </div>
 
-            <p className="text-sm font-semibold text-ink">{theme.nom}</p>
+            <p className="text-sm font-semibold text-ink">{nomTheme(theme.id, theme.nom)}</p>
           </div>
 
           {estActif && (
@@ -257,7 +266,7 @@ function CarteThemeItem({
         </div>
 
         <p className="mt-2 text-xs leading-relaxed text-ink-soft">
-          {theme.description}
+          {descTheme(theme.id, theme.description)}
         </p>
       </div>
 
@@ -283,7 +292,7 @@ function CarteThemeItem({
               backgroundColor: palette.primary,
             }}
           >
-            Aperçu
+            {tt("preview")}
           </span>
         </div>
       </div>

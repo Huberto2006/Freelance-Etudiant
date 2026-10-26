@@ -1,0 +1,59 @@
+{
+  "language": {
+    "label": "Language",
+    "choose": "Choose language",
+    "current": "Current language: {langue}",
+    "changeError": "Could not change the language. Please try again."
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "close": "Close",
+    "back": "Back",
+    "search": "Search",
+    "edit": "Edit",
+    "send": "Send",
+    "next": "Next",
+    "previous": "Previous",
+    "retry": "Try again",
+    "seeMore": "See more",
+    "seeAll": "See all",
+    "yes": "Yes",
+    "no": "No",
+    "add": "Add",
+    "remove": "Remove",
+    "download": "Download",
+    "copy": "Copy",
+    "apply": "Apply",
+    "reset": "Reset"
+  },
+  "states": {
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "sending": "Sending…",
+    "empty": "Nothing to show yet.",
+    "error": "Something went wrong.",
+    "none": "None",
+    "optional": "optional",
+    "required": "required",
+    "errLoadData": "Unable to load the data. Please try again."
+  },
+  "currency": {
+    "ariary": "Ar"
+  },
+  "card": {
+    "mission": "Mission",
+    "service": "Service",
+    "client": "Client",
+    "student": "Student",
+    "before": "before {date}",
+    "days": "{count} d",
+    "view": "View →"
+  },
+  "back": {
+    "ariaLabel": "Go back to the previous page",
+    "label": "Back"
+  }
+}

@@ -1,0 +1,177 @@
+{
+  "hero": {
+    "eyebrow": "Kianja · Marketplace des étudiants freelances",
+    "titleStart": "Les besoins des clients.",
+    "titleAccent": "Les compétences des étudiants.",
+    "intro": "Trouvez un profil qualifié, publiez un besoin ou proposez vos compétences, dans un cadre clair et sécurisé.",
+    "searchTypeLabel": "Type de recherche",
+    "targetServices": "Services",
+    "targetMissions": "Missions",
+    "placeholderServices": "Design, site web, rédaction, traduction…",
+    "placeholderMissions": "Refonte de site, application mobile…",
+    "ariaSearchServices": "Rechercher un service étudiant",
+    "ariaSearchMissions": "Rechercher une mission de client",
+    "searchSubmit": "Lancer la recherche",
+    "popular": "Populaires :",
+    "goDashboard": "Accéder à mon tableau de bord",
+    "publishMission": "Publier une mission",
+    "findMission": "Trouver une mission",
+    "join": "Rejoindre Kianja",
+    "explorePublications": "Explorer les publications →",
+    "statServices": "Services proposés",
+    "statMissions": "Missions ouvertes"
+  },
+  "audiences": {
+    "eyebrow": "Une marketplace bilatérale",
+    "title": "Deux parcours connectés pour réussir ensemble",
+    "subtitle": "Que vous ayez un besoin ponctuel ou des compétences à offrir, Kianja offre à chacun un cadre transparent et sécurisé.",
+    "client": {
+      "label": "Côté client",
+      "title": "Des étudiants prêts à vous aider",
+      "intro": "Entreprises, startups, associations ou particuliers : accédez aux futurs diplômés pour donner vie à vos projets avec un excellent rapport qualité-prix.",
+      "link": "Trouver un étudiant",
+      "pillars": {
+        "publish": {
+          "title": "Publier des missions",
+          "description": "Décrivez vos besoins ponctuels ou récurrents, fixez votre budget et recevez des candidatures ciblées d'étudiants qualifiés."
+        },
+        "find": {
+          "title": "Trouver des étudiants",
+          "description": "Explorez le catalogue de compétences, filtrez par filière ou domaine, et sélectionnez les meilleurs talents étudiants."
+        },
+        "follow": {
+          "title": "Suivre leurs projets",
+          "description": "Collaborez via une messagerie intégrée, suivez chaque étape de réalisation et validez la livraison en toute transparence."
+        }
+      }
+    },
+    "student": {
+      "label": "Côté étudiant",
+      "title": "Des projets à réaliser",
+      "intro": "Mettez en pratique vos acquis académiques, générez des revenus durant votre cursus et démarrez votre carrière avec une expérience concrète et vérifiée.",
+      "link": "Trouver une mission",
+      "pillars": {
+        "offer": {
+          "title": "Proposer leurs services",
+          "description": "Mettez en valeur vos compétences techniques, définissez vos offres clés en main, vos tarifs et vos délais de livraison."
+        },
+        "find": {
+          "title": "Trouver des missions",
+          "description": "Parcourez les besoins concrets publiés par des entreprises et particuliers, candidatez en un clic avec votre lettre de motivation."
+        },
+        "grow": {
+          "title": "Développer leur activité",
+          "description": "Bâtissez un portfolio certifié, gagnez des points de réputation grâce aux avis clients et financez vos études en toute indépendance."
+        }
+      }
+    }
+  },
+  "missions": {
+    "eyebrow": "Besoins des clients · Opportunités",
+    "title": "Projets et missions à pourvoir",
+    "subtitle": "Découvrez les besoins réels déposés par les clients et entreprises. Postulez pour mettre en pratique vos compétences.",
+    "seeAll": "Voir toutes les missions",
+    "empty": "Aucune mission ouverte pour le moment. Vous avez un projet à concrétiser ? Publiez la première mission pour recevoir des candidatures d'étudiants."
+  },
+  "services": {
+    "eyebrow": "Compétences étudiantes · Prestations",
+    "title": "Services prêts à l'emploi",
+    "subtitle": "Explorez les prestations directes proposées par les talents étudiants : développement, graphisme, rédaction et plus.",
+    "seeAll": "Voir tous les services",
+    "empty": "Aucun service n'est encore publié. Étudiants : publiez votre premier service pour être visible auprès des clients."
+  },
+  "categories": {
+    "eyebrow": "Domaines de compétences · Filières",
+    "title": "Explorer par catégorie",
+    "subtitle": "Chaque domaine regroupe les compétences des étudiants freelances et les besoins confiés par les clients.",
+    "browse": "Parcourir le catalogue",
+    "serviceCount": "{count, plural, one {# service} other {# services}}",
+    "discover": "Découvrir"
+  },
+  "process": {
+    "eyebrow": "Processus simplifié",
+    "title": "Comment fonctionne la marketplace Kianja",
+    "subtitle": "Du premier contact à la validation finale, chaque étape est pensée pour garantir la réussite du projet.",
+    "clientTrack": "Parcours Client",
+    "clientTrackTitle": "De votre besoin à la livraison finale",
+    "studentTrack": "Parcours Étudiant",
+    "studentTrackTitle": "De vos compétences à vos premiers revenus",
+    "client": {
+      "s1": {
+        "title": "Publiez votre besoin",
+        "detail": "Déposez une mission avec budget et échéance, ou parcourez les services étudiants."
+      },
+      "s2": {
+        "title": "Recevez des candidatures",
+        "detail": "Comparez les profils, les portfolios et les propositions des étudiants."
+      },
+      "s3": {
+        "title": "Choisissez votre étudiant",
+        "detail": "Sélectionnez le candidat qui correspond le mieux à vos exigences techniques."
+      },
+      "s4": {
+        "title": "Échangez par messagerie",
+        "detail": "Communiquez directement via la messagerie interne pour cadrer le travail."
+      },
+      "s5": {
+        "title": "Suivez la réalisation",
+        "detail": "Gardez une visibilité complète sur l'avancement jusqu'à la livraison finale."
+      },
+      "s6": {
+        "title": "Validez et évaluez",
+        "detail": "Réceptionnez les livrables, débloquez le paiement et notez le freelance."
+      }
+    },
+    "student": {
+      "s1": {
+        "title": "Créez votre profil",
+        "detail": "Indiquez votre filière, votre spécialité et vos compétences clés."
+      },
+      "s2": {
+        "title": "Présentez vos services",
+        "detail": "Affichez des prestations prêtes à l'achat ou consultez les missions ouvertes."
+      },
+      "s3": {
+        "title": "Postulez aux missions",
+        "detail": "Envoyez votre candidature argumentée avec votre tarif et votre délai."
+      },
+      "s4": {
+        "title": "Échangez avec le client",
+        "detail": "Précisez le cahier des charges et fixez les livrables attendus."
+      },
+      "s5": {
+        "title": "Réalisez et livrez",
+        "detail": "Produisez un travail de qualité et déposez vos livrables sur la plateforme."
+      },
+      "s6": {
+        "title": "Bâtissez votre réputation",
+        "detail": "Obtenez un avis client vérifié qui valorise votre réputation et votre portfolio."
+      }
+    }
+  },
+  "benefits": {
+    "eyebrow": "Garanties & Valeurs",
+    "title": "Pourquoi choisir la marketplace Kianja ?",
+    "subtitle": "Étudiants en quête d'expérience, clients en quête d'expertise : une plateforme pensée pour la réussite mutuelle.",
+    "talents": {
+      "title": "Des talents étudiants qualifiés",
+      "text": "Des étudiants formés aux standards actuels, aux compétences validées et notés par leurs clients après chaque livraison."
+    },
+    "springboard": {
+      "title": "Un tremplin professionnel réel",
+      "text": "Chaque mission réalisée enrichit concrètement le portfolio, développe le réseau et consolide le score de réputation certifié."
+    },
+    "secure": {
+      "title": "Un cadre d'échange sécurisé",
+      "text": "Une messagerie interne dédiée s'active dès l'acceptation de la candidature pour cadrer les échanges, fichiers et livrables."
+    },
+    "budgets": {
+      "title": "Des budgets adaptés et équitables",
+      "text": "Des tarifs compétitifs et transparents pour les clients, et une juste rémunération pour financer les études des freelances."
+    },
+    "ctaTitle": "Prêt à démarrer sur Kianja ?",
+    "ctaText": "Confiez un besoin à des étudiants qualifiés ou valorisez vos compétences auprès de vrais clients.",
+    "ctaButton": "Créer un compte gratuitement",
+    "explorePublications": "Explorer les publications →"
+  }
+}

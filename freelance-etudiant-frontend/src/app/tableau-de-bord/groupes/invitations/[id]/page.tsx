@@ -6,7 +6,9 @@ import { Check, Loader2, Users, X } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
 import type { EtudiantProfile, Groupe, InvitationGroupe } from "@/lib/types";
-import { formatDate, statutInvitationGroupeLabel } from "@/lib/format";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
 
 import { Button } from "@/components/ui/Button";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
@@ -19,6 +21,9 @@ export default function InvitationGroupePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const t = useTranslations("dashboardPages.groupInvitation");
+  const { date: formatDate } = useFormats();
+  const { statutInvitationGroupe } = useLabels();
   const router = useRouter();
   const [invitation, setInvitation] = useState<InvitationGroupe | null>(null);
   const [chargement, setChargement] = useState(true);
@@ -54,7 +59,7 @@ export default function InvitationGroupePage({
           setErreur(
             error instanceof ApiError
               ? error.message
-              : "Impossible de charger cette invitation.",
+              : t("loadError"),
           );
         }
       } finally {
@@ -67,7 +72,7 @@ export default function InvitationGroupePage({
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, t]);
 
   async function traiter(action: "accepter" | "refuser") {
     setTraitement(action);
@@ -88,8 +93,8 @@ export default function InvitationGroupePage({
       );
       setSucces(
         action === "accepter"
-          ? "Vous avez rejoint le groupe."
-          : "Invitation refusée.",
+          ? t("joined")
+          : t("refused"),
       );
         if (action === "accepter") {
           window.setTimeout(() => {
@@ -100,7 +105,7 @@ export default function InvitationGroupePage({
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de traiter cette invitation.",
+          : t("processError"),
       );
     } finally {
       setTraitement(null);
@@ -111,7 +116,7 @@ export default function InvitationGroupePage({
     return (
       <p className="flex items-center gap-2 text-sm text-ink-soft">
         <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-        Chargement de l&apos;invitation…
+        {t("loading")}
       </p>
     );
   }
@@ -122,7 +127,7 @@ export default function InvitationGroupePage({
         <BoutonRetour repli="/tableau-de-bord/notifications" className="mb-6" />
         <NoticeCard>
           <p className="text-sm text-brique">
-            {erreur ?? "Cette invitation est introuvable."}
+            {erreur ?? t("notFound")}
           </p>
         </NoticeCard>
       </div>
@@ -142,8 +147,8 @@ export default function InvitationGroupePage({
 
       <PageHeader
         icon={Users}
-        eyebrow="Invitation de groupe"
-        title={invitation.groupe?.nom ?? "Rejoindre un groupe"}
+        eyebrow={t("eyebrow")}
+        title={invitation.groupe?.nom ?? t("joinGroup")}
       />
 
       {erreur && (
@@ -162,7 +167,7 @@ export default function InvitationGroupePage({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="font-display text-xl font-semibold">
-              {invitation.groupe?.nom ?? "Groupe"}
+              {invitation.groupe?.nom ?? t("groupFallback")}
             </p>
             {invitation.groupe?.description && (
               <p className="mt-2 text-sm text-ink-soft">
@@ -170,28 +175,28 @@ export default function InvitationGroupePage({
               </p>
             )}
           </div>
-          <Tag tone={tonStatut}>{statutInvitationGroupeLabel[invitation.statut]}</Tag>
+          <Tag tone={tonStatut}>{statutInvitationGroupe(invitation.statut)}</Tag>
         </div>
 
         <p className="mt-4 text-xs text-ink-soft/70">
-          Reçue le {formatDate(invitation.dateCreation)}
+          {t("receivedOn", { date: formatDate(invitation.dateCreation) })}
         </p>
 
         <div className="mt-5 grid gap-3 border-t border-ink/10 pt-5 text-sm sm:grid-cols-2">
           <div>
-            <p className="text-xs uppercase tracking-wide text-ink-soft/70">Invitation envoyée par</p>
+            <p className="text-xs uppercase tracking-wide text-ink-soft/70">{t("sentBy")}</p>
             <div className="mt-2 flex items-center gap-2">
               <Avatar
-                nom={inviteur?.utilisateur?.nom ?? "Étudiant"}
+                nom={inviteur?.utilisateur?.nom ?? t("studentFallback")}
                 photoUrl={inviteur?.utilisateur?.photoUrl}
                 size={32}
               />
-              <span className="font-medium">{inviteur?.utilisateur?.nom ?? "Étudiant"}</span>
+              <span className="font-medium">{inviteur?.utilisateur?.nom ?? t("studentFallback")}</span>
             </div>
           </div>
           <div className="space-y-1 text-ink-soft">
-            <p>Membres : {groupe?.membres?.length ?? "—"}</p>
-            <p>Mission : {groupe?.mission?.titre ?? "Aucune"}</p>
+            <p>{t("members", { count: groupe?.membres?.length ?? "—" })}</p>
+            <p>{t("mission", { titre: groupe?.mission?.titre ?? t("noMission") })}</p>
           </div>
         </div>
 
@@ -207,7 +212,7 @@ export default function InvitationGroupePage({
               ) : (
                 <Check size={15} />
               )}
-              Accepter l&apos;invitation
+              {t("accept")}
             </Button>
             <Button
               variant="ghost"
@@ -220,7 +225,7 @@ export default function InvitationGroupePage({
               ) : (
                 <X size={15} />
               )}
-              Refuser
+              {t("refuse")}
             </Button>
           </div>
         )}
@@ -232,7 +237,7 @@ export default function InvitationGroupePage({
             href="/tableau-de-bord/groupes"
             className="mt-6"
           >
-            Voir mes groupes
+            {t("viewGroups")}
           </Button>
         )}
       </NoticeCard>

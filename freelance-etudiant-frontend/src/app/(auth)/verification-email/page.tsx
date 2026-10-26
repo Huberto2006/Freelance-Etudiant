@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { api, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { NoticeCard } from "@/components/ui/Notice";
@@ -18,6 +19,7 @@ type EtatVerification =
   | { etat: "erreur"; message: string };
 
 function ContenuVerificationEmail() {
+  const t = useTranslations("auth.verify");
   const params = useSearchParams();
   const token = params.get("token");
 
@@ -27,7 +29,7 @@ function ContenuVerificationEmail() {
       : {
           etat: "erreur",
           message:
-            "Lien de vérification invalide : aucun jeton n'est présent dans l'adresse.",
+            t("errNoToken"),
         },
   );
 
@@ -54,22 +56,22 @@ function ContenuVerificationEmail() {
           message:
             err instanceof ApiError
               ? err.message
-              : "Une erreur est survenue lors de la vérification de votre adresse email.",
+              : t("errGeneric"),
         }),
       );
-  }, [token]);
+  }, [token, t]);
 
   return (
     <NoticeCard>
       {etat.etat === "en_cours" && (
-        <p className="text-sm text-ink-soft">Vérification en cours…</p>
+        <p className="text-sm text-ink-soft">{t("inProgress")}</p>
       )}
 
       {etat.etat === "succes" && (
         <div className="flex flex-col gap-5">
           <p className="text-sm text-ink-soft">{etat.message}</p>
           <Link href="/connexion">
-            <Button>Se connecter</Button>
+            <Button>{t("login")}</Button>
           </Link>
         </div>
       )}
@@ -82,16 +84,13 @@ function ContenuVerificationEmail() {
           */}
           <p className="text-sm text-brique">{etat.message}</p>
           <p className="text-xs text-ink-soft">
-            Les liens de vérification expirent après 24 heures et ne peuvent
-            être utilisés qu&apos;une seule fois. Si votre adresse n&apos;est
-            toujours pas vérifiée, tentez de vous connecter : vous pourrez y
-            demander un nouvel email.
+            {t("errorHelp")}
           </p>
           <Link
             href="/connexion"
             className="text-sm text-ocre-dark hover:underline"
           >
-            Retour à la connexion
+            {t("backToLogin")}
           </Link>
         </div>
       )}
@@ -100,13 +99,14 @@ function ContenuVerificationEmail() {
 }
 
 export default function VerificationEmailPage() {
+  const t = useTranslations("auth.verify");
   return (
     <div className="mx-auto max-w-md px-5 pb-12">
       <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
-        Vérification de compte
+        {t("eyebrow")}
       </p>
       <h1 className="mb-7 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-        Vérification de l&apos;email
+        {t("title")}
       </h1>
 
       <Suspense fallback={<p className="text-sm text-ink-soft">Chargement…</p>}>
@@ -115,7 +115,7 @@ export default function VerificationEmailPage() {
 
       <p className="mt-6 text-center text-sm text-ink-soft">
         <Link href="/" className="font-medium text-ocre-dark hover:underline">
-          Retour à l&apos;accueil
+          {t("backHome")}
         </Link>
       </p>
     </div>

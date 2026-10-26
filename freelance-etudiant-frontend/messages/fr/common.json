@@ -1,0 +1,59 @@
+{
+  "language": {
+    "label": "Langue",
+    "choose": "Choisir la langue",
+    "current": "Langue actuelle : {langue}",
+    "changeError": "Impossible de changer la langue. Réessayez."
+  },
+  "actions": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "back": "Retour",
+    "search": "Rechercher",
+    "edit": "Modifier",
+    "send": "Envoyer",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "retry": "Réessayer",
+    "seeMore": "Voir plus",
+    "seeAll": "Tout voir",
+    "yes": "Oui",
+    "no": "Non",
+    "add": "Ajouter",
+    "remove": "Retirer",
+    "download": "Télécharger",
+    "copy": "Copier",
+    "apply": "Appliquer",
+    "reset": "Réinitialiser"
+  },
+  "states": {
+    "loading": "Chargement…",
+    "saving": "Enregistrement…",
+    "sending": "Envoi…",
+    "empty": "Rien à afficher pour le moment.",
+    "error": "Une erreur est survenue.",
+    "none": "Aucun",
+    "optional": "facultatif",
+    "required": "obligatoire",
+    "errLoadData": "Impossible de charger les données. Réessayez."
+  },
+  "currency": {
+    "ariary": "Ar"
+  },
+  "card": {
+    "mission": "Mission",
+    "service": "Service",
+    "client": "Client",
+    "student": "Étudiant",
+    "before": "avant le {date}",
+    "days": "{count} j",
+    "view": "Voir →"
+  },
+  "back": {
+    "ariaLabel": "Revenir à la page précédente",
+    "label": "Retour"
+  }
+}

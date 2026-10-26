@@ -1,0 +1,8 @@
+{
+  "subMenu": {
+    "ariaLabel": "Filter by highlight or category",
+    "all": "All",
+    "recommended": "Recommended",
+    "best": "Best"
+  }
+}

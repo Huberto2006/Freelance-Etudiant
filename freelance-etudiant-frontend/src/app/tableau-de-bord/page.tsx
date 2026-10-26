@@ -28,13 +28,12 @@ import type {
   Transaction,
   Utilisateur,
 } from "@/lib/types";
-import {
-  formatArgent,
-  formatDateCourte,
-  statutTransactionLabel,
-} from "@/lib/format";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
+import { useOptionLabels } from "@/i18n/use-option-labels";
 import { calculerCompletionProfil, versNombre } from "@/lib/dashboard";
-import type { ActionUrgente, EtatSection } from "@/lib/dashboard";
+import type { ActionUrgente, EtatSection, Traducteur } from "@/lib/dashboard";
 import {
   activiteDepuisNotifications,
   activitePlateformeAdmin,
@@ -142,6 +141,7 @@ async function chargerSection<T>(chemin: string): Promise<EtatSection<T>> {
 
 export default function TableauDeBordVueEnsemble() {
   const { utilisateur, chargement: chargementAuth } = useAuth();
+  const t = useTranslations("dashboardPages.overview");
 
   const role = utilisateur?.role;
 
@@ -239,7 +239,7 @@ export default function TableauDeBordVueEnsemble() {
   if (chargementAuth) {
     return (
       <div className="flex min-h-[300px] items-center justify-center">
-        <p className="text-sm text-ink-soft">Chargement de votre compte…</p>
+        <p className="text-sm text-ink-soft">{t("loadingAccount")}</p>
       </div>
     );
   }
@@ -272,7 +272,7 @@ export default function TableauDeBordVueEnsemble() {
         <VueEtudiant
           utilisateur={utilisateur}
           donnees={donneesEtudiant}
-          onReessayer={() => setTentative((t) => t + 1)}
+          onReessayer={() => setTentative((n) => n + 1)}
         />
       )}
 
@@ -280,7 +280,7 @@ export default function TableauDeBordVueEnsemble() {
         <VueClient
           utilisateur={utilisateur}
           donnees={donneesClient}
-          onReessayer={() => setTentative((t) => t + 1)}
+          onReessayer={() => setTentative((n) => n + 1)}
         />
       )}
 
@@ -288,7 +288,7 @@ export default function TableauDeBordVueEnsemble() {
         <VueAdmin
           utilisateur={utilisateur}
           donnees={donneesAdmin}
-          onReessayer={() => setTentative((t) => t + 1)}
+          onReessayer={() => setTentative((n) => n + 1)}
         />
       )}
     </div>
@@ -297,8 +297,9 @@ export default function TableauDeBordVueEnsemble() {
 
 /** Squelette complet du tableau de bord pendant le premier chargement. */
 function ChargementDashboard() {
+  const t = useTranslations("dashboardPages.overview");
   return (
-    <div role="status" aria-label="Chargement du tableau de bord">
+    <div role="status" aria-label={t("loadingDashboard")}>
       <div className="mb-7 flex items-center gap-4">
         <Skeleton rond className="h-14 w-14" />
 
@@ -334,6 +335,14 @@ function VueEtudiant({
   donnees: DonneesEtudiant;
   onReessayer: () => void;
 }) {
+  const t = useTranslations("dashboardPages.overview");
+  const tl = useTranslations(
+    "dashboardPages.dashboardLib",
+  ) as unknown as Traducteur;
+  const {
+    argent: formatArgent,
+    dateCourte: formatDateCourte,
+  } = useFormats();
   const stats =
     donnees.stats.statut === "succes"
       ? donnees.stats.donnees ?? null
@@ -357,16 +366,22 @@ function VueEtudiant({
 
   const actions =
     candidatures !== null && livraisons !== null && notifications !== null
-      ? construireActionsEtudiant({ candidatures, livraisons, notifications })
+      ? construireActionsEtudiant({
+          candidatures,
+          livraisons,
+          notifications,
+          t: tl,
+          formatDate: formatDateCourte,
+        })
       : [];
 
   const projets =
     candidatures !== null && livraisons !== null
-      ? construireProjetsEtudiant({ candidatures, livraisons })
+      ? construireProjetsEtudiant({ candidatures, livraisons, t: tl })
       : [];
 
   const activite =
-    notifications !== null ? activiteDepuisNotifications(notifications) : [];
+    notifications !== null ? activiteDepuisNotifications(notifications, tl) : [];
 
   const completion = calculerCompletionProfil(utilisateur);
 
@@ -446,7 +461,7 @@ function VueEtudiant({
   async function toutEffacerActivite() {
     if (activiteFiltree.length === 0) return;
 
-    if (!window.confirm("Effacer toute votre activité récente ?")) {
+    if (!window.confirm(t("confirmClear"))) {
       return;
     }
 
@@ -479,20 +494,20 @@ function VueEtudiant({
     <div>
       <DashboardHeader
         utilisateur={utilisateur}
-        sousTitre="Voici un résumé de votre activité."
+        sousTitre={t("subtitleStudent")}
       />
 
       {/* ==================== STATISTIQUES ==================== */}
-      <section aria-label="Vos statistiques">
+      <section aria-label={t("yourStats")}>
         {donnees.stats.statut === "erreur" ? (
           <ErreurSection
-            message="Impossible de charger vos statistiques."
+            message={t("statsLoadError")}
             onReessayer={onReessayer}
           />
         ) : stats === null ? (
           <div
             role="status"
-            aria-label="Chargement des statistiques"
+            aria-label={t("loadingStats")}
             className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
           >
             <SkeletonCarte />
@@ -505,31 +520,35 @@ function VueEtudiant({
             <StatCard
               icon={Send}
               tone="ocre"
-              label="Candidatures"
+              label={t("applications")}
               value={stats.totalCandidatures}
-              sublabel={`Taux d'acceptation : ${stats.tauxAcceptationCandidatures} %`}
+              sublabel={t("acceptanceRate", {
+                taux: stats.tauxAcceptationCandidatures,
+              })}
             />
 
             <StatCard
               icon={BriefcaseBusiness}
               tone="ocre"
-              label="Missions en cours"
+              label={t("ongoingMissions")}
               value={stats.missionsEnCours}
-              sublabel="Collaborations actives"
+              sublabel={t("activeCollaborations")}
             />
 
             <StatCard
               icon={Package}
               tone="ink"
-              label="Livraisons"
+              label={t("deliveries")}
               value={livraisonsEnAttente ?? "—"}
-              sublabel={`${livraisonsCorrection} correction(s) demandée(s)`}
+              sublabel={t("correctionsRequested", {
+                count: livraisonsCorrection,
+              })}
             />
 
             <StatCard
               icon={Wallet}
               tone="ocre"
-              label="Revenus libérés"
+              label={t("releasedIncome")}
               value={
                 totalRevenusLiberes !== null
                   ? formatArgent(totalRevenusLiberes)
@@ -537,7 +556,7 @@ function VueEtudiant({
               }
               sublabel={
                 totalEnAttente > 0
-                  ? `${formatArgent(totalEnAttente)} en attente`
+                  ? t("pendingAmount", { montant: formatArgent(totalEnAttente) })
                   : undefined
               }
             />
@@ -548,15 +567,15 @@ function VueEtudiant({
       {/* ============ REVENUS & RÉPUTATION ============ */}
       {stats !== null && (
         <DashboardSection
-          titre="Revenus & réputation"
+          titre={t("incomeReputation")}
           icone={Banknote}
           className="mt-8"
         >
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <BarreMensuelle
-                titre="Évolution de mes revenus"
-                sous_titre="Montants gagnés grâce aux livraisons validées"
+                titre={t("incomeEvolution")}
+                sous_titre={t("incomeEvolutionSub")}
                 donnees={stats.revenusMensuels}
                 cleValeur="revenu"
                 cleLabel="mois"
@@ -577,12 +596,14 @@ function VueEtudiant({
 
               <div className="text-center">
                 <p className="font-display text-lg font-medium">
-                  Votre réputation
+                  {t("yourReputation")}
                 </p>
 
                 <p className="text-sm text-ink-soft">
-                  {versNombre(profil?.noteMoyenne).toFixed(1)} / 5 ·{" "}
-                  {profil?.nombreMissionsTerminees ?? 0} mission(s) terminée(s)
+                  {t("reputationSummary", {
+                    note: versNombre(profil?.noteMoyenne).toFixed(1),
+                    count: profil?.nombreMissionsTerminees ?? 0,
+                  })}
                 </p>
               </div>
             </NoticeCard>
@@ -592,7 +613,7 @@ function VueEtudiant({
 
       {/* ============ À FAIRE MAINTENANT ============ */}
       <DashboardSection
-        titre="À faire maintenant"
+        titre={t("todoNow")}
         icone={Zap}
         className="mt-8"
       >
@@ -601,7 +622,7 @@ function VueEtudiant({
         notifications !== null ? (
           <DashboardActions actions={actions} />
         ) : (
-          <div role="status" aria-label="Chargement des actions">
+          <div role="status" aria-label={t("loadingActions")}>
             <SkeletonListe nombre={2} />
           </div>
         )}
@@ -609,7 +630,7 @@ function VueEtudiant({
 
       {/* ============ MISSIONS RECOMMANDÉES ============ */}
       <DashboardSection
-        titre="Missions recommandées pour vous"
+        titre={t("recommendedMissions")}
         icone={TrendingUp}
         className="mt-8"
       >
@@ -618,23 +639,23 @@ function VueEtudiant({
 
       {/* ============ PROJETS EN COURS ============ */}
       <DashboardSection
-        titre="Mes projets en cours"
+        titre={t("myOngoingProjects")}
         icone={BriefcaseBusiness}
         className="mt-8"
         action={
           <Link
             href="/tableau-de-bord/livraisons"
             className="text-sm font-medium text-ocre-dark hover:underline"
-            aria-label="Toutes mes livraisons"
+            aria-label={t("allMyDeliveries")}
           >
-            Toutes mes livraisons
+            {t("allMyDeliveries")}
           </Link>
         }
       >
         {candidatures !== null && livraisons !== null ? (
-          <ProjetsEnCours projets={projets} libelleInterlocuteur="Client" />
+          <ProjetsEnCours projets={projets} libelleInterlocuteur={t("clientLabel")} />
         ) : (
-          <div role="status" aria-label="Chargement des projets">
+          <div role="status" aria-label={t("loadingProjects")}>
             <SkeletonListe nombre={2} />
           </div>
         )}
@@ -644,7 +665,7 @@ function VueEtudiant({
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <DashboardSection
-            titre="Activité récente"
+            titre={t("recentActivity")}
             icone={Clock}
             className="h-full"
           >
@@ -658,11 +679,11 @@ function VueEtudiant({
               />
             ) : donnees.notifications.statut === "erreur" ? (
               <ErreurSection
-                message="Impossible de charger votre activité récente."
+                message={t("activityLoadError")}
                 onReessayer={onReessayer}
               />
             ) : (
-              <div role="status" aria-label="Chargement de l'activité">
+              <div role="status" aria-label={t("loadingActivity")}>
                 <SkeletonListe nombre={3} />
               </div>
             )}
@@ -670,7 +691,7 @@ function VueEtudiant({
         </div>
 
         <div>
-          <DashboardSection titre="Votre profil" icone={User} className="h-full">
+          <DashboardSection titre={t("yourProfile")} icone={User} className="h-full">
             <ProfilCompletion completion={completion} />
           </DashboardSection>
         </div>
@@ -692,6 +713,15 @@ function VueClient({
   donnees: DonneesClient;
   onReessayer: () => void;
 }) {
+  const t = useTranslations("dashboardPages.overview");
+  const tl = useTranslations(
+    "dashboardPages.dashboardLib",
+  ) as unknown as Traducteur;
+  const {
+    argent: formatArgent,
+    dateCourte: formatDateCourte,
+  } = useFormats();
+  const { statutTransaction: libelleStatutTransaction } = useLabels();
   const missions =
     donnees.missions.statut === "succes" ? donnees.missions.donnees ?? [] : null;
   const candidatures =
@@ -736,20 +766,20 @@ function VueClient({
         .reduce((somme, paiement) => somme + versNombre(paiement.montant), 0)
     : 0;
 
-  const actionsRapides = construireActionsRapidesClient();
+  const actionsRapides = construireActionsRapidesClient(tl);
 
   const actionsUrgentes =
     candidatures !== null && livraisons !== null && paiements !== null
-      ? construireActionsClient({ candidatures, livraisons, paiements })
+      ? construireActionsClient({ candidatures, livraisons, paiements, t: tl })
       : [];
 
   const projets =
     missions !== null && candidatures !== null && livraisons !== null
-      ? construireProjetsClient({ missions, candidatures, livraisons })
+      ? construireProjetsClient({ missions, candidatures, livraisons, t: tl })
       : [];
 
   const activite =
-    notifications !== null ? activiteDepuisNotifications(notifications) : [];
+    notifications !== null ? activiteDepuisNotifications(notifications, tl) : [];
 
   const derniersPaiements = paiements ? paiements.slice(0, 3) : null;
 
@@ -793,7 +823,7 @@ function VueClient({
   async function toutEffacerActivite() {
     if (activiteFiltree.length === 0) return;
 
-    if (!window.confirm("Effacer toute votre activité récente ?")) {
+    if (!window.confirm(t("confirmClear"))) {
       return;
     }
 
@@ -824,22 +854,22 @@ function VueClient({
     <div>
       <DashboardHeader
         utilisateur={utilisateur}
-        sousTitre="Voici l'état de vos projets."
+        sousTitre={t("subtitleClient")}
       />
 
       {/* ==================== STATISTIQUES ==================== */}
-      <section aria-label="État de vos projets">
+      <section aria-label={t("projectsState")}>
         {missions === null || candidatures === null ? (
           donnees.missions.statut === "erreur" &&
           donnees.candidatures.statut === "erreur" ? (
             <ErreurSection
-              message="Impossible de charger l'état de vos projets."
+              message={t("projectsLoadError")}
               onReessayer={onReessayer}
             />
           ) : (
             <div
               role="status"
-              aria-label="Chargement des statistiques"
+              aria-label={t("loadingStats")}
               className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
             >
               <SkeletonCarte />
@@ -853,31 +883,36 @@ function VueClient({
             <StatCard
               icon={BriefcaseBusiness}
               tone="ocre"
-              label="Missions publiées"
+              label={t("publishedMissions")}
               value={missions.length}
-              sublabel={`${missionsEnCours.length} en cours · ${missionsTerminees.length} terminée(s)`}
+              sublabel={t("missionsBreakdown", {
+                enCours: missionsEnCours.length,
+                terminees: missionsTerminees.length,
+              })}
             />
 
             <StatCard
               icon={ClipboardList}
               tone="ocre"
-              label="Candidatures reçues"
+              label={t("applicationsReceived")}
               value={candidatures.length}
-              sublabel={`${candidaturesEnAttente.length} en attente d'examen`}
+              sublabel={t("awaitingReview", {
+                count: candidaturesEnAttente.length,
+              })}
             />
 
             <StatCard
               icon={Package}
               tone="ink"
-              label="Livraisons à valider"
+              label={t("deliveriesToValidate")}
               value={livraisons === null ? "—" : livraisonsAValider.length}
-              sublabel="Déposées par les étudiants"
+              sublabel={t("submittedByStudents")}
             />
 
             <StatCard
               icon={Wallet}
               tone="ocre"
-              label="Dépenses engagées"
+              label={t("committedSpending")}
               value={
                 depensesEngagees !== null
                   ? formatArgent(depensesEngagees)
@@ -885,7 +920,9 @@ function VueClient({
               }
               sublabel={
                 depensesEnAttente > 0
-                  ? `${formatArgent(depensesEnAttente)} en attente de vérification`
+                  ? t("pendingVerification", {
+                      montant: formatArgent(depensesEnAttente),
+                    })
                   : undefined
               }
             />
@@ -894,20 +931,20 @@ function VueClient({
       </section>
 
       {/* ============ ACTIONS RAPIDES ============ */}
-      <DashboardSection titre="Actions rapides" icone={Zap} className="mt-8">
+      <DashboardSection titre={t("quickActions")} icone={Zap} className="mt-8">
         <DashboardActions actions={actionsRapides} variante="rapide" />
       </DashboardSection>
 
       {/* ============ À FAIRE MAINTENANT ============ */}
       <DashboardSection
-        titre="À faire maintenant"
+        titre={t("todoNow")}
         icone={Clock}
         className="mt-8"
       >
         {candidatures !== null && livraisons !== null && paiements !== null ? (
           <DashboardActions actions={actionsUrgentes} />
         ) : (
-          <div role="status" aria-label="Chargement des actions">
+          <div role="status" aria-label={t("loadingActions")}>
             <SkeletonListe nombre={2} />
           </div>
         )}
@@ -915,16 +952,16 @@ function VueClient({
 
       {/* ============ CANDIDATURES À EXAMINER ============ */}
       <DashboardSection
-        titre="Candidatures à examiner"
+        titre={t("applicationsToReview")}
         icone={ClipboardList}
         className="mt-8"
         action={
           <Link
             href="/tableau-de-bord/mes-missions"
             className="text-sm font-medium text-ocre-dark hover:underline"
-            aria-label="Toutes les candidatures"
+            aria-label={t("allApplications")}
           >
-            Tout voir
+            {t("seeAll")}
           </Link>
         }
       >
@@ -936,21 +973,21 @@ function VueClient({
 
       {/* ============ MISSIONS EN COURS ============ */}
       <DashboardSection
-        titre="Missions en cours"
+        titre={t("ongoingMissionsTitle")}
         icone={BriefcaseBusiness}
         className="mt-8"
       >
         {missions !== null && candidatures !== null && livraisons !== null ? (
           <ProjetsEnCours
             projets={projets}
-            libelleInterlocuteur="Étudiant"
-            videTitre="Aucune mission en cours."
-            videDescription="Publiez une mission ou acceptez une candidature pour démarrer un projet."
+            libelleInterlocuteur={t("studentLabel")}
+            videTitre={t("noOngoingMission")}
+            videDescription={t("noOngoingMissionHint")}
             videHref="/tableau-de-bord/mes-missions"
-            videLibelle="Publier une mission"
+            videLibelle={t("publishMission")}
           />
         ) : (
-          <div role="status" aria-label="Chargement des missions">
+          <div role="status" aria-label={t("loadingMissions")}>
             <SkeletonListe nombre={2} />
           </div>
         )}
@@ -958,45 +995,44 @@ function VueClient({
 
       {/* ============ DERNIERS PAIEMENTS ============ */}
       <DashboardSection
-        titre="Derniers paiements"
+        titre={t("latestPayments")}
         icone={Wallet}
         className="mt-8"
         action={
           <Link
             href="/tableau-de-bord/paiements"
             className="text-sm font-medium text-ocre-dark hover:underline"
-            aria-label="Tous les paiements"
+            aria-label={t("allPayments")}
           >
-            Tout voir
+            {t("seeAll")}
           </Link>
         }
       >
         {derniersPaiements === null ? (
           donnees.paiements.statut === "erreur" ? (
             <ErreurSection
-              message="Impossible de charger vos paiements."
+              message={t("paymentsLoadError")}
               onReessayer={onReessayer}
             />
           ) : (
-            <div role="status" aria-label="Chargement des paiements">
+            <div role="status" aria-label={t("loadingPayments")}>
               <SkeletonListe nombre={2} />
             </div>
           )
         ) : derniersPaiements.length === 0 ? (
           <NoticeCard className="flex flex-col items-start gap-3">
             <p className="font-display font-medium">
-              Aucun paiement pour le moment.
+              {t("noPayment")}
             </p>
             <p className="text-sm text-ink-soft">
-              Déclarez un paiement après validation d&apos;une livraison pour
-              sécuriser la transaction.
+              {t("noPaymentHint")}
             </p>
 
             <Link
               href="/tableau-de-bord/paiements"
-              aria-label="Déclarer un paiement"
+              aria-label={t("declarePayment")}
             >
-              <Button size="sm">Déclarer un paiement</Button>
+              <Button size="sm">{t("declarePayment")}</Button>
             </Link>
           </NoticeCard>
         ) : (
@@ -1005,7 +1041,7 @@ function VueClient({
               <NoticeCard key={paiement.id} className="flex flex-col gap-2">
                 <div className="flex items-start justify-between gap-2">
                   <p className="min-w-0 font-display font-medium">
-                    {paiement.candidature?.mission?.titre ?? "Mission"}
+                    {paiement.candidature?.mission?.titre ?? t("missionFallback")}
                   </p>
 
                   <Tag
@@ -1013,7 +1049,7 @@ function VueClient({
                       paiement.statut === "annulee" ? "brique" : "rice"
                     }
                   >
-                    {statutTransactionLabel[paiement.statut]}
+                    {libelleStatutTransaction(paiement.statut)}
                   </Tag>
                 </div>
 
@@ -1022,7 +1058,7 @@ function VueClient({
                 </p>
 
                 <p className="text-xs text-ink-soft/60">
-                  {paiement.etudiant?.nom ?? "Étudiant"} ·{" "}
+                  {paiement.etudiant?.nom ?? t("studentLabel")} ·{" "}
                   {formatDateCourte(paiement.dateCreation)}
                 </p>
               </NoticeCard>
@@ -1033,15 +1069,15 @@ function VueClient({
 
       {/* ============ ACTIVITÉ RÉCENTE ============ */}
       <DashboardSection
-        titre="Activité récente"
+        titre={t("recentActivity")}
         icone={Clock}
         className="mt-8"
       >
         {notifications !== null ? (
           <ActiviteRecente
             evenements={activiteFiltree}
-            videTitre="Aucune activité pour le moment."
-            videDescription="Candidatures reçues, livraisons déposées et messages apparaîtront ici."
+            videTitre={t("noActivity")}
+            videDescription={t("noActivityClientHint")}
             onSupprimer={supprimerActivite}
             suppressionEnCoursId={suppressionEnCoursId}
             onToutEffacer={toutEffacerActivite}
@@ -1049,11 +1085,11 @@ function VueClient({
           />
         ) : donnees.notifications.statut === "erreur" ? (
           <ErreurSection
-            message="Impossible de charger votre activité récente."
+            message={t("activityLoadError")}
             onReessayer={onReessayer}
           />
         ) : (
-          <div role="status" aria-label="Chargement de l'activité">
+          <div role="status" aria-label={t("loadingActivity")}>
             <SkeletonListe nombre={3} />
           </div>
         )}
@@ -1075,6 +1111,13 @@ function VueAdmin({
   donnees: DonneesAdmin;
   onReessayer: () => void;
 }) {
+  const t = useTranslations("dashboardPages.overview");
+  const tl = useTranslations(
+    "dashboardPages.dashboardLib",
+  ) as unknown as Traducteur;
+  const { argent: formatArgent, nombre: formatNombre } = useFormats();
+  const { statutTransaction: libelleStatutTransaction } = useLabels();
+  const { categorie: libelleCategorie } = useOptionLabels();
   const stats =
     donnees.stats.statut === "succes"
       ? donnees.stats.donnees ?? null
@@ -1114,10 +1157,9 @@ function VueAdmin({
       priorite: 10,
       icone: ShieldAlert,
       ton: "brique",
-      titre: `${signalementsOuverts.length} signalement(s) à traiter`,
-      description:
-        "Des signalements de la communauté attendent une modération.",
-      libelleAction: "Ouvrir les signalements",
+      titre: t("reportsToHandle", { count: signalementsOuverts.length }),
+      description: t("reportsToHandleHint"),
+      libelleAction: t("openReports"),
       href: "/tableau-de-bord/admin/signalements",
     });
   }
@@ -1128,10 +1170,9 @@ function VueAdmin({
       priorite: 20,
       icone: Wallet,
       ton: "ocre",
-      titre: `${paiementsEnAttente.length} paiement(s) à vérifier`,
-      description:
-        "Des paiements déclarés attendent la confirmation des fonds.",
-      libelleAction: "Vérifier les paiements",
+      titre: t("paymentsToVerify", { count: paiementsEnAttente.length }),
+      description: t("paymentsToVerifyHint"),
+      libelleAction: t("verifyPayments"),
       href: "/tableau-de-bord/admin/paiements",
     });
   }
@@ -1142,37 +1183,42 @@ function VueAdmin({
       priorite: 30,
       icone: Users,
       ton: "ink",
-      titre: `${comptesSuspendus.length} compte(s) suspendu(s)`,
-      description:
-        "Des comptes sont actuellement suspendus et nécessitent peut-être un suivi.",
-      libelleAction: "Gérer les comptes",
+      titre: t("suspendedAccounts", { count: comptesSuspendus.length }),
+      description: t("suspendedAccountsHint"),
+      libelleAction: t("manageAccounts"),
       href: "/tableau-de-bord/admin",
     });
   }
 
   const activite =
     signalements !== null && paiements !== null
-      ? activitePlateformeAdmin({ signalements, paiements })
+      ? activitePlateformeAdmin({
+          signalements,
+          paiements,
+          t: tl,
+          libelleStatutTransaction,
+          formatNombre: (valeur) => formatNombre(valeur),
+        })
       : [];
 
   return (
     <div>
       <DashboardHeader
         utilisateur={utilisateur}
-        sousTitre="Vue globale de la plateforme."
+        sousTitre={t("subtitleAdmin")}
       />
 
       {/* ==================== STATISTIQUES GLOBALES ==================== */}
-      <section aria-label="Statistiques globales">
+      <section aria-label={t("globalStats")}>
         {donnees.stats.statut === "erreur" ? (
           <ErreurSection
-            message="Impossible de charger les statistiques globales."
+            message={t("globalStatsLoadError")}
             onReessayer={onReessayer}
           />
         ) : stats === null ? (
           <div
             role="status"
-            aria-label="Chargement des statistiques"
+            aria-label={t("loadingStats")}
             className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
           >
             <SkeletonCarte />
@@ -1185,36 +1231,43 @@ function VueAdmin({
             <StatCard
               icon={Users}
               tone="ocre"
-              label="Utilisateurs inscrits"
+              label={t("registeredUsers")}
               value={stats.nombreInscrits.total}
-              sublabel={`${stats.nombreInscrits.etudiants} étudiants · ${stats.nombreInscrits.clients} clients`}
+              sublabel={t("usersBreakdown", {
+                etudiants: stats.nombreInscrits.etudiants,
+                clients: stats.nombreInscrits.clients,
+              })}
             />
 
             <StatCard
               icon={BriefcaseBusiness}
               tone="ocre"
-              label="Missions publiées"
+              label={t("publishedMissions")}
               value={stats.missions.total}
-              sublabel={`${stats.missions.terminees} livraison(s) validée(s)`}
+              sublabel={t("validatedDeliveries", {
+                count: stats.missions.terminees,
+              })}
             />
 
             <StatCard
               icon={Banknote}
               tone="ocre"
-              label="Volume d'affaires"
+              label={t("businessVolume")}
               value={formatArgent(stats.volumeAffairesGlobal)}
-              sublabel="Livraisons validées"
+              sublabel={t("validatedDeliveriesLabel")}
             />
 
             <StatCard
               icon={Wallet}
               tone="ink"
-              label="Paiements traités"
+              label={t("processedPayments")}
               value={paiements === null ? "—" : paiementsTraites.length}
               sublabel={
                 paiements === null
                   ? undefined
-                  : `${paiementsEnAttente.length} en attente de vérification`
+                  : t("paymentsAwaiting", {
+                      count: paiementsEnAttente.length,
+                    })
               }
             />
           </div>
@@ -1223,7 +1276,7 @@ function VueAdmin({
 
       {/* ============ À SURVEILLER ============ */}
       <DashboardSection
-        titre="À surveiller"
+        titre={t("toWatch")}
         icone={ShieldAlert}
         className="mt-8"
       >
@@ -1232,11 +1285,11 @@ function VueAdmin({
         utilisateurs !== null ? (
           <DashboardActions
             actions={surveillance}
-            libelleVide="Rien à signaler"
-            descriptionVide="La plateforme fonctionne normalement."
+            libelleVide={t("nothingToReport")}
+            descriptionVide={t("platformNormal")}
           />
         ) : (
-          <div role="status" aria-label="Chargement de la surveillance">
+          <div role="status" aria-label={t("loadingWatch")}>
             <SkeletonListe nombre={2} />
           </div>
         )}
@@ -1244,20 +1297,23 @@ function VueAdmin({
 
       {/* ============ INDICATEURS ============ */}
       <DashboardSection
-        titre="Indicateurs"
+        titre={t("indicators")}
         icone={TrendingUp}
         className="mt-8"
       >
         {stats === null ? (
-          <div role="status" aria-label="Chargement des indicateurs">
+          <div role="status" aria-label={t("loadingIndicators")}>
             <SkeletonListe nombre={1} />
           </div>
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
             <AnneauRepartition
-              titre="Répartition des missions par catégorie"
-              sous_titre="Part de chaque catégorie dans l'ensemble des missions publiées"
-              donnees={stats.repartitionMissionsParCategorie}
+              titre={t("missionsByCategory")}
+              sous_titre={t("missionsByCategorySub")}
+              donnees={stats.repartitionMissionsParCategorie.map((ligne) => ({
+                ...ligne,
+                categorie: libelleCategorie(ligne.categorie),
+              }))}
               cleValeur="total"
               cleLabel="categorie"
             />
@@ -1271,17 +1327,19 @@ function VueAdmin({
                 }
                 label={
                   <>
-                    Missions livrées
+                    {t("gaugeLine1")}
                     <br />
-                    et validées
+                    {t("gaugeLine2")}
                   </>
                 }
                 couleur="var(--color-ocre-dark)"
               />
 
               <p className="text-center text-sm text-ink-soft">
-                {stats.missions.terminees} livraison(s) validée(s) sur{" "}
-                {stats.missions.total} mission(s) publiée(s).
+                {t("gaugeSummary", {
+                  terminees: stats.missions.terminees,
+                  total: stats.missions.total,
+                })}
               </p>
             </NoticeCard>
           </div>
@@ -1290,18 +1348,18 @@ function VueAdmin({
 
       {/* ============ ACTIVITÉ PLATEFORME ============ */}
       <DashboardSection
-        titre="Activité plateforme"
+        titre={t("platformActivity")}
         icone={Clock}
         className="mt-8"
       >
         {signalements !== null && paiements !== null ? (
           <ActiviteRecente
             evenements={activite}
-            videTitre="Aucune activité récente."
-            videDescription="Signalements et paiements apparaîtront ici."
+            videTitre={t("noRecentActivity")}
+            videDescription={t("noRecentActivityHint")}
           />
         ) : (
-          <div role="status" aria-label="Chargement de l'activité plateforme">
+          <div role="status" aria-label={t("loadingPlatformActivity")}>
             <SkeletonListe nombre={3} />
           </div>
         )}

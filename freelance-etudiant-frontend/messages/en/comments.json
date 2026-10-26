@@ -1,0 +1,44 @@
+{
+  "section": {
+    "title": "{count, plural, =0 {Comments} other {Comments (#)}}",
+    "placeholder": "Add a comment… (type @ to tag a student)",
+    "publish": "Post",
+    "sending": "Sending…",
+    "loading": "Loading…",
+    "emptyLoggedIn": "No comments yet.",
+    "emptyAnonymous": "No comments yet. Log in to leave one.",
+    "defaultUser": "User",
+    "editedDate": "{date} · edited",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "errors": {
+      "load": "Error while loading comments",
+      "send": "Error while sending",
+      "edit": "Error while editing",
+      "delete": "Error while deleting"
+    }
+  },
+  "mentions": {
+    "suggestionsLabel": "Suggested users to tag"
+  },
+  "reactions": {
+    "like": "Like",
+    "dislike": "Dislike",
+    "loginRequired": "Log in to react"
+  },
+  "report": {
+    "button": "Report",
+    "title": "Report",
+    "close": "Close",
+    "success": "Thank you, your report has been sent to our moderation team.",
+    "reasonLabel": "Reason",
+    "reasonPlaceholder": "Inappropriate content…",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Describe the situation in detail…",
+    "submit": "Submit report",
+    "sending": "Sending…",
+    "error": "Error while sending"
+  }
+}

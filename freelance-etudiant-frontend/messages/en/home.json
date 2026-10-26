@@ -1,0 +1,177 @@
+{
+  "hero": {
+    "eyebrow": "Kianja · Marketplace for freelance students",
+    "titleStart": "Clients' needs.",
+    "titleAccent": "Students' skills.",
+    "intro": "Find a qualified profile, post a need or offer your skills, in a clear and secure setting.",
+    "searchTypeLabel": "Search type",
+    "targetServices": "Services",
+    "targetMissions": "Missions",
+    "placeholderServices": "Design, website, writing, translation…",
+    "placeholderMissions": "Website redesign, mobile app…",
+    "ariaSearchServices": "Search for a student service",
+    "ariaSearchMissions": "Search for a client mission",
+    "searchSubmit": "Start the search",
+    "popular": "Popular:",
+    "goDashboard": "Go to my dashboard",
+    "publishMission": "Post a mission",
+    "findMission": "Find a mission",
+    "join": "Join Kianja",
+    "explorePublications": "Explore publications →",
+    "statServices": "Services offered",
+    "statMissions": "Open missions"
+  },
+  "audiences": {
+    "eyebrow": "A two-sided marketplace",
+    "title": "Two connected journeys to succeed together",
+    "subtitle": "Whether you have a one-off need or skills to offer, Kianja gives everyone a transparent and secure framework.",
+    "client": {
+      "label": "Client side",
+      "title": "Students ready to help you",
+      "intro": "Companies, startups, associations or individuals: reach future graduates to bring your projects to life with excellent value for money.",
+      "link": "Find a student",
+      "pillars": {
+        "publish": {
+          "title": "Post missions",
+          "description": "Describe your one-off or recurring needs, set your budget and receive targeted applications from qualified students."
+        },
+        "find": {
+          "title": "Find students",
+          "description": "Browse the skills catalogue, filter by field or domain, and select the best student talent."
+        },
+        "follow": {
+          "title": "Follow their projects",
+          "description": "Collaborate through built-in messaging, follow each stage of the work and approve the delivery with full transparency."
+        }
+      }
+    },
+    "student": {
+      "label": "Student side",
+      "title": "Projects to carry out",
+      "intro": "Put your academic knowledge into practice, earn income during your studies and start your career with real, verified experience.",
+      "link": "Find a mission",
+      "pillars": {
+        "offer": {
+          "title": "Offer their services",
+          "description": "Showcase your technical skills, define your turnkey offers, your rates and your delivery times."
+        },
+        "find": {
+          "title": "Find missions",
+          "description": "Browse the real needs posted by companies and individuals, apply in one click with your cover letter."
+        },
+        "grow": {
+          "title": "Grow their activity",
+          "description": "Build a certified portfolio, earn reputation points through client reviews and fund your studies independently."
+        }
+      }
+    }
+  },
+  "missions": {
+    "eyebrow": "Client needs · Opportunities",
+    "title": "Projects and missions to fill",
+    "subtitle": "Discover the real needs posted by clients and companies. Apply to put your skills into practice.",
+    "seeAll": "See all missions",
+    "empty": "No open missions at the moment. Have a project to bring to life? Post the first mission to receive applications from students."
+  },
+  "services": {
+    "eyebrow": "Student skills · Offerings",
+    "title": "Ready-to-use services",
+    "subtitle": "Explore the direct services offered by student talents: development, graphic design, writing and more.",
+    "seeAll": "See all services",
+    "empty": "No service has been published yet. Students: publish your first service to be visible to clients."
+  },
+  "categories": {
+    "eyebrow": "Skill areas · Fields of study",
+    "title": "Explore by category",
+    "subtitle": "Each area brings together the skills of freelance students and the needs entrusted by clients.",
+    "browse": "Browse the catalogue",
+    "serviceCount": "{count, plural, one {# service} other {# services}}",
+    "discover": "Discover"
+  },
+  "process": {
+    "eyebrow": "Simplified process",
+    "title": "How the Kianja marketplace works",
+    "subtitle": "From the first contact to the final approval, every step is designed to ensure the project's success.",
+    "clientTrack": "Client journey",
+    "clientTrackTitle": "From your need to the final delivery",
+    "studentTrack": "Student journey",
+    "studentTrackTitle": "From your skills to your first income",
+    "client": {
+      "s1": {
+        "title": "Post your need",
+        "detail": "Submit a mission with a budget and deadline, or browse student services."
+      },
+      "s2": {
+        "title": "Receive applications",
+        "detail": "Compare students' profiles, portfolios and proposals."
+      },
+      "s3": {
+        "title": "Choose your student",
+        "detail": "Select the candidate who best matches your technical requirements."
+      },
+      "s4": {
+        "title": "Chat through messaging",
+        "detail": "Communicate directly through the internal messaging to frame the work."
+      },
+      "s5": {
+        "title": "Follow the progress",
+        "detail": "Keep full visibility on progress until the final delivery."
+      },
+      "s6": {
+        "title": "Approve and review",
+        "detail": "Receive the deliverables, release the payment and rate the freelancer."
+      }
+    },
+    "student": {
+      "s1": {
+        "title": "Create your profile",
+        "detail": "Enter your field of study, your specialty and your key skills."
+      },
+      "s2": {
+        "title": "Present your services",
+        "detail": "Display ready-to-buy offerings or browse open missions."
+      },
+      "s3": {
+        "title": "Apply to missions",
+        "detail": "Send your reasoned application with your rate and your deadline."
+      },
+      "s4": {
+        "title": "Talk with the client",
+        "detail": "Clarify the specifications and agree on the expected deliverables."
+      },
+      "s5": {
+        "title": "Do the work and deliver",
+        "detail": "Produce quality work and upload your deliverables to the platform."
+      },
+      "s6": {
+        "title": "Build your reputation",
+        "detail": "Get a verified client review that boosts your reputation and your portfolio."
+      }
+    }
+  },
+  "benefits": {
+    "eyebrow": "Guarantees & Values",
+    "title": "Why choose the Kianja marketplace?",
+    "subtitle": "Students seeking experience, clients seeking expertise: a platform designed for mutual success.",
+    "talents": {
+      "title": "Qualified student talents",
+      "text": "Students trained to current standards, with validated skills and rated by their clients after each delivery."
+    },
+    "springboard": {
+      "title": "A real professional springboard",
+      "text": "Every completed mission concretely enriches the portfolio, grows the network and strengthens the certified reputation score."
+    },
+    "secure": {
+      "title": "A secure exchange framework",
+      "text": "A dedicated internal messaging opens as soon as the application is accepted to frame exchanges, files and deliverables."
+    },
+    "budgets": {
+      "title": "Fair, adapted budgets",
+      "text": "Competitive, transparent rates for clients, and fair pay to fund freelancers' studies."
+    },
+    "ctaTitle": "Ready to get started on Kianja?",
+    "ctaText": "Entrust a need to qualified students or showcase your skills to real clients.",
+    "ctaButton": "Create a free account",
+    "explorePublications": "Explore publications →"
+  }
+}

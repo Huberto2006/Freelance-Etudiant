@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { CheckCircle2 } from "lucide-react";
 import { clsx } from "clsx";
 
@@ -40,14 +41,15 @@ function Medaillon({ action }: { action: ActionUrgente }) {
 export function DashboardActions({
   actions,
   variante = "priorite",
-  libelleVide = "Rien d'urgent",
-  descriptionVide = "Votre activité est à jour.",
+  libelleVide,
+  descriptionVide,
 }: {
   actions: ActionUrgente[];
   variante?: "priorite" | "rapide";
   libelleVide?: string;
   descriptionVide?: string;
 }) {
+  const t = useTranslations("dashboardPages.dashboardActions");
   if (actions.length === 0) {
     if (variante === "rapide") return null;
 
@@ -61,8 +63,12 @@ export function DashboardActions({
         </span>
 
         <div>
-          <p className="font-display font-medium">{libelleVide}</p>
-          <p className="text-sm text-ink-soft">{descriptionVide}</p>
+          <p className="font-display font-medium">
+            {libelleVide ?? t("nothingUrgent")}
+          </p>
+          <p className="text-sm text-ink-soft">
+            {descriptionVide ?? t("upToDate")}
+          </p>
         </div>
       </NoticeCard>
     );

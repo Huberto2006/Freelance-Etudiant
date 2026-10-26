@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MessageCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useSocket } from "@/lib/socket-context";
 import { useAuth } from "@/lib/auth-context";
@@ -18,6 +19,7 @@ import { useAuth } from "@/lib/auth-context";
  * Totalement indépendant du système de notifications 🔔 (table notifications).
  */
 export function MessagesLink() {
+  const t = useTranslations("extras.shared");
   const [total, setTotal] = useState(0);
   const { socket } = useSocket();
   const { utilisateur } = useAuth();
@@ -65,8 +67,8 @@ export function MessagesLink() {
   return (
     <Link
       href="/tableau-de-bord/messages"
-      aria-label={`Messages${total > 0 ? ` (${total} non lus)` : ""}`}
-      title="Messages"
+      aria-label={total > 0 ? t("messagesUnread", { count: total }) : t("messages")}
+      title={t("messages")}
       className={`
         relative
         flex

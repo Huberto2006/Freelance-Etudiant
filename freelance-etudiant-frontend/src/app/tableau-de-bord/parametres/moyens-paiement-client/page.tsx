@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Check,
   MoreVertical,
@@ -59,6 +60,7 @@ type ActionMoyen = "modifier" | "principal" | "actif" | "supprimer" | null;
 // ============================================================
 
 export default function MoyensPaiementClientPage() {
+  const t = useTranslations("settings.clientMethods");
   const { utilisateur } = useAuth();
   const estClient = utilisateur?.role === "client";
 
@@ -83,10 +85,10 @@ export default function MoyensPaiementClientPage() {
   if (!estClient) {
     return (
       <div className="space-y-6">
-        <PageHeader icon={Wallet} eyebrow="Paiements" title="Moyens de paiement" />
+        <PageHeader icon={Wallet} eyebrow={t("eyebrow")} title={t("titleGeneric")} />
         <NoticeCard>
           <p className="text-sm text-ink-soft">
-            Cette page est réservée aux clients.
+            {t("clientsOnly")}
           </p>
         </NoticeCard>
       </div>
@@ -97,20 +99,17 @@ export default function MoyensPaiementClientPage() {
     <div className="space-y-7">
       <PageHeader
         icon={Wallet}
-        eyebrow="Paiements"
-        title="Mes moyens de paiement"
+        eyebrow={t("eyebrow")}
+        title={t("title")}
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm leading-6 text-ink-soft">
-            Enregistrez vos numéros Mobile Money pour payer vos missions et
-            services sans les retaper à chaque fois.
+            {t("intro")}
           </p>
           <p className="mt-1 text-xs text-ink-soft/70">
-            Un paiement reste toujours soumis à la saisie de votre code
-            secret MVola au moment de la transaction — enregistrer un
-            numéro ne permet à personne d&rsquo;y accéder sans votre accord.
+            {t("security")}
           </p>
         </div>
 
@@ -123,14 +122,14 @@ export default function MoyensPaiementClientPage() {
           }}
         >
           <Plus size={16} />
-          Ajouter un moyen
+          {t("addMethod")}
         </Button>
       </div>
 
       {ajoutOuvert && (
         <FormulaireMoyen
-          titre="Ajouter un moyen de paiement"
-          description="Ce numéro pourra être sélectionné lors d'un prochain paiement."
+          titre={t("addTitle")}
+          description={t("addDescription")}
           moyenInitial={null}
           onFermer={() => setAjoutOuvert(false)}
           onTermine={async () => {
@@ -161,12 +160,11 @@ export default function MoyensPaiementClientPage() {
               }}
             >
               <Plus size={16} />
-              Ajouter mon premier moyen
+              {t("addFirst")}
             </Button>
           }
         >
-          Aucun moyen de paiement enregistré. Ajoutez un numéro Mobile
-          Money pour payer plus rapidement.
+          {t("empty")}
         </EtatVide>
       ) : (
         <div className="space-y-4">
@@ -186,7 +184,7 @@ export default function MoyensPaiementClientPage() {
 
       {moyenSelectionne && action === "modifier" && (
         <FormulaireMoyen
-          titre="Modifier ce moyen de paiement"
+          titre={t("editTitle")}
           description=""
           moyenInitial={moyenSelectionne}
           onFermer={fermerActions}
@@ -199,13 +197,13 @@ export default function MoyensPaiementClientPage() {
 
       <ConfirmDialog
         ouvert={moyenSelectionne !== null && action === "principal"}
-        titre="Définir comme moyen principal ?"
+        titre={t("primaryTitle")}
         description={
           moyenSelectionne
-            ? `Le numéro ${moyenSelectionne.numero} sera présélectionné à chaque nouveau paiement.`
+            ? t("primaryDescription", { numero: moyenSelectionne.numero })
             : undefined
         }
-        libelleConfirmer="Définir comme principal"
+        libelleConfirmer={t("setPrimary")}
         destructif={false}
         onConfirmer={async () => {
           if (!moyenSelectionne) return;
@@ -221,7 +219,7 @@ export default function MoyensPaiementClientPage() {
             setErreur(
               err instanceof ApiError
                 ? err.message
-                : "Impossible de définir ce moyen comme principal.",
+                : t("errPrimary"),
             );
             fermerActions();
           } finally {
@@ -235,15 +233,15 @@ export default function MoyensPaiementClientPage() {
         ouvert={moyenSelectionne !== null && action === "actif"}
         titre={
           moyenSelectionne?.actif
-            ? "Désactiver ce moyen de paiement ?"
-            : "Réactiver ce moyen de paiement ?"
+            ? t("deactivateTitle")
+            : t("reactivateTitle")
         }
         description={
           moyenSelectionne?.actif
-            ? "Il ne sera plus proposé pour un nouveau paiement."
-            : "Il redeviendra disponible pour vos prochains paiements."
+            ? t("deactivateDescription")
+            : t("reactivateDescription")
         }
-        libelleConfirmer={moyenSelectionne?.actif ? "Désactiver" : "Réactiver"}
+        libelleConfirmer={moyenSelectionne?.actif ? t("deactivate") : t("reactivate")}
         destructif={!!moyenSelectionne?.actif}
         onConfirmer={async () => {
           if (!moyenSelectionne) return;
@@ -258,7 +256,7 @@ export default function MoyensPaiementClientPage() {
             setErreur(
               err instanceof ApiError
                 ? err.message
-                : "Impossible de modifier l'état de ce moyen.",
+                : t("errToggle"),
             );
             fermerActions();
           } finally {
@@ -270,9 +268,9 @@ export default function MoyensPaiementClientPage() {
 
       <ConfirmDialog
         ouvert={moyenSelectionne !== null && action === "supprimer"}
-        titre="Supprimer ce moyen de paiement ?"
-        description="Cette action est définitive. S'il a déjà servi à un paiement, utilisez plutôt la désactivation."
-        libelleConfirmer="Supprimer"
+        titre={t("deleteTitle")}
+        description={t("deleteDescription")}
+        libelleConfirmer={t("delete")}
         onConfirmer={async () => {
           if (!moyenSelectionne) return;
           setEnvoiAction(true);
@@ -284,7 +282,7 @@ export default function MoyensPaiementClientPage() {
             setErreur(
               err instanceof ApiError
                 ? err.message
-                : "Impossible de supprimer ce moyen de paiement.",
+                : t("errDelete"),
             );
             fermerActions();
           } finally {
@@ -308,6 +306,7 @@ function CarteMoyen({
   moyen: MoyenPaiementClient;
   onAction: (action: Exclude<ActionMoyen, null>) => void;
 }) {
+  const t = useTranslations("settings.clientMethods");
   const [menuOuvert, setMenuOuvert] = useState(false);
 
   return (
@@ -328,11 +327,11 @@ function CarteMoyen({
                   <Tag tone="ocre">
                     <span className="inline-flex items-center gap-1">
                       <Star size={12} />
-                      Principal
+                      {t("primary")}
                     </span>
                   </Tag>
                 )}
-                {!moyen.actif && <Tag tone="ink">Désactivé</Tag>}
+                {!moyen.actif && <Tag tone="ink">{t("deactivated")}</Tag>}
               </div>
               <p className="mt-1 font-mono text-sm text-ink-soft">
                 {moyen.numero}
@@ -345,7 +344,7 @@ function CarteMoyen({
                 type="button"
                 onClick={() => setMenuOuvert((v) => !v)}
                 className="flex h-8 w-8 items-center justify-center rounded-full text-ink-soft transition hover:bg-ink/5"
-                aria-label="Actions"
+                aria-label={t("actions")}
               >
                 <MoreVertical size={16} />
               </button>
@@ -366,7 +365,7 @@ function CarteMoyen({
                       className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink transition hover:bg-ink/5"
                     >
                       <Pencil size={15} />
-                      Modifier
+                      {t("edit")}
                     </button>
                     {!moyen.principal && moyen.actif && (
                       <button
@@ -378,7 +377,7 @@ function CarteMoyen({
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink transition hover:bg-ink/5"
                       >
                         <Star size={15} />
-                        Définir comme principal
+                        {t("setPrimary")}
                       </button>
                     )}
                     <button
@@ -390,7 +389,7 @@ function CarteMoyen({
                       className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink transition hover:bg-ink/5"
                     >
                       {moyen.actif ? <X size={15} /> : <Check size={15} />}
-                      {moyen.actif ? "Désactiver" : "Réactiver"}
+                      {moyen.actif ? t("deactivate") : t("reactivate")}
                     </button>
                     <button
                       type="button"
@@ -401,7 +400,7 @@ function CarteMoyen({
                       className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-brique transition hover:bg-brique/5"
                     >
                       <Trash2 size={15} />
-                      Supprimer
+                      {t("delete")}
                     </button>
                   </div>
                 </>
@@ -431,6 +430,7 @@ function FormulaireMoyen({
   onFermer: () => void;
   onTermine: () => Promise<void>;
 }) {
+  const t = useTranslations("settings.clientMethods");
   const [type, setType] = useState<TypeMoyenPaiementClient>(
     moyenInitial?.type ?? "MVOLA",
   );
@@ -452,11 +452,11 @@ function FormulaireMoyen({
     const titulaireNettoye = nomTitulaire.trim();
 
     if (!numeroNettoye) {
-      setErreur("Le numéro est obligatoire.");
+      setErreur(t("errNumberRequired"));
       return;
     }
     if (!titulaireNettoye) {
-      setErreur("Le nom du titulaire est obligatoire.");
+      setErreur(t("errHolderRequired"));
       return;
     }
 
@@ -480,7 +480,7 @@ function FormulaireMoyen({
       setErreur(
         err instanceof ApiError
           ? err.message
-          : "Impossible d'enregistrer ce moyen de paiement.",
+          : t("errSave"),
       );
     } finally {
       setEnvoi(false);
@@ -500,14 +500,14 @@ function FormulaireMoyen({
           type="button"
           onClick={onFermer}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-soft transition hover:bg-ink/5"
-          aria-label="Fermer"
+          aria-label={t("close")}
         >
           <X size={16} />
         </button>
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
-        <Field label="Opérateur" htmlFor="type-moyen">
+        <Field label={t("operator")} htmlFor="type-moyen">
           <Select
             id="type-moyen"
             value={type}
@@ -522,14 +522,12 @@ function FormulaireMoyen({
           </Select>
           {type !== "MVOLA" && (
             <p className="mt-1.5 text-xs text-ink-soft/70">
-              Seul MVola est actuellement utilisable pour un paiement en
-              ligne sur la plateforme. Ce numéro sera enregistré pour plus
-              tard.
+              {t("onlyMvola")}
             </p>
           )}
         </Field>
 
-        <Field label="Numéro" htmlFor="numero-moyen">
+        <Field label={t("number")} htmlFor="numero-moyen">
           <Input
             id="numero-moyen"
             value={numero}
@@ -539,12 +537,12 @@ function FormulaireMoyen({
           />
         </Field>
 
-        <Field label="Nom du titulaire" htmlFor="titulaire-moyen">
+        <Field label={t("holderName")} htmlFor="titulaire-moyen">
           <Input
             id="titulaire-moyen"
             value={nomTitulaire}
             onChange={(e) => setNomTitulaire(e.target.value)}
-            placeholder="Votre nom tel qu'enregistré chez l'opérateur"
+            placeholder={t("holderPlaceholder")}
             disabled={envoi}
           />
         </Field>
@@ -557,17 +555,17 @@ function FormulaireMoyen({
             disabled={envoi}
             className="h-4 w-4 rounded border-ink/30 accent-ocre"
           />
-          Définir comme moyen principal
+          {t("setAsPrimaryMethod")}
         </label>
 
         {erreur && <p className="text-sm text-brique-dark">{erreur}</p>}
 
         <div className="flex justify-end gap-2.5">
           <Button type="button" variant="ghost" onClick={onFermer} disabled={envoi}>
-            Annuler
+            {t("cancel")}
           </Button>
           <Button type="submit" variant="primary" disabled={envoi}>
-            {envoi ? "Enregistrement…" : estModification ? "Enregistrer" : "Ajouter"}
+            {envoi ? t("saving") : estModification ? t("save") : t("add")}
           </Button>
         </div>
       </form>

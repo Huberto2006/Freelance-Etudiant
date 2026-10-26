@@ -1,0 +1,44 @@
+{
+  "section": {
+    "title": "{count, plural, =0 {Commentaires} other {Commentaires (#)}}",
+    "placeholder": "Ajouter un commentaire… (taper @ pour identifier un étudiant)",
+    "publish": "Publier",
+    "sending": "Envoi…",
+    "loading": "Chargement…",
+    "emptyLoggedIn": "Aucun commentaire pour le moment.",
+    "emptyAnonymous": "Aucun commentaire pour le moment. Connectez-vous pour en laisser un.",
+    "defaultUser": "Utilisateur",
+    "editedDate": "{date} · modifié",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "errors": {
+      "load": "Erreur lors du chargement des commentaires",
+      "send": "Erreur lors de l'envoi",
+      "edit": "Erreur lors de la modification",
+      "delete": "Erreur lors de la suppression"
+    }
+  },
+  "mentions": {
+    "suggestionsLabel": "Suggestions d'utilisateurs à identifier"
+  },
+  "reactions": {
+    "like": "J'aime",
+    "dislike": "Je n'aime pas",
+    "loginRequired": "Connectez-vous pour réagir"
+  },
+  "report": {
+    "button": "Signaler",
+    "title": "Signaler",
+    "close": "Fermer",
+    "success": "Merci, votre signalement a été transmis à notre équipe de modération.",
+    "reasonLabel": "Motif",
+    "reasonPlaceholder": "Contenu inapproprié…",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Décrivez la situation en détail…",
+    "submit": "Envoyer le signalement",
+    "sending": "Envoi…",
+    "error": "Erreur lors de l'envoi"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "list": {
+    "loadError": "Impossible de charger les missions pour le moment.",
+    "eyebrow": "Panneau d'affichage",
+    "title": "Missions",
+    "intro": "Les missions ouvertes aux candidatures, publiées par les clients de la plateforme.",
+    "loading": "Chargement des missions…",
+    "count": "{count, plural, one {# mission ouverte aux candidatures} other {# missions ouvertes aux candidatures}}",
+    "filterPlaceholder": "Site vitrine, gestion scolaire…",
+    "filterBudget": "Budget (Ar)",
+    "emptyTitle": "Aucune mission ne correspond à ces critères pour le moment.",
+    "emptyHint": "Essayez d'élargir vos filtres ou revenez plus tard : de nouvelles missions sont publiées régulièrement.",
+    "seeAll": "Voir toutes les missions"
+  },
+  "detail": {
+    "applyError": "Impossible d'envoyer la candidature",
+    "loading": "Chargement…",
+    "loadError": "Impossible de charger cette mission pour le moment.",
+    "notFound": "Cette mission est introuvable.",
+    "backToMissions": "Retour aux missions",
+    "publishedMeta": "Publiée le {datePublication} · candidatures ouvertes jusqu'au {dateLimite}",
+    "description": "Description",
+    "requiredSkills": "Compétences requises",
+    "budget": "Budget",
+    "applicationDeadline": "Date limite de candidature",
+    "clientFallback": "Client",
+    "clientKianjaFallback": "Client Kianja",
+    "clientCompany": "Entreprise",
+    "clientIndividual": "Particulier",
+    "viewProfile": "Voir le profil",
+    "applySuccess": "Votre candidature a bien été envoyée. Le client pourra maintenant l'examiner.",
+    "applyTitle": "Postuler à cette mission",
+    "proposedPrice": "Prix proposé (Ar)",
+    "proposedDelay": "Délai proposé (jours)",
+    "messageLabel": "Message (optionnel)",
+    "messagePlaceholder": "Présentez brièvement votre approche…",
+    "sending": "Envoi…",
+    "submitApplication": "Envoyer ma candidature",
+    "cancel": "Annuler",
+    "loginPrompt": "<login>Connectez-vous</login> en tant qu'étudiant pour postuler à cette mission."
+  }
+}

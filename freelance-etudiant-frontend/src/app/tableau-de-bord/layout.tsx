@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 
@@ -13,6 +14,7 @@ export default function TableauDeBordLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const tc = useTranslations("common");
   const { utilisateur, chargement } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -100,7 +102,7 @@ export default function TableauDeBordLayout({
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-paper px-5">
         <p className="text-sm text-ink-soft">
-          Chargement…
+          {tc("states.loading")}
         </p>
       </div>
     );

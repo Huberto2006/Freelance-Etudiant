@@ -1,0 +1,34 @@
+{
+  "list": {
+    "eyebrow": "Fanaraha-maso ara-bola",
+    "title": "Faktiora",
+    "introStudent": "Ny faktiora ho an'ny onja voaray noho ny asa sy ny serivisy nataonao.",
+    "introClient": "Faktiora iray no avoaka ho azy isaky ny fandoavana voamarina.",
+    "loading": "Eo am-pakàna…",
+    "loadError": "Tsy afaka naka ny faktiora amin'izao fotoana izao.",
+    "empty": "Mbola tsy misy faktiora. Hiseho izy rehefa voamarina ny fandoavana.",
+    "paidBy": "Nandoa: {nom}",
+    "provider": "Mpanome tolotra: {nom}"
+  },
+  "detail": {
+    "print": "Avoaka an-taratasy / Tehirizina ho PDF",
+    "loading": "Eo am-pakàna ny faktiora…",
+    "loadError": "Tsy afaka naka ny faktiora.",
+    "notFound": "Tsy hita ny faktiora.",
+    "ariaLabel": "Faktiora {numero}",
+    "invoice": "Faktiora",
+    "issuedOn": "Navoaka tamin'ny {date}",
+    "billedTo": "Faktiorana ho an'i",
+    "provider": "Mpanome tolotra",
+    "studentVia": "Mpianatra · amin'ny alalan'ny sehatra {plateforme}",
+    "designation": "Famaritana",
+    "amount": "Vola",
+    "serviceBy": "Asa vita nataon'i {nom}",
+    "totalPaid": "Totalin'ny voaloa",
+    "payment": "Fandoavana",
+    "method": "Fomba",
+    "reference": "Tsiahy",
+    "paymentDate": "Daty nandoavana",
+    "footer": "Faktiora voaloa: voaray sy voamarin'ny sehatra ny fandoavana. Antontan-taratasy noforonina ho azy."
+  }
+}

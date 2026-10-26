@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { api, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
@@ -12,6 +13,7 @@ import {
 } from "@/components/auth/TurnstileWidget";
 
 export default function MotDePasseOubliePage() {
+  const t = useTranslations("auth.forgot");
   const [email, setEmail] = useState("");
   const [envoi, setEnvoi] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -35,7 +37,7 @@ export default function MotDePasseOubliePage() {
       setMessage(res.message);
     } catch (err) {
       setErreur(
-        err instanceof ApiError ? err.message : "Une erreur est survenue",
+        err instanceof ApiError ? err.message : t("errGeneric"),
       );
     } finally {
       enCours.current = false;
@@ -47,10 +49,10 @@ export default function MotDePasseOubliePage() {
   return (
     <div className="mx-auto max-w-md px-5 pb-12">
       <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
-        Récupération de compte
+        {t("eyebrow")}
       </p>
       <h1 className="mb-7 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-        Mot de passe oublié
+        {t("title")}
       </h1>
 
       <NoticeCard>
@@ -59,10 +61,9 @@ export default function MotDePasseOubliePage() {
         ) : (
           <form onSubmit={onSubmit} className="flex flex-col gap-5">
             <p className="text-sm text-ink-soft">
-              Indiquez votre adresse email : si un compte lui est associé,
-              vous recevrez un lien pour choisir un nouveau mot de passe.
+              {t("intro")}
             </p>
-            <Field label="Adresse email" htmlFor="email">
+            <Field label={t("email")} htmlFor="email">
               <Input
                 id="email"
                 type="email"
@@ -70,7 +71,7 @@ export default function MotDePasseOubliePage() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="vous@exemple.mg"
+                placeholder={t("emailPlaceholder")}
               />
             </Field>
 
@@ -87,7 +88,7 @@ export default function MotDePasseOubliePage() {
               disabled={envoi || !turnstileToken}
               className="mt-2"
             >
-              {envoi ? "Envoi…" : "Envoyer le lien"}
+              {envoi ? t("sending") : t("send")}
             </Button>
           </form>
         )}
@@ -98,7 +99,7 @@ export default function MotDePasseOubliePage() {
           href="/connexion"
           className="font-medium text-ocre-dark hover:underline"
         >
-          Retour à la connexion
+          {t("backToLogin")}
         </Link>
       </p>
     </div>

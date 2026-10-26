@@ -30,14 +30,14 @@ import {
 } from "lucide-react";
 import { clsx } from "clsx";
 
-import { roleLabel, useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/lib/auth-context";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
+import { useChatHelpers } from "@/i18n/use-chat-helpers";
 import { api, ApiError, getFileUrl } from "@/lib/api";
 import { useSocket } from "@/lib/socket-context";
-import {
-  formatArgent,
-  formatDate,
-  statutMissionLabel,
-} from "@/lib/format";
+
 
 import type {
   CompteurNonLus,
@@ -113,82 +113,6 @@ type MessageSocket = MessageAvecUtilisateurs & {
    HELPERS
    ========================================================= */
 
-function formaterHeure(date: string): string {
-  try {
-    return new Intl.DateTimeFormat("fr-FR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(date));
-  } catch {
-    return "";
-  }
-}
-
-function formaterDateListe(date: string): string {
-  const jour = new Date(date);
-
-  if (Number.isNaN(jour.getTime())) {
-    return "";
-  }
-
-  const aujourdhui = new Date();
-
-  if (jour.toDateString() === aujourdhui.toDateString()) {
-    return formaterHeure(date);
-  }
-
-  const hier = new Date(aujourdhui);
-
-  hier.setDate(aujourdhui.getDate() - 1);
-
-  if (jour.toDateString() === hier.toDateString()) {
-    return "Hier";
-  }
-
-  const memeAnnee =
-    jour.getFullYear() === aujourdhui.getFullYear();
-
-  try {
-    return new Intl.DateTimeFormat("fr-FR", {
-      day: "numeric",
-      month: "short",
-      ...(memeAnnee
-        ? {}
-        : {
-            year: "numeric",
-          }),
-    }).format(jour);
-  } catch {
-    return "";
-  }
-}
-
-function formaterJourSeparateur(date: string): string {
-  const jour = new Date(date);
-
-  if (Number.isNaN(jour.getTime())) {
-    return "";
-  }
-
-  const memeAnnee =
-    jour.getFullYear() === new Date().getFullYear();
-
-  try {
-    return new Intl.DateTimeFormat("fr-FR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      ...(memeAnnee
-        ? {}
-        : {
-            year: "numeric",
-          }),
-    }).format(jour);
-  } catch {
-    return "";
-  }
-}
-
 function estMemeJournee(
   a: string,
   b: string,
@@ -199,59 +123,12 @@ function estMemeJournee(
   );
 }
 
-function apercuMessage(
-  message: MessageAvecUtilisateurs,
-): string {
-  if (message.estSupprime) {
-    return "Message supprimé";
-  }
-
-  if (message.contenu?.trim()) {
-    return message.contenu.trim();
-  }
-
-  if (message.pieceJointeUrl) {
-    return "Pièce jointe";
-  }
-
-  return "Nouvelle conversation";
-}
-
-function apercuMessageGroupe(
-  message: MessageAvecUtilisateurs,
-  utilisateurId: string,
-): string {
-  const apercu = apercuMessage(message);
-
-  if (message.expediteurId === utilisateurId) {
-    return apercu;
-  }
-
-  const auteur =
-    message.expediteur?.nom ?? "Membre";
-
-  return `${auteur} : ${apercu}`;
-}
-
-/*
- * roleLabel est une fonction :
- * roleLabel(role)
- */
-function afficherRole(
-  role?: Role | null,
-): string {
-  if (!role) {
-    return "Utilisateur Kianja";
-  }
-
-  return roleLabel(role);
-}
-
 /* =========================================================
    PAGE
    ========================================================= */
 
 export default function MessagesPage() {
+  const t = useTranslations("chat");
   return (
     <Suspense
       fallback={
@@ -262,7 +139,7 @@ export default function MessagesPage() {
               className="animate-spin"
               aria-hidden="true"
             />
-            Chargement des conversations…
+            {t("loadingConversations")}
           </div>
         </div>
       }
@@ -277,6 +154,17 @@ export default function MessagesPage() {
    ========================================================= */
 
 function MessagesContent() {
+  const t = useTranslations("chat");
+  const { argent: formatArgent } = useFormats();
+  const { statutMission: libelleStatutMission } = useLabels();
+  const {
+    formaterHeure,
+    formaterDateListe,
+    formaterJourSeparateur,
+    apercuMessage,
+    apercuMessageGroupe,
+    afficherRole,
+  } = useChatHelpers();
   const { utilisateur } = useAuth();
   const { socket } = useSocket();
   const searchParams = useSearchParams();
@@ -303,11 +191,12 @@ function MessagesContent() {
       id: contactIdParam,
       nom:
         nomParam?.trim() ||
-        "Utilisateur",
+        t("user"),
     };
   }, [
     contactIdParam,
     nomParam,
+    t,
   ]);
 
   /*
@@ -328,11 +217,12 @@ function MessagesContent() {
       id: groupeIdParam,
       nom:
         nomParam?.trim() ||
-        "Groupe",
+        t("group"),
     };
   }, [
     groupeIdParam,
     nomParam,
+    t,
   ]);
 
   /* =========================================================
@@ -573,10 +463,10 @@ function MessagesContent() {
         setErreur(
           error instanceof ApiError
             ? error.message
-            : "Impossible de charger les conversations.",
+            : t("errLoadConversations"),
         );
       }
-    }, []);
+    }, [t]);
 
   const chargerCompteur =
     useCallback(async () => {
@@ -646,7 +536,7 @@ function MessagesContent() {
           setErreur(
             error instanceof ApiError
               ? error.message
-              : "Impossible de charger les conversations.",
+              : t("errLoadConversations"),
           );
         }
       } finally {
@@ -661,7 +551,7 @@ function MessagesContent() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   /* =========================================================
      TYPES DE CONVERSATIONS
@@ -746,7 +636,7 @@ function MessagesContent() {
               id: autre.id,
               nom:
                 autre.nom?.trim() ||
-                "Utilisateur",
+                t("user"),
               photoUrl:
                 autre.photoUrl ??
                 null,
@@ -792,7 +682,7 @@ function MessagesContent() {
               photoUrl: null,
               role: null,
               dernierContenu:
-                "Nouvelle conversation",
+                t("newConversation"),
               dernierDate: null,
               dernierEstMoi: false,
               conversationVide: true,
@@ -855,7 +745,7 @@ function MessagesContent() {
                   dernier,
                   utilisateur.id,
                 )
-              : "Aucun message",
+              : t("noMessage"),
             dernierDate:
               dernier?.dateEnvoi ??
               null,
@@ -897,7 +787,7 @@ function MessagesContent() {
             nombreMembres:
               groupeDepuisUrl.nombreMembres,
             dernierContenu:
-              "Aucun message",
+              t("noMessage"),
             dernierDate: null,
             dernierEstMoi: false,
             conversationVide: true,
@@ -943,6 +833,9 @@ function MessagesContent() {
         utilisateur,
         contactDepuisUrl,
         groupeDepuisUrl,
+        apercuMessage,
+        apercuMessageGroupe,
+        t,
       ],
     );
 
@@ -1040,7 +933,7 @@ function MessagesContent() {
           setErreur(
             error instanceof ApiError
               ? error.message
-              : "Impossible de charger cette conversation.",
+              : t("errLoadConversation"),
           );
 
           return [];
@@ -1048,7 +941,7 @@ function MessagesContent() {
           setChargementFil(false);
         }
       },
-      [],
+      [t],
     );
 
   /* =========================================================
@@ -1085,7 +978,7 @@ function MessagesContent() {
           setErreur(
             error instanceof ApiError
               ? error.message
-              : "Impossible de charger la discussion du groupe.",
+              : t("errLoadGroupChat"),
           );
 
           return [];
@@ -1093,7 +986,7 @@ function MessagesContent() {
           setChargementFil(false);
         }
       },
-      [],
+      [t],
     );
 
   /* =========================================================
@@ -1369,7 +1262,7 @@ function MessagesContent() {
           setErreur(
             error instanceof ApiError
               ? error.message
-              : "Impossible de charger cette conversation.",
+              : t("errLoadConversation"),
           );
         }
       } finally {
@@ -1389,6 +1282,7 @@ function MessagesContent() {
     contactSelectionne,
     groupeSelectionne,
     marquerFilCommeLu,
+    t,
   ]);
 
   /* =========================================================
@@ -1457,7 +1351,7 @@ function MessagesContent() {
           setErreur(
             error instanceof ApiError
               ? error.message
-              : "Impossible de charger cette discussion de groupe.",
+              : t("errLoadGroupChat2"),
           );
         }
       } finally {
@@ -1477,6 +1371,7 @@ function MessagesContent() {
     groupeSelectionne,
     contactSelectionne,
     rafraichirDonnees,
+    t,
   ]);
 
   /* =========================================================
@@ -1962,7 +1857,7 @@ function MessagesContent() {
           auteur:
             message.expediteurId ===
             utilisateur.id
-              ? "Vous"
+              ? t("you")
               : message.expediteur?.nom ??
                 conversationActive?.nom ??
                 "",
@@ -1976,6 +1871,7 @@ function MessagesContent() {
       fil,
       utilisateur,
       conversationActive,
+      t,
     ]);
 
   /* =========================================================
@@ -2070,7 +1966,7 @@ function MessagesContent() {
       setErreurEnvoi(
         error instanceof ApiError
           ? error.message
-          : "Impossible d'envoyer le message. Vérifiez votre connexion et réessayez.",
+          : t("errSendMessage"),
       );
     } finally {
       envoiEnCoursRef.current =
@@ -2138,7 +2034,7 @@ function MessagesContent() {
                   ...message,
                   estSupprime: true,
                   contenu:
-                    "Message supprimé",
+                    t("deletedMessage"),
                   pieceJointeUrl:
                     null,
                   pieceJointeNom:
@@ -2158,7 +2054,7 @@ function MessagesContent() {
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de supprimer ce message.",
+          : t("errDeleteMessage"),
       );
     } finally {
       setMessageEnSuppression(
@@ -2279,14 +2175,14 @@ function MessagesContent() {
 
             <div className="min-w-0 flex-1">
               <h1 className="font-display text-lg font-semibold leading-tight text-ink">
-                Messages
+                {t("title")}
               </h1>
 
               <p className="text-xs text-ink-soft">
                 {compteNonLus >
                 0
-                  ? `${compteNonLus} message${compteNonLus > 1 ? "s" : ""} non lu${compteNonLus > 1 ? "s" : ""}`
-                  : `${compteToutes} conversation${compteToutes > 1 ? "s" : ""}`}
+                  ? t("unreadCount", { count: compteNonLus })
+                  : t("conversationsCount", { count: compteToutes })}
               </p>
             </div>
           </div>
@@ -2314,8 +2210,8 @@ function MessagesContent() {
                         .value,
                     )
                   }
-                  placeholder="Rechercher…"
-                  aria-label="Rechercher une conversation"
+                  placeholder={t("searchPlaceholder")}
+                  aria-label={t("searchLabel")}
                   className="w-full rounded-full border-ink/20 bg-paper-light py-2 pl-9 pr-3 text-sm"
                 />
               </div>
@@ -2329,14 +2225,14 @@ function MessagesContent() {
             <div
               className="flex gap-2 px-3 pb-3 pt-2.5"
               role="tablist"
-              aria-label="Filtrer les conversations"
+              aria-label={t("filterLabel")}
             >
               {[
                 {
                   valeur:
                     "toutes" as const,
                   label:
-                    "Toutes",
+                    t("all"),
                   compte:
                     compteToutes,
                 },
@@ -2344,7 +2240,7 @@ function MessagesContent() {
                   valeur:
                     "non_lus" as const,
                   label:
-                    "Non lues",
+                    t("unread"),
                   compte:
                     compteNonLus,
                 },
@@ -2443,12 +2339,11 @@ function MessagesContent() {
                 </span>
 
                 <p className="text-sm font-medium text-ink">
-                  Aucune conversation pour l&apos;instant
+                  {t("noConversationYet")}
                 </p>
 
                 <p className="text-xs leading-relaxed text-ink-soft/80">
-                  Les conversations individuelles et les groupes dont
-                  vous êtes membre apparaîtront ici.
+                  {t("noConversationHint")}
                 </p>
               </div>
             ) : lignesFiltrees.length ===
@@ -2456,8 +2351,8 @@ function MessagesContent() {
               <div className="flex h-full items-center justify-center p-6 text-center">
                 <p className="text-sm text-ink-soft">
                   {recherche.trim()
-                    ? `Aucune conversation ne correspond à « ${recherche.trim()} »`
-                    : "Aucune conversation avec des messages non lus."}
+                    ? t("noMatch", { recherche: recherche.trim() })
+                    : t("noUnread")}
                 </p>
               </div>
             ) : (
@@ -2560,7 +2455,7 @@ function MessagesContent() {
                                       12
                                     }
                                     className="shrink-0 text-primary"
-                                    aria-label="Groupe"
+                                    aria-label={t("group")}
                                   />
                                 )}
                               </span>
@@ -2588,12 +2483,12 @@ function MessagesContent() {
                                 "GROUPE" &&
                               ligne.nombreMembres !=
                                 null
-                                ? `${ligne.nombreMembres} membre${ligne.nombreMembres > 1 ? "s" : ""} · `
+                                ? `${t("membersCount", { count: ligne.nombreMembres })} · `
                                 : ""}
 
                               {ligne.conversationVide
-                                ? "Nouvelle conversation"
-                                : `${ligne.dernierEstMoi ? "Vous : " : ""}${ligne.dernierContenu}`}
+                                ? t("newConversation")
+                                : `${ligne.dernierEstMoi ? `${t("you")} : ` : ""}${ligne.dernierContenu}`}
                             </span>
                           </span>
                         </button>
@@ -2627,11 +2522,11 @@ function MessagesContent() {
               </span>
 
               <p className="font-display text-lg font-semibold text-ink">
-                Sélectionnez une conversation
+                {t("selectConversation")}
               </p>
 
               <p className="max-w-sm text-sm text-ink-soft/80">
-                Choisissez un contact ou un groupe dans la liste.
+                {t("selectConversationHint")}
               </p>
             </div>
           ) : (
@@ -2644,7 +2539,7 @@ function MessagesContent() {
                   onClick={
                     fermerConversationMobile
                   }
-                  aria-label="Retour à la liste des conversations"
+                  aria-label={t("backToList")}
                   className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink lg:hidden"
                 >
                   <ArrowLeft
@@ -2688,13 +2583,13 @@ function MessagesContent() {
                     "GROUPE"
                       ? conversationActive.nombreMembres !=
                         null
-                        ? `${conversationActive.nombreMembres} membre${conversationActive.nombreMembres > 1 ? "s" : ""}`
-                        : "Groupe Kianja"
+                        ? t("membersCount", { count: conversationActive.nombreMembres })
+                        : t("kianjaGroup")
                       : autreUtilisateur
                         ? afficherRole(
                             autreUtilisateur.role,
                           )
-                        : "Utilisateur Kianja"}
+                        : t("kianjaUser")}
                   </p>
                 </div>
 
@@ -2703,8 +2598,8 @@ function MessagesContent() {
                   onClick={
                     gererBoutonMenu
                   }
-                  aria-label="Détails de la conversation"
-                  title="Détails de la conversation"
+                  aria-label={t("details")}
+                  title={t("details")}
                   className={clsx(
                     "inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors",
                     panneauVisible
@@ -2729,7 +2624,7 @@ function MessagesContent() {
                         size={13}
                         aria-hidden="true"
                       />
-                      Mission
+                      {t("mission")}
                     </span>
 
                     <Link
@@ -2742,17 +2637,16 @@ function MessagesContent() {
                     </Link>
 
                     <span className="text-ink-soft">
-                      Statut:&nbsp;
+                      {t("statusColon")}&nbsp;
                       <span className="font-medium text-ink">
-                        {statutMissionLabel[
-                          missionAffichee.statut
-                        ] ??
-                          missionAffichee.statut}
+                        {libelleStatutMission(
+                          missionAffichee.statut,
+                        )}
                       </span>
                     </span>
 
                     <span className="text-ink-soft">
-                      Budget:&nbsp;
+                      {t("budgetColon")}&nbsp;
                       <span className="font-medium text-ink">
                         {formatArgent(
                           missionAffichee.budget,
@@ -2764,7 +2658,7 @@ function MessagesContent() {
                       href={`/missions/${missionAffichee.id}`}
                       className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/30 bg-primary-soft px-2.5 py-1 font-medium text-primary transition-colors hover:border-primary/60"
                     >
-                      Voir la mission
+                      {t("viewMission")}
                       <ExternalLink
                         size={12}
                         aria-hidden="true"
@@ -2787,7 +2681,7 @@ function MessagesContent() {
                       size={16}
                       className="animate-spin"
                     />
-                    Chargement de la conversation…
+                    {t("loadingConversation")}
                   </div>
                 ) : fil.length ===
                   0 ? (
@@ -2806,11 +2700,11 @@ function MessagesContent() {
                     </span>
 
                     <p className="text-sm text-ink-soft">
-                      Aucun message dans cette conversation.
+                      {t("emptyThread")}
                     </p>
 
                     <p className="text-xs text-ink-soft/70">
-                      Envoyez le premier message pour démarrer les échanges.
+                      {t("emptyThreadHint")}
                     </p>
                   </div>
                 ) : (
@@ -2909,7 +2803,7 @@ function MessagesContent() {
                                       : "text-ink-soft/70",
                                   )}
                                 >
-                                  Message supprimé
+                                  {t("deletedMessage")}
                                 </p>
                               ) : (
                                 <>
@@ -2965,14 +2859,14 @@ function MessagesContent() {
                                       size={
                                         13
                                       }
-                                      aria-label="Message lu"
+                                      aria-label={t("messageRead")}
                                     />
                                   ) : (
                                     <Check
                                       size={
                                         13
                                       }
-                                      aria-label="Message envoyé"
+                                      aria-label={t("messageSent")}
                                     />
                                   ))}
                               </div>
@@ -2990,7 +2884,7 @@ function MessagesContent() {
                                       messageEnSuppression ===
                                       message.id
                                     }
-                                    aria-label="Supprimer ce message"
+                                    aria-label={t("deleteMessage")}
                                     className="absolute -right-2 -top-2 hidden h-5 w-5 cursor-pointer items-center justify-center rounded-full border border-ink/15 bg-paper text-[0.65rem] text-ink-soft opacity-0 transition-opacity hover:border-brique/50 hover:text-brique group-hover:flex group-hover:opacity-100"
                                   >
                                     ×
@@ -3048,10 +2942,10 @@ function MessagesContent() {
                     placeholder={
                       conversationActive.type ===
                       "GROUPE"
-                        ? "Écrivez au groupe…"
-                        : "Écrivez votre message…"
+                        ? t("writeToGroup")
+                        : t("writeMessage")
                     }
-                    aria-label="Votre message"
+                    aria-label={t("yourMessage")}
                     className="max-h-[140px] min-h-[40px] flex-1 resize-none rounded-2xl py-2"
                     disabled={
                       envoi
@@ -3064,7 +2958,7 @@ function MessagesContent() {
                       envoi ||
                       !nouveauMessage.trim()
                     }
-                    aria-label="Envoyer le message"
+                    aria-label={t("sendMessage")}
                     className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-paper-light shadow-sm transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {envoi ? (
@@ -3092,7 +2986,7 @@ function MessagesContent() {
                 )}
 
                 <p className="mt-2 hidden text-[0.65rem] font-mono text-ink-soft/50 sm:block">
-                  Entrée pour envoyer · Maj+Entrée pour une nouvelle ligne
+                  {t("keyboardHint")}
                 </p>
               </form>
             </>
@@ -3142,7 +3036,7 @@ function MessagesContent() {
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="Détails de la conversation"
+            aria-label={t("details")}
             className="fixed inset-0 z-50 flex justify-end bg-ink/50 xl:hidden"
             onClick={() =>
               setDetailsOuverts(
@@ -3158,7 +3052,7 @@ function MessagesContent() {
             >
               <div className="flex items-center justify-between border-b border-ink/10 px-4 py-3">
                 <h2 className="font-display text-base font-semibold text-ink">
-                  Détails de la conversation
+                  {t("details")}
                 </h2>
 
                 <button
@@ -3168,7 +3062,7 @@ function MessagesContent() {
                       false,
                     )
                   }
-                  aria-label="Fermer les détails"
+                  aria-label={t("closeDetails")}
                   className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink"
                 >
                   <X
@@ -3245,6 +3139,10 @@ function PanneauDetailsConversation({
   piecesJointes:
     PieceJointeConversation[];
 }) {
+  const t = useTranslations("chat");
+  const { argent: formatArgent, date: formatDate } = useFormats();
+  const { statutMission: libelleStatutMission } = useLabels();
+  const { formaterDateListe, afficherRole } = useChatHelpers();
   const noteEtudiant =
     profilEtudiant?.noteMoyenne !=
     null
@@ -3269,7 +3167,7 @@ function PanneauDetailsConversation({
               size={13}
               aria-hidden="true"
             />
-            Groupe
+            {t("group")}
           </h3>
 
           <div className="flex items-center gap-3">
@@ -3289,14 +3187,14 @@ function PanneauDetailsConversation({
               <p className="text-xs text-ink-soft">
                 {conversation.nombreMembres !=
                 null
-                  ? `${conversation.nombreMembres} membre${conversation.nombreMembres > 1 ? "s" : ""}`
-                  : "Groupe Kianja"}
+                  ? t("membersCount", { count: conversation.nombreMembres })
+                  : t("kianjaGroup")}
               </p>
             </div>
           </div>
 
           <p className="mt-3 text-xs leading-relaxed text-ink-soft/80">
-            Discussion réservée aux membres actifs de ce groupe.
+            {t("groupMembersOnly")}
           </p>
         </section>
 
@@ -3307,11 +3205,7 @@ function PanneauDetailsConversation({
               <FileText
                 size={13}
               />
-              Pièces jointes (
-              {
-                piecesJointes.length
-              }
-              )
+              {t("attachments", { count: piecesJointes.length })}
             </h3>
 
             <ul className="space-y-2">
@@ -3363,7 +3257,7 @@ function PanneauDetailsConversation({
             <Briefcase
               size={13}
             />
-            Mission liée
+            {t("linkedMission")}
           </h3>
 
           {missionAffichee.imageUrl && (
@@ -3388,22 +3282,19 @@ function PanneauDetailsConversation({
           <dl className="mt-3 space-y-2 text-xs">
             <div className="flex items-center justify-between gap-2">
               <dt className="text-ink-soft/70">
-                Statut
+                {t("status")}
               </dt>
 
               <dd className="font-medium text-ink">
-                {
-                  statutMissionLabel[
-                    missionAffichee.statut
-                  ] ??
-                  missionAffichee.statut
-                }
+                {libelleStatutMission(
+                  missionAffichee.statut,
+                )}
               </dd>
             </div>
 
             <div className="flex items-center justify-between gap-2">
               <dt className="text-ink-soft/70">
-                Budget
+                {t("budget")}
               </dt>
 
               <dd className="font-medium text-ink">
@@ -3415,7 +3306,7 @@ function PanneauDetailsConversation({
 
             <div className="flex items-center justify-between gap-2">
               <dt className="text-ink-soft/70">
-                Date limite
+                {t("deadline")}
               </dt>
 
               <dd className="font-medium text-ink">
@@ -3432,8 +3323,8 @@ function PanneauDetailsConversation({
             size="sm"
             className="mt-3 w-full justify-center gap-1.5"
           >
-            Voir la mission
-            <ExternalLink
+            {t("viewMission")}
+                      <ExternalLink
               size={13}
             />
           </Button>
@@ -3445,7 +3336,7 @@ function PanneauDetailsConversation({
           <User
             size={13}
           />
-          Correspondant
+          {t("correspondent")}
         </h3>
 
         <div className="flex items-center gap-3">
@@ -3471,7 +3362,7 @@ function PanneauDetailsConversation({
                 ? afficherRole(
                     autreUtilisateur.role,
                   )
-                : "Utilisateur Kianja"}
+                : t("kianjaUser")}
             </p>
 
             {noteEtudiant !=
@@ -3521,7 +3412,7 @@ function PanneauDetailsConversation({
             size="sm"
             className="mt-3 w-full justify-center gap-1.5"
           >
-            Voir le profil
+            {t("viewProfile")}
             <ExternalLink
               size={13}
             />
@@ -3536,11 +3427,7 @@ function PanneauDetailsConversation({
             <FileText
               size={13}
             />
-            Pièces jointes (
-            {
-              piecesJointes.length
-            }
-            )
+            {t("attachments", { count: piecesJointes.length })}
           </h3>
 
           <ul className="space-y-2">

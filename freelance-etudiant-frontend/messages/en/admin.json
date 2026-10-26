@@ -1,0 +1,25 @@
+{
+  "eyebrow": "Administration",
+  "users": {
+    "title": "Users",
+    "loading": "Loading…",
+    "empty": "No users found.",
+    "suspended": "Suspended",
+    "registeredOn": "joined on {date}",
+    "reactivate": "Reactivate",
+    "suspend": "Suspend",
+    "suspendError": "Unable to suspend this user.",
+    "reactivateError": "Unable to reactivate this user."
+  },
+  "reports": {
+    "title": "Reports",
+    "loading": "Loading…",
+    "toProcess": "To process ({count})",
+    "noneWaiting": "No reports pending.",
+    "resolutionPlaceholder": "Resolution note (optional)…",
+    "markProcessed": "Mark as processed",
+    "processed": "Processed",
+    "resolution": "Resolution: {text}",
+    "genericError": "Error"
+  }
+}

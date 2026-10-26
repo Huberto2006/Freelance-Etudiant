@@ -7,11 +7,9 @@ import { Printer } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { Facture } from "@/lib/types";
-import {
-  formatArgent,
-  formatDate,
-  methodePaiementLabel,
-} from "@/lib/format";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
 
 import { Button } from "@/components/ui/Button";
 import { NoticeCard } from "@/components/ui/Notice";
@@ -25,6 +23,9 @@ import { BoutonRetour } from "@/components/ui/BoutonRetour";
  */
 export default function FacturePaiementPage() {
   const { utilisateur } = useAuth();
+  const t = useTranslations("invoices");
+  const { argent, date } = useFormats();
+  const { methodePaiement } = useLabels();
   const params = useParams<{ id: string }>();
   const idPaiement = params?.id;
 
@@ -45,7 +46,7 @@ export default function FacturePaiementPage() {
           setErreur(
             err instanceof ApiError
               ? err.message
-              : "Impossible de charger la facture.",
+              : t("detail.loadError"),
           );
         }
       } finally {
@@ -57,7 +58,7 @@ export default function FacturePaiementPage() {
     return () => {
       actif = false;
     };
-  }, [utilisateur, idPaiement]);
+  }, [utilisateur, idPaiement, t]);
 
   // Active les règles d'impression propres à la facture.
   useEffect(() => {
@@ -75,23 +76,23 @@ export default function FacturePaiementPage() {
         {facture && (
           <Button onClick={() => window.print()} className="gap-2">
             <Printer size={16} aria-hidden="true" />
-            Imprimer / Enregistrer en PDF
+            {t("detail.print")}
           </Button>
         )}
       </div>
 
       {chargement ? (
-        <p className="text-sm text-ink-soft">Chargement de la facture…</p>
+        <p className="text-sm text-ink-soft">{t("detail.loading")}</p>
       ) : erreur || !facture ? (
         <NoticeCard>
           <p role="alert" className="text-sm text-brique">
-            {erreur ?? "Facture introuvable."}
+            {erreur ?? t("detail.notFound")}
           </p>
         </NoticeCard>
       ) : (
         <article
           id="facture-imprimable"
-          aria-label={`Facture ${facture.numero}`}
+          aria-label={t("detail.ariaLabel", { numero: facture.numero })}
           className="mx-auto w-full max-w-[52rem] rounded-xl border border-slate-200 bg-white p-6 text-slate-900 shadow-sm sm:p-10 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none"
         >
           {/* En-tête */}
@@ -109,13 +110,13 @@ export default function FacturePaiementPage() {
 
             <div className="sm:text-right">
               <p className="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">
-                Facture
+                {t("detail.invoice")}
               </p>
               <p className="font-display text-2xl font-bold">
                 {facture.numero}
               </p>
               <p className="mt-1 text-sm text-slate-600">
-                Émise le {formatDate(facture.dateEmission)}
+                {t("detail.issuedOn", { date: date(facture.dateEmission) })}
               </p>
             </div>
           </header>
@@ -124,7 +125,7 @@ export default function FacturePaiementPage() {
           <section className="grid gap-6 py-6 sm:grid-cols-2">
             <div>
               <p className="mb-1 font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-slate-500">
-                Facturé à
+                {t("detail.billedTo")}
               </p>
               <p className="font-medium">
                 {facture.clientEntreprise || facture.clientNom}
@@ -137,11 +138,11 @@ export default function FacturePaiementPage() {
 
             <div>
               <p className="mb-1 font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-slate-500">
-                Prestataire
+                {t("detail.provider")}
               </p>
               <p className="font-medium">{facture.etudiantNom}</p>
               <p className="text-sm text-slate-600">
-                Étudiant · via la plateforme {facture.emetteurNom}
+                {t("detail.studentVia", { plateforme: facture.emetteurNom })}
               </p>
             </div>
           </section>
@@ -150,8 +151,8 @@ export default function FacturePaiementPage() {
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-y border-slate-200 text-left font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-slate-500">
-                <th className="py-2.5 pr-4 font-medium">Désignation</th>
-                <th className="py-2.5 text-right font-medium">Montant</th>
+                <th className="py-2.5 pr-4 font-medium">{t("detail.designation")}</th>
+                <th className="py-2.5 text-right font-medium">{t("detail.amount")}</th>
               </tr>
             </thead>
             <tbody>
@@ -159,21 +160,21 @@ export default function FacturePaiementPage() {
                 <td className="py-3.5 pr-4">
                   <p className="font-medium">{facture.titreMission}</p>
                   <p className="text-xs text-slate-600">
-                    Prestation réalisée par {facture.etudiantNom}
+                    {t("detail.serviceBy", { nom: facture.etudiantNom })}
                   </p>
                 </td>
                 <td className="py-3.5 text-right font-mono">
-                  {formatArgent(facture.montant)}
+                  {argent(facture.montant)}
                 </td>
               </tr>
             </tbody>
             <tfoot>
               <tr>
                 <td className="pt-4 pr-4 text-right font-medium">
-                  Total payé
+                  {t("detail.totalPaid")}
                 </td>
                 <td className="pt-4 text-right font-mono text-lg font-bold">
-                  {formatArgent(facture.montant)}
+                  {argent(facture.montant)}
                 </td>
               </tr>
             </tfoot>
@@ -182,29 +183,28 @@ export default function FacturePaiementPage() {
           {/* Paiement */}
           <section className="mt-8 rounded-lg bg-slate-50 p-4 text-sm print:border print:border-slate-200 print:bg-white">
             <p className="mb-2 font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-slate-500">
-              Paiement
+              {t("detail.payment")}
             </p>
             <dl className="grid gap-x-6 gap-y-1.5 sm:grid-cols-3">
               <div>
-                <dt className="text-xs text-slate-500">Moyen</dt>
+                <dt className="text-xs text-slate-500">{t("detail.method")}</dt>
                 <dd>
-                  {methodePaiementLabel[facture.methode] ?? facture.methode}
+                  {methodePaiement(facture.methode)}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Référence</dt>
+                <dt className="text-xs text-slate-500">{t("detail.reference")}</dt>
                 <dd className="font-mono">{facture.referencePaiement}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Date de paiement</dt>
-                <dd>{formatDate(facture.datePaiement)}</dd>
+                <dt className="text-xs text-slate-500">{t("detail.paymentDate")}</dt>
+                <dd>{date(facture.datePaiement)}</dd>
               </div>
             </dl>
           </section>
 
           <p className="mt-8 text-xs leading-relaxed text-slate-500">
-            Facture acquittée : le paiement a été reçu et confirmé par la
-            plateforme. Document généré automatiquement.
+            {t("detail.footer")}
           </p>
         </article>
       )}

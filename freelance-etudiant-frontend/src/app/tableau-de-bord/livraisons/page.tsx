@@ -26,6 +26,10 @@ import {
   Check,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
+import { useOptionLabels } from "@/i18n/use-option-labels";
 
 import { api, ApiError, lienExterneSur } from "@/lib/api";
 import { PieceJointeAffichage } from "@/components/ui/PieceJointe";
@@ -39,7 +43,7 @@ import type {
   Transaction,
 } from "@/lib/types";
 
-import { formatArgent, formatDateCourte, statutLivraisonLabel } from "@/lib/format";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -64,12 +68,13 @@ import { SousNavigation } from "@/components/ui/SousNavigation";
 // ============================================================
 
 export default function LivraisonsPage() {
+  const t = useTranslations("deliveriesPage");
   return (
     <Suspense
       fallback={
         <div>
           <p className="text-sm text-ink-soft">
-            Chargement…
+            {t("loading")}
           </p>
         </div>
       }
@@ -84,6 +89,10 @@ export default function LivraisonsPage() {
 // ============================================================
 
 function LivraisonsContent() {
+  const t = useTranslations("deliveriesPage");
+  const { argent: formatArgent, dateCourte: formatDateCourte } = useFormats();
+  const { statutLivraison: libelleStatutLivraison } = useLabels();
+  const { categorie: libelleCategorie } = useOptionLabels();
   const searchParams = useSearchParams();
 
   // L'ID de candidature sert uniquement à sélectionner
@@ -300,7 +309,7 @@ function LivraisonsContent() {
           setErreur(
             error instanceof ApiError
               ? error.message
-              : "Impossible de charger vos livraisons.",
+              : t("loadError"),
           );
         }
       } finally {
@@ -324,6 +333,7 @@ function LivraisonsContent() {
     chargementAuth,
     utilisateur,
     role,
+    t,
   ]);
 
   // ==========================================================
@@ -389,18 +399,18 @@ function LivraisonsContent() {
   function infosAutrePersonne(candidature: Candidature) {
     if (role === "client") {
       return {
-        nom: candidature.etudiant?.utilisateur?.nom ?? "Étudiant",
+        nom: candidature.etudiant?.utilisateur?.nom ?? t("student"),
         photoUrl: candidature.etudiant?.utilisateur?.photoUrl ?? null,
-        label: "Étudiant",
+        label: t("student"),
       };
     }
     return {
       nom:
         candidature.mission?.client?.utilisateur?.nom ??
         candidature.mission?.client?.nomEntreprise ??
-        "Client",
+        t("client"),
       photoUrl: candidature.mission?.client?.utilisateur?.photoUrl ?? null,
-      label: "Client",
+      label: t("client"),
     };
   }
 
@@ -453,7 +463,7 @@ function LivraisonsContent() {
     return (
       <div>
         <p className="text-sm text-ink-soft">
-          Vérification de votre session…
+          {t("checkingSession")}
         </p>
       </div>
     );
@@ -468,8 +478,7 @@ function LivraisonsContent() {
       <div>
         <NoticeCard>
           <p className="text-sm text-ink-soft">
-            Vous devez être connecté pour
-            consulter vos livraisons.
+            {t("mustLogin")}
           </p>
 
           <Link
@@ -480,7 +489,7 @@ function LivraisonsContent() {
               size="sm"
               variant="secondary"
             >
-              Se connecter
+              {t("login")}
             </Button>
           </Link>
         </NoticeCard>
@@ -497,8 +506,7 @@ function LivraisonsContent() {
       <div>
         <NoticeCard>
           <p className="text-sm text-brique">
-            Vous n&apos;êtes pas autorisé à
-            consulter les livraisons.
+            {t("notAllowed")}
           </p>
         </NoticeCard>
       </div>
@@ -522,21 +530,21 @@ function LivraisonsContent() {
 
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <nav
-            aria-label="Fil d'Ariane"
+            aria-label={t("breadcrumb")}
             className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-ink-soft"
           >
             <Link
               href="/tableau-de-bord/livraisons"
               className="hover:text-ink hover:underline"
             >
-              Livraisons
+              {t("breadcrumbDeliveries")}
             </Link>
             <ChevronRight size={13} aria-hidden="true" />
-            <span className="text-ink">Détail</span>
+            <span className="text-ink">{t("detail")}</span>
           </nav>
 
           <BoutonRetour
-            label="Retour"
+            label={t("back")}
             repli="/tableau-de-bord/livraisons"
             forcer
           />
@@ -558,7 +566,7 @@ function LivraisonsContent() {
               ) : (
                 <NoticeCard>
                   <p className="text-sm text-ink-soft">
-                    Aucune livraison n&apos;a encore été déposée.
+                    {t("noneSubmitted")}
                   </p>
                 </NoticeCard>
               )
@@ -578,7 +586,7 @@ function LivraisonsContent() {
           <div className="flex flex-col gap-5">
             <NoticeCard>
               <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
-                Détails de la mission
+                {t("missionDetails")}
               </p>
 
               <Link
@@ -586,7 +594,7 @@ function LivraisonsContent() {
                 className="mt-3 block"
               >
                 <Button size="sm" variant="ghost" className="w-full">
-                  Voir la mission
+                  {t("viewMission")}
                 </Button>
               </Link>
 
@@ -599,8 +607,9 @@ function LivraisonsContent() {
                 <div className="flex items-center gap-2">
                   <Timer size={15} className="shrink-0 text-ink-soft" aria-hidden="true" />
                   <span>
-                    Livraison : {candidatureSelectionnee.delaiPropose} jour
-                    {candidatureSelectionnee.delaiPropose > 1 ? "s" : ""}
+                    {t("deliveryIn", {
+                      count: candidatureSelectionnee.delaiPropose,
+                    })}
                   </span>
                 </div>
 
@@ -619,7 +628,7 @@ function LivraisonsContent() {
               {livraisonSelectionnee && (
                 <div className="mt-4 border-t border-ink/15 pt-4">
                   <p className="mb-2 text-xs text-ink-soft">
-                    Statut de la livraison
+                    {t("deliveryStatus")}
                   </p>
                   <Tag
                     tone={
@@ -630,7 +639,7 @@ function LivraisonsContent() {
                           : "ocre"
                     }
                   >
-                    {statutLivraisonLabel[livraisonSelectionnee.statut]}
+                    {libelleStatutLivraison(livraisonSelectionnee.statut)}
                   </Tag>
                 </div>
               )}
@@ -656,13 +665,13 @@ function LivraisonsContent() {
         }
         eyebrow={
           role === "client"
-            ? "Espace client"
-            : "Espace étudiant"
+            ? t("clientSpace")
+            : t("studentSpace")
         }
         title={
           role === "client"
-            ? "Livraisons reçues"
-            : "Mes livraisons"
+            ? t("receivedDeliveries")
+            : t("myDeliveries")
         }
       />
 
@@ -692,9 +701,9 @@ function LivraisonsContent() {
             <StatCard
               icon={Package}
               tone="ink"
-              label="À traiter"
+              label={t("toProcess")}
               value={compteLivraisons.a_traiter}
-              sublabel="Livraisons à envoyer"
+              sublabel={t("deliveriesToSend")}
             />
           </button>
 
@@ -706,9 +715,9 @@ function LivraisonsContent() {
             <StatCard
               icon={XCircle}
               tone="brique"
-              label="Corrections demandées"
+              label={t("correctionsRequested")}
               value={compteLivraisons.corrections}
-              sublabel="À reprendre"
+              sublabel={t("toRedo")}
             />
           </button>
 
@@ -720,9 +729,9 @@ function LivraisonsContent() {
             <StatCard
               icon={Clock}
               tone="ocre"
-              label="En attente de validation"
+              label={t("awaitingValidation")}
               value={compteLivraisons.attente_validation}
-              sublabel="Chez le client"
+              sublabel={t("atClient")}
             />
           </button>
 
@@ -734,9 +743,9 @@ function LivraisonsContent() {
             <StatCard
               icon={CheckCircle}
               tone="rice"
-              label="Livraisons validées"
+              label={t("validatedDeliveries")}
               value={compteLivraisons.validees}
-              sublabel="Terminées"
+              sublabel={t("completed")}
             />
           </button>
         </div>
@@ -757,28 +766,28 @@ function LivraisonsContent() {
             <Input
               value={recherche}
               onChange={(event) => setRecherche(event.target.value)}
-              placeholder="Rechercher un client, une mission…"
-              aria-label="Rechercher une livraison"
+              placeholder={t("searchPlaceholder")}
+              aria-label={t("searchLabel")}
               className="pl-9 text-sm sm:text-base"
             />
           </div>
-          <Select value={filtreClient} onChange={(event) => setFiltreClient(event.target.value)} aria-label="Filtrer par client">
-            <option value="" disabled hidden>Tous les clients</option>
-            {Array.from(new Set(candidaturesFiltrees.map((c) => c.mission?.client?.utilisateur?.nom ?? c.mission?.client?.nomEntreprise ?? "Client"))).map((client) => <option key={client} value={client}>{client}</option>)}
+          <Select value={filtreClient} onChange={(event) => setFiltreClient(event.target.value)} aria-label={t("filterClient")}>
+            <option value="" disabled hidden>{t("allClients")}</option>
+            {Array.from(new Set(candidaturesFiltrees.map((c) => c.mission?.client?.utilisateur?.nom ?? c.mission?.client?.nomEntreprise ?? t("client")))).map((client) => <option key={client} value={client}>{client}</option>)}
           </Select>
-          <Select value={filtreMission} onChange={(event) => setFiltreMission(event.target.value)} aria-label="Filtrer par mission">
-            <option value="" disabled hidden>Toutes les missions</option>
-            {Array.from(new Set(candidaturesFiltrees.map((c) => c.mission?.titre ?? "Mission"))).map((mission) => <option key={mission} value={mission}>{mission}</option>)}
+          <Select value={filtreMission} onChange={(event) => setFiltreMission(event.target.value)} aria-label={t("filterMission")}>
+            <option value="" disabled hidden>{t("allMissions")}</option>
+            {Array.from(new Set(candidaturesFiltrees.map((c) => c.mission?.titre ?? t("mission")))).map((mission) => <option key={mission} value={mission}>{mission}</option>)}
           </Select>
-          <Select value={filtreStatut} onChange={(event) => setFiltreStatut(event.target.value)} aria-label="Filtrer par statut">
-            <option value="" disabled hidden>Tous les statuts</option>
-            {Object.entries(statutLivraisonLabel).map(([valeur, label]) => <option key={valeur} value={valeur}>{label}</option>)}
+          <Select value={filtreStatut} onChange={(event) => setFiltreStatut(event.target.value)} aria-label={t("filterStatus")}>
+            <option value="" disabled hidden>{t("allStatuses")}</option>
+            {["en_attente", "validee", "correction_demandee"].map((valeur) => <option key={valeur} value={valeur}>{libelleStatutLivraison(valeur)}</option>)}
           </Select>
-          <Select value={filtreMethode} onChange={(event) => setFiltreMethode(event.target.value)} aria-label="Filtrer par méthode">
-            <option value="" disabled hidden>Toutes les méthodes</option>
+          <Select value={filtreMethode} onChange={(event) => setFiltreMethode(event.target.value)} aria-label={t("filterMethod")}>
+            <option value="" disabled hidden>{t("allMethods")}</option>
             <option value="github">GitHub</option>
             <option value="gitlab">GitLab</option>
-            <option value="fichiers">Fichiers</option>
+            <option value="fichiers">{t("files")}</option>
           </Select>
         </div>
       )}
@@ -789,15 +798,15 @@ function LivraisonsContent() {
 
       {chargement ? (
         <p className="text-sm text-ink-soft">
-          Chargement des livraisons…
+          {t("loadingDeliveries")}
         </p>
       ) : candidaturesFiltrees.length ===
         0 ? (
         <NoticeCard>
           <p className="text-sm text-ink-soft">
             {role === "client"
-              ? "Vous n'avez aucune livraison reçue pour le moment."
-              : "Vous n'avez actuellement aucune candidature acceptée."}
+              ? t("emptyClient")
+              : t("emptyStudent")}
           </p>
 
           <Link
@@ -813,8 +822,8 @@ function LivraisonsContent() {
               variant="ghost"
             >
               {role === "client"
-                ? "Voir mes missions"
-                : "Voir mes candidatures"}
+                ? t("viewMyMissions")
+                : t("viewMyApplications")}
             </Button>
           </Link>
         </NoticeCard>
@@ -824,27 +833,27 @@ function LivraisonsContent() {
             onglets={[
               {
                 valeur: "toutes",
-                label: "Toutes",
+                label: t("all"),
                 compte: candidaturesFiltrees.length,
               },
               {
                 valeur: "a_traiter",
-                label: "À traiter",
+                label: t("toProcess"),
                 compte: compteLivraisons.a_traiter,
               },
               {
                 valeur: "corrections",
-                label: "Corrections demandées",
+                label: t("correctionsRequested"),
                 compte: compteLivraisons.corrections,
               },
               {
                 valeur: "attente_validation",
-                label: "En attente de validation",
+                label: t("awaitingValidation"),
                 compte: compteLivraisons.attente_validation,
               },
               {
                 valeur: "validees",
-                label: "Validées",
+                label: t("validated"),
                 compte: compteLivraisons.validees,
               },
             ]}
@@ -860,7 +869,7 @@ function LivraisonsContent() {
             {candidaturesAffichees.length === 0 && (
               <NoticeCard>
                 <p className="text-sm text-ink-soft">
-                  Aucune livraison dans cette catégorie.
+                  {t("noneInCategory")}
                 </p>
               </NoticeCard>
             )}
@@ -888,10 +897,10 @@ function LivraisonsContent() {
                     {/* MISSION */}
                     <div className="min-w-0 sm:flex-1">
                       <p className="truncate text-sm font-medium">
-                        {candidature.mission?.titre ?? "Mission"}
+                        {candidature.mission?.titre ?? t("mission")}
                       </p>
                       {candidature.mission?.categorie && (
-                        <Tag tone="ink">{candidature.mission.categorie}</Tag>
+                        <Tag tone="ink">{libelleCategorie(candidature.mission.categorie)}</Tag>
                       )}
                     </div>
 
@@ -907,7 +916,7 @@ function LivraisonsContent() {
                           : methode === "gitlab"
                             ? `GitLab${livraison?.branche ? ` · ${livraison.branche}` : ""}`
                             : methode === "fichiers"
-                              ? `${livraison?.piecesJointes?.length ?? 0} fichier${(livraison?.piecesJointes?.length ?? 0) > 1 ? "s" : ""}`
+                              ? t("filesCount", { count: livraison?.piecesJointes?.length ?? 0 })
                               : "—"}
                       </span>
                     </div>
@@ -932,7 +941,7 @@ function LivraisonsContent() {
                                 : "ocre"
                         }
                       >
-                        {livraison ? statutLivraisonLabel[livraison.statut] : "Aucune livraison"}
+                        {livraison ? libelleStatutLivraison(livraison.statut) : t("noDelivery")}
                       </Tag>
                     </div>
                   </div>
@@ -942,7 +951,7 @@ function LivraisonsContent() {
                     className="shrink-0"
                   >
                     <Button size="sm" variant="ghost">
-                      Voir
+                      {t("see")}
                     </Button>
                   </Link>
                 </NoticeCard>
@@ -971,6 +980,8 @@ function LivraisonEtudiant({
   onRafraichir: () => Promise<void>;
 }) {
   const { utilisateur } = useAuth();
+  const t = useTranslations("deliveriesPage");
+  const { statutLivraison: libelleStatutLivraison } = useLabels();
 
   const clientId =
     candidature.mission?.client
@@ -983,7 +994,7 @@ function LivraisonEtudiant({
       ?.utilisateur?.nom ??
     candidature.mission?.client
       ?.nomEntreprise ??
-    "Client";
+    t("client");
 
   const [lienLivrable, setLienLivrable] = useState(
     livraison?.lienLivrable ?? "",
@@ -1032,11 +1043,11 @@ function LivraisonEtudiant({
 
     const lien = lienLivrable.trim();
     if (methode === "depot" && !lien) {
-      setErreur("Veuillez renseigner le lien vers votre livrable.");
+      setErreur(t("errLinkRequired"));
       return;
     }
     if (methode === "fichiers" && !piecesJointes.length) {
-      setErreur("Ajoutez au moins un fichier avant de continuer.");
+      setErreur(t("errFileBeforeContinue"));
       return;
     }
 
@@ -1085,7 +1096,7 @@ function LivraisonEtudiant({
     if (envoiEvalClient || evalClientEnvoyee || maEvaluationClient) return;
 
     if (noteEvalClient < 1) {
-      setErreurEvalClient("Veuillez choisir une note entre 1 et 5.");
+      setErreurEvalClient(t("errRating"));
       return;
     }
 
@@ -1106,8 +1117,8 @@ function LivraisonEtudiant({
     } catch (error) {
       setErreurEvalClient(
         error instanceof ApiError
-          ? error.message || "Impossible d'envoyer l'évaluation."
-          : "Erreur réseau : impossible d'envoyer l'évaluation.",
+          ? error.message || t("errSendReview")
+          : t("errSendReviewNetwork"),
       );
     } finally {
       setEnvoiEvalClient(false);
@@ -1130,7 +1141,7 @@ function LivraisonEtudiant({
       setErreurEvalClient(
         error instanceof ApiError
           ? error.message
-          : "Impossible de modifier l'évaluation.",
+          : t("errEditReview"),
       );
     } finally {
       setEnvoiEvalClient(false);
@@ -1141,7 +1152,7 @@ function LivraisonEtudiant({
     const selections = Array.from(files);
     if (!selections.length) return;
     if (piecesJointes.length + selections.length > 10) {
-      setErreur("Maximum 10 fichiers par livraison.");
+      setErreur(t("errMaxFiles"));
       return;
     }
     setErreur(null);
@@ -1167,7 +1178,7 @@ function LivraisonEtudiant({
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible d'ajouter ce fichier.",
+          : t("errAddFile"),
       );
     } finally {
       setUploadEnCours(false);
@@ -1189,13 +1200,11 @@ function LivraisonEtudiant({
 
     const lien = lienLivrable.trim();
     if (methode === "depot" && !lien) {
-      setErreur(
-        "Veuillez renseigner le lien vers votre livrable.",
-      );
+      setErreur(t("errLinkRequired"));
       return;
     }
     if (methode === "fichiers" && !piecesJointes.length) {
-      setErreur("Ajoutez au moins un fichier avant l'envoi.");
+      setErreur(t("errFileBeforeSend"));
       return;
     }
 
@@ -1215,7 +1224,7 @@ function LivraisonEtudiant({
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible d'envoyer la livraison.",
+          : t("errSendDelivery"),
       );
     } finally {
       setEnvoi(false);
@@ -1227,16 +1236,16 @@ function LivraisonEtudiant({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
-            Livraison
+            {t("delivery")}
           </p>
 
           <h2 className="mt-2 font-display text-xl font-medium">
             {candidature.mission?.titre ??
-              "Mission"}
+              t("mission")}
           </h2>
 
           <p className="mt-1 text-sm text-ink-soft">
-            Client : {clientNom}
+            {t("clientName", { nom: clientNom })}
           </p>
         </div>
 
@@ -1256,7 +1265,7 @@ function LivraisonEtudiant({
               <MessageCircle
                 size={16}
               />
-              Discuter avec le client
+              {t("chatWithClient")}
             </Button>
           </Link>
         )}
@@ -1277,11 +1286,7 @@ function LivraisonEtudiant({
                   : "ink"
             }
           >
-            {
-              statutLivraisonLabel[
-                livraison.statut
-              ]
-            }
+            {libelleStatutLivraison(livraison.statut)}
           </Tag>
         </div>
       )}
@@ -1293,7 +1298,7 @@ function LivraisonEtudiant({
         livraison.commentaireCorrection && (
           <div className="mt-5 rounded-lg border border-brique/20 bg-brique/5 p-4">
             <p className="font-mono text-xs uppercase tracking-wider text-brique">
-              Correction demandée
+              {t("correctionRequested")}
             </p>
 
             <p className="mt-2 text-sm text-ink">
@@ -1310,8 +1315,7 @@ function LivraisonEtudiant({
         "validee" && (
         <div className="mt-5 rounded-lg border border-rice/20 bg-rice/5 p-4">
           <p className="text-sm text-rice">
-            Votre livraison a été validée
-            par le client.
+            {t("validatedByClient")}
           </p>
         </div>
       )}
@@ -1329,7 +1333,7 @@ function LivraisonEtudiant({
             className="inline-flex items-center gap-2 break-all text-sm text-ocre-dark hover:underline"
           >
             <ExternalLink size={15} />
-            Ouvrir le livrable
+            {t("openDeliverable")}
           </a>
         </div>
       )}
@@ -1341,8 +1345,8 @@ function LivraisonEtudiant({
         <div className="mt-6 max-w-xl border-t border-ink/15 pt-6">
           <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
             {livraison
-              ? "Modifier ma livraison"
-              : "Déposer ma livraison"}
+              ? t("editMyDelivery")
+              : t("submitMyDelivery")}
           </p>
 
           {/* INDICATEUR D'ÉTAPES */}
@@ -1350,9 +1354,9 @@ function LivraisonEtudiant({
           <div className="mt-4 flex items-center">
             {(
               [
-                { numero: 1, label: "Méthode" },
-                { numero: 2, label: "Informations" },
-                { numero: 3, label: "Aperçu" },
+                { numero: 1, label: t("stepMethod") },
+                { numero: 2, label: t("stepInfo") },
+                { numero: 3, label: t("stepPreview") },
               ] as const
             ).map((item, index) => (
               <div
@@ -1397,8 +1401,8 @@ function LivraisonEtudiant({
                   {methode === "depot" && (
                     <Check size={14} className="absolute right-3 top-3 text-ocre-dark" aria-hidden="true" />
                   )}
-                  <span className="font-medium">Lien de dépôt</span>
-                  <span className="mt-1 block text-xs text-ink-soft">GitHub ou GitLab</span>
+                  <span className="font-medium">{t("repoLink")}</span>
+                  <span className="mt-1 block text-xs text-ink-soft">{t("githubOrGitlab")}</span>
                 </button>
                 <button
                   type="button"
@@ -1408,8 +1412,8 @@ function LivraisonEtudiant({
                   {methode === "fichiers" && (
                     <Check size={14} className="absolute right-3 top-3 text-ocre-dark" aria-hidden="true" />
                   )}
-                  <span className="font-medium">Fichiers</span>
-                  <span className="mt-1 block text-xs text-ink-soft">Jusqu&apos;à 10 fichiers</span>
+                  <span className="font-medium">{t("files")}</span>
+                  <span className="mt-1 block text-xs text-ink-soft">{t("upTo10")}</span>
                 </button>
               </div>
             )}
@@ -1419,7 +1423,7 @@ function LivraisonEtudiant({
             {etape === 2 &&
               (methode === "depot" ? (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Plateforme" htmlFor={`plateforme-${candidature.id}`}>
+                  <Field label={t("platform")} htmlFor={`plateforme-${candidature.id}`}>
                     <Select
                       id={`plateforme-${candidature.id}`}
                       value={plateforme}
@@ -1430,7 +1434,7 @@ function LivraisonEtudiant({
                       <option value="gitlab">GitLab</option>
                     </Select>
                   </Field>
-                  <Field label="Branche (optionnel)" htmlFor={`branche-${candidature.id}`}>
+                  <Field label={t("branchOptional")} htmlFor={`branche-${candidature.id}`}>
                     <Input
                       id={`branche-${candidature.id}`}
                       value={branche}
@@ -1440,7 +1444,7 @@ function LivraisonEtudiant({
                     />
                   </Field>
                   <div className="sm:col-span-2">
-                    <Field label="URL du dépôt" htmlFor={`lien-${candidature.id}`}>
+                    <Field label={t("repoUrl")} htmlFor={`lien-${candidature.id}`}>
                       <Input
                         id={`lien-${candidature.id}`}
                         value={lienLivrable}
@@ -1451,13 +1455,13 @@ function LivraisonEtudiant({
                     </Field>
                   </div>
                   <div className="sm:col-span-2">
-                    <Field label="Commentaire" htmlFor={`commentaire-${candidature.id}`}>
+                    <Field label={t("comment")} htmlFor={`commentaire-${candidature.id}`}>
                       <Textarea
                         id={`commentaire-${candidature.id}`}
                         rows={4}
                         value={commentaireLivraison}
                         onChange={(event) => setCommentaireLivraison(event.target.value)}
-                        placeholder="Précisions sur votre livraison…"
+                        placeholder={t("deliveryNotesPlaceholder")}
                         disabled={envoi}
                       />
                     </Field>
@@ -1475,8 +1479,8 @@ function LivraisonEtudiant({
                     }}
                   >
                     <FileUp size={20} />
-                    <span>{uploadEnCours ? "Envoi des fichiers…" : "Sélectionner ou déposer des fichiers"}</span>
-                    <span className="text-xs text-ink-soft">PDF, Word, Excel, image, archive ou texte</span>
+                    <span>{uploadEnCours ? t("uploadingFiles") : t("selectOrDrop")}</span>
+                    <span className="text-xs text-ink-soft">{t("fileTypes")}</span>
                     <input
                       id={`fichiers-${candidature.id}`}
                       type="file"
@@ -1493,8 +1497,8 @@ function LivraisonEtudiant({
                     <ul className="mt-3 space-y-2 text-sm">
                       {piecesJointes.map((piece, index) => (
                         <li key={`${piece.url}-${index}`} className="flex items-center justify-between gap-3 border border-ink/10 px-3 py-2">
-                          <span className="min-w-0 truncate">{piece.nom} <span className="text-xs text-ink-soft">({Math.ceil((piece.tailleOctets ?? 0) / 1024)} Ko)</span></span>
-                          <button type="button" onClick={() => setPiecesJointes((precedentes) => precedentes.filter((_, pieceIndex) => pieceIndex !== index))} aria-label={`Supprimer ${piece.nom}`} className="shrink-0 text-brique">
+                          <span className="min-w-0 truncate">{piece.nom} <span className="text-xs text-ink-soft">({t("sizeKb", { taille: Math.ceil((piece.tailleOctets ?? 0) / 1024) })})</span></span>
+                          <button type="button" onClick={() => setPiecesJointes((precedentes) => precedentes.filter((_, pieceIndex) => pieceIndex !== index))} aria-label={t("removeFile", { nom: piece.nom })} className="shrink-0 text-brique">
                             <Trash2 size={16} />
                           </button>
                         </li>
@@ -1503,13 +1507,13 @@ function LivraisonEtudiant({
                   )}
 
                   <div className="mt-4">
-                    <Field label="Commentaire" htmlFor={`commentaire-${candidature.id}`}>
+                    <Field label={t("comment")} htmlFor={`commentaire-${candidature.id}`}>
                       <Textarea
                         id={`commentaire-${candidature.id}`}
                         rows={4}
                         value={commentaireLivraison}
                         onChange={(event) => setCommentaireLivraison(event.target.value)}
-                        placeholder="Précisions sur votre livraison…"
+                        placeholder={t("deliveryNotesPlaceholder")}
                         disabled={envoi}
                       />
                     </Field>
@@ -1522,35 +1526,35 @@ function LivraisonEtudiant({
             {etape === 3 && (
               <div className="space-y-3 rounded-lg border border-ink/15 bg-ink/5 p-4 text-sm">
                 <p>
-                  <span className="text-ink-soft">Méthode : </span>
+                  <span className="text-ink-soft">{t("methodLabel")} </span>
                   {methode === "depot"
-                    ? `Lien de dépôt (${plateforme === "github" ? "GitHub" : "GitLab"})`
-                    : "Fichiers"}
+                    ? t("repoLinkWith", { plateforme: plateforme === "github" ? "GitHub" : "GitLab" })
+                    : t("files")}
                 </p>
 
                 {methode === "depot" ? (
                   <>
                     <p className="break-all">
-                      <span className="text-ink-soft">URL : </span>
+                      <span className="text-ink-soft">{t("urlLabel")} </span>
                       {lienLivrable || "—"}
                     </p>
                     {branche && (
                       <p>
-                        <span className="text-ink-soft">Branche : </span>
+                        <span className="text-ink-soft">{t("branchLabel")} </span>
                         {branche}
                       </p>
                     )}
                   </>
                 ) : (
                   <p>
-                    <span className="text-ink-soft">Fichiers : </span>
-                    {piecesJointes.length} fichier{piecesJointes.length > 1 ? "s" : ""}
+                    <span className="text-ink-soft">{t("filesLabel")} </span>
+                    {t("filesCount", { count: piecesJointes.length })}
                   </p>
                 )}
 
                 {commentaireLivraison && (
                   <p>
-                    <span className="text-ink-soft">Commentaire : </span>
+                    <span className="text-ink-soft">{t("commentLabel")} </span>
                     {commentaireLivraison}
                   </p>
                 )}
@@ -1571,7 +1575,7 @@ function LivraisonEtudiant({
                 onClick={etapePrecedente}
                 disabled={etape === 1 || envoi}
               >
-                Précédent
+                {t("previous")}
               </Button>
 
               {etape < 3 ? (
@@ -1581,7 +1585,7 @@ function LivraisonEtudiant({
                   onClick={etapeSuivante}
                   disabled={envoi || uploadEnCours}
                 >
-                  Suivant
+                  {t("next")}
                 </Button>
               ) : (
                 <Button
@@ -1594,10 +1598,10 @@ function LivraisonEtudiant({
                   }
                 >
                   {envoi
-                    ? "Envoi…"
+                    ? t("sending")
                     : livraison
-                      ? "Mettre à jour la livraison"
-                      : "Déposer ma livraison"}
+                      ? t("updateDelivery")
+                      : t("submitMyDelivery")}
                 </Button>
               )}
             </div>
@@ -1621,7 +1625,7 @@ function LivraisonEtudiant({
               <div className="mt-5 rounded-lg border border-ink/10 bg-ink/[0.03] p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm font-medium">
-                    Votre évaluation du client : {maEvaluationClient.note}/5
+                    {t("yourClientReview", { note: maEvaluationClient.note })}
                   </p>
                   {!editionEvalClient && (
                     <Button
@@ -1635,7 +1639,7 @@ function LivraisonEtudiant({
                         setEditionEvalClient(true);
                       }}
                     >
-                      Modifier
+                      {t("edit")}
                     </Button>
                   )}
                 </div>
@@ -1643,7 +1647,7 @@ function LivraisonEtudiant({
                 {editionEvalClient && (
                   <div className="mt-4 max-w-xl">
                     <Field
-                      label="Note"
+                      label={t("rating")}
                       htmlFor={`evaluation-client-modification-${candidature.id}`}
                     >
                       <Input
@@ -1658,7 +1662,7 @@ function LivraisonEtudiant({
                       />
                     </Field>
                     <Field
-                      label="Commentaire (facultatif)"
+                      label={t("commentOptional")}
                       htmlFor={`evaluation-client-commentaire-${candidature.id}`}
                     >
                       <Textarea
@@ -1676,14 +1680,14 @@ function LivraisonEtudiant({
                         disabled={envoiEvalClient || noteEvalClient < 1}
                         onClick={() => void enregistrerEvalClient()}
                       >
-                        Enregistrer
+                        {t("save")}
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => setEditionEvalClient(false)}
                       >
-                        Fermer
+                        {t("close")}
                       </Button>
                     </div>
                   </div>
@@ -1696,17 +1700,16 @@ function LivraisonEtudiant({
                   className="mt-5 border-t border-ink/15 pt-5"
                 >
                   <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
-                    Évaluer le client
+                    {t("reviewClient")}
                   </p>
 
                   <p className="mt-1 text-sm text-ink-soft">
-                    Projet terminé et paiement confirmé : partagez votre
-                    retour sur cette collaboration.
+                    {t("reviewClientHint")}
                   </p>
 
                   <div className="mt-4 max-w-xl">
                     <Field
-                      label="Note"
+                      label={t("rating")}
                       htmlFor={`evaluation-client-note-${candidature.id}`}
                     >
                       <Input
@@ -1722,7 +1725,7 @@ function LivraisonEtudiant({
                       />
                     </Field>
                     <Field
-                      label="Commentaire (facultatif)"
+                      label={t("commentOptional")}
                       htmlFor={`evaluation-client-avis-${candidature.id}`}
                     >
                       <Textarea
@@ -1732,7 +1735,7 @@ function LivraisonEtudiant({
                         onChange={(event) =>
                           setCommentaireEvalClient(event.target.value)
                         }
-                        placeholder="Partagez votre retour sur cette collaboration…"
+                        placeholder={t("feedbackPlaceholder")}
                         disabled={envoiEvalClient}
                       />
                     </Field>
@@ -1750,8 +1753,8 @@ function LivraisonEtudiant({
                       disabled={envoiEvalClient || noteEvalClient < 1}
                     >
                       {envoiEvalClient
-                        ? "Envoi…"
-                        : "Envoyer mon évaluation"}
+                        ? t("sending")
+                        : t("sendMyReview")}
                     </Button>
                   </div>
                 </form>
@@ -1761,7 +1764,7 @@ function LivraisonEtudiant({
             {evalClientEnvoyee && (
               <div className="mt-5 rounded-lg border border-rice/20 bg-rice/5 p-4">
                 <p className="text-sm text-rice">
-                  Évaluation envoyée. Merci pour votre retour !
+                  {t("reviewSent")}
                 </p>
               </div>
             )}
@@ -1786,6 +1789,8 @@ function LivraisonClient({
   paiements: Transaction[];
   onRafraichir: () => Promise<void>;
 }) {
+  const t = useTranslations("deliveriesPage");
+  const { statutLivraison: libelleStatutLivraison } = useLabels();
   const etudiantId =
     candidature.etudiant
       ?.utilisateur?.id ??
@@ -1794,7 +1799,7 @@ function LivraisonClient({
   const etudiantNom =
     candidature.etudiant
       ?.utilisateur?.nom ??
-    "Étudiant";
+    t("student");
 
   // ==========================================================
   // ÉVALUATIONS (RG-037 / RG-065 / RG-066)
@@ -1946,9 +1951,7 @@ function LivraisonClient({
     }
 
     if (note < 1) {
-      setEvaluationErreur(
-        "Veuillez choisir une note entre 1 et 5.",
-      );
+      setEvaluationErreur(t("errRating"));
       return;
     }
 
@@ -1991,11 +1994,11 @@ function LivraisonClient({
         // On affiche le message métier du backend.
         setEvaluationErreur(
           error.message ||
-            "Impossible d'envoyer l'évaluation.",
+            t("errSendReview"),
         );
       } else {
         setEvaluationErreur(
-          "Erreur réseau : impossible d'envoyer l'évaluation. Vérifiez votre connexion.",
+          t("errSendReviewNetworkCheck"),
         );
       }
     } finally {
@@ -2019,7 +2022,7 @@ function LivraisonClient({
       setEvaluationErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de modifier l'évaluation.",
+          : t("errEditReview"),
       );
     } finally {
       setEvaluationEnvoi(false);
@@ -2043,9 +2046,7 @@ function LivraisonClient({
       actionType === "corriger" &&
       !commentaireCorrection.trim()
     ) {
-      setErreur(
-        "Veuillez indiquer les corrections à apporter.",
-      );
+      setErreur(t("errCorrectionsRequired"));
       return;
     }
 
@@ -2090,7 +2091,7 @@ function LivraisonClient({
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de traiter la livraison.",
+          : t("errProcessDelivery"),
       );
     } finally {
       setEnvoi(false);
@@ -2105,16 +2106,16 @@ function LivraisonClient({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
-            Livraison reçue
+            {t("deliveryReceived")}
           </p>
 
           <h2 className="mt-2 font-display text-xl font-medium">
             {candidature.mission?.titre ??
-              "Mission"}
+              t("mission")}
           </h2>
 
           <p className="mt-1 text-sm text-ink-soft">
-            Étudiant : {etudiantNom}
+            {t("studentName", { nom: etudiantNom })}
           </p>
         </div>
 
@@ -2134,7 +2135,7 @@ function LivraisonClient({
               <MessageCircle
                 size={16}
               />
-              Discuter avec l&apos;étudiant
+              {t("chatWithStudent")}
             </Button>
           </Link>
         )}
@@ -2153,7 +2154,7 @@ function LivraisonClient({
                 : "ink"
           }
         >
-          {statutLivraisonLabel[statut]}
+          {libelleStatutLivraison(statut)}
         </Tag>
       </div>
 
@@ -2170,7 +2171,7 @@ function LivraisonClient({
             className="inline-flex items-center gap-2 break-all text-sm text-ocre-dark hover:underline"
           >
             <ExternalLink size={15} />
-            Ouvrir le livrable
+            {t("openDeliverable")}
           </a>
         </div>
       )}
@@ -2178,7 +2179,7 @@ function LivraisonClient({
       {livraison.piecesJointes && livraison.piecesJointes.length > 0 && (
         <div className="mt-5">
           <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
-            Fichiers livrés
+            {t("deliveredFiles")}
           </p>
           <ul className="mt-2 space-y-2 text-sm">
             {livraison.piecesJointes.map((piece) => (
@@ -2195,7 +2196,7 @@ function LivraisonClient({
       {livraison.commentaireLivraison && (
         <div className="mt-5 rounded-lg border border-ink/10 bg-ink/5 p-4">
           <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
-            Commentaire de l&apos;étudiant
+            {t("studentComment")}
           </p>
 
           <p className="mt-2 text-sm text-ink">
@@ -2213,7 +2214,7 @@ function LivraisonClient({
         livraison.commentaireCorrection && (
           <div className="mt-5 rounded-lg border border-brique/20 bg-brique/5 p-4">
             <p className="font-mono text-xs uppercase tracking-wider text-brique">
-              Correction demandée
+              {t("correctionRequested")}
             </p>
 
             <p className="mt-2 text-sm text-ink">
@@ -2229,12 +2230,12 @@ function LivraisonClient({
       {statut !== "validee" && (
         <div className="mt-6 border-t border-ink/15 pt-6">
           <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
-            Actions
+            {t("actions")}
           </p>
 
           <div className="mt-4">
             <Field
-              label="Commentaire de correction"
+              label={t("correctionComment")}
               htmlFor={`correction-${candidature.id}`}
             >
               <Textarea
@@ -2248,7 +2249,7 @@ function LivraisonClient({
                     event.target.value,
                   )
                 }
-                placeholder="Indiquez les modifications à apporter…"
+                placeholder={t("correctionPlaceholder")}
                 disabled={envoi}
               />
             </Field>
@@ -2277,8 +2278,8 @@ function LivraisonClient({
 
               {envoi &&
               action === "valider"
-                ? "Validation…"
-                : "Valider la livraison"}
+                ? t("validating")
+                : t("validateDelivery")}
             </Button>
 
             {/* CORRECTION */}
@@ -2300,8 +2301,8 @@ function LivraisonClient({
 
               {envoi &&
               action === "corriger"
-                ? "Envoi…"
-                : "Demander une correction"}
+                ? t("sending")
+                : t("requestCorrection")}
             </Button>
           </div>
         </div>
@@ -2315,7 +2316,7 @@ function LivraisonClient({
       {statut === "validee" && (
         <div className="mt-5 border-t border-ink/15 pt-5">
           <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
-            État du projet
+            {t("projectStatus")}
           </p>
 
           <ul className="mt-3 space-y-2 text-sm">
@@ -2324,7 +2325,7 @@ function LivraisonClient({
                 size={16}
                 aria-hidden="true"
               />
-              Livraison validée
+              {t("deliveryValidated")}
             </li>
 
             {!paiementConfirme &&
@@ -2334,14 +2335,14 @@ function LivraisonClient({
                     size={16}
                     aria-hidden="true"
                   />
-                  Paiement déclaré — en attente de confirmation
+                  {t("paymentDeclared")}
                   <Link href="/tableau-de-bord/paiements">
                     <Button
                       size="sm"
                       variant="ghost"
                       className="border border-ocre/30 text-ocre hover:bg-ocre/10"
                     >
-                      Suivre le paiement
+                      {t("trackPayment")}
                     </Button>
                   </Link>
                 </li>
@@ -2351,14 +2352,14 @@ function LivraisonClient({
                     size={16}
                     aria-hidden="true"
                   />
-                  Paiement annulé — une nouvelle tentative est possible
+                  {t("paymentCancelled")}
                   <Link href="/tableau-de-bord/paiements">
                     <Button
                       size="sm"
                       variant="ghost"
                       className="border border-brique/30 text-brique hover:bg-brique/10"
                     >
-                      Refaire le paiement
+                      {t("retryPayment")}
                     </Button>
                   </Link>
                 </li>
@@ -2368,14 +2369,14 @@ function LivraisonClient({
                     size={16}
                     aria-hidden="true"
                   />
-                  Paiement obligatoire
+                  {t("paymentRequired")}
                   <Link href="/tableau-de-bord/paiements">
                     <Button
                       size="sm"
                       variant="ghost"
                       className="border border-ocre/30 text-ocre hover:bg-ocre/10"
                     >
-                      Payer maintenant
+                      {t("payNow")}
                     </Button>
                   </Link>
                 </li>
@@ -2387,7 +2388,7 @@ function LivraisonClient({
                   size={16}
                   aria-hidden="true"
                 />
-                Paiement confirmé
+                {t("paymentConfirmed")}
               </li>
             )}
 
@@ -2398,7 +2399,7 @@ function LivraisonClient({
                     size={16}
                     aria-hidden="true"
                   />
-                  Évaluation effectuée
+                  {t("reviewDone")}
                 </li>
               ) : (
                 <li className="flex items-center gap-2 text-ocre">
@@ -2406,7 +2407,7 @@ function LivraisonClient({
                     size={16}
                     aria-hidden="true"
                   />
-                  Évaluation obligatoire
+                  {t("reviewRequired")}
                 </li>
               ))}
           </ul>
@@ -2417,7 +2418,7 @@ function LivraisonClient({
                 size={16}
                 aria-hidden="true"
               />
-              Projet terminé
+              {t("projectCompleted")}
             </p>
           )}
         </div>
@@ -2443,18 +2444,17 @@ function LivraisonClient({
             className="mt-5 border-t border-ink/15 pt-5"
           >
             <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
-              Évaluer la livraison
+              {t("reviewDelivery")}
             </p>
 
             <p className="mt-1 text-sm text-ink-soft">
-              Votre évaluation est obligatoire pour
-              marquer le projet comme terminé.
+              {t("reviewMandatory")}
             </p>
 
             <div
               className="mt-4 flex items-center gap-1"
               role="radiogroup"
-              aria-label="Note de 1 à 5"
+              aria-label={t("ratingGroup")}
             >
               {[1, 2, 3, 4, 5].map(
                 (valeur) => (
@@ -2465,7 +2465,7 @@ function LivraisonClient({
                     aria-checked={
                       note === valeur
                     }
-                    aria-label={`Note ${valeur} sur 5`}
+                    aria-label={t("ratingOutOf", { valeur })}
                     disabled={
                       evaluationEnvoi
                     }
@@ -2496,7 +2496,7 @@ function LivraisonClient({
 
             <div className="mt-4 max-w-xl">
               <Field
-                label="Commentaire (facultatif)"
+                label={t("commentOptional")}
                 htmlFor={`evaluation-${candidature.id}`}
               >
                 <Textarea
@@ -2510,7 +2510,7 @@ function LivraisonClient({
                       event.target.value,
                     )
                   }
-                  placeholder="Partagez votre retour sur le travail réalisé…"
+                  placeholder={t("workFeedbackPlaceholder")}
                   disabled={
                     evaluationEnvoi
                   }
@@ -2533,8 +2533,8 @@ function LivraisonClient({
               }
             >
               {evaluationEnvoi
-                ? "Envoi…"
-                : "Envoyer l'évaluation"}
+                ? t("sending")
+                : t("sendReview")}
             </Button>
           </form>
         )}
@@ -2550,7 +2550,7 @@ function LivraisonClient({
         <div className="mt-5 rounded-lg border border-ink/10 bg-ink/[0.03] p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-medium">
-              Votre évaluation : {maEvaluation.note}/5
+              {t("yourReview", { note: maEvaluation.note })}
             </p>
             {!editionEvaluation && (
               <Button
@@ -2564,15 +2564,15 @@ function LivraisonClient({
                   setEditionEvaluation(true);
                 }}
               >
-                Modifier
-              </Button>
+                {t("edit")}
+                    </Button>
             )}
           </div>
 
           {editionEvaluation && (
             <div className="mt-4 max-w-xl">
               <Field
-                label="Note"
+                label={t("rating")}
                 htmlFor={`evaluation-modification-${candidature.id}`}
               >
                 <Input
@@ -2585,7 +2585,7 @@ function LivraisonClient({
                 />
               </Field>
               <Field
-                label="Commentaire (facultatif)"
+                label={t("commentOptional")}
                 htmlFor={`evaluation-commentaire-${candidature.id}`}
               >
                 <Textarea
@@ -2601,15 +2601,15 @@ function LivraisonClient({
                   disabled={evaluationEnvoi || note < 1}
                   onClick={() => void enregistrerEvaluation()}
                 >
-                  Enregistrer
-                </Button>
+                  {t("save")}
+                      </Button>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => setEditionEvaluation(false)}
                 >
-                  Fermer
-                </Button>
+                  {t("close")}
+                      </Button>
               </div>
             </div>
           )}
@@ -2621,8 +2621,7 @@ function LivraisonClient({
       {evaluationEnvoyee && (
         <div className="mt-5 rounded-lg border border-rice/20 bg-rice/5 p-4">
           <p className="text-sm text-rice">
-            Évaluation envoyée. Merci pour
-            votre retour !
+            {t("reviewSent")}
           </p>
         </div>
       )}

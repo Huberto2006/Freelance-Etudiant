@@ -2,8 +2,10 @@
 
 import { Sparkles, Trophy, LayoutGrid } from "lucide-react";
 import { clsx } from "clsx";
+import { useTranslations } from "next-intl";
 
 import { CATEGORIES_REPERENTIEL } from "@/lib/categories";
+import { useOptionLabels } from "@/i18n/use-option-labels";
 
 /**
  * Mode de tri spécial, mutuellement exclusif avec une catégorie précise :
@@ -84,6 +86,9 @@ export function SousMenuCatalogue({
   /** Callback appelé lorsqu'un onglet est sélectionné. */
   onChange: (onglet: OngletCatalogue) => void;
 }) {
+  const t = useTranslations("catalog.subMenu");
+  const libelleCategorie = useOptionLabels().categorie;
+
   function estActif(onglet: OngletCatalogue) {
     if (onglet.type !== actif.type) return false;
 
@@ -92,7 +97,7 @@ export function SousMenuCatalogue({
 
   return (
     <nav
-      aria-label="Filtrer par mise en avant ou par catégorie"
+      aria-label={t("ariaLabel")}
       className="sticky top-16 z-20 -mx-4 border-b border-ink/10 bg-paper/95 px-4 py-3 backdrop-blur-sm sm:mx-0 sm:rounded-xl sm:border sm:bg-paper-light/95"
     >
       <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
@@ -106,7 +111,7 @@ export function SousMenuCatalogue({
           onSelect={onChange}
           icon={LayoutGrid}
         >
-          Tous
+          {t("all")}
         </OngletBouton>
 
         {/* Recommandé */}
@@ -119,7 +124,7 @@ export function SousMenuCatalogue({
           onSelect={onChange}
           icon={Sparkles}
         >
-          Recommandé
+          {t("recommended")}
         </OngletBouton>
 
         {/* Meilleurs */}
@@ -132,7 +137,7 @@ export function SousMenuCatalogue({
           onSelect={onChange}
           icon={Trophy}
         >
-          Meilleurs
+          {t("best")}
         </OngletBouton>
 
         {/* Séparateur */}
@@ -155,7 +160,7 @@ export function SousMenuCatalogue({
               onSelect={onChange}
               icon={categorie.icon}
             >
-              {categorie.libelle}
+              {libelleCategorie(categorie.valeur)}
             </OngletBouton>
           );
         })}

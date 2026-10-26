@@ -1,0 +1,59 @@
+{
+  "language": {
+    "label": "Fiteny",
+    "choose": "Fidio ny fiteny",
+    "current": "Fiteny ankehitriny : {langue}",
+    "changeError": "Tsy afaka niova ny fiteny. Andramo indray."
+  },
+  "actions": {
+    "save": "Tehirizina",
+    "cancel": "Foanana",
+    "delete": "Fafana",
+    "confirm": "Hamafiso",
+    "close": "Hidina",
+    "back": "Hiverina",
+    "search": "Hitady",
+    "edit": "Hanitsy",
+    "send": "Alefa",
+    "next": "Manaraka",
+    "previous": "Teo aloha",
+    "retry": "Andramo indray",
+    "seeMore": "Hijery bebe kokoa",
+    "seeAll": "Hijery rehetra",
+    "yes": "Eny",
+    "no": "Tsia",
+    "add": "Ampio",
+    "remove": "Esory",
+    "download": "Alaina",
+    "copy": "Adikao",
+    "apply": "Ampiharo",
+    "reset": "Averina"
+  },
+  "states": {
+    "loading": "Mampiditra…",
+    "saving": "Mitahiry…",
+    "sending": "Mandefa…",
+    "empty": "Tsy misy asehoy amin'izao fotoana izao.",
+    "error": "Nisy hadisoana.",
+    "none": "Tsy misy",
+    "optional": "tsy voatery",
+    "required": "tsy maintsy fenoina",
+    "errLoadData": "Tsy afaka nampiditra ny angona. Andramo indray."
+  },
+  "currency": {
+    "ariary": "Ar"
+  },
+  "card": {
+    "mission": "Asa",
+    "service": "Tolotra",
+    "client": "Mpanjifa",
+    "student": "Mpianatra",
+    "before": "alohan'ny {date}",
+    "days": "{count} andro",
+    "view": "Jereo →"
+  },
+  "back": {
+    "ariaLabel": "Hiverina amin'ny pejy teo aloha",
+    "label": "Hiverina"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "notFound": {
+    "title": "Tsy hita ny pejy",
+    "text": "Tsy misy na nafindra ny pejy tadiavinao.",
+    "home": "Hiverina amin'ny fandraisana"
+  },
+  "crash": {
+    "title": "Nisy fahadisoana",
+    "text": "Nisy olana tsy nampoizina. Azonao andramana indray.",
+    "retry": "Andramo indray"
+  }
+}

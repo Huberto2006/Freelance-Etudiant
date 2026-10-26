@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/Button";
 
@@ -92,6 +93,8 @@ export function BoutonGoogle({
   texte = "continue_with",
   disabled = false,
 }: BoutonGoogleProps) {
+  const t = useTranslations("auth.google");
+  const locale = useLocale();
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const conteneur = useRef<HTMLDivElement>(null);
   const onCredentialRef = useRef(onCredential);
@@ -127,7 +130,7 @@ export function BoutonGoogle({
           text: texte,
           shape: "rectangular",
           logo_alignment: "left",
-          locale: "fr",
+          locale: locale === "en" ? "en" : "fr",
           width: Math.min(400, Math.max(200, cible.clientWidth || 320)),
         });
         setEtat("pret");
@@ -139,7 +142,7 @@ export function BoutonGoogle({
     return () => {
       annule = true;
     };
-  }, [clientId, texte, tentative]);
+  }, [clientId, texte, tentative, locale]);
 
   if (!clientId) return null;
 
@@ -157,14 +160,13 @@ export function BoutonGoogle({
       <div aria-live="polite">
         {etat === "chargement" && (
           <p className="mt-1 text-center text-xs text-ink-soft">
-            Chargement de Google…
+            {t("loading")}
           </p>
         )}
         {etat === "erreur" && (
           <div role="alert" className="mt-2 flex flex-col items-center gap-2">
             <p className="text-center text-sm text-brique">
-              Impossible de charger la connexion Google. Vérifiez votre
-              connexion ou désactivez le bloqueur de contenu.
+              {t("error")}
             </p>
             <Button
               type="button"
@@ -175,7 +177,7 @@ export function BoutonGoogle({
                 setTentative((n) => n + 1);
               }}
             >
-              Réessayer
+              {t("retry")}
             </Button>
           </div>
         )}

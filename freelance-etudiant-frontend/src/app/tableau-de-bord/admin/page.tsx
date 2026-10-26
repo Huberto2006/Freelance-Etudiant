@@ -1,16 +1,20 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ShieldCheck, ShieldAlert, Mail, CalendarDays } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Utilisateur } from "@/lib/types";
-import { formatDate } from "@/lib/format";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
 import { useApiList } from "@/hooks/useApiList";
-import { roleLabel } from "@/lib/auth-context";
 import { Button } from "@/components/ui/Button";
 import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 export default function AdminPage() {
+  const t = useTranslations("admin");
+  const { date } = useFormats();
+  const { role } = useLabels();
   // L'ancienne version de cette page dupliquait cette meme requete deux
   // fois (un useEffect pour le chargement initial, un charger() distinct
   // pour le rechargement apres action) : deux copies du meme code, deja
@@ -42,7 +46,7 @@ export default function AdminPage() {
       );
 
       setErreur(
-        "Impossible de suspendre cet utilisateur."
+        t("users.suspendError")
       );
     }
   }
@@ -64,7 +68,7 @@ export default function AdminPage() {
       );
 
       setErreur(
-        "Impossible de réactiver cet utilisateur."
+        t("users.reactivateError")
       );
     }
   }
@@ -76,7 +80,7 @@ export default function AdminPage() {
       </div>
 
       {/* Titre */}
-      <PageHeader icon={ShieldCheck} eyebrow="Administration" title="Utilisateurs" />
+      <PageHeader icon={ShieldCheck} eyebrow={t("eyebrow")} title={t("users.title")} />
 
       {/* Erreur */}
       {erreur && (
@@ -90,13 +94,13 @@ export default function AdminPage() {
       {/* Chargement */}
       {chargement ? (
         <p className="text-sm text-ink-soft">
-          Chargement…
+          {t("users.loading")}
         </p>
       ) : utilisateurs.length === 0 ? (
         /* Aucun utilisateur */
         <NoticeCard>
           <p className="text-sm text-ink-soft">
-            Aucun utilisateur trouvé.
+            {t("users.empty")}
           </p>
         </NoticeCard>
       ) : (
@@ -115,13 +119,13 @@ export default function AdminPage() {
                   </p>
 
                   <Tag tone="ink">
-                    {roleLabel(u.role)}
+                    {role(u.role)}
                   </Tag>
 
                   {u.estSuspendu && (
                     <Tag tone="brique">
                       <ShieldAlert size={11} className="mr-1" />
-                      Suspendu
+                      {t("users.suspended")}
                     </Tag>
                   )}
                 </div>
@@ -133,7 +137,7 @@ export default function AdminPage() {
                   </span>
                   <span className="inline-flex items-center gap-1">
                     <CalendarDays size={12} />
-                    inscrit le {formatDate(u.dateInscription)}
+                    {t("users.registeredOn", { date: date(u.dateInscription) })}
                   </span>
                 </p>
               </div>
@@ -154,8 +158,8 @@ export default function AdminPage() {
                   }
                 >
                   {u.estSuspendu
-                    ? "Réactiver"
-                    : "Suspendre"}
+                    ? t("users.reactivate")
+                    : t("users.suspend")}
                 </Button>
               )}
             </NoticeCard>

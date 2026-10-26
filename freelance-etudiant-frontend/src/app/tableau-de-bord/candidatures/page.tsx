@@ -10,7 +10,9 @@ import type { Candidature } from "@/lib/types";
 import { useApiList } from "@/hooks/useApiList";
 import { SousNavigation } from "@/components/ui/SousNavigation";
 
-import { formatArgent, statutCandidatureLabel } from "@/lib/format";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
 
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
@@ -18,6 +20,9 @@ import { Field, Input, Textarea } from "@/components/ui/Field";
 import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
 
 export default function CandidaturesPage() {
+  const t = useTranslations("dashboardPages.candidatures");
+  const { argent: formatArgent } = useFormats();
+  const { statutCandidature } = useLabels();
   const { donnees, setDonnees, chargement, erreur, setErreur } = useApiList(() =>
     api.get<Candidature[]>("/candidatures/me"),
   );
@@ -59,7 +64,7 @@ export default function CandidaturesPage() {
     return (
       candidature.mission?.client?.utilisateur?.nom ??
       candidature.mission?.client?.nomEntreprise ??
-      "Client"
+      t("clientFallback")
     );
   }
 
@@ -93,7 +98,7 @@ export default function CandidaturesPage() {
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de modifier la candidature.",
+          : t("editError"),
       );
     } finally {
       setActionEnCours(null);
@@ -115,7 +120,7 @@ export default function CandidaturesPage() {
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible d'annuler la candidature.",
+          : t("cancelError"),
       );
     } finally {
       setActionEnCours(null);
@@ -129,8 +134,8 @@ export default function CandidaturesPage() {
           ===================================================== */}
       <PageHeader
         icon={ClipboardList}
-        eyebrow="Espace étudiant"
-        title="Mes candidatures"
+        eyebrow={t("eyebrow")}
+        title={t("title")}
       />
 
       {/* =====================================================
@@ -146,13 +151,13 @@ export default function CandidaturesPage() {
           CHARGEMENT
           ===================================================== */}
       {chargement ? (
-        <p className="text-sm text-ink-soft">Chargement…</p>
+        <p className="text-sm text-ink-soft">{t("loading")}</p>
       ) : candidatures.length === 0 ? (
         <NoticeCard>
           <p className="text-sm text-ink-soft">
-            Vous n&apos;avez pas encore postulé à une mission.{" "}
+            {t("empty")}{" "}
             <Link href="/missions" className="text-ocre-dark hover:underline">
-              Parcourir les missions
+              {t("browseMissions")}
             </Link>
           </p>
         </NoticeCard>
@@ -190,22 +195,22 @@ export default function CandidaturesPage() {
                 onglets={[
                   {
                     valeur: "toutes",
-                    label: "Toutes",
+                    label: t("tabs.all"),
                     compte: candidatures.length,
                   },
                   {
                     valeur: "en_attente",
-                    label: "En attente",
+                    label: t("tabs.pending"),
                     compte: enAttente,
                   },
                   {
                     valeur: "acceptees",
-                    label: "Acceptées",
+                    label: t("tabs.accepted"),
                     compte: acceptees,
                   },
                   {
                     valeur: "refusees",
-                    label: "Refusées",
+                    label: t("tabs.refused"),
                     compte: refusees,
                   },
                 ]}
@@ -216,7 +221,7 @@ export default function CandidaturesPage() {
               {candidaturesAffichees.length === 0 ? (
                 <NoticeCard>
                   <p className="text-sm text-ink-soft">
-                    Aucune candidature dans cette catégorie.
+                    {t("emptyCategory")}
                   </p>
                 </NoticeCard>
               ) : (
@@ -245,16 +250,18 @@ export default function CandidaturesPage() {
                             : "ink"
                       }
                     >
-                      {statutCandidatureLabel[candidature.statut]}
+                      {statutCandidature(candidature.statut)}
                     </Tag>
 
                     <p className="mt-3 font-display text-lg font-medium">
-                      {candidature.mission?.titre ?? "Mission"}
+                      {candidature.mission?.titre ?? t("missionFallback")}
                     </p>
 
                     <p className="mt-1 text-xs text-ink-soft/70">
-                      proposé : {formatArgent(candidature.prixPropose)} en{" "}
-                      {candidature.delaiPropose} jours
+                      {t("proposed", {
+                        prix: formatArgent(candidature.prixPropose),
+                        jours: candidature.delaiPropose,
+                      })}
                     </p>
                   </div>
 
@@ -264,7 +271,7 @@ export default function CandidaturesPage() {
                   {missionId && (
                     <Link href={`/missions/${missionId}`}>
                       <Button size="sm" variant="ghost">
-                        Voir la mission
+                        {t("viewMission")}
                       </Button>
                     </Link>
                   )}
@@ -274,10 +281,10 @@ export default function CandidaturesPage() {
                 {editionId === candidature.id && (
                   <div className="flex flex-col gap-4">
                     <p className="font-display text-lg font-medium">
-                      Modifier votre candidature
+                      {t("editTitle")}
                     </p>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <Field label="Prix proposé (Ar)" htmlFor={`prix-${candidature.id}`}>
+                      <Field label={t("proposedPrice")} htmlFor={`prix-${candidature.id}`}>
                         <Input
                           id={`prix-${candidature.id}`}
                           type="number"
@@ -286,7 +293,7 @@ export default function CandidaturesPage() {
                           onChange={(event) => setPrixEdition(event.target.value)}
                         />
                       </Field>
-                      <Field label="Délai proposé (jours)" htmlFor={`delai-${candidature.id}`}>
+                      <Field label={t("proposedDelay")} htmlFor={`delai-${candidature.id}`}>
                         <Input
                           id={`delai-${candidature.id}`}
                           type="number"
@@ -296,7 +303,7 @@ export default function CandidaturesPage() {
                         />
                       </Field>
                     </div>
-                    <Field label="Message (optionnel)" htmlFor={`message-${candidature.id}`}>
+                    <Field label={t("messageOptional")} htmlFor={`message-${candidature.id}`}>
                       <Textarea
                         id={`message-${candidature.id}`}
                         value={messageEdition}
@@ -309,10 +316,10 @@ export default function CandidaturesPage() {
                         disabled={actionEnCours !== null}
                         onClick={() => void enregistrerEdition(candidature)}
                       >
-                        Enregistrer
+                        {t("save")}
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => setEditionId(null)}>
-                        Fermer
+                        {t("close")}
                       </Button>
                     </div>
                   </div>
@@ -337,7 +344,7 @@ export default function CandidaturesPage() {
                           className="inline-flex items-center gap-2"
                         >
                           <MessageCircle size={16} />
-                          Discuter avec le client
+                          {t("chatWithClient")}
                         </Button>
                       </Link>
                     )}
@@ -358,8 +365,8 @@ export default function CandidaturesPage() {
                         <Package size={16} />
 
                         {candidature.livraison
-                          ? "Suivre ma livraison"
-                          : "Déposer ma livraison"}
+                          ? t("trackDelivery")
+                          : t("submitDelivery")}
                       </Button>
                     </Link>
                   </div>
@@ -373,7 +380,7 @@ export default function CandidaturesPage() {
                       disabled={actionEnCours !== null}
                       onClick={() => commencerEdition(candidature)}
                     >
-                      Modifier
+                      {t("edit")}
                     </Button>
                     <Button
                       size="sm"
@@ -382,7 +389,7 @@ export default function CandidaturesPage() {
                       onClick={() => setCandidatureAAnnuler(candidature)}
                       className="text-brique"
                     >
-                      Annuler
+                      {t("cancel")}
                     </Button>
                   </div>
                 )}
@@ -398,14 +405,16 @@ export default function CandidaturesPage() {
 
       <ConfirmDialog
         ouvert={candidatureAAnnuler !== null}
-        titre="Annuler cette candidature ?"
+        titre={t("confirmTitle")}
         description={
           candidatureAAnnuler
-            ? `Votre candidature pour « ${candidatureAAnnuler.mission?.titre ?? "cette mission"} » sera définitivement retirée.`
+            ? t("confirmDescription", {
+                titre: candidatureAAnnuler.mission?.titre ?? t("thisMission"),
+              })
             : undefined
         }
-        libelleConfirmer="Annuler la candidature"
-        libelleAnnuler="Revenir"
+        libelleConfirmer={t("confirmCancel")}
+        libelleAnnuler={t("confirmBack")}
         onConfirmer={() => {
           if (candidatureAAnnuler) void annuler(candidatureAAnnuler);
           setCandidatureAAnnuler(null);

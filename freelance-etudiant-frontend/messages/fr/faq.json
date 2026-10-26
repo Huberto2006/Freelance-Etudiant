@@ -1,0 +1,121 @@
+{
+  "themes": {
+    "inscription": {
+      "title": "Inscription et compte",
+      "items": {
+        "who": {
+          "question": "Qui peut rejoindre Kianja ?",
+          "answer": "Les étudiants qui souhaitent proposer leurs compétences en freelance, et les clients (particuliers ou organisations) qui cherchent des talents. Vous choisissez votre profil au moment de l'inscription."
+        },
+        "verify": {
+          "question": "Dois-je confirmer mon adresse e-mail ?",
+          "answer": "Oui. Après l'inscription, un e-mail de vérification est envoyé : vous devez cliquer sur le lien reçu avant de pouvoir vous connecter. Si le lien a expiré, un nouvel e-mail peut être demandé depuis la page de connexion."
+        },
+        "forgot": {
+          "question": "J'ai oublié mon mot de passe, que faire ?",
+          "answer": "Utilisez le lien « Mot de passe oublié » de la page de connexion : un e-mail vous permettra de choisir un nouveau mot de passe."
+        }
+      }
+    },
+    "profils": {
+      "title": "Profils",
+      "items": {
+        "fill": {
+          "question": "Que dois-je renseigner dans mon profil étudiant ?",
+          "answer": "Après l'inscription, un questionnaire vous aide à compléter votre profil : filière, spécialités, compétences, langues, tarifs, portfolio et description. Un profil complet aide les clients à mieux vous identifier."
+        },
+        "visibility": {
+          "question": "Qui peut consulter les profils des étudiants ?",
+          "answer": "Les fiches des étudiants sont réservées aux utilisateurs connectés. Elles n'affichent pas l'e-mail ni le numéro de téléphone : on y trouve les informations utiles à la collaboration (compétences, formation, disponibilité, évaluations, portfolio)."
+        }
+      }
+    },
+    "publications": {
+      "title": "Publications",
+      "items": {
+        "diff": {
+          "question": "Quelle est la différence entre une mission et un service ?",
+          "answer": "Une mission est un besoin publié par un client (budget, échéance, compétences recherchées). Un service est une prestation proposée par un étudiant. Les deux sont réunis dans la page Publications."
+        },
+        "account": {
+          "question": "Faut-il un compte pour parcourir les publications ?",
+          "answer": "Non, vous pouvez consulter les missions et les services sans être connecté. Un compte est nécessaire pour agir : postuler, publier, échanger par messagerie ou consulter un profil étudiant."
+        }
+      }
+    },
+    "candidatures": {
+      "title": "Candidatures",
+      "items": {
+        "apply": {
+          "question": "Comment postuler à une mission ?",
+          "answer": "Connecté en tant qu'étudiant, ouvrez la mission qui vous intéresse et envoyez votre candidature. Vous la retrouvez ensuite dans « Mes candidatures » de votre tableau de bord."
+        },
+        "choose": {
+          "question": "Comment un client choisit-il un étudiant ?",
+          "answer": "Le client examine les candidatures reçues sur sa mission, consulte les profils et accepte la candidature qui lui convient. Les échanges se poursuivent ensuite par la messagerie de la plateforme."
+        }
+      }
+    },
+    "services": {
+      "title": "Services",
+      "items": {
+        "offer": {
+          "question": "Comment proposer un service en tant qu'étudiant ?",
+          "answer": "Depuis votre tableau de bord, la section « Mes services » vous permet de publier une prestation avec sa description, sa catégorie, son prix et son délai."
+        },
+        "request": {
+          "question": "Comment un client peut-il demander un service ?",
+          "answer": "Un client connecté peut adresser une demande à l'étudiant depuis la page du service. Les demandes sont suivies dans la section « Demandes de service » du tableau de bord."
+        }
+      }
+    },
+    "livraisons": {
+      "title": "Livraisons",
+      "items": {
+        "delivery": {
+          "question": "Comment se passe la livraison d'un travail ?",
+          "answer": "L'étudiant dépose ses livrables sur la plateforme depuis la section « Livraisons ». Le client les examine puis les valide, ce qui clôt la livraison et déclenche la libération du paiement."
+        }
+      }
+    },
+    "paiements": {
+      "title": "Paiements",
+      "items": {
+        "how": {
+          "question": "Comment fonctionne le paiement ?",
+          "answer": "Le paiement peut être effectué dès qu'une candidature est acceptée. Les fonds sont conservés par la plateforme jusqu'à la validation de la livraison par le client, puis ils sont libérés au profit de l'étudiant."
+        },
+        "methods": {
+          "question": "Quels moyens de paiement sont disponibles ?",
+          "answer": "Le paiement en ligne est disponible via Papi (MVola, Orange Money, Airtel Money ou carte Visa) et directement via MVola. Un virement effectué hors plateforme peut aussi être déclaré ; il reste en attente jusqu'à sa vérification par l'équipe d'administration."
+        },
+        "setup": {
+          "question": "Que dois-je configurer pour être payé en tant qu'étudiant ?",
+          "answer": "Vous devez enregistrer au moins un moyen de paiement actif dans les paramètres de votre tableau de bord : sans cela, un paiement ne peut pas être initié en votre faveur."
+        }
+      }
+    },
+    "securite": {
+      "title": "Sécurité",
+      "items": {
+        "privacy": {
+          "question": "Mes coordonnées privées sont-elles visibles ?",
+          "answer": "Non. Les pages publiques et les fiches de profil n'affichent ni votre e-mail ni votre numéro de téléphone. Les documents échangés (livrables, pièces jointes) ne sont accessibles qu'aux personnes concernées."
+        },
+        "report": {
+          "question": "Comment signaler un comportement abusif ?",
+          "answer": "Un bouton « Signaler » est disponible sur les profils des étudiants et des clients pour les utilisateurs connectés. Les signalements sont examinés par l'équipe d'administration."
+        }
+      }
+    }
+  },
+  "eyebrow": "Centre d'aide",
+  "title": "Questions fréquentes",
+  "intro": "Retrouvez les réponses aux questions les plus courantes sur le fonctionnement de Kianja.",
+  "navAria": "Thèmes de la FAQ",
+  "noAnswerTitle": "Vous ne trouvez pas votre réponse ?",
+  "noAnswerText": "Écrivez-nous, nous vous répondrons dès que possible.",
+  "contactButton": "Contact et assistance",
+  "metaTitle": "FAQ — Kianja",
+  "metaDescription": "Réponses aux questions fréquentes sur l'inscription, les publications, les candidatures, les livraisons et les paiements sur Kianja."
+}

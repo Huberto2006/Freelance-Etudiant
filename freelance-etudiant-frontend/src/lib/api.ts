@@ -288,7 +288,15 @@ function parseBody(text: string): unknown {
 function extraireMessage(data: unknown): string {
   const message = (data as { message?: string | string[] } | null)?.message;
   if (Array.isArray(message)) return message.join(", ");
-  return message ?? "Une erreur est survenue";
+  return message ?? messageParDefaut();
+}
+
+/** Message générique dans la langue d'interface (cookie NEXT_LOCALE). */
+function messageParDefaut(): string {
+  const langue = enteteLangue()["Accept-Language"];
+  if (langue === "mg") return "Nisy fahadisoana";
+  if (langue === "en") return "An error occurred";
+  return "Une erreur est survenue";
 }
 
 /** Construit la requete avec les en-tetes d'authentification si besoin. */
@@ -299,6 +307,8 @@ async function executerRequete(
   const { auth = true, headers, ...rest } = options;
   const finalHeaders: Record<string, string> = {
     "Content-Type": "application/json",
+    // Langue d'interface : le serveur s'en sert pour les messages d'erreur.
+    ...enteteLangue(),
     ...(headers as Record<string, string>),
   };
 
@@ -317,6 +327,16 @@ async function executerRequete(
     // Path a /api/v1/auth : il n'est pas joint aux autres routes.
     credentials: "include",
   });
+}
+
+/** Langue d'interface lue dans le cookie NEXT_LOCALE (navigateur uniquement). */
+function enteteLangue(): Record<string, string> {
+  if (typeof document === "undefined") return {};
+  const m = document.cookie.match(/(?:^|;\s*)NEXT_LOCALE=([^;]+)/);
+  const langue = m ? decodeURIComponent(m[1]) : "";
+  return langue === "fr" || langue === "mg" || langue === "en"
+    ? { "Accept-Language": langue }
+    : {};
 }
 
 /** Convertit la reponse en donnees ou leve une ApiError explicite. */

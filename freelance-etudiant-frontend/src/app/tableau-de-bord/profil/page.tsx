@@ -27,7 +27,8 @@ import {
 
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError, lienExterneSur } from "@/lib/api";
-import { formatArgent } from "@/lib/format";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { MessageVide, NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
@@ -55,15 +56,16 @@ const STATUTS_DISPONIBILITE = [
   "indisponible",
 ];
 
-const LABELS_STATUT_DISPONIBILITE: Record<string, string> = {
-  disponible: "Disponible",
-  occupe: "Occupé",
-  en_mission: "En mission",
-  indisponible: "Indisponible",
+const CLES_TYPE_FREELANCE: Record<string, string> = {
+  "Temps partiel": "partTime",
+  "Temps plein": "fullTime",
+  "Mission ponctuelle": "oneOff",
+  Stage: "internship",
 };
 
 export default function ProfilPage() {
   const { utilisateur } = useAuth();
+  const t = useTranslations("profilePage");
 
   if (!utilisateur) return null;
 
@@ -75,7 +77,7 @@ export default function ProfilPage() {
         <ProfilClient utilisateur={utilisateur} />
       ) : (
         <div className="space-y-6">
-          <PageHeader icon={User} eyebrow="Votre compte" title="Mon profil" />
+          <PageHeader icon={User} eyebrow={t("yourAccount")} title={t("myProfile")} />
 
           <NoticeCard>
             <div className="flex items-center gap-4">
@@ -92,7 +94,7 @@ export default function ProfilPage() {
             </div>
 
             <p className="mt-5 text-sm text-ink-soft">
-              Les administrateurs n&apos;ont pas de profil public à modifier.
+              {t("adminNoProfile")}
             </p>
           </NoticeCard>
         </div>
@@ -105,8 +107,8 @@ export default function ProfilPage() {
         <section aria-labelledby="theme-section-title" className="pt-2">
           <PageHeader
             icon={Palette}
-            eyebrow="Personnalisation"
-            title="Apparence & Thème"
+            eyebrow={t("personalisation")}
+            title={t("appearanceTheme")}
           />
 
           <NoticeCard>
@@ -124,6 +126,16 @@ export default function ProfilPage() {
 
 function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
   const { rafraichirProfil } = useAuth();
+  const t = useTranslations("profilePage");
+  const { argent: formatArgent } = useFormats();
+  const libelleDisponibilite = (statut: string) =>
+    t.has(`availability.${statut}` as never)
+      ? t(`availability.${statut}` as never)
+      : statut;
+  const libelleTypeFreelance = (valeur: string) => {
+    const cle = CLES_TYPE_FREELANCE[valeur];
+    return cle ? t(`freelanceTypes.${cle}` as never) : valeur;
+  };
 
   const profil = utilisateur.profilEtudiant;
 
@@ -220,9 +232,9 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
       formData.append("file", file);
       const resultat = await api.upload<OcrCvExtraction>("/etudiants/me/cv-import", formData);
       setCvDraft(resultat);
-      setMessage("Le CV a été analysé. Vérifiez les suggestions avant d’enregistrer.");
+      setMessage(t("cvAnalysed"));
     } catch (error) {
-      const messageErreur = error instanceof ApiError ? error.message : "Impossible d’analyser ce CV.";
+      const messageErreur = error instanceof ApiError ? error.message : t("errCv");
       setCvErreur(messageErreur);
     } finally {
       setImportCvEnCours(false);
@@ -247,7 +259,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
     if (suggestions.siteWeb?.value) setSiteWeb(suggestions.siteWeb.value);
     if (suggestions.portfolioUrls?.value?.length) setPortfolioUrls(suggestions.portfolioUrls.value);
     setCvDraft(null);
-    setMessage("Les données OCR ont été appliquées comme suggestions. Enregistrez votre profil pour valider définitivement.");
+    setMessage(t("ocrApplied"));
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -261,7 +273,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
       tarifMaximum &&
       Number(tarifMinimum) > Number(tarifMaximum)
     ) {
-      setErreur("Le tarif minimum ne peut pas dépasser le tarif maximum.");
+      setErreur(t("errMinMax"));
       return;
     }
     if (
@@ -269,9 +281,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
       tarifMinimum &&
       Number(tarifHoraire) < Number(tarifMinimum)
     ) {
-      setErreur(
-        "Le tarif horaire ne peut pas être inférieur au tarif minimum.",
-      );
+      setErreur(t("errHourlyBelowMin"));
       return;
     }
     if (
@@ -279,9 +289,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
       tarifMaximum &&
       Number(tarifHoraire) > Number(tarifMaximum)
     ) {
-      setErreur(
-        "Le tarif horaire ne peut pas être supérieur au tarif maximum.",
-      );
+      setErreur(t("errHourlyAboveMax"));
       return;
     }
     setEnvoi(true);
@@ -331,14 +339,14 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
       await rafraichirProfil();
 
-      setMessage("Votre profil a été mis à jour.");
+      setMessage(t("profileUpdated"));
 
       setGestion(false);
     } catch (err) {
       setErreur(
         err instanceof ApiError
           ? err.message
-          : "Une erreur inattendue est survenue.",
+          : t("errUnexpected"),
       );
     } finally {
       setEnvoi(false);
@@ -396,13 +404,13 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
     if (!/^https?:\/\//i.test(url) && !url.startsWith("/")) {
       setErreurUrlPortfolio(
-        "Utilisez un lien complet (https://…) ou un chemin d'upload (/uploads/…).",
+        t("errPortfolioLink"),
       );
       return;
     }
 
     if (portfolioUrls.includes(url)) {
-      setErreurUrlPortfolio("Ce lien fait déjà partie du portfolio.");
+      setErreurUrlPortfolio(t("errPortfolioDuplicate"));
       return;
     }
 
@@ -419,7 +427,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
   return (
     <div className="space-y-6">
       {/* En-tête */}
-      <PageHeader icon={User} eyebrow="Votre compte" title="Mon profil" />
+      <PageHeader icon={User} eyebrow={t("yourAccount")} title={t("myProfile")} />
 
       {/* =================================================
           IDENTITÉ
@@ -438,7 +446,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               <p className="mt-1 text-sm text-ink-soft">{utilisateur.email}</p>
 
               <div className="mt-3">
-                <Tag>Étudiant</Tag>
+                <Tag>{t("roleStudent")}</Tag>
               </div>
             </div>
           </div>
@@ -454,7 +462,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               className="flex items-center justify-center gap-2"
             >
               <Pencil size={16} />
-              Gérer mon profil
+              {t("manageProfile")}
             </Button>
           )}
         </div>
@@ -487,21 +495,21 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               <MapPin size={20} className="text-ocre-dark" />
 
               <h2 className="font-display text-xl font-semibold">
-                Coordonnées
+                {t("contact")}
               </h2>
             </div>
 
             <div className="grid gap-5 sm:grid-cols-2">
               <InfoItem
                 icon={MapPin}
-                label="Ville"
-                value={profil?.ville || "Non renseigné"}
+                label={t("city")}
+                value={profil?.ville || t("notProvided")}
               />
 
               <InfoItem
                 icon={Phone}
-                label="Téléphone"
-                value={profil?.telephone || "Non renseigné"}
+                label={t("phone")}
+                value={profil?.telephone || t("notProvided")}
               />
             </div>
           </NoticeCard>
@@ -513,33 +521,33 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               <GraduationCap size={20} className="text-ocre-dark" />
 
               <h2 className="font-display text-xl font-semibold">
-                Informations académiques
+                {t("academicInfo")}
               </h2>
             </div>
 
             <div className="grid gap-5 sm:grid-cols-2">
               <InfoItem
                 icon={GraduationCap}
-                label="Niveau d'étude"
-                value={profil?.niveauEtude || "Non renseigné"}
+                label={t("studyLevel")}
+                value={profil?.niveauEtude || t("notProvided")}
               />
 
               <InfoItem
                 icon={Building2}
-                label="Université / établissement"
-                value={profil?.universite || "Non renseigné"}
+                label={t("universityInstitution")}
+                value={profil?.universite || t("notProvided")}
               />
 
               <InfoItem
                 icon={BriefcaseBusiness}
-                label="Filière"
-                value={profil?.filiere || "Non renseigné"}
+                label={t("field")}
+                value={profil?.filiere || t("notProvided")}
               />
 
               <InfoItem
                 icon={GraduationCap}
-                label="Année d'étude"
-                value={profil?.anneeEtude || "Non renseigné"}
+                label={t("studyYear")}
+                value={profil?.anneeEtude || t("notProvided")}
               />
             </div>
           </NoticeCard>
@@ -551,12 +559,12 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               <FileText size={20} className="text-ocre-dark" />
 
               <h2 className="font-display text-xl font-semibold">
-                Présentation
+                {t("presentation")}
               </h2>
             </div>
 
             <p className="text-sm leading-7 text-ink-soft">
-              {profil?.description || "Aucune présentation renseignée."}
+              {profil?.description || t("noPresentation")}
             </p>
           </NoticeCard>
 
@@ -568,7 +576,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 <BriefcaseBusiness size={20} className="text-ocre-dark" />
 
                 <h2 className="font-display text-xl font-semibold">
-                  Compétences
+                  {t("skills")}
                 </h2>
               </div>
 
@@ -582,14 +590,14 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 </div>
               ) : (
                 <p className="text-sm text-ink-soft">
-                  Aucune compétence renseignée.
+                  {t("noSkills")}
                 </p>
               )}
 
               {profil?.specialites?.length ? (
                 <div className="mt-4 border-t border-ink/10 pt-4">
                   <p className="mb-2 text-xs uppercase tracking-wider text-ink-soft">
-                    Spécialités
+                    {t("specialities")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {profil.specialites.map((specialite) => (
@@ -606,7 +614,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               <div className="mb-5 flex items-center gap-3">
                 <Languages size={20} className="text-ocre-dark" />
 
-                <h2 className="font-display text-xl font-semibold">Langues</h2>
+                <h2 className="font-display text-xl font-semibold">{t("languages")}</h2>
               </div>
 
               {profil?.langues?.length ? (
@@ -619,7 +627,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 </div>
               ) : (
                 <p className="text-sm text-ink-soft">
-                  Aucune langue renseignée.
+                  {t("noLanguages")}
                 </p>
               )}
             </NoticeCard>
@@ -632,34 +640,38 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               <Sparkles size={20} className="text-ocre-dark" />
 
               <h2 className="font-display text-xl font-semibold">
-                Activité freelance
+                {t("freelanceActivity")}
               </h2>
             </div>
 
             <div className="grid gap-5 sm:grid-cols-3">
               <InfoItem
                 icon={Clock}
-                label="Expérience"
+                label={t("experience")}
                 value={
                   profil?.experience != null
-                    ? `${profil.experience} an${profil.experience > 1 ? "s" : ""}`
-                    : "Non renseigné"
+                    ? t("years", { count: profil.experience })
+                    : t("notProvided")
                 }
               />
 
               <InfoItem
                 icon={BriefcaseBusiness}
-                label="Type de freelance"
-                value={profil?.typeFreelance || "Non renseigné"}
+                label={t("freelanceType")}
+                value={
+                  profil?.typeFreelance
+                    ? libelleTypeFreelance(profil.typeFreelance)
+                    : t("notProvided")
+                }
               />
 
               <InfoItem
                 icon={CircleCheck}
-                label="Statut de disponibilité"
+                label={t("availabilityStatus")}
                 value={
-                  LABELS_STATUT_DISPONIBILITE[profil?.statutDisponibilite ?? ""] ||
-                  profil?.statutDisponibilite ||
-                  "Non renseigné"
+                  profil?.statutDisponibilite
+                    ? libelleDisponibilite(profil.statutDisponibilite)
+                    : t("notProvided")
                 }
               />
             </div>
@@ -676,19 +688,19 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
                 <div>
                   <p className="text-xs uppercase tracking-wider text-ink-soft">
-                    Tarif horaire
+                    {t("hourlyRate")}
                   </p>
 
                   <p className="mt-1 font-display text-xl font-semibold">
                     {profil?.tarifHoraire != null
                       ? formatArgent(profil.tarifHoraire)
-                      : "Non renseigné"}
+                      : t("notProvided")}
                   </p>
 
                   {(profil?.tarifMinimum != null ||
                     profil?.tarifMaximum != null) && (
                     <p className="mt-1 text-xs text-ink-soft">
-                      Fourchette :{" "}
+                      {t("range")}{" "}
                       {profil?.tarifMinimum != null
                         ? formatArgent(profil.tarifMinimum)
                         : "—"}{" "}
@@ -716,11 +728,11 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
                 <div>
                   <p className="text-xs uppercase tracking-wider text-ink-soft">
-                    Disponibilité
+                    {t("availability.title")}
                   </p>
 
                   <p className="mt-1 font-display text-xl font-semibold">
-                    {profil?.disponibilite ? "Disponible" : "Indisponible"}
+                    {profil?.disponibilite ? t("availability.disponible") : t("availability.indisponible")}
                   </p>
                 </div>
               </div>
@@ -733,13 +745,13 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
             <div className="mb-6 flex items-center gap-3">
               <Star size={20} className="text-ocre-dark" />
 
-              <h2 className="font-display text-xl font-semibold">Réputation</h2>
+              <h2 className="font-display text-xl font-semibold">{t("reputation")}</h2>
             </div>
 
             <div className="grid gap-6 sm:grid-cols-3">
               <InfoItem
                 icon={Star}
-                label="Score de réputation"
+                label={t("reputationScore")}
                 value={
                   profil?.scoreReputation != null
                     ? Number(profil.scoreReputation).toFixed(1)
@@ -749,7 +761,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
               <InfoItem
                 icon={Star}
-                label="Note moyenne"
+                label={t("averageRating")}
                 value={
                   profil?.noteMoyenne != null
                     ? `${Number(profil.noteMoyenne).toFixed(1)} / 5`
@@ -759,7 +771,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
               <InfoItem
                 icon={CircleCheck}
-                label="Missions terminées"
+                label={t("completedMissions")}
                 value={
                   profil?.nombreMissionsTerminees != null
                     ? String(profil.nombreMissionsTerminees)
@@ -775,15 +787,14 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
             <div className="mb-6 flex items-center gap-3">
               <FolderOpen size={20} className="text-ocre-dark" />
 
-              <h2 className="font-display text-xl font-semibold">Portfolio</h2>
+              <h2 className="font-display text-xl font-semibold">{t("portfolio")}</h2>
             </div>
 
             {(profil?.portfolioUrls ?? []).filter(Boolean).length > 0 ? (
               <PortfolioGalerie urls={profil?.portfolioUrls ?? []} />
             ) : (
               <MessageVide>
-                Aucun projet dans le portfolio pour le moment. Cliquez sur
-                « Gérer mon profil » pour ajouter vos réalisations.
+                {t("noPortfolio")}
               </MessageVide>
             )}
 
@@ -833,7 +844,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
                   >
                     <Globe size={13} />
-                    Site web
+                    {t("website")}
                   </a>
                 )}
               </div>
@@ -851,11 +862,11 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
           <div className="mb-6 flex items-center justify-between">
             <div>
               <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
-                Gestion
+                {t("management")}
               </p>
 
               <h2 className="mt-1 font-display text-2xl font-semibold">
-                Modifier mon profil
+                {t("editMyProfile")}
               </h2>
             </div>
 
@@ -863,8 +874,8 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               variant="ghost"
               size="sm"
               onClick={annulerModification}
-              title="Annuler"
-              aria-label="Annuler"
+              title={t("cancel")}
+              aria-label={t("cancel")}
             >
               <X size={18} />
             </Button>
@@ -873,12 +884,12 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
           <div className="mb-6 flex flex-col gap-4 rounded-xl border border-ink/10 bg-paper-light p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-ocre-dark">Import CV</p>
-                <h3 className="mt-1 font-display text-xl font-semibold">Importer mon CV</h3>
+                <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-ocre-dark">{t("cvImport")}</p>
+                <h3 className="mt-1 font-display text-xl font-semibold">{t("importMyCv")}</h3>
               </div>
               <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-ink/15 bg-paper px-3 py-2 text-sm text-ink transition-colors hover:bg-ink/5">
                 <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" className="hidden" onChange={importerCv} disabled={importCvEnCours} />
-                {importCvEnCours ? "Analyse…" : "Choisir un fichier"}
+                {importCvEnCours ? t("analysing") : t("chooseFile")}
               </label>
             </div>
 
@@ -890,37 +901,24 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               <div className="rounded-xl border border-ocre/30 bg-ocre/5 p-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <p className="font-display text-lg font-semibold">Suggestions OCR</p>
-                    <p className="text-sm text-ink-soft">Les valeurs ci-dessous sont des propositions à valider avant enregistrement.</p>
+                    <p className="font-display text-lg font-semibold">{t("ocrSuggestions")}</p>
+                    <p className="text-sm text-ink-soft">{t("ocrHint")}</p>
                   </div>
-                  <Button type="button" variant="secondary" size="sm" onClick={appliquerSuggestionCV}>Appliquer les suggestions</Button>
+                  <Button type="button" variant="secondary" size="sm" onClick={appliquerSuggestionCV}>{t("applySuggestions")}</Button>
                 </div>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {Object.entries(cvDraft.fields).map(([key, field]) => {
                     if (!field || !field.value) return null;
-                    const label = {
-                      nom: "Nom",
-                      email: "E-mail",
-                      telephone: "Téléphone",
-                      universite: "Université",
-                      filiere: "Filière",
-                      anneeEtude: "Année d’étude",
-                      ville: "Ville",
-                      description: "Description",
-                      competences: "Compétences",
-                      langues: "Langues",
-                      githubUrl: "GitHub",
-                      linkedinUrl: "LinkedIn",
-                      siteWeb: "Site web",
-                      portfolioUrls: "Portfolio",
-                    }[key] ?? key;
+                    const label = t.has(`cvFields.${key}` as never)
+                      ? t(`cvFields.${key}` as never)
+                      : key;
                     const value = Array.isArray(field.value) ? field.value.join(", ") : field.value;
                     return (
                       <div key={key} className="rounded-lg border border-ink/10 bg-paper p-3">
                         <p className="text-[0.65rem] uppercase tracking-[0.2em] text-ink-soft">{label}</p>
                         <p className="mt-2 text-sm text-ink">{value}</p>
-                        <p className="mt-1 text-[0.65rem] uppercase tracking-[0.2em] text-ocre-dark">Niveau: {field.confidence}</p>
+                        <p className="mt-1 text-[0.65rem] uppercase tracking-[0.2em] text-ocre-dark">{t("confidence", { niveau: String(field.confidence) })}</p>
                       </div>
                     );
                   })}
@@ -928,7 +926,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
                 {cvDraft.warnings.length > 0 && (
                   <div className="mt-4 rounded-lg border border-ocre/30 bg-ocre/10 p-3">
-                    <p className="text-xs font-mono uppercase tracking-[0.2em] text-ocre-dark">Vérification</p>
+                    <p className="text-xs font-mono uppercase tracking-[0.2em] text-ocre-dark">{t("verification")}</p>
                     <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink">
                       {cvDraft.warnings.map((warning) => <li key={warning}>{warning}</li>)}
                     </ul>
@@ -940,13 +938,13 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
           <form onSubmit={onSubmit} className="flex flex-col gap-5">
             <div className="grid gap-5 sm:grid-cols-2">
-              <Field label="Niveau d'étude" htmlFor="niveauEtude">
+              <Field label={t("studyLevel")} htmlFor="niveauEtude">
                 <Select
                   id="niveauEtude"
                   value={niveauEtude}
                   onChange={(e) => setNiveauEtude(e.target.value)}
                 >
-                  <option value="" disabled hidden>Sélectionner…</option>
+                  <option value="" disabled hidden>{t("select")}</option>
                   {NIVEAUX_ETUDE.map((n) => (
                     <option key={n} value={n}>
                       {n}
@@ -955,7 +953,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 </Select>
               </Field>
 
-              <Field label="Établissement" htmlFor="universite">
+              <Field label={t("institution")} htmlFor="universite">
                 <Input
                   id="universite"
                   value={universite}
@@ -964,7 +962,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 />
               </Field>
 
-              <Field label="Filière" htmlFor="filiere">
+              <Field label={t("field")} htmlFor="filiere">
                 <Input
                   id="filiere"
                   value={filiere}
@@ -973,13 +971,13 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 />
               </Field>
 
-              <Field label="Année d'étude" htmlFor="anneeEtude">
+              <Field label={t("studyYear")} htmlFor="anneeEtude">
                 <Select
                   id="anneeEtude"
                   value={anneeEtude}
                   onChange={(e) => setAnneeEtude(e.target.value)}
                 >
-                  <option value="" disabled hidden>Sélectionner…</option>
+                  <option value="" disabled hidden>{t("select")}</option>
                   {NIVEAUX_ETUDE.map((n) => (
                     <option key={n} value={n}>
                       {n}
@@ -988,7 +986,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 </Select>
               </Field>
 
-              <Field label="Ville" htmlFor="ville">
+              <Field label={t("city")} htmlFor="ville">
                 <Input
                   id="ville"
                   value={ville}
@@ -997,7 +995,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 />
               </Field>
 
-              <Field label="Téléphone" htmlFor="telephone">
+              <Field label={t("phone")} htmlFor="telephone">
                 <Input
                   id="telephone"
                   value={telephone}
@@ -1007,48 +1005,48 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
               </Field>
             </div>
 
-            <Field label="Présentation" htmlFor="description">
+            <Field label={t("presentation")} htmlFor="description">
               <Textarea
                 id="description"
                 rows={5}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Décrivez votre parcours, vos expériences et ce que vous proposez..."
+                placeholder={t("presentationPlaceholder")}
               />
             </Field>
 
             <Field
-              label="Compétences"
+              label={t("skills")}
               htmlFor="competences"
-              hint="Sélectionnez ou ajoutez des compétences."
+              hint={t("skillsHint")}
             >
               <MultiSelectCreatable
                 id="competences"
                 value={competences}
                 onChange={setCompetences}
                 options={COMPETENCES_PREDEFINIES}
-                placeholder="Rechercher une compétence…"
+                placeholder={t("searchSkill")}
                 allowCreate
               />
             </Field>
 
             <Field
-              label="Spécialités"
+              label={t("specialities")}
               htmlFor="specialites"
-              hint="Sélectionnez ou ajoutez un domaine d'intervention."
+              hint={t("specialitiesHint")}
             >
               <MultiSelectCreatable
                 id="specialites"
                 value={specialites}
                 onChange={setSpecialites}
                 options={SPECIALITES_PREDEFINIES}
-                placeholder="Rechercher une spécialité…"
+                placeholder={t("searchSpeciality")}
                 allowCreate
               />
             </Field>
 
             <div className="grid gap-5 sm:grid-cols-3">
-              <Field label="Expérience (années)" htmlFor="experience">
+              <Field label={t("experienceYears")} htmlFor="experience">
                 <Input
                   id="experience"
                   type="number"
@@ -1060,31 +1058,31 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 />
               </Field>
 
-              <Field label="Type de freelance" htmlFor="typeFreelance">
+              <Field label={t("freelanceType")} htmlFor="typeFreelance">
                 <Select
                   id="typeFreelance"
                   value={typeFreelance}
                   onChange={(e) => setTypeFreelance(e.target.value)}
                 >
-                  <option value="" disabled hidden>Sélectionner…</option>
-                  {TYPES_FREELANCE.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
+                  <option value="" disabled hidden>{t("select")}</option>
+                  {TYPES_FREELANCE.map((type) => (
+                    <option key={type} value={type}>
+                      {libelleTypeFreelance(type)}
                     </option>
                   ))}
                 </Select>
               </Field>
 
-              <Field label="Statut de disponibilité" htmlFor="statutDisponibilite">
+              <Field label={t("availabilityStatus")} htmlFor="statutDisponibilite">
                 <Select
                   id="statutDisponibilite"
                   value={statutDisponibilite}
                   onChange={(e) => setStatutDisponibilite(e.target.value)}
                 >
-                  <option value="" disabled hidden>Sélectionner…</option>
+                  <option value="" disabled hidden>{t("select")}</option>
                   {STATUTS_DISPONIBILITE.map((s) => (
                     <option key={s} value={s}>
-                      {LABELS_STATUT_DISPONIBILITE[s]}
+                      {libelleDisponibilite(s)}
                     </option>
                   ))}
                 </Select>
@@ -1092,16 +1090,16 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
             </div>
 
             <Field
-              label="Langues"
+              label={t("languages")}
               htmlFor="langues"
-              hint="Ajoutez vos langues ou sélectionnez dans la liste."
+              hint={t("languagesHint")}
             >
               <MultiSelectCreatable
                 id="langues"
                 value={langues}
                 onChange={setLangues}
                 options={LANGUES_PREDEFINIES}
-                placeholder="Rechercher ou saisir une langue…"
+                placeholder={t("searchLanguage")}
                 allowCreate
               />
             </Field>
@@ -1134,7 +1132,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 />
               </Field>
 
-              <Field label="Site web" htmlFor="siteWeb">
+              <Field label={t("website")} htmlFor="siteWeb">
                 <Input
                   id="siteWeb"
                   value={siteWeb}
@@ -1147,9 +1145,9 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
             <div className="flex items-start gap-2">
               <div className="min-w-0 flex-1">
                 <Field
-                  label="Portfolio"
+                  label={t("portfolio")}
                   htmlFor="portfolioUrl"
-                  hint="Lien vers un projet, un site ou une image (https://…)"
+                  hint={t("portfolioHint")}
                 >
                   <Input
                     id="portfolioUrl"
@@ -1174,7 +1172,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 onClick={ajouterUrlPortfolio}
                 disabled={envoi || !nouvelleUrlPortfolio.trim()}
               >
-                Ajouter
+                {t("add")}
               </Button>
             </div>
 
@@ -1208,7 +1206,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                       type="button"
                       onClick={() => retirerUrlPortfolio(index)}
                       disabled={envoi}
-                      aria-label={`Retirer ${url} du portfolio`}
+                      aria-label={t("removeFromPortfolio", { url })}
                       className="shrink-0 text-ink-soft/60 transition-colors hover:text-brique disabled:opacity-50"
                     >
                       <X size={15} />
@@ -1219,7 +1217,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
             )}
 
             <div className="grid gap-5 sm:grid-cols-3">
-              <Field label="Tarif minimum (Ar)" htmlFor="tarifMinimum">
+              <Field label={t("minRate")} htmlFor="tarifMinimum">
                 <Input
                   id="tarifMinimum"
                   type="number"
@@ -1230,7 +1228,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 />
               </Field>
 
-              <Field label="Tarif horaire (Ar)" htmlFor="tarifHoraire">
+              <Field label={t("hourlyRateAr")} htmlFor="tarifHoraire">
                 <Input
                   id="tarifHoraire"
                   type="number"
@@ -1241,7 +1239,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 />
               </Field>
 
-              <Field label="Tarif maximum (Ar)" htmlFor="tarifMaximum">
+              <Field label={t("maxRate")} htmlFor="tarifMaximum">
                 <Input
                   id="tarifMaximum"
                   type="number"
@@ -1261,7 +1259,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                   onChange={(e) => setDisponibilite(e.target.checked)}
                   className="h-4 w-4 accent-ocre"
                 />
-                Disponible pour de nouvelles missions
+                {t("availableForNew")}
               </label>
             </div>
 
@@ -1271,7 +1269,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
             <div className="flex flex-wrap gap-3">
               <Button type="submit" disabled={envoi}>
-                {envoi ? "Enregistrement…" : "Enregistrer les modifications"}
+                {envoi ? t("saving") : t("saveChanges")}
               </Button>
 
               <Button
@@ -1280,7 +1278,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 onClick={annulerModification}
                 disabled={envoi}
               >
-                Annuler
+                {t("cancel")}
               </Button>
             </div>
           </form>
@@ -1296,6 +1294,7 @@ function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
 function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
   const { rafraichirProfil } = useAuth();
+  const t = useTranslations("profilePage");
 
   const profil = utilisateur.profilClient;
 
@@ -1329,14 +1328,14 @@ function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
 
       await rafraichirProfil();
 
-      setMessage("Votre profil a été mis à jour.");
+      setMessage(t("profileUpdated"));
 
       setGestion(false);
     } catch (err) {
       setErreur(
         err instanceof ApiError
           ? err.message
-          : "Une erreur inattendue est survenue.",
+          : t("errUnexpected"),
       );
     } finally {
       setEnvoi(false);
@@ -1355,7 +1354,7 @@ function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
 
   return (
     <div className="space-y-6">
-      <PageHeader icon={User} eyebrow="Votre compte" title="Mon profil" />
+      <PageHeader icon={User} eyebrow={t("yourAccount")} title={t("myProfile")} />
 
       {/* Identité */}
 
@@ -1372,7 +1371,7 @@ function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
               <p className="mt-1 text-sm text-ink-soft">{utilisateur.email}</p>
 
               <div className="mt-3">
-                <Tag tone="ocre">Client</Tag>
+                <Tag tone="ocre">{t("roleClient")}</Tag>
               </div>
             </div>
           </div>
@@ -1387,7 +1386,7 @@ function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
               }}
             >
               <Pencil size={16} />
-              Gérer mon profil
+              {t("manageProfile")}
             </Button>
           )}
         </div>
@@ -1413,26 +1412,26 @@ function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
             <Building2 size={20} className="text-ocre-dark" />
 
             <h2 className="font-display text-xl font-semibold">
-              Informations du compte
+              {t("accountInfo")}
             </h2>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">
             <InfoItem
               icon={Building2}
-              label="Type de compte"
+              label={t("accountType")}
               value={
                 profil?.typeClient === "entreprise"
-                  ? "Entreprise"
-                  : "Particulier"
+                  ? t("company")
+                  : t("individual")
               }
             />
 
             {profil?.typeClient === "entreprise" && (
               <InfoItem
                 icon={BriefcaseBusiness}
-                label="Nom de l'entreprise"
-                value={profil.nomEntreprise || "Non renseigné"}
+                label={t("companyName")}
+                value={profil.nomEntreprise || t("notProvided")}
               />
             )}
           </div>
@@ -1446,11 +1445,11 @@ function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
           <div className="mb-6 flex items-center justify-between">
             <div>
               <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
-                Gestion
+                {t("management")}
               </p>
 
               <h2 className="mt-1 font-display text-2xl font-semibold">
-                Modifier mon profil
+                {t("editMyProfile")}
               </h2>
             </div>
 
@@ -1458,15 +1457,15 @@ function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
               variant="ghost"
               size="sm"
               onClick={annulerModification}
-              title="Annuler"
-              aria-label="Annuler"
+              title={t("cancel")}
+              aria-label={t("cancel")}
             >
               <X size={18} />
             </Button>
           </div>
 
           <form onSubmit={onSubmit} className="flex max-w-md flex-col gap-5">
-            <Field label="Type de compte" htmlFor="typeClient">
+            <Field label={t("accountType")} htmlFor="typeClient">
               <Select
                 id="typeClient"
                 value={typeClient}
@@ -1474,14 +1473,14 @@ function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
                   setTypeClient(e.target.value as "particulier" | "entreprise")
                 }
               >
-                <option value="particulier">Particulier</option>
+                <option value="particulier">{t("individual")}</option>
 
-                <option value="entreprise">Entreprise</option>
+                <option value="entreprise">{t("company")}</option>
               </Select>
             </Field>
 
             {typeClient === "entreprise" && (
-              <Field label="Nom de l'entreprise" htmlFor="nomEntreprise">
+              <Field label={t("companyName")} htmlFor="nomEntreprise">
                 <Input
                   id="nomEntreprise"
                   value={nomEntreprise}
@@ -1497,7 +1496,7 @@ function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
 
             <div className="flex flex-wrap gap-3">
               <Button type="submit" disabled={envoi}>
-                {envoi ? "Enregistrement…" : "Enregistrer les modifications"}
+                {envoi ? t("saving") : t("saveChanges")}
               </Button>
 
               <Button
@@ -1506,7 +1505,7 @@ function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
                 onClick={annulerModification}
                 disabled={envoi}
               >
-                Annuler
+                {t("cancel")}
               </Button>
             </div>
           </form>

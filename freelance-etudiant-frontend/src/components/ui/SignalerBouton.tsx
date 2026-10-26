@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Flag, X } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -19,6 +20,7 @@ export function SignalerBouton({
   cibleType: CibleSignalement;
   cibleId: string;
 }) {
+  const t = useTranslations("comments.report");
   const { utilisateur } = useAuth();
   const [ouvert, setOuvert] = useState(false);
   const [motif, setMotif] = useState("");
@@ -37,7 +39,7 @@ export function SignalerBouton({
       await api.post("/signalements", { motif, description, cibleType, cibleId });
       setEnvoye(true);
     } catch (err) {
-      setErreur(err instanceof ApiError ? err.message : "Erreur lors de l'envoi");
+      setErreur(err instanceof ApiError ? err.message : t("error"));
     } finally {
       setEnvoi(false);
     }
@@ -51,7 +53,7 @@ export function SignalerBouton({
         className="inline-flex items-center gap-1.5 text-xs text-ink-soft/60 hover:text-brique transition-colors"
       >
         <Flag size={13} />
-        Signaler
+        {t("button")}
       </button>
     );
   }
@@ -59,11 +61,11 @@ export function SignalerBouton({
   return (
     <div className="notice-card p-5 max-w-md">
       <div className="mb-3 flex items-center justify-between">
-        <p className="font-display text-lg font-medium">Signaler</p>
+        <p className="font-display text-lg font-medium">{t("title")}</p>
         <button
           type="button"
           onClick={() => setOuvert(false)}
-          aria-label="Fermer"
+          aria-label={t("close")}
           className="text-ink-soft hover:text-ink"
         >
           <X size={18} />
@@ -72,34 +74,33 @@ export function SignalerBouton({
 
       {envoye ? (
         <p className="text-sm text-ink-soft">
-          Merci, votre signalement a été transmis à notre équipe de
-          modération.
+          {t("success")}
         </p>
       ) : (
         <form onSubmit={envoyer} className="flex flex-col gap-4">
-          <Field label="Motif" htmlFor="motif">
+          <Field label={t("reasonLabel")} htmlFor="motif">
             <Input
               id="motif"
               required
               maxLength={100}
               value={motif}
               onChange={(e) => setMotif(e.target.value)}
-              placeholder="Contenu inapproprié…"
+              placeholder={t("reasonPlaceholder")}
             />
           </Field>
-          <Field label="Description" htmlFor="description">
+          <Field label={t("descriptionLabel")} htmlFor="description">
             <Textarea
               id="description"
               required
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Décrivez la situation en détail…"
+              placeholder={t("descriptionPlaceholder")}
             />
           </Field>
           {erreur && <p className="text-sm text-brique">{erreur}</p>}
           <Button type="submit" disabled={envoi} className="self-start">
-            {envoi ? "Envoi…" : "Envoyer le signalement"}
+            {envoi ? t("sending") : t("submit")}
           </Button>
         </form>
       )}

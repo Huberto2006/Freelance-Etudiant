@@ -7,6 +7,7 @@ import type { KeyboardEvent } from "react";
 import { clsx } from "clsx";
 
 import type { MenuPublicDeroulant } from "@/lib/navigation-publique";
+import { useNavLabel } from "@/i18n/use-nav-label";
 
 /**
  * Menu déroulant de la navigation publique (motif « disclosure »
@@ -35,6 +36,7 @@ export function MenuDeroulantNav({
   actif: boolean;
   onOuvrirChange: (ouvert: boolean) => void;
 }) {
+  const tn = useNavLabel();
   const conteneurRef = useRef<HTMLDivElement>(null);
   const boutonRef = useRef<HTMLButtonElement>(null);
   const panneauId = `${menu.id}-panneau`;
@@ -125,7 +127,7 @@ export function MenuDeroulantNav({
             : "text-ink-soft hover:bg-ink/5 hover:text-ink",
         )}
       >
-        {menu.label}
+        {tn.label(menu.label)}
         <ChevronDown
           size={14}
           aria-hidden="true"
@@ -158,10 +160,10 @@ export function MenuDeroulantNav({
                   </span>
                   <span className="min-w-0">
                     <span className="block text-sm font-medium text-ink">
-                      {element.label}
+                      {tn.label(element.label)}
                     </span>
                     <span className="mt-0.5 block text-xs text-ink-soft">
-                      {element.description}
+                      {tn.description(element.description)}
                     </span>
                   </span>
                 </Link>

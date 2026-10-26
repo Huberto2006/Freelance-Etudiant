@@ -1,0 +1,80 @@
+{
+  "favoriteButton": {
+    "add": "Ampidirina amin'ny tiana",
+    "remove": "Esorina amin'ny tiana"
+  },
+  "profileReaction": {
+    "react": "Hamaly ity mombamomba ity",
+    "loginRequired": "Midira mba hamaly ity mombamomba ity",
+    "label": "Hamaly"
+  },
+  "upload": {
+    "errFormat": "Tsy tohanana ny endrika. Ampiasao JPG, PNG na WebP.",
+    "errNoUrl": "Tsy namerina ny URL an'ilay sary ny mpizara.",
+    "errSend": "Tsy afaka naterina ny sary.",
+    "hint": "JPG, PNG na WebP · 5 Mo farafaharatsiny",
+    "replaceTitle": "Tsindrio mba hanolo ny sary",
+    "previewAlt": "Topimaso ny sary lehibe",
+    "errDisplay": "Tsy afaka naseho ity sary ity. Hamarino ny URL naverin'ny mpizara.",
+    "removeImage": "Esory ny sary",
+    "sendingShort": "Mandefa…",
+    "addImage": "Hanampy sary",
+    "errMax": "Sary {max} no betsaka indrindra: ny {count} voalohany ihany no hampiana.",
+    "errSize": "Misy sary mihoatra ny habe 5 Mo.",
+    "removeThis": "Esory ity sary ity",
+    "cover": "Sarimiaina",
+    "add": "Hanampy",
+    "multiHint": "JPG, PNG na WebP · 5 Mo farafaharatsiny · sary {max} no betsaka indrindra, ny voalohany no sarimiaina",
+    "photoAlt": "Sarin'ny mombamomba an'i {nom}",
+    "photoFileSize": "Mihoatra ny habe 5 Mo ny sary.",
+    "errPhoto": "Tsy afaka naterina ny sary.",
+    "changePhoto": "Hanova ny sarin'ny mombamomba"
+  },
+  "portfolio": {
+    "previewOf": "Topimaso : {legende}",
+    "closePreview": "Hakatona ny topimaso",
+    "imageFallback": "Sary ao amin'ny portfolio",
+    "enlarge": "Hanamafy ny sary",
+    "viewProject": "Hijery ny tetikasa"
+  },
+  "shared": {
+    "categoryFilters": "Sivana araka ny sokajy",
+    "subNav": "Fitetezana faharoa",
+    "reputationScore": "Isa famantarana : {score}/100",
+    "score": "isa",
+    "messages": "Hafatra",
+    "messagesUnread": "Hafatra ({count} tsy voavaky)",
+    "mentionSuggestions": "Soso-kevitry ny mpampiasa hovinaina",
+    "catalogLoading": "Mampiditra ny katalaogy"
+  },
+  "freelanceList": {
+    "availability": {
+      "disponible": "Misy",
+      "occupe": "Sahirana",
+      "en_mission": "Eo am-pandrehana iraka",
+      "indisponible": "Tsy misy"
+    },
+    "errLoad": "Tsy afaka nampiditra ny freelance ankehitriny.",
+    "errMore": "Tsy afaka nampiditra ny tohiny.",
+    "membersOnlyTitle": "Natokana ho an'ny mpikambana ny mombamomba",
+    "membersOnlyText": "Mba hiarovana ny mpianatra, hita rehefa niditra ny lahatahiry freelance. Mandritra izay dia azonao jerena ny serivisy atolotr'izy ireo.",
+    "browseServices": "Hijery ny serivisy",
+    "login": "Fidirana",
+    "join": "Hiditra ao Kianja",
+    "searchPlaceholder": "Anarana, fahaizana, sampana, tanàna…",
+    "searchAria": "Hikaroka freelance",
+    "availableOnly": "Ireo misy ihany",
+    "emptyAll": "Tsy misy freelance haseho ankehitriny.",
+    "emptySearch": "Tsy misy freelance mifanaraka amin'ny fikarohanao.",
+    "shown": "{count, plural, one {freelance # naseho} other {freelance # naseho}}",
+    "loading": "Mampiditra…",
+    "seeMore": "Hijery freelance maro kokoa",
+    "student": "Mpianatra",
+    "skills": "Fahaizana",
+    "missionsDone": "{note} · iraka {count}",
+    "newOnKianja": "Vaovao ao Kianja",
+    "viewProfileOf": "Hijery ny mombamomban'i {nom}",
+    "viewProfile": "Hijery ny mombamomba",
+    "skeletonLoading": "Mampiditra ny freelance"
+  }
+}

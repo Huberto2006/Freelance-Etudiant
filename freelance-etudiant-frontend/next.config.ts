@@ -1,4 +1,8 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+/* Internationalisation (fr / mg / en) : configuration par requete, sans prefixe d'URL. */
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 /*
  * Content-Security-Policy
@@ -136,4 +140,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

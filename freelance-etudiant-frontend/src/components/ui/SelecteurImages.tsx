@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { api, ApiError, getFileUrl } from "@/lib/api";
 
@@ -26,6 +27,7 @@ export function SelecteurImages({
   disabled?: boolean;
   max?: number;
 }) {
+  const t = useTranslations("extras.upload");
   const inputRef = useRef<HTMLInputElement>(null);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -40,7 +42,7 @@ export function SelecteurImages({
     setErreur(null);
     const aEnvoyer = fichiers.slice(0, placesRestantes);
     if (fichiers.length > aEnvoyer.length) {
-      setErreur(`Maximum ${max} images : seules les ${aEnvoyer.length} premieres seront ajoutees.`);
+      setErreur(t("errMax", { max, count: aEnvoyer.length }));
     }
 
     const urlsAjoutees: string[] = [];
@@ -48,18 +50,18 @@ export function SelecteurImages({
     try {
       for (const fichier of aEnvoyer) {
         if (!TYPES_ACCEPTES.includes(fichier.type)) {
-          setErreur("Format non supporté. Utilisez JPG, PNG ou WebP.");
+          setErreur(t("errFormat"));
           continue;
         }
         if (fichier.size > TAILLE_MAX) {
-          setErreur("Une image dépasse la taille maximale de 5 Mo.");
+          setErreur(t("errSize"));
           continue;
         }
         const formData = new FormData();
         formData.append("file", fichier);
         const response = await api.upload<UploadResponse>("/uploads/image", formData);
         if (!response?.url) {
-          throw new Error("Le serveur n'a pas retourné l'URL de l'image.");
+          throw new Error(t("errNoUrl"));
         }
         urlsAjoutees.push(response.url);
       }
@@ -72,7 +74,7 @@ export function SelecteurImages({
           ? error.message
           : error instanceof Error
             ? error.message
-            : "Impossible d'envoyer l'image.",
+            : t("errSend"),
       );
     } finally {
       setEnvoi(false);
@@ -112,14 +114,14 @@ export function SelecteurImages({
             />
             {index === 0 && (
               <span className="absolute bottom-1 left-1 rounded bg-ink/70 px-1.5 py-0.5 text-[0.65rem] font-medium text-paper-light">
-                Couverture
+                {t("cover")}
               </span>
             )}
             <button
               type="button"
               onClick={() => retirer(index)}
               disabled={disabled || envoi}
-              aria-label="Retirer cette image"
+              aria-label={t("removeThis")}
               className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-ink/70 text-paper-light hover:bg-brique disabled:cursor-not-allowed"
             >
               <X size={12} />
@@ -139,13 +141,13 @@ export function SelecteurImages({
             ) : (
               <ImagePlus size={20} />
             )}
-            <span className="text-[0.6875rem]">{envoi ? "Envoi…" : "Ajouter"}</span>
+            <span className="text-[0.6875rem]">{envoi ? t("sendingShort") : t("add")}</span>
           </button>
         )}
       </div>
 
       <p className="mt-1.5 text-xs text-ink-soft/70">
-        JPG, PNG ou WebP · 5 Mo max · {max} images max, la première sert de couverture
+        {t("multiHint", { max })}
       </p>
 
       {erreur && <p className="text-xs text-brique">{erreur}</p>}

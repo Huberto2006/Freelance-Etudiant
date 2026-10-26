@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { BriefcaseBusiness } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
@@ -60,6 +61,7 @@ function filtresDepuisUrl(searchParams: URLSearchParams): Filtres {
 }
 
 function MissionsContent() {
+  const t = useTranslations("missions");
   const { utilisateur } = useAuth();
   const searchParams = useSearchParams();
   const cleParams = searchParams.toString();
@@ -158,14 +160,14 @@ function MissionsContent() {
         setErreur(
           err instanceof ApiError
             ? err.message
-            : "Impossible de charger les missions pour le moment.",
+            : t("list.loadError"),
         );
         setMissions([]);
       } finally {
         setChargement(false);
       }
     },
-    [estEtudiant],
+    [estEtudiant, t],
   );
 
   /*
@@ -204,17 +206,16 @@ function MissionsContent() {
       </div>
       <div className="mb-6">
         <p className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
-          Panneau d&apos;affichage
+          {t("list.eyebrow")}
         </p>
-        <h1 className="font-display text-3xl font-bold">Missions</h1>
+        <h1 className="font-display text-3xl font-bold">{t("list.title")}</h1>
         <p className="mt-1 text-sm text-ink-soft">
-          Les missions ouvertes aux candidatures, publiées par les clients de
-          la plateforme.
+          {t("list.intro")}
         </p>
         <p className="mt-0.5 text-xs text-ink-soft/70">
           {chargement
-            ? "Chargement des missions…"
-            : `${missions.length} mission${missions.length > 1 ? "s" : ""} ouverte${missions.length > 1 ? "s" : ""} aux candidatures`}
+            ? t("list.loading")
+            : t("list.count", { count: missions.length })}
         </p>
       </div>
 
@@ -236,8 +237,8 @@ function MissionsContent() {
         >
           <PanneauFiltres
             filtresInitiaux={filtresAvances}
-            placeholder="Site vitrine, gestion scolaire…"
-            labelBudget="Budget (Ar)"
+            placeholder={t("list.filterPlaceholder")}
+            labelBudget={t("list.filterBudget")}
             onFiltrer={(nouveauxFiltres) => {
               setFiltresAvances(nouveauxFiltres);
               rechercher(onglet, nouveauxFiltres);
@@ -262,14 +263,13 @@ function MissionsContent() {
                   <BriefcaseBusiness size={22} />
                 </span>
                 <p className="text-sm text-ink-soft">
-                  Aucune mission ne correspond à ces critères pour le moment.
+                  {t("list.emptyTitle")}
                 </p>
                 <p className="max-w-sm text-xs text-ink-soft/70">
-                  Essayez d&apos;élargir vos filtres ou revenez plus tard : de
-                  nouvelles missions sont publiées régulièrement.
+                  {t("list.emptyHint")}
                 </p>
                 <Button variant="secondary" size="sm" href="/missions">
-                  Voir toutes les missions
+                  {t("list.seeAll")}
                 </Button>
               </div>
             </NoticeCard>

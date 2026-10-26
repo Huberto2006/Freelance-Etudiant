@@ -7,14 +7,13 @@ import {
   Wallet,
 } from "lucide-react";
 
-import { formatDate } from "./format";
 import type {
   Candidature,
   Livraison,
   NotificationItem,
   Transaction,
 } from "./types";
-import type { ActionUrgente } from "./dashboard";
+import type { ActionUrgente, Traducteur } from "./dashboard";
 
 const TROIS_JOURS_EN_MS = 3 * 24 * 60 * 60 * 1000;
 
@@ -39,8 +38,11 @@ export function construireActionsEtudiant(params: {
   candidatures: Candidature[];
   livraisons: Livraison[];
   notifications: NotificationItem[];
+  t: Traducteur;
+  /** Date formatée selon la langue de l'interface. */
+  formatDate: (date: string) => string;
 }): ActionUrgente[] {
-  const { candidatures, livraisons, notifications } = params;
+  const { candidatures, livraisons, notifications, t, formatDate } = params;
   const actions: ActionUrgente[] = [];
   const maintenant = Date.now();
 
@@ -50,15 +52,15 @@ export function construireActionsEtudiant(params: {
     .slice(0, 2)
     .forEach((livraison) => {
       const titre =
-        livraison.candidature?.mission?.titre ?? "votre mission";
+        livraison.candidature?.mission?.titre ?? t("actions.yourMission");
       actions.push({
         id: `correction-${livraison.id}`,
         priorite: 10,
         icone: AlertTriangle,
         ton: "brique",
-        titre: "Correction demandée",
-        description: `Le client attend une nouvelle version de votre livraison pour « ${titre} ».`,
-        libelleAction: "Corriger ma livraison",
+        titre: t("actions.correctionTitle"),
+        description: t("actions.correctionDescription", { titre }),
+        libelleAction: t("actions.correctionAction"),
         href: `/tableau-de-bord/livraisons?candidature=${encodeURIComponent(
           livraison.candidatureId,
         )}&role=etudiant`,
@@ -87,15 +89,16 @@ export function construireActionsEtudiant(params: {
       priorite: urgence ? 20 : 30,
       icone: Package,
       ton: urgence ? "brique" : "ocre",
-      titre: urgence ? "Livraison urgente" : "Livraison à déposer",
+      titre: urgence ? t("actions.urgentDelivery") : t("actions.deliveryToSubmit"),
       description: echeance
-        ? `Mission « ${mission.titre} » — échéance : ${formatDate(
-            echeance.toISOString(),
-          )}.`
-        : `Votre candidature pour « ${mission.titre} » a été acceptée.`,
+        ? t("actions.deliveryDue", {
+            titre: mission.titre,
+            date: formatDate(echeance.toISOString()),
+          })
+        : t("actions.applicationAccepted", { titre: mission.titre }),
       libelleAction: candidature.livraison
-        ? "Voir la livraison"
-        : "Déposer ma livraison",
+        ? t("actions.viewDelivery")
+        : t("actions.submitDelivery"),
       href: `/tableau-de-bord/livraisons?candidature=${encodeURIComponent(
         candidature.id,
       )}&role=etudiant`,
@@ -113,9 +116,9 @@ export function construireActionsEtudiant(params: {
       priorite: 35,
       icone: MessageCircle,
       ton: "rice",
-      titre: "Nouveau message",
+      titre: t("actions.newMessage"),
       description: notifMessage.message,
-      libelleAction: "Répondre",
+      libelleAction: t("actions.reply"),
       href: notifMessage.lienUrl ?? "/tableau-de-bord/messages",
     });
   }
@@ -131,9 +134,9 @@ export function construireActionsEtudiant(params: {
       priorite: 40,
       icone: MessageCircle,
       ton: "rice",
-      titre: "Candidature acceptée 🎉",
+      titre: t("actions.applicationAcceptedTitle"),
       description: notifAcceptee.message,
-      libelleAction: "Ouvrir la conversation",
+      libelleAction: t("actions.openConversation"),
       href: notifAcceptee.lienUrl ?? "/tableau-de-bord/messages",
     });
   }
@@ -148,11 +151,13 @@ export function construireActionsEtudiant(params: {
       priorite: 50,
       icone: Package,
       ton: "ink",
-      titre: "Livraison en attente de validation",
-      description: `Votre travail pour « ${
-        enAttenteValidation.candidature?.mission?.titre ?? "votre mission"
-      } » est entre les mains du client.`,
-      libelleAction: "Suivre ma livraison",
+      titre: t("actions.deliveryAwaitingTitle"),
+      description: t("actions.deliveryAwaitingDescription", {
+        titre:
+          enAttenteValidation.candidature?.mission?.titre ??
+          t("actions.yourMission"),
+      }),
+      libelleAction: t("actions.trackDelivery"),
       href: `/tableau-de-bord/livraisons?candidature=${encodeURIComponent(
         enAttenteValidation.candidatureId,
       )}&role=etudiant`,
@@ -167,16 +172,16 @@ export function construireActionsEtudiant(params: {
 // ============================================================
 
 /** Raccourcis de navigation propres au pilotage côté client. */
-export function construireActionsRapidesClient(): ActionUrgente[] {
+export function construireActionsRapidesClient(t: Traducteur): ActionUrgente[] {
   return [
     {
       id: "publier-mission",
       priorite: 1,
       icone: Plus,
       ton: "ocre",
-      titre: "Publier une mission",
-      description: "Décrivez votre besoin et recevez des candidatures.",
-      libelleAction: "Publier",
+      titre: t("quick.publishTitle"),
+      description: t("quick.publishDescription"),
+      libelleAction: t("quick.publishAction"),
       href: "/tableau-de-bord/mes-missions",
     },
     {
@@ -184,9 +189,9 @@ export function construireActionsRapidesClient(): ActionUrgente[] {
       priorite: 2,
       icone: ClipboardList,
       ton: "rice",
-      titre: "Voir les candidatures",
-      description: "Répondez aux étudiants qui postulent.",
-      libelleAction: "Consulter",
+      titre: t("quick.applicationsTitle"),
+      description: t("quick.applicationsDescription"),
+      libelleAction: t("quick.applicationsAction"),
       href: "/tableau-de-bord/mes-missions",
     },
     {
@@ -194,9 +199,9 @@ export function construireActionsRapidesClient(): ActionUrgente[] {
       priorite: 3,
       icone: Package,
       ton: "ink",
-      titre: "Voir les livraisons",
-      description: "Validez ou demandez des corrections.",
-      libelleAction: "Ouvrir",
+      titre: t("quick.deliveriesTitle"),
+      description: t("quick.deliveriesDescription"),
+      libelleAction: t("quick.open"),
       href: "/tableau-de-bord/livraisons",
     },
     {
@@ -204,9 +209,9 @@ export function construireActionsRapidesClient(): ActionUrgente[] {
       priorite: 4,
       icone: Wallet,
       ton: "brique",
-      titre: "Gérer les paiements",
-      description: "Déclarez et suivez vos paiements.",
-      libelleAction: "Ouvrir",
+      titre: t("quick.paymentsTitle"),
+      description: t("quick.paymentsDescription"),
+      libelleAction: t("quick.open"),
       href: "/tableau-de-bord/paiements",
     },
   ];
@@ -224,8 +229,9 @@ export function construireActionsClient(params: {
   candidatures: Candidature[];
   livraisons: Livraison[];
   paiements: Transaction[];
+  t: Traducteur;
 }): ActionUrgente[] {
-  const { candidatures, livraisons, paiements } = params;
+  const { candidatures, livraisons, paiements, t } = params;
   const actions: ActionUrgente[] = [];
 
   // 1. Livraisons en attente de validation.
@@ -234,17 +240,20 @@ export function construireActionsClient(params: {
     .slice(0, 2)
     .forEach((livraison) => {
       const etudiant =
-        livraison.candidature?.etudiant?.utilisateur?.nom ?? "l'étudiant";
+        livraison.candidature?.etudiant?.utilisateur?.nom ??
+        t("actions.theStudent");
       actions.push({
         id: `examen-livraison-${livraison.id}`,
         priorite: 10,
         icone: Package,
         ton: "brique",
-        titre: "Livraison à examiner",
-        description: `${etudiant} a déposé son travail pour « ${
-          livraison.candidature?.mission?.titre ?? "votre mission"
-        } ».`,
-        libelleAction: "Examiner",
+        titre: t("actions.reviewTitle"),
+        description: t("actions.reviewDescription", {
+          etudiant,
+          titre:
+            livraison.candidature?.mission?.titre ?? t("actions.yourMission"),
+        }),
+        libelleAction: t("actions.review"),
         href: `/tableau-de-bord/livraisons?candidature=${encodeURIComponent(
           livraison.candidatureId,
         )}&role=client`,
@@ -268,11 +277,11 @@ export function construireActionsClient(params: {
         priorite: 20,
         icone: Wallet,
         ton: "ocre",
-        titre: "Paiement à déclarer",
-        description: `La mission « ${
-          candidature.mission?.titre ?? "en cours"
-        } » attend le paiement de l'étudiant.`,
-        libelleAction: "Déclarer le paiement",
+        titre: t("actions.paymentTitle"),
+        description: t("actions.paymentDescription", {
+          titre: candidature.mission?.titre ?? t("actions.ongoing"),
+        }),
+        libelleAction: t("actions.declarePayment"),
         href: "/tableau-de-bord/paiements",
       });
     });
@@ -287,9 +296,11 @@ export function construireActionsClient(params: {
       priorite: 30,
       icone: ClipboardList,
       ton: "rice",
-      titre: "Candidatures à examiner",
-      description: `${enAttente.length} candidature(s) attendent votre réponse.`,
-      libelleAction: "Voir les candidatures",
+      titre: t("actions.applicationsTitle"),
+      description: t("actions.applicationsDescription", {
+        count: enAttente.length,
+      }),
+      libelleAction: t("actions.viewApplications"),
       href: "/tableau-de-bord/mes-missions",
     });
   }

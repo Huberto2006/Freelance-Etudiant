@@ -2,6 +2,7 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, QueryFailedError, Repository } from 'typeorm';
 import { Utilisateur } from './entities/utilisateur.entity';
+import { Langue } from '../../common/i18n/langues';
 import { Role } from '../../common/enums/role.enum';
 import { TypeClient } from '../../common/enums/type-client.enum';
 import { EtudiantProfile } from '../etudiants/entities/etudiant-profile.entity';
@@ -123,6 +124,15 @@ export class UsersService {
   async create(data: Partial<Utilisateur>): Promise<Utilisateur> {
     const utilisateur = this.utilisateurRepo.create(data);
     return this.utilisateurRepo.save(utilisateur);
+  }
+
+  /** Enregistre la langue d'interface preferee de l'utilisateur. */
+  async modifierLangue(id: string, langue: Langue): Promise<Langue> {
+    const maj = await this.utilisateurRepo.update(id, { langue });
+    if (!maj.affected) {
+      throw new NotFoundException('Utilisateur introuvable');
+    }
+    return langue;
   }
 
   async save(utilisateur: Utilisateur): Promise<Utilisateur> {

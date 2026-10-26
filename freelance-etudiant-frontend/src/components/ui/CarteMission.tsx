@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { CalendarClock } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { Mission } from "@/lib/types";
-import { formatArgent, formatDateCourte, statutMissionLabel } from "@/lib/format";
 import { getFileUrl } from "@/lib/api";
-import { libelleCategorie } from "@/lib/categories";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
+import { useOptionLabels } from "@/i18n/use-option-labels";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { FavoriBouton } from "@/components/ui/FavoriBouton";
@@ -26,6 +28,10 @@ export function CarteMission({
   mission: Mission;
   afficherType?: boolean;
 }) {
+  const t = useTranslations("common");
+  const { argent, dateCourte } = useFormats();
+  const { statutMission } = useLabels();
+  const { categorie } = useOptionLabels();
   const client = mission.client;
   const auteur = client?.utilisateur;
   const image = getFileUrl(mission.imageUrl ?? null);
@@ -51,14 +57,14 @@ export function CarteMission({
           {afficherType && (
             <span className="inline-flex items-center gap-1 rounded-full border border-bleu/30 bg-bleu/90 px-2.5 py-0.5 text-[0.6875rem] font-mono font-semibold uppercase tracking-wide text-white shadow-xs backdrop-blur-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" aria-hidden="true" />
-              Mission
+              {t("card.mission")}
             </span>
           )}
           <span className="inline-flex items-center rounded-full border border-ink/10 bg-paper-light/90 px-2.5 py-0.5 text-[0.6875rem] font-mono uppercase tracking-wide text-ink-soft backdrop-blur-sm">
-            {libelleCategorie(mission.categorie)}
+            {categorie(mission.categorie)}
           </span>
           <span className="inline-flex items-center rounded-full border border-ink/10 bg-paper-light/90 px-2.5 py-0.5 text-[0.6875rem] font-mono uppercase tracking-wide text-ink-soft backdrop-blur-sm">
-            {statutMissionLabel[mission.statut] ?? mission.statut}
+            {statutMission(mission.statut)}
           </span>
         </span>
 
@@ -97,28 +103,28 @@ export function CarteMission({
         <div className="mt-auto border-t border-ink/10 pt-3">
           <div className="flex items-center justify-between gap-2 pt-2">
             <p className="font-mono text-sm font-semibold text-ocre-dark">
-              {formatArgent(mission.budget)}
+              {argent(mission.budget)}
             </p>
 
             <p className="inline-flex items-center gap-1 text-xs text-ink-soft/70">
               <CalendarClock size={12} aria-hidden="true" />
-              avant le {formatDateCourte(mission.dateLimite)}
+              {t("card.before", { date: dateCourte(mission.dateLimite) })}
             </p>
           </div>
 
           <div className="mt-2.5 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <Avatar
-                nom={auteur?.nom ?? "Client"}
+                nom={auteur?.nom ?? t("card.client")}
                 photoUrl={auteur?.photoUrl}
                 size={22}
                 href={client ? `/clients/${client.utilisateurId}` : undefined}
               />
               <div className="min-w-0">
                 <p className="truncate text-xs font-medium text-ink">
-                  {auteur?.nom ?? "Client"}
+                  {auteur?.nom ?? t("card.client")}
                 </p>
-                <p className="text-[0.6875rem] text-ink-soft">Client</p>
+                <p className="text-[0.6875rem] text-ink-soft">{t("card.client")}</p>
               </div>
             </div>
 
@@ -126,7 +132,7 @@ export function CarteMission({
               href={`/missions/${mission.id}`}
               className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 font-mono text-xs font-semibold text-bleu-dark hover:bg-bleu/10 hover:text-bleu transition-colors"
             >
-              Voir →
+              {t("card.view")}
             </Link>
           </div>
         </div>

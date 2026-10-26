@@ -1,0 +1,53 @@
+{
+  "metaTitle": "About — Kianja",
+  "metaDescription": "Kianja connects freelance students with clients who need their skills.",
+  "eyebrow": "About",
+  "title": "Kianja links students' skills to clients' needs",
+  "intro": "A marketplace designed for all students who want to offer their skills as freelancers, and for clients looking for talent.",
+  "missionTitle": "Our mission",
+  "mission1": "Kianja's mission is to make it easier for freelance students and clients, individuals or organizations, who need specific work to meet: development, design, writing, translation, marketing and many other fields.",
+  "mission2": "The platform is open to all students, regardless of their institution: what matters is their skills.",
+  "problemTitle": "The problem we address",
+  "problem1": "Many students have useful skills but few ways to make them known or land their first missions. Clients, for their part, struggle to quickly find reliable profiles for one-off needs.",
+  "problem2": "Kianja brings missions, services and profiles together in one place and supports the collaboration, from application to delivery.",
+  "howTitle": "How it works",
+  "steps": {
+    "need": {
+      "title": "A need or a skill",
+      "detail": "A client posts a mission, or a student presents a service they offer."
+    },
+    "match": {
+      "title": "A connection",
+      "detail": "Students apply to missions, clients review applications or request a service, and everyone communicates through the platform's messaging."
+    },
+    "delivery": {
+      "title": "Work delivered and approved",
+      "detail": "The student uploads their deliverables, the client approves them, then the payment is released and each can review the other."
+    }
+  },
+  "valuesTitle": "Our values",
+  "values": {
+    "open": {
+      "title": "Opening up opportunities",
+      "detail": "Letting every student make the most of their skills while still studying, whatever their institution."
+    },
+    "clear": {
+      "title": "Staying clear",
+      "detail": "Readable missions, services and profiles, so everyone knows what they offer or expect."
+    },
+    "protect": {
+      "title": "Protecting data",
+      "detail": "Profiles only show information useful for collaboration; private contact details are not displayed."
+    },
+    "trust": {
+      "title": "Building trust",
+      "detail": "Payment held until the delivery is approved, reviews and reports for trustworthy exchanges."
+    }
+  },
+  "visionTitle": "Our vision",
+  "vision": "To make Kianja a leading meeting point where students build their professional experience and clients find the skills they need.",
+  "ctaTitle": "Want to know more?",
+  "ctaText": "Browse the publications or create your account to offer your skills or post a need.",
+  "explore": "Explore the publications",
+  "join": "Join Kianja"
+}

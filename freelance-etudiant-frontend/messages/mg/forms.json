@@ -1,0 +1,36 @@
+{
+  "password": {
+    "show": "Asehoy ny teny miafina",
+    "hide": "Afeno ny teny miafina"
+  },
+  "filters": {
+    "title": "Sivana",
+    "reset": "Averina amin'ny tany am-boalohany",
+    "keywords": "Teny fanalahidy",
+    "keywordsPlaceholder": "Hitady amin'ny teny fanalahidy…",
+    "skill": "Fahaizana",
+    "skillPlaceholder": "Figma…",
+    "budget": "Teti-bola (Ar)",
+    "min": "Farafahakeliny",
+    "max": "Faratampony",
+    "minAria": "{label} farafahakeliny",
+    "maxAria": "{label} faratampony",
+    "submit": "Sivana"
+  },
+  "multiSelect": {
+    "remove": "Fafana ny {item}",
+    "searchShort": "Hitady...",
+    "placeholder": "Hitady na manoratra soatoavina…",
+    "add": "Hanampy « {value} »"
+  },
+  "attachment": {
+    "tooLarge": "Lehibe loatra ny rakitra: mihoatra ny {size} Mo no tsy azo.",
+    "uploadError": "Tsy afaka naroso ny rakitra.",
+    "remove": "Esory ny rakitra nampiana",
+    "attach": "Hanisy rakitra",
+    "sending": "Eo am-pandefasana…",
+    "accessDenied": "Tsy mahazo miditra amin'io rakitra io ianao.",
+    "openError": "Tsy afaka nosokafana ny rakitra.",
+    "default": "Rakitra nampiana"
+  }
+}

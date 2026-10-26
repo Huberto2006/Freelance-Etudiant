@@ -6,39 +6,36 @@ import type {
   Signalement,
   Transaction,
 } from "./types";
-import { statutTransactionLabel } from "./format";
 import { versNombre } from "./dashboard";
 import type {
   EvenementActivite,
   ProjetActif,
   Ton,
+  Traducteur,
 } from "./dashboard";
 
 // ============================================================
 // ACTIVITÉ — ISSUE DES NOTIFICATIONS (journal réel des événements)
 // ============================================================
 
-const LIBELLES_PAR_TYPE: Record<
-  NotificationItem["type"],
-  { label: string; ton: Ton }
-> = {
-  nouvelle_invitation_groupe: { label: "Invitation de groupe", ton: "ocre" },
-  nouvelle_candidature: { label: "Nouvelle candidature", ton: "ocre" },
-  candidature_acceptee: { label: "Candidature acceptée", ton: "rice" },
-  candidature_refusee: { label: "Candidature refusée", ton: "brique" },
-  nouveau_message: { label: "Nouveau message", ton: "ink" },
-  livraison_deposee: { label: "Livraison déposée", ton: "ocre" },
-  livraison_validee: { label: "Livraison validée", ton: "rice" },
-  correction_demandee: { label: "Correction demandée", ton: "brique" },
-  nouvelle_evaluation: { label: "Nouvelle évaluation", ton: "ocre" },
-  nouveau_commentaire: { label: "Nouveau commentaire", ton: "ink" },
-  paiement_initie: { label: "Paiement déclaré", ton: "ink" },
-  paiement_confirme: { label: "Paiement confirmé", ton: "rice" },
-  paiement_libere: { label: "Paiement libéré", ton: "rice" },
-  paiement_echoue: { label: "Paiement non abouti", ton: "brique" },
-  nouvelle_reaction: { label: "Nouvelle réaction", ton: "ink" },
-  mention: { label: "Nouvelle mention", ton: "ocre" },
-  mission_expiree: { label: "Mission arrivée à échéance", ton: "brique" },
+const LIBELLES_PAR_TYPE: Record<NotificationItem["type"], { ton: Ton }> = {
+  nouvelle_invitation_groupe: { ton: "ocre" },
+  nouvelle_candidature: { ton: "ocre" },
+  candidature_acceptee: { ton: "rice" },
+  candidature_refusee: { ton: "brique" },
+  nouveau_message: { ton: "ink" },
+  livraison_deposee: { ton: "ocre" },
+  livraison_validee: { ton: "rice" },
+  correction_demandee: { ton: "brique" },
+  nouvelle_evaluation: { ton: "ocre" },
+  nouveau_commentaire: { ton: "ink" },
+  paiement_initie: { ton: "ink" },
+  paiement_confirme: { ton: "rice" },
+  paiement_libere: { ton: "rice" },
+  paiement_echoue: { ton: "brique" },
+  nouvelle_reaction: { ton: "ink" },
+  mention: { ton: "ocre" },
+  mission_expiree: { ton: "brique" },
 };
 
 /**
@@ -48,6 +45,7 @@ const LIBELLES_PAR_TYPE: Record<
  */
 export function activiteDepuisNotifications(
   notifications: NotificationItem[],
+  t: Traducteur,
   max = 8,
 ): EvenementActivite[] {
   return notifications
@@ -61,7 +59,9 @@ export function activiteDepuisNotifications(
     .map((notification) => ({
       id: notification.id,
       ton: LIBELLES_PAR_TYPE[notification.type]?.ton ?? "ink",
-      titre: LIBELLES_PAR_TYPE[notification.type]?.label ?? notification.titre,
+      titre: LIBELLES_PAR_TYPE[notification.type]
+        ? t(`activity.type.${notification.type}`)
+        : notification.titre,
       detail: notification.message,
       date: notification.dateCreation,
       href: notification.lienUrl ?? undefined,
@@ -75,9 +75,21 @@ export function activiteDepuisNotifications(
 export function activitePlateformeAdmin(params: {
   signalements: Signalement[];
   paiements: Transaction[];
+  t: Traducteur;
+  /** Libellé traduit du statut d'une transaction. */
+  libelleStatutTransaction: (statut: string) => string;
+  /** Nombre formaté selon la langue de l'interface. */
+  formatNombre: (valeur: number) => string;
   max?: number;
 }): EvenementActivite[] {
-  const { signalements, paiements, max = 8 } = params;
+  const {
+    signalements,
+    paiements,
+    t,
+    libelleStatutTransaction,
+    formatNombre,
+    max = 8,
+  } = params;
 
   const evenementsSignalements: EvenementActivite[] = signalements.map(
     (signalement) => ({
@@ -85,8 +97,8 @@ export function activitePlateformeAdmin(params: {
       ton: signalement.statut === "traite" ? "rice" : "brique",
       titre:
         signalement.statut === "traite"
-          ? "Signalement traité"
-          : "Nouveau signalement",
+          ? t("activity.reportHandled")
+          : t("activity.reportNew"),
       detail: signalement.motif,
       date: signalement.dateSignalement,
       href: "/tableau-de-bord/admin/signalements",
@@ -97,10 +109,10 @@ export function activitePlateformeAdmin(params: {
     (paiement) => ({
       id: `paiement-${paiement.id}`,
       ton: paiement.statut === "annulee" ? "brique" : "rice",
-      titre: statutTransactionLabel[paiement.statut],
-      detail: `${new Intl.NumberFormat("fr-FR").format(
-        versNombre(paiement.montant),
-      )} Ar · ${paiement.candidature?.mission?.titre ?? "mission"}`,
+      titre: libelleStatutTransaction(paiement.statut),
+      detail: `${formatNombre(versNombre(paiement.montant))} Ar · ${
+        paiement.candidature?.mission?.titre ?? t("activity.missionFallback")
+      }`,
       date: paiement.dateCreation,
       href: "/tableau-de-bord/admin/paiements",
     }),
@@ -119,8 +131,9 @@ export function activitePlateformeAdmin(params: {
 export function construireProjetsEtudiant(params: {
   candidatures: Candidature[];
   livraisons: Livraison[];
+  t: Traducteur;
 }): ProjetActif[] {
-  const { candidatures, livraisons } = params;
+  const { candidatures, livraisons, t } = params;
   const livraisonParCandidature = new Map(
     livraisons.map((livraison) => [livraison.candidatureId, livraison]),
   );
@@ -134,11 +147,11 @@ export function construireProjetsEtudiant(params: {
 
       const statutLabel = livraison
         ? livraison.statut === "en_attente"
-          ? "En attente de validation"
+          ? t("projects.awaitingValidation")
           : livraison.statut === "correction_demandee"
-            ? "Correction demandée"
-            : "Validée"
-        : "À livrer";
+            ? t("projects.correctionRequested")
+            : t("projects.validated")
+        : t("projects.toDeliver");
       const statutTon: Ton = livraison
         ? livraison.statut === "en_attente"
           ? "ocre"
@@ -149,7 +162,7 @@ export function construireProjetsEtudiant(params: {
 
       return {
         id: candidature.id,
-        titre: mission?.titre ?? "Mission",
+        titre: mission?.titre ?? t("projects.missionFallback"),
         interlocuteur:
           mission?.client?.utilisateur?.nom ??
           mission?.client?.nomEntreprise ??
@@ -158,7 +171,7 @@ export function construireProjetsEtudiant(params: {
         statutTon,
         detail: livraison
           ? undefined
-          : "Déposez votre travail pour démarrer la validation.",
+          : t("projects.submitHint"),
         href: `/tableau-de-bord/livraisons?candidature=${encodeURIComponent(
           candidature.id,
         )}&role=etudiant`,
@@ -171,8 +184,9 @@ export function construireProjetsClient(params: {
   missions: Mission[];
   candidatures: Candidature[];
   livraisons: Livraison[];
+  t: Traducteur;
 }): ProjetActif[] {
-  const { missions, candidatures, livraisons } = params;
+  const { missions, candidatures, livraisons, t } = params;
 
   const candidatureAccepteeParMission = new Map<string, Candidature>();
   for (const candidature of candidatures) {
@@ -195,11 +209,11 @@ export function construireProjetsClient(params: {
 
       const statutLabel = livraison
         ? livraison.statut === "en_attente"
-          ? "Livraison à valider"
+          ? t("projects.deliveryToValidate")
           : livraison.statut === "correction_demandee"
-            ? "Correction demandée"
-            : "Validée"
-        : "En attente de livraison";
+            ? t("projects.correctionRequested")
+            : t("projects.validated")
+        : t("projects.awaitingDelivery");
       const statutTon: Ton = livraison
         ? livraison.statut === "en_attente"
           ? "ocre"

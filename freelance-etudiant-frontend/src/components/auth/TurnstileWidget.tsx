@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   forwardRef,
   useEffect,
@@ -89,6 +90,7 @@ export const TurnstileWidget = forwardRef<
   TurnstileHandle,
   TurnstileWidgetProps
 >(function TurnstileWidget({ action, onToken, className }, ref) {
+  const t = useTranslations("auth.turnstile");
   const cleSite = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const conteneur = useRef<HTMLDivElement>(null);
   const idWidget = useRef<string | null>(null);
@@ -177,9 +179,7 @@ export const TurnstileWidget = forwardRef<
   if (etat === "non-configure") {
     return (
       <p role="alert" className="text-sm text-brique">
-        La vérification anti-robot n&apos;est pas configurée
-        (NEXT_PUBLIC_TURNSTILE_SITE_KEY manquante). Le formulaire est
-        désactivé.
+        {t("notConfigured")}
       </p>
     );
   }
@@ -188,18 +188,17 @@ export const TurnstileWidget = forwardRef<
     <div className={className}>
       <div ref={conteneur} className="min-h-[65px]" />
       <div aria-live="polite" className="mt-1 text-xs text-ink-soft">
-        {etat === "chargement" && <p>Vérification anti-robot en cours…</p>}
+        {etat === "chargement" && <p>{t("loading")}</p>}
         {etat === "expire" && (
-          <p>La vérification a expiré, une nouvelle est en cours.</p>
+          <p>{t("expired")}</p>
         )}
         {etat === "erreur" && (
           <div role="alert" className="flex flex-col items-start gap-2">
             <p className="text-sm text-brique">
-              La vérification anti-robot n&apos;a pas pu être chargée. Elle
-              est peut-être bloquée par une extension ou votre connexion.
+              {t("error")}
             </p>
             <Button type="button" variant="ghost" size="sm" onClick={reessayer}>
-              Réessayer
+              {t("retry")}
             </Button>
           </div>
         )}

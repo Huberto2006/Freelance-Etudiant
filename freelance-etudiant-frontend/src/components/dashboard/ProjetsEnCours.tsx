@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import type { ProjetActif } from "@/lib/dashboard";
 import { Button } from "@/components/ui/Button";
@@ -13,12 +14,12 @@ import { NoticeCard, Tag } from "@/components/ui/Notice";
  */
 export function ProjetsEnCours({
   projets,
-  libelleInterlocuteur = "Client",
-  libelleAction = "Voir le projet",
-  videTitre = "Aucune mission en cours.",
-  videDescription = "Explorez les missions ouvertes pour démarrer un nouveau projet.",
+  libelleInterlocuteur,
+  libelleAction,
+  videTitre,
+  videDescription,
   videHref = "/missions",
-  videLibelle = "Explorer les missions",
+  videLibelle,
 }: {
   projets: ProjetActif[];
   /** Étiquette de l'interlocuteur affiché (« Client », « Étudiant »…). */
@@ -29,14 +30,19 @@ export function ProjetsEnCours({
   videHref?: string;
   videLibelle?: string;
 }) {
+  const t = useTranslations("dashboardPages.ongoingProjects");
+  const interlocuteurLabel = libelleInterlocuteur ?? t("client");
+  const actionLabel = libelleAction ?? t("viewProject");
+  const videTitreLabel = videTitre ?? t("emptyTitle");
+  const videDescriptionLabel = videDescription ?? t("emptyDescription");
+  const videLibelleLabel = videLibelle ?? t("exploreMissions");
   if (projets.length === 0) {
     return (
       <NoticeCard className="flex flex-col items-start gap-3">
-        <p className="font-display font-medium">{videTitre}</p>
-        <p className="text-sm text-ink-soft">{videDescription}</p>
-
-        <Link href={videHref} aria-label={videLibelle}>
-          <Button size="sm">{videLibelle}</Button>
+        <p className="font-display font-medium">{videTitreLabel}</p>
+        <p className="text-sm text-ink-soft">{videDescriptionLabel}</p>
+        <Link href={videHref} aria-label={videLibelleLabel}>
+          <Button size="sm">{videLibelleLabel}</Button>
         </Link>
       </NoticeCard>
     );
@@ -50,7 +56,7 @@ export function ProjetsEnCours({
             <Link
               href={projet.href}
               className="min-w-0 font-display font-semibold transition-colors hover:text-ocre-dark"
-              aria-label={`${libelleAction} : ${projet.titre}`}
+              aria-label={`${actionLabel} : ${projet.titre}`}
             >
               {projet.titre}
             </Link>
@@ -60,7 +66,7 @@ export function ProjetsEnCours({
 
           {projet.interlocuteur && (
             <p className="text-sm text-ink-soft">
-              {libelleInterlocuteur} : {projet.interlocuteur}
+              {interlocuteurLabel} : {projet.interlocuteur}
             </p>
           )}
 
@@ -71,10 +77,10 @@ export function ProjetsEnCours({
           <Link
             href={projet.href}
             className="mt-auto self-start"
-            aria-label={`${libelleAction} : ${projet.titre}`}
+            aria-label={`${actionLabel} : ${projet.titre}`}
           >
             <Button size="sm" variant="ghost">
-              {libelleAction}
+              {actionLabel}
             </Button>
           </Link>
         </NoticeCard>

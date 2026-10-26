@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { api } from "@/lib/api";
-import { libelleCategorie } from "@/lib/categories";
+import { useOptionLabels } from "@/i18n/use-option-labels";
 import type { Mission, ServiceOffert } from "@/lib/types";
 
 import { HeroAccueil, type StatVive } from "@/components/home/HeroAccueil";
@@ -11,6 +12,8 @@ import {
   SectionCategories,
   type CategorieAccueil,
 } from "@/components/home/SectionCategories";
+import { SectionServices } from "@/components/home/SectionServices";
+import { SectionMissions } from "@/components/home/SectionMissions";
 import { SectionAvantages } from "@/components/home/SectionAvantages";
 import { SectionAudiences } from "@/components/home/SectionAudiences";
 import { SectionFonctionnement } from "@/components/home/SectionFonctionnement";
@@ -22,6 +25,8 @@ import { SectionFonctionnement } from "@/components/home/SectionFonctionnement";
  * endpoints publics (aucune authentification requise).
  */
 export default function PageAccueil() {
+  const t = useTranslations("home.hero");
+  const libelleCategorie = useOptionLabels().categorie;
   const [services, setServices] = useState<ServiceOffert[]>([]);
   const [missions, setMissions] = useState<Mission[]>([]);
   const [chargement, setChargement] = useState(true);
@@ -75,15 +80,15 @@ export default function PageAccueil() {
         libelle: libelleCategorie(valeur),
         total,
       }));
-  }, [services]);
+  }, [services, libelleCategorie]);
 
   const suggestions = categories.slice(0, 5);
 
   const stats: StatVive[] | undefined = chargement
     ? undefined
     : [
-        { label: "Services proposés", valeur: String(services.length) },
-        { label: "Missions ouvertes", valeur: String(missions.length) },
+        { label: t("statServices"), valeur: String(services.length) },
+        { label: t("statMissions"), valeur: String(missions.length) },
       ];
 
   return (
@@ -93,6 +98,12 @@ export default function PageAccueil() {
 
       {/* 2. Audiences : mise en valeur immédiate des deux côtés de la marketplace */}
       <SectionAudiences />
+
+      {/* 3. Besoins des clients : missions ouvertes aux étudiants */}
+      <SectionMissions missions={missions} />
+
+      {/* 4. Compétences étudiantes : services prêts à l'emploi */}
+      <SectionServices services={services} />
 
       {/* 5. Catégories : exploration par domaine de compétences / filière */}
       <SectionCategories

@@ -1,0 +1,121 @@
+{
+  "themes": {
+    "inscription": {
+      "title": "Registration and account",
+      "items": {
+        "who": {
+          "question": "Who can join Kianja?",
+          "answer": "Students who want to offer their skills as freelancers, and clients (individuals or organizations) looking for talent. You choose your profile type when you sign up."
+        },
+        "verify": {
+          "question": "Do I need to confirm my email address?",
+          "answer": "Yes. After signing up, a verification email is sent: you must click the link you receive before you can log in. If the link has expired, you can request a new email from the login page."
+        },
+        "forgot": {
+          "question": "I forgot my password, what should I do?",
+          "answer": "Use the “Forgot password” link on the login page: an email will let you choose a new password."
+        }
+      }
+    },
+    "profils": {
+      "title": "Profiles",
+      "items": {
+        "fill": {
+          "question": "What should I fill in on my student profile?",
+          "answer": "After signing up, a questionnaire helps you complete your profile: field of study, specialties, skills, languages, rates, portfolio and description. A complete profile helps clients identify you better."
+        },
+        "visibility": {
+          "question": "Who can view student profiles?",
+          "answer": "Student profiles are reserved for logged-in users. They do not show the email or phone number: they contain the information useful for collaboration (skills, education, availability, reviews, portfolio)."
+        }
+      }
+    },
+    "publications": {
+      "title": "Publications",
+      "items": {
+        "diff": {
+          "question": "What is the difference between a mission and a service?",
+          "answer": "A mission is a need posted by a client (budget, deadline, skills sought). A service is an offer proposed by a student. Both are brought together on the Publications page."
+        },
+        "account": {
+          "question": "Do I need an account to browse publications?",
+          "answer": "No, you can view missions and services without being logged in. An account is required to take action: apply, publish, exchange by messaging or view a student profile."
+        }
+      }
+    },
+    "candidatures": {
+      "title": "Applications",
+      "items": {
+        "apply": {
+          "question": "How do I apply to a mission?",
+          "answer": "When logged in as a student, open the mission you are interested in and send your application. You will then find it under “My applications” in your dashboard."
+        },
+        "choose": {
+          "question": "How does a client choose a student?",
+          "answer": "The client reviews the applications received on their mission, looks at the profiles and accepts the application that suits them. Discussions then continue through the platform's messaging."
+        }
+      }
+    },
+    "services": {
+      "title": "Services",
+      "items": {
+        "offer": {
+          "question": "How do I offer a service as a student?",
+          "answer": "From your dashboard, the “My services” section lets you publish an offer with its description, category, price and delivery time."
+        },
+        "request": {
+          "question": "How can a client request a service?",
+          "answer": "A logged-in client can send a request to the student from the service page. Requests are tracked in the “Service requests” section of the dashboard."
+        }
+      }
+    },
+    "livraisons": {
+      "title": "Deliveries",
+      "items": {
+        "delivery": {
+          "question": "How does the delivery of work happen?",
+          "answer": "The student uploads their deliverables on the platform from the “Deliveries” section. The client reviews and then approves them, which closes the delivery and triggers the release of the payment."
+        }
+      }
+    },
+    "paiements": {
+      "title": "Payments",
+      "items": {
+        "how": {
+          "question": "How does payment work?",
+          "answer": "Payment can be made as soon as an application is accepted. The funds are held by the platform until the client approves the delivery, then they are released to the student."
+        },
+        "methods": {
+          "question": "Which payment methods are available?",
+          "answer": "Online payment is available through Papi (MVola, Orange Money, Airtel Money or Visa card) and directly through MVola. A transfer made outside the platform can also be declared; it remains pending until verified by the administration team."
+        },
+        "setup": {
+          "question": "What do I need to set up to get paid as a student?",
+          "answer": "You must register at least one active payment method in your dashboard settings: without it, a payment cannot be initiated in your favor."
+        }
+      }
+    },
+    "securite": {
+      "title": "Security",
+      "items": {
+        "privacy": {
+          "question": "Are my private contact details visible?",
+          "answer": "No. Public pages and profile pages show neither your email nor your phone number. Exchanged documents (deliverables, attachments) are only accessible to the people concerned."
+        },
+        "report": {
+          "question": "How do I report abusive behavior?",
+          "answer": "A “Report” button is available on student and client profiles for logged-in users. Reports are reviewed by the administration team."
+        }
+      }
+    }
+  },
+  "eyebrow": "Help center",
+  "title": "Frequently asked questions",
+  "intro": "Find answers to the most common questions about how Kianja works.",
+  "navAria": "FAQ topics",
+  "noAnswerTitle": "Can't find your answer?",
+  "noAnswerText": "Write to us, we will reply as soon as possible.",
+  "contactButton": "Contact and support",
+  "metaTitle": "FAQ — Kianja",
+  "metaDescription": "Answers to frequently asked questions about registration, publications, applications, deliveries and payments on Kianja."
+}

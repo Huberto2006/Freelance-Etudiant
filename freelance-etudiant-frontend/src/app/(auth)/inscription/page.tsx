@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { clsx } from "clsx";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import type { ReponseInscription } from "@/lib/types";
@@ -23,6 +24,7 @@ import { BoutonGoogle } from "@/components/auth/BoutonGoogle";
 const DELAI_RENVOI_SECONDES = 60;
 
 function FormulaireInscription() {
+  const t = useTranslations("auth.signup");
   const { inscrire, connecterAvecGoogle } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
@@ -76,7 +78,7 @@ function FormulaireInscription() {
   async function onGoogle(idToken: string) {
     if (enCours.current) return;
     if (!turnstileToken) {
-      setErreur("Complétez d'abord la vérification anti-robot ci-dessous.");
+      setErreur(t("errCaptchaFirst"));
       return;
     }
     enCours.current = true;
@@ -98,7 +100,7 @@ function FormulaireInscription() {
       setErreur(
         err instanceof ApiError
           ? err.message
-          : "Impossible de créer le compte avec Google",
+          : t("errGoogle"),
       );
     } finally {
       enCours.current = false;
@@ -138,7 +140,7 @@ function FormulaireInscription() {
       setSecondesAvantRenvoi(DELAI_RENVOI_SECONDES);
     } catch (err) {
       setErreur(
-        err instanceof ApiError ? err.message : "Impossible de créer le compte",
+        err instanceof ApiError ? err.message : t("errCreate"),
       );
     } finally {
       enCours.current = false;
@@ -165,7 +167,7 @@ function FormulaireInscription() {
         message:
           err instanceof ApiError
             ? err.message
-            : "Impossible de renvoyer l'email",
+            : t("errResend"),
       });
     } finally {
       setRenvoiEnCours(false);
@@ -176,22 +178,22 @@ function FormulaireInscription() {
     return (
       <div className="mx-auto max-w-md px-5 pb-12">
         <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
-          Vérification de l&apos;email
+          {t("verifyEyebrow")}
         </p>
         <h1 className="mb-7 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-          Confirmez votre adresse email
+          {t("verifyTitle")}
         </h1>
 
         <NoticeCard>
           <div className="flex flex-col gap-4">
             <p className="text-sm text-ink-soft">
-              Un email de vérification a été envoyé à{" "}
-              <strong className="text-ink">{reponseInscription.email}</strong>.
+              {t.rich("verifySent", {
+                email: reponseInscription.email,
+                b: (morceaux) => <strong className="text-ink">{morceaux}</strong>,
+              })}
             </p>
             <p className="text-sm text-ink-soft">
-              Ouvrez le lien qu&apos;il contient pour activer votre compte.
-              Pensez à vérifier votre dossier de courriers indésirables si le
-              message n&apos;arrive pas sous quelques minutes.
+              {t("verifyHelp")}
             </p>
 
             {renvoiFeedback && (
@@ -213,21 +215,21 @@ function FormulaireInscription() {
               disabled={renvoiEnCours || secondesAvantRenvoi > 0}
             >
               {renvoiEnCours
-                ? "Envoi en cours…"
+                ? t("sending")
                 : secondesAvantRenvoi > 0
-                  ? `Renvoyer l'email (${secondesAvantRenvoi}s)`
-                  : "Renvoyer l'email"}
+                  ? t("resendIn", { secondes: secondesAvantRenvoi })
+                  : t("resend")}
             </Button>
           </div>
         </NoticeCard>
 
         <p className="mt-6 text-center text-sm text-ink-soft">
-          Vous avez déjà vérifié votre adresse ?{" "}
+          {t("alreadyVerified")}{" "}
           <Link
             href="/connexion"
             className="font-medium text-ocre-dark hover:underline"
           >
-            Se connecter
+            {t("login")}
           </Link>
         </p>
       </div>
@@ -237,15 +239,15 @@ function FormulaireInscription() {
   return (
     <div className="mx-auto max-w-md px-5 pb-12">
       <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
-        Bienvenue sur Kianja
+        {t("eyebrow")}
       </p>
       <h1 className="mb-7 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-        Créer un compte
+        {t("title")}
       </h1>
 
       <div
         role="group"
-        aria-label="Type de compte"
+        aria-label={t("accountType")}
         className="mb-6 grid grid-cols-2 gap-1 rounded-xl border border-ink/10 bg-ink/5 p-1"
       >
         <button
@@ -259,7 +261,7 @@ function FormulaireInscription() {
               : "text-ink-soft hover:text-ink",
           )}
         >
-          Je suis étudiant
+          {t("imStudent")}
         </button>
         <button
           type="button"
@@ -272,7 +274,7 @@ function FormulaireInscription() {
               : "text-ink-soft hover:text-ink",
           )}
         >
-          Je suis client
+          {t("imClient")}
         </button>
       </div>
 
@@ -286,14 +288,14 @@ function FormulaireInscription() {
           {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
             <div className="flex items-center gap-3 text-xs text-ink-soft">
               <span className="h-px flex-1 bg-ink/10" aria-hidden="true" />
-              ou avec votre email
+              {t("orEmail")}
               <span className="h-px flex-1 bg-ink/10" aria-hidden="true" />
             </div>
           )}
         </div>
 
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
-          <Field label="Nom complet" htmlFor="nom">
+          <Field label={t("fullName")} htmlFor="nom">
             <Input
               id="nom"
               required
@@ -302,7 +304,7 @@ function FormulaireInscription() {
               placeholder="Lanja Rakoto"
             />
           </Field>
-          <Field label="Adresse email" htmlFor="email">
+          <Field label={t("email")} htmlFor="email">
             <Input
               id="email"
               type="email"
@@ -310,13 +312,13 @@ function FormulaireInscription() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="vous@exemple.mg"
+              placeholder={t("emailPlaceholder")}
             />
           </Field>
           <Field
-            label="Mot de passe"
+            label={t("password")}
             htmlFor="motDePasse"
-            hint="8 caractères minimum"
+            hint={t("passwordHint")}
           >
             <PasswordInput
               id="motDePasse"
@@ -330,7 +332,7 @@ function FormulaireInscription() {
           </Field>
 
           {role === "etudiant" ? (
-            <Field label="Établissement" htmlFor="universite">
+            <Field label={t("school")} htmlFor="universite">
               <Input
                 id="universite"
                 value={universite}
@@ -340,9 +342,9 @@ function FormulaireInscription() {
             </Field>
           ) : (
             <Field
-              label="Entreprise (optionnel)"
+              label={t("company")}
               htmlFor="nomEntreprise"
-              hint="Laissez vide si vous êtes un particulier"
+              hint={t("companyHint")}
             >
               <Input
                 id="nomEntreprise"
@@ -366,19 +368,19 @@ function FormulaireInscription() {
             disabled={envoi || !turnstileToken}
             className="mt-2"
           >
-            {envoi ? "Création…" : "Créer mon compte"}
+            {envoi ? t("creating") : t("submit")}
           </Button>
         </form>
       </NoticeCard>
 
       <p className="mt-6 text-center text-sm text-ink-soft">
-        Déjà un compte ?{" "}
+        {t("haveAccount")}{" "}
         <Link
           href="/connexion"
           className="font-medium text-ocre-dark hover:underline"
         >
-          Se connecter
-        </Link>
+          {t("login")}
+          </Link>
       </p>
     </div>
   );

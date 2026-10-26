@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/auth-context";
@@ -33,6 +34,7 @@ export function HeroAccueil({
   suggestions: SuggestionCategorie[];
   stats?: StatVive[];
 }) {
+  const t = useTranslations("home.hero");
   const router = useRouter();
   const { utilisateur, chargement } = useAuth();
 
@@ -67,21 +69,20 @@ export function HeroAccueil({
         aria-hidden="true"
       />
 
-      <div className="relative z-20 mx-auto w-full max-w-7xl px-5 py-16 text-center sm:px-8 lg:px-10 sm:py-24">
+      <div className="relative z-20 mx-auto max-w-3xl px-5 py-16 text-center sm:px-10 sm:py-24">
         <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-soft">
-          Kianja · Marketplace des étudiants freelances
+          {t("eyebrow")}
         </p>
 
         <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-          Les besoins des clients.{" "}
+          {t("titleStart")}{" "}
           <span className="text-ocre-dark">
-            Les compétences des étudiants.
+            {t("titleAccent")}
           </span>
         </h1>
 
         <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-ink-soft">
-          Trouvez un profil qualifié, publiez un besoin ou proposez vos
-          compétences, dans un cadre clair et sécurisé.
+          {t("intro")}
         </p>
 
         {/* Recherche : une seule barre, sélecteur Services / Missions intégré */}
@@ -91,7 +92,7 @@ export function HeroAccueil({
           className="mx-auto mt-9 flex max-w-xl items-stretch overflow-hidden rounded-xl bg-paper-light shadow-sm transition"
         >
           <label className="sr-only" htmlFor="cible-recherche">
-            Type de recherche
+            {t("searchTypeLabel")}
           </label>
           <select
             id="cible-recherche"
@@ -99,8 +100,8 @@ export function HeroAccueil({
             onChange={(e) => setCible(e.target.value as CibleRecherche)}
             className="kianja-field-control cursor-pointer bg-transparent py-3 pl-4 pr-2 text-sm font-medium text-ink outline-none focus:outline-none"
           >
-            <option value="services">Services</option>
-            <option value="missions">Missions</option>
+            <option value="services">{t("targetServices")}</option>
+            <option value="missions">{t("targetMissions")}</option>
           </select>
 
           <input
@@ -109,20 +110,20 @@ export function HeroAccueil({
             onChange={(e) => setRecherche(e.target.value)}
             placeholder={
               cible === "services"
-                ? "Design, site web, rédaction, traduction…"
-                : "Refonte de site, application mobile…"
+                ? t("placeholderServices")
+                : t("placeholderMissions")
             }
             aria-label={
               cible === "services"
-                ? "Rechercher un service étudiant"
-                : "Rechercher une mission de client"
+                ? t("ariaSearchServices")
+                : t("ariaSearchMissions")
             }
             className="kianja-field-control min-w-0 flex-1 bg-transparent px-3 text-sm text-ink outline-none focus:outline-none placeholder:text-ink-soft/60"
           />
 
           <button
             type="submit"
-            aria-label="Lancer la recherche"
+            aria-label={t("searchSubmit")}
             className="flex w-12 shrink-0 cursor-pointer items-center justify-center bg-ink text-paper-light transition-colors hover:bg-ink-soft"
           >
             <Search size={17} aria-hidden="true" />
@@ -132,7 +133,7 @@ export function HeroAccueil({
         {/* Domaines populaires : liens texte discrets */}
         {suggestions.length > 0 && (
           <p className="mt-4 text-xs text-ink-soft">
-            Populaires :{" "}
+            {t("popular")}{" "}
             {suggestions.slice(0, 4).map((suggestion, index) => (
               <span key={suggestion.valeur}>
                 {index > 0 && (
@@ -157,14 +158,14 @@ export function HeroAccueil({
             {utilisateur ? (
               <>
                 <Button href="/tableau-de-bord" size="lg">
-                  Accéder à mon tableau de bord
+                  {t("goDashboard")}
                 </Button>
                 {utilisateur.role === "client" && (
                   <Link
                     href="/tableau-de-bord/mes-missions"
                     className="text-sm font-medium text-ink underline-offset-4 hover:underline"
                   >
-                    Publier une mission
+                    {t("publishMission")}
                   </Link>
                 )}
                 {utilisateur.role === "etudiant" && (
@@ -172,20 +173,20 @@ export function HeroAccueil({
                     href="/missions"
                     className="text-sm font-medium text-ink underline-offset-4 hover:underline"
                   >
-                    Trouver une mission
+                    {t("findMission")}
                   </Link>
                 )}
               </>
             ) : (
               <>
                 <Button href="/inscription" size="lg">
-                  Rejoindre Kianja
+                  {t("join")}
                 </Button>
                 <Link
                   href="/publications"
                   className="text-sm font-medium text-ink underline-offset-4 hover:underline"
                 >
-                  Explorer les publications →
+                  {t("explorePublications")}
                 </Link>
               </>
             )}

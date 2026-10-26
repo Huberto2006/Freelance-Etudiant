@@ -1,0 +1,8 @@
+{
+  "subMenu": {
+    "ariaLabel": "Filtrer par mise en avant ou par catégorie",
+    "all": "Tous",
+    "recommended": "Recommandé",
+    "best": "Meilleurs"
+  }
+}

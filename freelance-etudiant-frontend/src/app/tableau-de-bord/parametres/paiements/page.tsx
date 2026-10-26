@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Building2,
   Check,
@@ -69,7 +70,7 @@ const typeLabel: Record<TypeMoyenPaiement, string> = {
   MVOLA: "MVola",
   ORANGE_MONEY: "Orange Money",
   AIRTEL_MONEY: "Airtel Money",
-  BANQUE: "Compte bancaire",
+  BANQUE: "Compte bancaire", // remplacé par la traduction à l'affichage
 };
 
 // ============================================================
@@ -93,6 +94,7 @@ function IconeMoyen({
 // ============================================================
 
 export default function MoyensPaiementPage() {
+  const t = useTranslations("settings.studentMethods");
   const { utilisateur } = useAuth();
 
   const [moyens, setMoyens] = useState<MoyenPaiement[]>([]);
@@ -120,7 +122,7 @@ export default function MoyensPaiementPage() {
       setErreur(
         err instanceof ApiError
           ? err.message
-          : "Impossible de charger vos moyens de paiement.",
+          : t("errLoad"),
       );
     } finally {
       setChargement(false);
@@ -140,7 +142,7 @@ export default function MoyensPaiementPage() {
           setErreur(
             err instanceof ApiError
               ? err.message
-              : "Impossible de charger vos moyens de paiement.",
+              : t("errLoad"),
           );
         }
       })
@@ -151,7 +153,7 @@ export default function MoyensPaiementPage() {
     return () => {
       cancelled = true;
     };
-  }, [utilisateur?.role, obtenirMoyens]);
+  }, [utilisateur?.role, obtenirMoyens, t]);
 
   function fermerActions() {
     setMoyenSelectionne(null);
@@ -167,13 +169,13 @@ export default function MoyensPaiementPage() {
       <div className="space-y-6">
         <PageHeader
           icon={Wallet}
-          eyebrow="Paiements"
-          title="Moyens de paiement"
+          eyebrow={t("eyebrow")}
+          title={t("titleGeneric")}
         />
 
         <NoticeCard>
           <p className="text-sm text-ink-soft">
-            Cette page est réservée aux étudiants.
+            {t("studentsOnly")}
           </p>
         </NoticeCard>
       </div>
@@ -184,19 +186,18 @@ export default function MoyensPaiementPage() {
     <div className="space-y-7">
       <PageHeader
         icon={Wallet}
-        eyebrow="Paiements"
-        title="Mes moyens de paiement"
+        eyebrow={t("eyebrow")}
+        title={t("title")}
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm leading-6 text-ink-soft">
-            Gérez les coordonnées sur lesquelles vos clients pourront
-            effectuer leurs paiements.
+            {t("intro")}
           </p>
 
           <p className="mt-1 text-xs text-ink-soft/70">
-            Vos coordonnées ne sont pas affichées sur votre profil public.
+            {t("privacy")}
           </p>
         </div>
 
@@ -209,7 +210,7 @@ export default function MoyensPaiementPage() {
           }}
         >
           <Plus size={16} />
-          Ajouter un moyen
+          {t("addMethod")}
         </Button>
       </div>
 
@@ -246,7 +247,7 @@ export default function MoyensPaiementPage() {
       {chargement ? (
         <NoticeCard>
           <p className="text-sm text-ink-soft">
-            Chargement de vos moyens de paiement…
+            {t("loading")}
           </p>
         </NoticeCard>
       ) : moyens.length === 0 ? (
@@ -262,12 +263,11 @@ export default function MoyensPaiementPage() {
             </span>
 
             <h2 className="mt-4 font-display text-lg font-medium">
-              Aucun moyen de paiement
+              {t("emptyTitle")}
             </h2>
 
             <p className="mt-2 max-w-md text-sm leading-6 text-ink-soft">
-              Ajoutez un numéro Mobile Money ou un compte bancaire afin
-              de pouvoir recevoir vos paiements.
+              {t("emptyDescription")}
             </p>
 
             <Button
@@ -279,7 +279,7 @@ export default function MoyensPaiementPage() {
               }}
             >
               <Plus size={16} />
-              Ajouter mon premier moyen
+              {t("addFirst")}
             </Button>
           </div>
         </NoticeCard>
@@ -333,7 +333,7 @@ export default function MoyensPaiementPage() {
               setErreur(
                 err instanceof ApiError
                   ? err.message
-                  : "Impossible de définir ce moyen comme principal.",
+                  : t("errPrimary"),
               );
             }
           }}
@@ -361,7 +361,7 @@ export default function MoyensPaiementPage() {
               setErreur(
                 err instanceof ApiError
                   ? err.message
-                  : "Impossible de modifier l'état de ce moyen.",
+                  : t("errToggle"),
               );
             }
           }}
@@ -386,7 +386,7 @@ export default function MoyensPaiementPage() {
               setErreur(
                 err instanceof ApiError
                   ? err.message
-                  : "Impossible de supprimer ce moyen de paiement.",
+                  : t("errDelete"),
               );
             }
           }}
@@ -407,6 +407,9 @@ function CarteMoyenPaiement({
   moyen: MoyenPaiement;
   onAction: (action: Exclude<ActionMoyen, null>) => void;
 }) {
+  const t = useTranslations("settings.studentMethods");
+  const libelleType = (ty: TypeMoyenPaiement) =>
+    ty === "BANQUE" ? t("bankAccount") : typeLabel[ty];
   const [menuOuvert, setMenuOuvert] = useState(false);
 
   return (
@@ -426,20 +429,20 @@ function CarteMoyenPaiement({
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="font-display text-lg font-medium">
-                  {typeLabel[moyen.type]}
+                  {libelleType(moyen.type)}
                 </h2>
 
                 {moyen.principal && (
                   <Tag tone="ocre">
                     <span className="inline-flex items-center gap-1">
                       <Star size={12} />
-                      Principal
+                      {t("primary")}
                     </span>
                   </Tag>
                 )}
 
                 <Tag tone={moyen.actif ? "rice" : "brique"}>
-                  {moyen.actif ? "Actif" : "Inactif"}
+                  {moyen.actif ? t("active") : t("inactive")}
                 </Tag>
               </div>
 
@@ -462,7 +465,7 @@ function CarteMoyenPaiement({
             <div className="relative shrink-0">
               <button
                 type="button"
-                aria-label={`Actions pour ${typeLabel[moyen.type]}`}
+                aria-label={t("actionsFor", { type: libelleType(moyen.type) })}
                 aria-expanded={menuOuvert}
                 className="
                   rounded-lg p-2
@@ -482,7 +485,7 @@ function CarteMoyenPaiement({
                 <>
                   <button
                     type="button"
-                    aria-label="Fermer le menu"
+                    aria-label={t("closeMenu")}
                     className="fixed inset-0 z-20 cursor-default"
                     onClick={() => setMenuOuvert(false)}
                   />
@@ -514,7 +517,7 @@ function CarteMoyenPaiement({
                       }}
                     >
                       <Pencil size={16} />
-                      Modifier
+                      {t("edit")}
                     </button>
 
                     {/* PRINCIPAL */}
@@ -534,7 +537,7 @@ function CarteMoyenPaiement({
                         }}
                       >
                         <Star size={16} />
-                        Définir comme principal
+                        {t("setPrimary")}
                       </button>
                     )}
 
@@ -556,12 +559,12 @@ function CarteMoyenPaiement({
                       {moyen.actif ? (
                         <>
                           <Check size={16} />
-                          Désactiver
+                          {t("deactivate")}
                         </>
                       ) : (
                         <>
                           <Play size={16} />
-                          Activer
+                          {t("activate")}
                         </>
                       )}
                     </button>
@@ -585,7 +588,7 @@ function CarteMoyenPaiement({
                       }}
                     >
                       <Trash2 size={16} />
-                      Supprimer
+                      {t("delete")}
                     </button>
                   </div>
                 </>
@@ -599,7 +602,7 @@ function CarteMoyenPaiement({
             </p>
 
             <p className="mt-1 text-sm text-ink-soft">
-              Titulaire : {moyen.nomTitulaire}
+              {t("holder", { nom: moyen.nomTitulaire })}
             </p>
           </div>
         </div>
@@ -619,10 +622,11 @@ function FormulaireAjoutMoyen({
   onFermer: () => void;
   onAjoute: () => Promise<void>;
 }) {
+  const t = useTranslations("settings.studentMethods");
   return (
     <FormulaireMoyen
-      titre="Ajouter un moyen de paiement"
-      description="Ajoutez les coordonnées sur lesquelles vous souhaitez recevoir vos paiements."
+      titre={t("addTitle")}
+      description={t("addDescription")}
       moyenInitial={null}
       onFermer={onFermer}
       onTermine={onAjoute}
@@ -643,12 +647,13 @@ function ModalModifierMoyen({
   onFermer: () => void;
   onModifie: () => Promise<void>;
 }) {
+  const t = useTranslations("settings.studentMethods");
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4">
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto">
         <FormulaireMoyen
-          titre="Modifier le moyen de paiement"
-          description="Modifiez les coordonnées de ce moyen de paiement."
+          titre={t("editTitle")}
+          description={t("editDescription")}
           moyenInitial={moyen}
           onFermer={onFermer}
           onTermine={onModifie}
@@ -675,6 +680,7 @@ function FormulaireMoyen({
   onFermer: () => void;
   onTermine: () => Promise<void>;
 }) {
+  const t = useTranslations("settings.studentMethods");
   const [type, setType] = useState<TypeMoyenPaiement>(
     moyenInitial?.type ?? "MVOLA",
   );
@@ -730,23 +736,19 @@ function FormulaireMoyen({
     if (!numeroNettoye) {
       setErreur(
         estBanque
-          ? "Le numéro de compte est obligatoire."
-          : "Le numéro est obligatoire.",
+          ? t("errAccountRequired")
+          : t("errNumberRequired"),
       );
       return;
     }
 
     if (!titulaireNettoye) {
-      setErreur(
-        "Le nom du titulaire est obligatoire.",
-      );
+      setErreur(t("errHolderRequired"));
       return;
     }
 
     if (estBanque && !nomBanque.trim()) {
-      setErreur(
-        "Le nom de la banque est obligatoire.",
-      );
+      setErreur(t("errBankRequired"));
       return;
     }
 
@@ -784,8 +786,8 @@ function FormulaireMoyen({
         err instanceof ApiError
           ? err.message
           : estModification
-            ? "Impossible de modifier ce moyen de paiement."
-            : "Impossible d'ajouter ce moyen de paiement.",
+            ? t("errEdit")
+            : t("errAdd"),
       );
     } finally {
       setEnvoi(false);
@@ -808,7 +810,7 @@ function FormulaireMoyen({
         <button
           type="button"
           onClick={onFermer}
-          aria-label="Fermer"
+          aria-label={t("close")}
           disabled={envoi}
           className="
             rounded-lg p-2
@@ -845,7 +847,7 @@ function FormulaireMoyen({
       >
         {/* TYPE */}
         <Field
-          label="Type de moyen de paiement"
+          label={t("methodType")}
           htmlFor="type-moyen-paiement"
         >
           <Select
@@ -866,7 +868,7 @@ function FormulaireMoyen({
               Airtel Money
             </option>
             <option value="BANQUE">
-              Compte bancaire
+              {t("bankAccount")}
             </option>
           </Select>
         </Field>
@@ -874,9 +876,9 @@ function FormulaireMoyen({
         {/* OPERATEUR */}
         {!estBanque && (
           <Field
-            label="Opérateur"
+            label={t("operator")}
             htmlFor="operateur"
-            hint="Facultatif. Le type sélectionné permet déjà d'identifier l'opérateur."
+            hint={t("operatorHint")}
           >
             <Input
               id="operateur"
@@ -899,7 +901,7 @@ function FormulaireMoyen({
         {/* BANQUE */}
         {estBanque && (
           <Field
-            label="Nom de la banque"
+            label={t("bankName")}
             htmlFor="nom-banque"
           >
             <Input
@@ -908,7 +910,7 @@ function FormulaireMoyen({
               onChange={(e) =>
                 setNomBanque(e.target.value)
               }
-              placeholder="Ex. BNI Madagascar"
+              placeholder={t("bankPlaceholder")}
               disabled={envoi}
               required
             />
@@ -919,8 +921,8 @@ function FormulaireMoyen({
         <Field
           label={
             estBanque
-              ? "Numéro de compte"
-              : "Numéro"
+              ? t("accountNumber")
+              : t("number")
           }
           htmlFor="numero"
         >
@@ -932,7 +934,7 @@ function FormulaireMoyen({
             }
             placeholder={
               estBanque
-                ? "Numéro de compte"
+                ? t("accountNumber")
                 : "0341234567"
             }
             disabled={envoi}
@@ -942,7 +944,7 @@ function FormulaireMoyen({
 
         {/* TITULAIRE */}
         <Field
-          label="Nom du titulaire"
+          label={t("holderName")}
           htmlFor="nom-titulaire"
         >
           <Input
@@ -951,7 +953,7 @@ function FormulaireMoyen({
             onChange={(e) =>
               setNomTitulaire(e.target.value)
             }
-            placeholder="Nom complet du titulaire"
+            placeholder={t("holderPlaceholder")}
             disabled={envoi}
             required
           />
@@ -975,11 +977,11 @@ function FormulaireMoyen({
 
           <span>
             <span className="block text-sm font-medium text-ink">
-              Définir comme moyen principal
+              {t("setAsPrimaryMethod")}
             </span>
 
             <span className="mt-0.5 block text-xs text-ink-soft">
-              Ce moyen sera proposé en priorité lors d&apos;un paiement.
+              {t("primaryHint")}
             </span>
           </span>
         </label>
@@ -992,7 +994,7 @@ function FormulaireMoyen({
             onClick={onFermer}
             disabled={envoi}
           >
-            Annuler
+            {t("cancel")}
           </Button>
 
           <Button
@@ -1002,11 +1004,11 @@ function FormulaireMoyen({
           >
             {envoi
               ? estModification
-                ? "Modification…"
-                : "Ajout en cours…"
+                ? t("editing")
+                : t("adding")
               : estModification
-                ? "Enregistrer"
-                : "Ajouter le moyen"}
+                ? t("save")
+                : t("addTheMethod")}
           </Button>
         </div>
       </form>
@@ -1027,6 +1029,9 @@ function ModalPrincipal({
   onFermer: () => void;
   onConfirmer: () => Promise<void>;
 }) {
+  const t = useTranslations("settings.studentMethods");
+  const libelleType = (ty: TypeMoyenPaiement) =>
+    ty === "BANQUE" ? t("bankAccount") : typeLabel[ty];
   const [chargement, setChargement] = useState(false);
 
   async function confirmer() {
@@ -1049,15 +1054,15 @@ function ModalPrincipal({
 
           <div>
             <h2 className="font-display text-lg font-medium">
-              Définir comme principal ?
+              {t("primaryTitle")}
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-ink-soft">
-              {typeLabel[moyen.type]} — {moyen.numero}
+              {libelleType(moyen.type)} — {moyen.numero}
             </p>
 
             <p className="mt-2 text-sm leading-6 text-ink-soft">
-              Ce moyen sera proposé en priorité lors des paiements.
+              {t("primaryModalHint")}
             </p>
           </div>
         </div>
@@ -1068,7 +1073,7 @@ function ModalPrincipal({
             onClick={onFermer}
             disabled={chargement}
           >
-            Annuler
+            {t("cancel")}
           </Button>
 
           <Button
@@ -1076,7 +1081,7 @@ function ModalPrincipal({
             onClick={() => void confirmer()}
             disabled={chargement}
           >
-            {chargement ? "Enregistrement…" : "Confirmer"}
+            {chargement ? t("saving") : t("confirm")}
           </Button>
         </div>
       </NoticeCard>
@@ -1098,6 +1103,9 @@ function ModalActivation({
   onConfirmer: () => Promise<void>;
 }) {
   const [chargement, setChargement] = useState(false);
+  const t = useTranslations("settings.studentMethods");
+  const libelleType = (ty: TypeMoyenPaiement) =>
+    ty === "BANQUE" ? t("bankAccount") : typeLabel[ty];
 
   const activation = !moyen.actif;
 
@@ -1126,18 +1134,18 @@ function ModalActivation({
           <div>
             <h2 className="font-display text-lg font-medium">
               {activation
-                ? "Activer ce moyen ?"
-                : "Désactiver ce moyen ?"}
+                ? t("activateTitle")
+                : t("deactivateTitle")}
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-ink-soft">
-              {typeLabel[moyen.type]} — {moyen.numero}
+              {libelleType(moyen.type)} — {moyen.numero}
             </p>
 
             <p className="mt-2 text-sm leading-6 text-ink-soft">
               {activation
-                ? "Ce moyen pourra de nouveau être utilisé pour recevoir des paiements."
-                : "Ce moyen ne sera plus proposé pour les nouveaux paiements."}
+                ? t("activateHint")
+                : t("deactivateHint")}
             </p>
           </div>
         </div>
@@ -1148,7 +1156,7 @@ function ModalActivation({
             onClick={onFermer}
             disabled={chargement}
           >
-            Annuler
+            {t("cancel")}
           </Button>
 
           <Button
@@ -1157,10 +1165,10 @@ function ModalActivation({
             disabled={chargement}
           >
             {chargement
-              ? "Enregistrement…"
+              ? t("saving")
               : activation
-                ? "Activer"
-                : "Désactiver"}
+                ? t("activate")
+                : t("deactivate")}
           </Button>
         </div>
       </NoticeCard>
@@ -1182,6 +1190,9 @@ function ModalSuppression({
   onConfirmer: () => Promise<void>;
 }) {
   const [chargement, setChargement] = useState(false);
+  const t = useTranslations("settings.studentMethods");
+  const libelleType = (ty: TypeMoyenPaiement) =>
+    ty === "BANQUE" ? t("bankAccount") : typeLabel[ty];
 
   async function confirmer() {
     setChargement(true);
@@ -1198,16 +1209,16 @@ function ModalSuppression({
       <NoticeCard className="w-full max-w-md">
         <div>
           <h2 className="font-display text-lg font-medium">
-            Supprimer ce moyen de paiement ?
+            {t("deleteTitle")}
           </h2>
 
           <p className="mt-3 text-sm leading-6 text-ink-soft">
-            Vous êtes sur le point de supprimer :
+            {t("aboutToDelete")}
           </p>
 
           <div className="mt-3 rounded-lg bg-paper-light px-4 py-3">
             <p className="font-medium text-ink">
-              {typeLabel[moyen.type]}
+              {libelleType(moyen.type)}
             </p>
 
             <p className="mt-1 font-mono text-sm text-ink-soft">
@@ -1220,9 +1231,7 @@ function ModalSuppression({
           </div>
 
           <p className="mt-4 text-sm leading-6 text-ink-soft">
-            Si ce moyen a déjà été utilisé pour une transaction,
-            il ne pourra pas être supprimé. Vous pourrez alors
-            simplement le désactiver.
+            {t("deleteHint")}
           </p>
         </div>
 
@@ -1232,7 +1241,7 @@ function ModalSuppression({
             onClick={onFermer}
             disabled={chargement}
           >
-            Annuler
+            {t("cancel")}
           </Button>
 
           <Button
@@ -1241,8 +1250,8 @@ function ModalSuppression({
             disabled={chargement}
           >
             {chargement
-              ? "Suppression…"
-              : "Supprimer"}
+              ? t("deleting")
+              : t("delete")}
           </Button>
         </div>
       </NoticeCard>

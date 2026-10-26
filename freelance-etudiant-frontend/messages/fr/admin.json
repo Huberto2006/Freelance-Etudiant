@@ -1,0 +1,25 @@
+{
+  "eyebrow": "Administration",
+  "users": {
+    "title": "Utilisateurs",
+    "loading": "Chargement…",
+    "empty": "Aucun utilisateur trouvé.",
+    "suspended": "Suspendu",
+    "registeredOn": "inscrit le {date}",
+    "reactivate": "Réactiver",
+    "suspend": "Suspendre",
+    "suspendError": "Impossible de suspendre cet utilisateur.",
+    "reactivateError": "Impossible de réactiver cet utilisateur."
+  },
+  "reports": {
+    "title": "Signalements",
+    "loading": "Chargement…",
+    "toProcess": "À traiter ({count})",
+    "noneWaiting": "Aucun signalement en attente.",
+    "resolutionPlaceholder": "Note de résolution (optionnel)…",
+    "markProcessed": "Marquer comme traité",
+    "processed": "Traités",
+    "resolution": "Résolution : {text}",
+    "genericError": "Erreur"
+  }
+}

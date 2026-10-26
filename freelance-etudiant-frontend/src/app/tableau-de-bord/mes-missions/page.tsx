@@ -9,14 +9,13 @@ import { api, ApiError, getFileUrl } from "@/lib/api";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { Candidature, Mission } from "@/lib/types";
 import { SousNavigation } from "@/components/ui/SousNavigation";
-import { CATEGORIE_AUTRE, cleCategorie, optionsCategories } from "@/lib/categories";
+import { CATEGORIE_AUTRE, cleCategorie } from "@/lib/categories";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
+import { useOptionLabels } from "@/i18n/use-option-labels";
 
-import {
-  formatArgent,
-  formatDateCourte,
-  statutCandidatureLabel,
-  statutMissionLabel,
-} from "@/lib/format";
+
 
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
@@ -28,14 +27,19 @@ import { dateLimiteDepassee } from "@/lib/format";
 import { COMPETENCES_PREDEFINIES } from "@/data/field-options";
 
 export default function MesMissionsPage() {
+  const t = useTranslations("dashboardPages.myMissions");
   return (
-    <Suspense fallback={<p className="text-sm text-ink-soft">Chargement…</p>}>
+    <Suspense fallback={<p className="text-sm text-ink-soft">{t("loading")}</p>}>
       <MesMissionsContent />
     </Suspense>
   );
 }
 
 function MesMissionsContent() {
+  const t = useTranslations("dashboardPages.myMissions");
+  const { argent: formatArgent, dateCourte: formatDateCourte } = useFormats();
+  const { statutMission } = useLabels();
+  const { categorie: libelleCategorie } = useOptionLabels();
   const searchParams = useSearchParams();
   const idAEditer = searchParams.get("editer");
   const [missions, setMissions] = useState<Mission[]>([]);
@@ -74,12 +78,12 @@ function MesMissionsContent() {
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de charger vos missions.",
+          : t("loadError"),
       );
     } finally {
       setChargement(false);
     }
-  }, []);
+  }, [t]);
 
   /**
    * Chargement initial.
@@ -102,7 +106,7 @@ function MesMissionsContent() {
           setErreur(
             error instanceof ApiError
               ? error.message
-              : "Impossible de charger vos missions.",
+              : t("loadError"),
           );
         }
       } finally {
@@ -117,7 +121,7 @@ function MesMissionsContent() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const [missionASupprimer, setMissionASupprimer] = useState<Mission | null>(null);
 
@@ -134,7 +138,7 @@ function MesMissionsContent() {
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de supprimer cette mission.",
+          : t("deleteError"),
       );
     }
   };
@@ -203,8 +207,8 @@ function MesMissionsContent() {
       <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
         <PageHeader
           icon={BriefcaseBusiness}
-          eyebrow="Espace client"
-          title="Mes missions"
+          eyebrow={t("eyebrow")}
+          title={t("title")}
           className="mb-0"
         />
 
@@ -219,12 +223,12 @@ function MesMissionsContent() {
           {afficherFormulaire ? (
             <>
               <X size={16} />
-              Fermer
+              {t("close")}
             </>
           ) : (
             <>
               <Plus size={16} />
-              Publier une mission
+              {t("publish")}
             </>
           )}
         </Button>
@@ -247,16 +251,16 @@ function MesMissionsContent() {
       {!chargement && missions.length > 0 && (
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <button type="button" onClick={() => setOngletMissions("toutes")} className="cursor-pointer text-left">
-            <StatCard icon={BriefcaseBusiness} tone="ink" label="Total" value={missions.length} sublabel="Missions publiées" />
+            <StatCard icon={BriefcaseBusiness} tone="ink" label={t("stats.total")} value={missions.length} sublabel={t("stats.totalSub")} />
           </button>
           <button type="button" onClick={() => setOngletMissions("ouvertes")} className="cursor-pointer text-left">
-            <StatCard icon={BriefcaseBusiness} tone="rice" label="Ouvertes" value={ouvertes} sublabel="En attente de candidats" />
+            <StatCard icon={BriefcaseBusiness} tone="rice" label={t("stats.open")} value={ouvertes} sublabel={t("stats.openSub")} />
           </button>
           <button type="button" onClick={() => setOngletMissions("en_cours")} className="cursor-pointer text-left">
-            <StatCard icon={BriefcaseBusiness} tone="ocre" label="En cours" value={enCours} sublabel="Avec un étudiant" />
+            <StatCard icon={BriefcaseBusiness} tone="ocre" label={t("stats.ongoing")} value={enCours} sublabel={t("stats.ongoingSub")} />
           </button>
           <button type="button" onClick={() => setOngletMissions("terminees")} className="cursor-pointer text-left">
-            <StatCard icon={BriefcaseBusiness} tone="ink" label="Terminées" value={terminees} sublabel="Projets livrés" />
+            <StatCard icon={BriefcaseBusiness} tone="ink" label={t("stats.completed")} value={terminees} sublabel={t("stats.completedSub")} />
           </button>
         </div>
       )}
@@ -301,7 +305,7 @@ function MesMissionsContent() {
       {chargement ? (
         <p className="flex items-center gap-2 text-sm text-ink-soft">
           <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-          Chargement de vos missions…
+          {t("loadingMissions")}
         </p>
       ) : missions.length === 0 ? (
         <NoticeCard>
@@ -313,7 +317,7 @@ function MesMissionsContent() {
               <BriefcaseBusiness size={22} />
             </span>
             <p className="text-sm text-ink-soft">
-              Vous n&apos;avez pas encore publié de mission.
+              {t("empty")}
             </p>
             <Button
               variant="secondary"
@@ -322,7 +326,7 @@ function MesMissionsContent() {
               onClick={() => setAfficherFormulaire(true)}
             >
               <Plus size={14} aria-hidden="true" />
-              Publier une mission
+              {t("publish")}
             </Button>
           </div>
         </NoticeCard>
@@ -330,11 +334,11 @@ function MesMissionsContent() {
         <>
           <SousNavigation
             onglets={[
-              { valeur: "toutes", label: "Toutes", compte: missions.length },
-              { valeur: "ouvertes", label: "Ouvertes", compte: ouvertes },
-              { valeur: "en_cours", label: "En cours", compte: enCours },
-              { valeur: "terminees", label: "Terminées", compte: terminees },
-              { valeur: "expirees", label: "Expirées", compte: expirees },
+              { valeur: "toutes", label: t("tabs.all"), compte: missions.length },
+              { valeur: "ouvertes", label: t("tabs.open"), compte: ouvertes },
+              { valeur: "en_cours", label: t("tabs.ongoing"), compte: enCours },
+              { valeur: "terminees", label: t("tabs.completed"), compte: terminees },
+              { valeur: "expirees", label: t("tabs.expired"), compte: expirees },
             ]}
             actif={ongletMissions}
             onChanger={setOngletMissions}
@@ -354,16 +358,16 @@ function MesMissionsContent() {
                   onChange={(e) => setRecherche(e.target.value)}
                   placeholder={
                     ongletMissions === "ouvertes"
-                      ? "Rechercher une mission ouverte…"
+                      ? t("search.open")
                       : ongletMissions === "en_cours"
-                        ? "Rechercher une mission en cours…"
+                        ? t("search.ongoing")
                         : ongletMissions === "terminees"
-                          ? "Rechercher une mission terminée…"
+                          ? t("search.completed")
                           : ongletMissions === "expirees"
-                            ? "Rechercher une mission expirée…"
-                            : "Rechercher une mission…"
+                            ? t("search.expired")
+                            : t("search.all")
                   }
-                  aria-label="Rechercher une mission"
+                  aria-label={t("search.label")}
                   className="pl-9"
                 />
               </div>
@@ -371,12 +375,12 @@ function MesMissionsContent() {
               <Select
                 value={filtreCategorie}
                 onChange={(e) => setFiltreCategorie(e.target.value)}
-                aria-label="Filtrer par catégorie"
+                aria-label={t("filterCategory")}
               >
-                <option value="" disabled hidden>Toutes les catégories</option>
+                <option value="" disabled hidden>{t("allCategories")}</option>
                 {categoriesDisponibles.map((categorie) => (
                   <option key={categorie} value={categorie}>
-                    {categorie}
+                    {libelleCategorie(categorie)}
                   </option>
                 ))}
               </Select>
@@ -386,7 +390,7 @@ function MesMissionsContent() {
           {missionsAffichees.length === 0 ? (
             <NoticeCard>
               <p className="text-sm text-ink-soft">
-                Aucune mission dans cette catégorie.
+                {t("emptyCategory")}
               </p>
             </NoticeCard>
           ) : (
@@ -416,10 +420,10 @@ function MesMissionsContent() {
                                 estExpiree(mission) ? "brique" : "rice"
                               }
                             >
-                              {statutMissionLabel[mission.statut]}
+                              {statutMission(mission.statut)}
                             </Tag>
 
-                            <Tag tone="ink">{mission.categorie}</Tag>
+                            <Tag tone="ink">{libelleCategorie(mission.categorie)}</Tag>
                           </div>
 
                           <p className="font-display text-lg font-medium transition-colors group-hover:text-ocre-dark">
@@ -427,15 +431,14 @@ function MesMissionsContent() {
                           </p>
 
                           <p className="mt-1 text-xs text-ink-soft/70">
-                            {mission.candidatures?.length ?? 0} candidature(s)
-                            reçue(s)
-                            {" · "}
-                            budget {formatArgent(mission.budget)}
-                            {" · "}
-                            avant le {formatDateCourte(mission.dateLimite)}
+                            {t("meta", {
+                              count: mission.candidatures?.length ?? 0,
+                              budget: formatArgent(mission.budget),
+                              date: formatDateCourte(mission.dateLimite),
+                            })}
                             {estExpiree(mission) &&
                             mission.statut === "ouverte"
-                              ? " (échéance dépassée)"
+                              ? t("overdue")
                               : ""}
                           </p>
                         </div>
@@ -445,7 +448,7 @@ function MesMissionsContent() {
                           <details className="relative">
                             <summary
                               className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg text-ink-soft transition hover:bg-ink/5 hover:text-ink [&::-webkit-details-marker]:hidden"
-                              aria-label={`Actions pour ${mission.titre}`}
+                              aria-label={t("actionsFor", { titre: mission.titre })}
                             >
                               <MoreVertical size={19} />
                             </summary>
@@ -456,7 +459,7 @@ function MesMissionsContent() {
                                 className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink transition hover:bg-ink/5"
                               >
                                 <Search size={15} />
-                                Voir
+                                {t("view")}
                               </Link>
 
                               <button
@@ -468,7 +471,7 @@ function MesMissionsContent() {
                                 className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink transition hover:bg-ink/5"
                               >
                                 <Pencil size={15} />
-                                Modifier
+                                {t("edit")}
                               </button>
 
                               {mission.statut !== "en_cours" &&
@@ -479,7 +482,7 @@ function MesMissionsContent() {
                                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-brique transition hover:bg-brique/5"
                                   >
                                     <Trash2 size={15} />
-                                    Supprimer
+                                    {t("delete")}
                                   </button>
                                 )}
                             </div>
@@ -497,10 +500,10 @@ function MesMissionsContent() {
                             }
                           >
                             {missionOuverte === mission.id
-                              ? "Masquer les candidatures"
-                              : `Candidatures (${
-                                  mission.candidatures?.length ?? 0
-                                })`}
+                              ? t("hideApplications")
+                              : t("applicationsCount", {
+                                  count: mission.candidatures?.length ?? 0,
+                                })}
                           </Button>
                         </div>
                       </div>
@@ -528,13 +531,13 @@ function MesMissionsContent() {
 
       <ConfirmDialog
         ouvert={missionASupprimer !== null}
-        titre="Supprimer cette mission ?"
+        titre={t("confirmDeleteTitle")}
         description={
           missionASupprimer
-            ? `« ${missionASupprimer.titre} » sera définitivement supprimée. Cette action est irréversible.`
+            ? t("confirmDeleteDescription", { titre: missionASupprimer.titre })
             : undefined
         }
-        libelleConfirmer="Supprimer"
+        libelleConfirmer={t("delete")}
         onConfirmer={() => {
           if (missionASupprimer) void supprimer(missionASupprimer);
           setMissionASupprimer(null);
@@ -558,6 +561,8 @@ function FormulaireMission({
   onCree: () => void | Promise<void>;
   onAnnuler?: () => void;
 }) {
+  const t = useTranslations("dashboardPages.myMissions.form");
+  const { optionsCategories } = useOptionLabels();
   const enEdition = Boolean(missionExistante);
 
   const [titre, setTitre] = useState(missionExistante?.titre ?? "");
@@ -633,7 +638,7 @@ function FormulaireMission({
     } catch (err) {
       console.error("Erreur lors de la création de la mission :", err);
 
-      setErreur(err instanceof ApiError ? err.message : "Erreur inattendue.");
+      setErreur(err instanceof ApiError ? err.message : t("unexpectedError"));
     } finally {
       setEnvoi(false);
     }
@@ -642,23 +647,23 @@ function FormulaireMission({
   return (
     <NoticeCard>
       <h2 className="font-display text-xl font-semibold">
-        {enEdition ? "Modifier la mission" : "Nouvelle mission"}
+        {enEdition ? t("editTitle") : t("newTitle")}
       </h2>
       <p className="mt-1 text-sm text-ink-soft">
         {enEdition
-          ? "Les modifications sont visibles immédiatement après enregistrement."
-          : "Votre annonce sera visible dans le catalogue des missions dès sa publication."}
+          ? t("editHint")
+          : t("newHint")}
       </p>
 
       <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-5">
         {/* — 01 · VISUEL */}
 
         <p className="font-mono text-[0.6875rem] uppercase tracking-[0.15em] text-ink-soft/70">
-          01 · Visuel
+          {t("sectionVisual")}
         </p>
 
         <div className="grid items-start gap-4 sm:grid-cols-[auto,1fr]">
-          <Field label="Image principale" htmlFor="imageMission">
+          <Field label={t("mainImage")} htmlFor="imageMission">
             <SelecteurImage
               valeur={imageUrl}
               onChange={(url) => {
@@ -676,8 +681,7 @@ function FormulaireMission({
                 className="mt-0.5 shrink-0 text-rice"
                 aria-hidden="true"
               />
-              L&apos;image est facultative : sans elle, un visuel de catégorie
-              est affiché automatiquement.
+              {t("tipImageOptional")}
             </li>
             <li className="flex items-start gap-2">
               <Check
@@ -685,7 +689,7 @@ function FormulaireMission({
                 className="mt-0.5 shrink-0 text-rice"
                 aria-hidden="true"
               />
-              Une image claire et lumineuse attire davantage de candidatures.
+              {t("tipImageBright")}
             </li>
             <li className="flex items-start gap-2">
               <Check
@@ -693,8 +697,7 @@ function FormulaireMission({
                 className="mt-0.5 shrink-0 text-rice"
                 aria-hidden="true"
               />
-              Indiquez un budget et une échéance réalistes pour inspirer
-              confiance.
+              {t("tipRealistic")}
             </li>
           </ul>
         </div>
@@ -702,32 +705,32 @@ function FormulaireMission({
         {/* — 02 · CONTENU */}
 
         <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[0.6875rem] uppercase tracking-[0.15em] text-ink-soft/70">
-          02 · Contenu
+          {t("sectionContent")}
         </p>
 
         {/* Titre */}
 
-        <Field label="Titre" htmlFor="titre">
+        <Field label={t("titleLabel")} htmlFor="titre">
           <Input
             id="titre"
             required
             value={titre}
             onChange={(e) => setTitre(e.target.value)}
-            placeholder="Développement d'un site vitrine"
+            placeholder={t("titlePlaceholder")}
             disabled={envoi}
           />
         </Field>
 
         {/* Description */}
 
-        <Field label="Description" htmlFor="description">
+        <Field label={t("descriptionLabel")} htmlFor="description">
           <Textarea
             id="description"
             required
             rows={4}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Décrivez le contexte, les livrables attendus et vos contraintes…"
+            placeholder={t("descriptionPlaceholder")}
             disabled={envoi}
           />
         </Field>
@@ -735,11 +738,11 @@ function FormulaireMission({
         {/* — 03 · PARAMÈTRES */}
 
         <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[0.6875rem] uppercase tracking-[0.15em] text-ink-soft/70">
-          03 · Paramètres
+          {t("sectionSettings")}
         </p>
 
         <div className="grid gap-5 sm:grid-cols-3">
-          <Field label="Catégorie" htmlFor="categorie">
+          <Field label={t("categoryLabel")} htmlFor="categorie">
             <Select
               id="categorie"
               required
@@ -747,7 +750,7 @@ function FormulaireMission({
               onChange={(e) => setCategorie(e.target.value)}
               disabled={envoi}
             >
-              <option value="" disabled hidden>Sélectionner une catégorie</option>
+              <option value="" disabled hidden>{t("selectCategory")}</option>
               {optionsCategories(categorieInitiale).map((option) => (
                 <option key={option.valeur} value={option.valeur}>
                   {option.libelle}
@@ -759,14 +762,14 @@ function FormulaireMission({
                 className="mt-2"
                 value={categoriePersonnalisee}
                 onChange={(e) => setCategoriePersonnalisee(e.target.value)}
-                placeholder="Préciser la catégorie"
+                placeholder={t("customCategory")}
                 required
                 disabled={envoi}
               />
             )}
           </Field>
 
-          <Field label="Budget (Ar)" htmlFor="budget">
+          <Field label={t("budgetLabel")} htmlFor="budget">
             <Input
               id="budget"
               type="number"
@@ -778,7 +781,7 @@ function FormulaireMission({
             />
           </Field>
 
-          <Field label="Date limite" htmlFor="dateLimite">
+          <Field label={t("deadlineLabel")} htmlFor="dateLimite">
             <Input
               id="dateLimite"
               type="date"
@@ -793,20 +796,20 @@ function FormulaireMission({
         {/* — 04 · COMPÉTENCES */}
 
         <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[0.6875rem] uppercase tracking-[0.15em] text-ink-soft/70">
-          04 · Compétences
+          {t("sectionSkills")}
         </p>
 
         <Field
-          label="Compétences requises"
+          label={t("requiredSkills")}
           htmlFor="competencesRequises"
-          hint="Sélectionnez ou ajoutez des compétences."
+          hint={t("skillsHint")}
         >
           <MultiSelectCreatable
             id="competencesRequises"
             value={competencesRequises}
             onChange={setCompetencesRequises}
             options={COMPETENCES_PREDEFINIES}
-            placeholder="Rechercher une compétence…"
+            placeholder={t("skillsSearch")}
             allowCreate
             disabled={envoi}
           />
@@ -820,7 +823,7 @@ function FormulaireMission({
 
         <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-ink/10 pt-5">
           <p className="mr-auto text-xs text-ink-soft/60">
-            L&apos;image et les compétences sont facultatives.
+            {t("optionalNote")}
           </p>
 
           {enEdition && onAnnuler && (
@@ -830,7 +833,7 @@ function FormulaireMission({
               disabled={envoi}
               onClick={onAnnuler}
             >
-              Annuler
+              {t("cancel")}
             </Button>
           )}
 
@@ -845,11 +848,11 @@ function FormulaireMission({
             )}
             {envoi
               ? enEdition
-                ? "Enregistrement…"
-                : "Publication…"
+                ? t("saving")
+                : t("publishing")
               : enEdition
-                ? "Enregistrer les modifications"
-                : "Publier la mission"}
+                ? t("saveChanges")
+                : t("publishMission")}
           </Button>
         </div>
       </form>
@@ -868,6 +871,9 @@ function CandidaturesMission({
   missionId: string;
   onCandidatureAcceptee?: () => void | Promise<void>;
 }) {
+  const t = useTranslations("dashboardPages.myMissions.applications");
+  const { argent: formatArgent } = useFormats();
+  const { statutCandidature } = useLabels();
   const [candidatures, setCandidatures] = useState<Candidature[]>([]);
 
   const [chargement, setChargement] = useState(true);
@@ -900,12 +906,12 @@ function CandidaturesMission({
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de charger les candidatures.",
+          : t("loadError"),
       );
     } finally {
       setChargement(false);
     }
-  }, [missionId]);
+  }, [missionId, t]);
 
   /**
    * Chargement initial.
@@ -933,7 +939,7 @@ function CandidaturesMission({
           setErreur(
             error instanceof ApiError
               ? error.message
-              : "Impossible de charger les candidatures.",
+              : t("loadError"),
           );
         }
       } finally {
@@ -948,7 +954,7 @@ function CandidaturesMission({
     return () => {
       cancelled = true;
     };
-  }, [missionId]);
+  }, [missionId, t]);
 
   /**
    * Accepter une candidature.
@@ -971,7 +977,7 @@ function CandidaturesMission({
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible d'accepter cette candidature.",
+          : t("acceptError"),
       );
     } finally {
       setActionEnCours(null);
@@ -995,7 +1001,7 @@ function CandidaturesMission({
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de refuser cette candidature.",
+          : t("refuseError"),
       );
     } finally {
       setActionEnCours(null);
@@ -1003,7 +1009,7 @@ function CandidaturesMission({
   }
 
   if (chargement) {
-    return <p className="text-sm text-ink-soft">Chargement…</p>;
+    return <p className="text-sm text-ink-soft">{t("loading")}</p>;
   }
 
   if (erreur) {
@@ -1013,7 +1019,7 @@ function CandidaturesMission({
   if (candidatures.length === 0) {
     return (
       <p className="text-sm text-ink-soft">
-        Aucune candidature reçue pour l&apos;instant.
+        {t("none")}
       </p>
     );
   }
@@ -1043,10 +1049,12 @@ function CandidaturesMission({
 
                 <div>
                   <p className="font-display flex items-center gap-1.5 font-medium">
-                    {etudiant?.nom ?? "Étudiant"}
+                    {etudiant?.nom ?? t("studentFallback")}
                     {candidature.groupeId && (
                       <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[0.65rem] font-normal text-ink-soft">
-                        Groupe{candidature.groupe?.nom ? ` · ${candidature.groupe.nom}` : ""}
+                        {candidature.groupe?.nom
+                          ? t("groupNamed", { nom: candidature.groupe.nom })
+                          : t("group")}
                       </span>
                     )}
                   </p>
@@ -1054,12 +1062,11 @@ function CandidaturesMission({
                   <p className="text-xs text-ink-soft/70">
                     {formatArgent(candidature.prixPropose)}
                     {" · "}
-                    {candidature.delaiPropose} jours
+                    {t("days", { count: candidature.delaiPropose })}
                     {candidature.groupeId && candidature.groupe?.membres && (
                       <>
                         {" · "}
-                        {candidature.groupe.membres.length} membre
-                        {candidature.groupe.membres.length > 1 ? "s" : ""}
+                        {t("members", { count: candidature.groupe.membres.length })}
                       </>
                     )}
                   </p>
@@ -1075,7 +1082,7 @@ function CandidaturesMission({
                       : "ink"
                 }
               >
-                {statutCandidatureLabel[candidature.statut]}
+                {statutCandidature(candidature.statut)}
               </Tag>
             </div>
 
@@ -1101,8 +1108,8 @@ function CandidaturesMission({
                   onClick={() => accepter(candidature.id)}
                 >
                   {actionEnCours === candidature.id
-                    ? "Acceptation…"
-                    : "Accepter"}
+                    ? t("accepting")
+                    : t("accept")}
                 </Button>
 
                 <Button
@@ -1112,8 +1119,8 @@ function CandidaturesMission({
                   onClick={() => refuser(candidature.id)}
                 >
                   {actionEnCours === candidature.id
-                    ? "Refus…"
-                    : "Refuser"}
+                    ? t("refusing")
+                    : t("refuse")}
                 </Button>
               </div>
             )}
@@ -1136,7 +1143,7 @@ function CandidaturesMission({
                       )}&nom=${encodeURIComponent(etudiant.nom)}`}
                     >
                       <Button size="sm" variant="secondary">
-                        Discuter avec l&apos;étudiant
+                        {t("chatWithStudent")}
                       </Button>
                     </Link>
                   )}
@@ -1151,14 +1158,13 @@ function CandidaturesMission({
                     )}&role=client`}
                   >
                     <Button size="sm" variant="ghost">
-                      Suivre la livraison
+                      {t("trackDelivery")}
                     </Button>
                   </Link>
                 </div>
 
                 <p className="mt-2 text-xs text-ink-soft/70">
-                  La validation et l&apos;évaluation de la livraison se font
-                  depuis la page dédiée aux livraisons.
+                  {t("deliveryHint")}
                 </p>
               </div>
             )}

@@ -26,6 +26,11 @@ import { Role } from "../../common/enums/role.enum";
 import { EtudiantProfile } from "../etudiants/entities/etudiant-profile.entity";
 import { ClientProfile } from "../clients/entities/client-profile.entity";
 import { Utilisateur } from "../users/entities/utilisateur.entity";
+import {
+  Langue,
+  langueDepuisAcceptLanguage,
+  normaliserLangue,
+} from "../../common/i18n/langues";
 import { TypeClient } from "../../common/enums/type-client.enum";
 import { JwtPayload } from "./interfaces/authenticated-user.interface";
 import { EmailService } from "../email/email.service";
@@ -85,7 +90,7 @@ export interface SessionEmise {
   refreshExp?: number;
   /** Indique qu'il s'agit de la première authentification de l'utilisateur. */
   premiereConnexion: boolean;
-  utilisateur: { id: string; email: string; role: Role };
+  utilisateur: { id: string; email: string; role: Role; langue: Langue };
 }
 
 @Injectable()
@@ -156,7 +161,7 @@ export class AuthService {
    * client ; le role admin ne peut jamais etre auto-attribue ici).
    * RG7 : unicite de l'email verifiee via UsersService.
    */
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, acceptLanguage?: string) {
     if (dto.role !== Role.ETUDIANT && dto.role !== Role.CLIENT) {
       throw new BadRequestException(
         "Seuls les roles etudiant ou client sont autorises a l'inscription",
@@ -172,6 +177,8 @@ export class AuthService {
       email: dto.email,
       motDePasse: motDePasseHache,
       role: dto.role,
+      // Langue initiale : choix explicite > en-tete Accept-Language > fr.
+      langue: dto.langue ?? langueDepuisAcceptLanguage(acceptLanguage),
       // Le compte est cree mais inactif tant que l'adresse email n'est
       // pas confirmee via le lien recu (cf. verifierEmail).
       emailVerifie: false,
@@ -257,6 +264,7 @@ export class AuthService {
       utilisateur.email,
       utilisateur.role,
       premiereConnexion,
+      utilisateur.langue,
     );
   }
 
@@ -277,7 +285,10 @@ export class AuthService {
    * - sinon creation d'un compte au role transitoire A_DEFINIR (jamais
    *   admin) : le role est choisi ensuite via choisirRole().
    */
-  async loginAvecGoogle(idToken: string): Promise<SessionEmise> {
+  async loginAvecGoogle(
+    idToken: string,
+    acceptLanguage?: string,
+  ): Promise<SessionEmise> {
     const identite = await this.googleVerifier.verifier(idToken);
 
     let utilisateur = await this.usersService.findByGoogleId(identite.sub);
@@ -291,7 +302,10 @@ export class AuthService {
           "Un compte Kianja existe deja avec cette adresse email. Connectez-vous avec votre mot de passe, puis liez votre compte Google depuis vos parametres.",
         );
       }
-      utilisateur = await this.creerCompteGoogle(identite);
+      utilisateur = await this.creerCompteGoogle(
+        identite,
+        langueDepuisAcceptLanguage(acceptLanguage),
+      );
     }
 
     if (utilisateur.estSuspendu || !utilisateur.estActif) {
@@ -306,11 +320,13 @@ export class AuthService {
       utilisateur.email,
       utilisateur.role,
       premiereConnexion,
+      utilisateur.langue,
     );
   }
 
   private async creerCompteGoogle(
     identite: IdentiteGoogle,
+    langue: Langue,
   ): Promise<Utilisateur> {
     if (identite.email.length > 150) {
       throw new BadRequestException("Adresse email trop longue");
@@ -331,6 +347,7 @@ export class AuthService {
         emailVerifie: true,
         authProvider: AuthProvider.GOOGLE,
         googleId: identite.sub,
+        langue,
       });
     } catch (error) {
       // Deux requetes simultanees pour le meme nouveau compte : la
@@ -412,6 +429,8 @@ export class AuthService {
       utilisateur.id,
       utilisateur.email,
       utilisateur.role,
+      false,
+      utilisateur.langue,
     );
   }
 
@@ -475,6 +494,8 @@ export class AuthService {
       utilisateur.id,
       utilisateur.email,
       utilisateur.role,
+      false,
+      utilisateur.langue,
     );
   }
 
@@ -737,6 +758,7 @@ export class AuthService {
     email: string,
     role: Role,
     premiereConnexion = false,
+    langue?: unknown,
   ): Promise<SessionEmise> {
     const accessToken = this.jwtService.sign(
       { sub: id, email, role, typ: "access" } satisfies JwtPayload,
@@ -777,7 +799,7 @@ export class AuthService {
       refreshToken,
       refreshExp,
       premiereConnexion,
-      utilisateur: { id, email, role },
+      utilisateur: { id, email, role, langue: normaliserLangue(langue) },
     };
   }
 }

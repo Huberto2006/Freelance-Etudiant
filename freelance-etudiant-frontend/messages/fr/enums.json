@@ -1,0 +1,113 @@
+{
+  "statutMission": {
+    "ouverte": "Ouverte",
+    "en_cours": "En cours",
+    "terminee": "Terminée",
+    "fermee": "Fermée",
+    "expiree": "Expirée"
+  },
+  "statutCandidature": {
+    "en_attente": "En attente",
+    "acceptee": "Acceptée",
+    "refusee": "Refusée"
+  },
+  "statutLivraison": {
+    "en_attente": "En attente de validation",
+    "validee": "Validée",
+    "correction_demandee": "Correction demandée"
+  },
+  "statutTransaction": {
+    "en_attente": "En attente de vérification",
+    "confirmee": "Confirmé",
+    "liberee": "Libéré",
+    "annulee": "Annulé"
+  },
+  "methodePaiement": {
+    "papi": "Papi",
+    "mvola": "Mvola",
+    "orange_money": "Orange Money",
+    "airtel_money": "Airtel Money",
+    "virement": "Virement bancaire"
+  },
+  "statutSignalement": {
+    "ouvert": "Ouvert",
+    "en_cours": "En cours de traitement",
+    "traite": "Traité"
+  },
+  "statutDemandeService": {
+    "en_attente": "En attente de réponse",
+    "acceptee": "Acceptée",
+    "refusee": "Refusée"
+  },
+  "statutInvitationGroupe": {
+    "en_attente": "En attente",
+    "acceptee": "Acceptée",
+    "refusee": "Refusée",
+    "annulee": "Annulée"
+  },
+  "roleMembreGroupe": {
+    "chef": "Chef",
+    "membre": "Membre"
+  },
+  "role": {
+    "etudiant": "Étudiant",
+    "client": "Client",
+    "admin": "Administrateur",
+    "a_definir": "Rôle à choisir"
+  },
+  "categories": {
+    "developpement": "Développement",
+    "design": "Design",
+    "redaction": "Rédaction",
+    "traduction": "Traduction",
+    "marketing": "Marketing",
+    "video": "Vidéo",
+    "data": "Data",
+    "administratif": "Administratif",
+    "autre": "Autre",
+    "marketingdigital": "Marketing digital",
+    "montagevideo": "Montage vidéo",
+    "multimedia": "Multimédia"
+  },
+  "categoriesDescriptions": {
+    "developpement": "Sites web, applications, scripts…",
+    "design": "Maquettes UI/UX, logotypes, illustrations…",
+    "redaction": "Articles, mémoires, contenus web…",
+    "traduction": "Français, anglais, malagasy…",
+    "marketing": "Réseaux sociaux, SEO, campagnes…",
+    "video": "Montage, sous-titrage, motion design…",
+    "data": "Analyses, tableaux de bord, bases de données…",
+    "administratif": "Saisie, classement, assistance…"
+  },
+  "langues": {
+    "malagasy": "Malagasy",
+    "francais": "Français",
+    "anglais": "Anglais",
+    "allemand": "Allemand",
+    "espagnol": "Espagnol",
+    "italien": "Italien",
+    "portugais": "Portugais",
+    "arabe": "Arabe",
+    "chinois": "Chinois",
+    "japonais": "Japonais",
+    "coreen": "Coréen",
+    "russe": "Russe"
+  },
+  "specialites": {
+    "developpementweb": "Développement web",
+    "developpementmobile": "Développement mobile",
+    "uiux": "UI/UX",
+    "branding": "Branding",
+    "graphisme": "Graphisme",
+    "marketingdigital": "Marketing digital",
+    "seo": "SEO",
+    "motiondesign": "Motion design",
+    "reseauxsociaux": "Réseaux sociaux",
+    "data": "Data",
+    "productdesign": "Product design"
+  },
+  "competences": {
+    "design": "Design",
+    "uiux": "UI/UX"
+  }
+}

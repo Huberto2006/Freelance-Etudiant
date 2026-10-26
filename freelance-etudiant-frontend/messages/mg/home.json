@@ -1,0 +1,177 @@
+{
+  "hero": {
+    "eyebrow": "Kianja · Tsena ho an'ny mpianatra miasa an-tsehatra",
+    "titleStart": "Ny filàn'ny mpanjifa.",
+    "titleAccent": "Ny fahaizan'ny mpianatra.",
+    "intro": "Mitadiava mpiasa mahafeno fepetra, mamoaha filàna na manolora ny fahaizanao, ao anatin'ny rafitra mazava sy azo antoka.",
+    "searchTypeLabel": "Karazana fikarohana",
+    "targetServices": "Tolotra",
+    "targetMissions": "Iraka",
+    "placeholderServices": "Endrika, tranokala, fanoratana, fandikana…",
+    "placeholderMissions": "Fanavaozana tranokala, rindranasa finday…",
+    "ariaSearchServices": "Hitady tolotra avy amin'ny mpianatra",
+    "ariaSearchMissions": "Hitady iraka avy amin'ny mpanjifa",
+    "searchSubmit": "Atombohy ny fikarohana",
+    "popular": "Malaza :",
+    "goDashboard": "Hiditra amin'ny tableau de bord-ko",
+    "publishMission": "Hamoaka iraka",
+    "findMission": "Hitady iraka",
+    "join": "Hiditra ao amin'i Kianja",
+    "explorePublications": "Hijery ny publication rehetra →",
+    "statServices": "Tolotra naroso",
+    "statMissions": "Iraka misokatra"
+  },
+  "audiences": {
+    "eyebrow": "Tsena mifandray amin'ny roa tonta",
+    "title": "Lalana roa mifandray mba hahomby miaraka",
+    "subtitle": "Na manana filàna vonjimaika ianao na fahaizana azo atolotra, Kianja dia manome rafitra mazava sy azo antoka ho an'ny rehetra.",
+    "client": {
+      "label": "Ho an'ny mpanjifa",
+      "title": "Mpianatra vonona hanampy anao",
+      "intro": "Orinasa, startup, fikambanana na olon-tsotra : mifandraisa amin'ireo ho mpahazo diplaoma any aoriana mba hanatanterahana ny tetikasanao amin'ny kalitao tsara sy vidiny mirary.",
+      "link": "Hitady mpianatra",
+      "pillars": {
+        "publish": {
+          "title": "Mamoaka iraka",
+          "description": "Faritanao ny filànao vonjimaika na miverimberina, apetrakao ny tetibolanao, dia mahazo fangatahana mifanaraka amin'izany avy amin'ny mpianatra mahafeno fepetra."
+        },
+        "find": {
+          "title": "Mitady mpianatra",
+          "description": "Jereo ny katalaogin'ny fahaizana, sivano araka ny sampana na ny sehatra, dia fidio ireo mpianatra tena mahay indrindra."
+        },
+        "follow": {
+          "title": "Manaraka ny tetikasany",
+          "description": "Miaraka miasa amin'ny alalan'ny hafatra ao anaty rafitra, araho isaky ny dingana ny fanatanterahana, ary ekeo ny fanoloran-tena amin'ny mangarahara tanteraka."
+        }
+      }
+    },
+    "student": {
+      "label": "Ho an'ny mpianatra",
+      "title": "Tetikasa hotanterahina",
+      "intro": "Ampiasao ny fahalalana azonao tany an-tsekoly, mahazoa vola mandritra ny fianarana, ary atombohy ny asa fiaraha-monina amin'ny traikefa tena izy sy voamarina.",
+      "link": "Hitady iraka",
+      "pillars": {
+        "offer": {
+          "title": "Manolotra ny tolotra",
+          "description": "Asehoy ny fahaizanao ara-teknika, faritanao ny tolotrao vonona, ny vidiny ary ny fotoana hanaterana azy."
+        },
+        "find": {
+          "title": "Mitady iraka",
+          "description": "Jereo ny filàna tena izy napetraky ny orinasa sy ny olon-tsotra, mangataha amin'ny fikitihana iray miaraka amin'ny taratasy fangatahanao."
+        },
+        "grow": {
+          "title": "Mampitombo ny asany",
+          "description": "Manorona portfolio voamarina, mahazoa isa fanajana noho ny hevitry ny mpanjifa, ary mamatsia ny fianaranao amin'ny fahaleovan-tena tanteraka."
+        }
+      }
+    }
+  },
+  "missions": {
+    "eyebrow": "Filàn'ny mpanjifa · Fahafahana",
+    "title": "Tetikasa sy iraka tsy mbola misy mpanao",
+    "subtitle": "Jereo ny filàna tena izy napetraky ny mpanjifa sy ny orinasa. Mangataha mba hampihatra ny fahaizanao.",
+    "seeAll": "Hijery ny iraka rehetra",
+    "empty": "Tsy misy iraka misokatra amin'izao fotoana izao. Manana tetikasa tianao hotanterahina ve ianao? Alefaso ny iraka voalohany mba hahazoana fangatahana avy amin'ny mpianatra."
+  },
+  "services": {
+    "eyebrow": "Fahaizan'ny mpianatra · Tolotra",
+    "title": "Tolotra vonona hampiasaina",
+    "subtitle": "Jereo ireo tolotra mivantana atolotry ny mpianatra mahay : fanamboarana rindrambaiko, sary, fanoratana sy ny maro hafa.",
+    "seeAll": "Hijery ny tolotra rehetra",
+    "empty": "Tsy mbola misy tolotra navoaka. Mpianatra : alefaso ny tolotrao voalohany mba ho hitan'ny mpanjifa."
+  },
+  "categories": {
+    "eyebrow": "Sehatry ny fahaizana · Sampana",
+    "title": "Hijery araka ny sokajy",
+    "subtitle": "Ny sehatra tsirairay dia mampiray ny fahaizan'ny mpianatra miasa an-tsehatra sy ny filàna navelan'ny mpanjifa.",
+    "browse": "Hijery ny katalaogy",
+    "serviceCount": "{count, plural, other {# tolotra}}",
+    "discover": "Hijery"
+  },
+  "process": {
+    "eyebrow": "Dingana nohamora",
+    "title": "Ny fiasan'ny tsena Kianja",
+    "subtitle": "Nanomboka tamin'ny fifandraisana voalohany ka hatramin'ny fanamarinana farany, ny dingana tsirairay dia noheverina mba hiantohana ny fahombiazan'ny tetikasa.",
+    "clientTrack": "Lalan'ny Mpanjifa",
+    "clientTrackTitle": "Hatramin'ny filànao ka hatramin'ny fanaterana farany",
+    "studentTrack": "Lalan'ny Mpianatra",
+    "studentTrackTitle": "Hatramin'ny fahaizanao ka hatramin'ny fidiram-bola voalohany",
+    "client": {
+      "s1": {
+        "title": "Alefaso ny filànao",
+        "detail": "Apetraho ny iraka miaraka amin'ny tetibola sy ny daty farany, na jereo ny tolotry ny mpianatra."
+      },
+      "s2": {
+        "title": "Raiso ny fangatahana",
+        "detail": "Ampitahao ny mombamomba, ny portfolio ary ny tolo-kevitry ny mpianatra."
+      },
+      "s3": {
+        "title": "Fidio ny mpianatrao",
+        "detail": "Fidio ilay mpangataka mifanaraka indrindra amin'ny fepetra ara-teknikanao."
+      },
+      "s4": {
+        "title": "Mifampiresaha amin'ny hafatra",
+        "detail": "Mifandraisa mivantana amin'ny alalan'ny hafatra ao anaty rafitra mba hamaritana ny asa."
+      },
+      "s5": {
+        "title": "Arahabaho ny fanatanterahana",
+        "detail": "Mijere tsara ny fandrosoana mandra-pahatongan'ny fanaterana farany."
+      },
+      "s6": {
+        "title": "Ekeo ary hamarino",
+        "detail": "Raiso ny vokatra, avoaho ny fandoavam-bola ary omeo isa ilay mpianatra."
+      }
+    },
+    "student": {
+      "s1": {
+        "title": "Mamoròna ny mombamombanao",
+        "detail": "Ataovy fantatra ny sampanao, ny ahy manokana sy ny fahaizanao lehibe."
+      },
+      "s2": {
+        "title": "Asehoy ny tolotrao",
+        "detail": "Asehoy ny tolotra vonona hovidiana na jereo ny iraka misokatra."
+      },
+      "s3": {
+        "title": "Mangataha iraka",
+        "detail": "Alefaso ny fangatahanao misy porofo miaraka amin'ny vidiny sy ny fotoana ilaina."
+      },
+      "s4": {
+        "title": "Mifampiresaha amin'ny mpanjifa",
+        "detail": "Faritao tsara ny fepetra takiana ary ampifanarahana ny vokatra andrasana."
+      },
+      "s5": {
+        "title": "Tanterao ary ampitaovy",
+        "detail": "Manaova asa tsara kalitao ary apetraho ao amin'ny pateforma ny vokatrao."
+      },
+      "s6": {
+        "title": "Manorona ny lazanao",
+        "detail": "Mahazoa hevitry ny mpanjifa voamarina izay manandratra ny lazanao sy ny portfolio-nao."
+      }
+    }
+  },
+  "benefits": {
+    "eyebrow": "Antoka & Soatoavina",
+    "title": "Nahoana no mifidy ny tsena Kianja?",
+    "subtitle": "Mpianatra mitady traikefa, mpanjifa mitady fahaizana : pateforma noheverina ho amin'ny fahombiazan'ny roa tonta.",
+    "talents": {
+      "title": "Mpianatra mahay sy mahafeno fepetra",
+      "text": "Mpianatra nampiofanina araka ny fenitra ankehitriny, voamarina ny fahaizany ary omen'ny mpanjifany isa isaky ny fanaterana."
+    },
+    "springboard": {
+      "title": "Fiatoana ho amin'ny asa tena izy",
+      "text": "Ny iraka tanteraka rehetra dia manatsara ny portfolio, mampitombo ny tambazotra ary manamafy ny isa fanajana voamarina."
+    },
+    "secure": {
+      "title": "Rafitra fifanakalozan-kevitra azo antoka",
+      "text": "Misy hafatra anatiny natokana izay mihetsika raha vao ekena ny fangatahana mba hirindrana ny fifanakalozana, ny rakitra ary ny vokatra."
+    },
+    "budgets": {
+      "title": "Tetibola mifanaraka sy ara-drariny",
+      "text": "Vidiny mifaninana sy mangarahara ho an'ny mpanjifa, ary karama ara-drariny hamatsiana ny fianaran'ireo mpianatra miasa an-tsehatra."
+    },
+    "ctaTitle": "Vonona hanomboka ao amin'i Kianja ve ianao?",
+    "ctaText": "Ankasitrahy ny mpianatra mahafeno fepetra ny filànao na asehoy amin'ny mpanjifa tena izy ny fahaizanao.",
+    "ctaButton": "Mamorona kaonty maimaim-poana",
+    "explorePublications": "Hijery ny publication rehetra →"
+  }
+}

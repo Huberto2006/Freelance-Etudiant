@@ -60,8 +60,19 @@ export interface ProjetActif {
 
 export interface CompletionProfil {
   pourcentage: number;
+  /** Clés techniques des champs manquants (traduites à l'affichage). */
   champsManquants: string[];
 }
+
+/**
+ * Fonction de traduction transmise aux constructeurs de données du tableau de
+ * bord (clés du domaine `dashboardPages.dashboardLib`). Les libellés sont ainsi
+ * produits dans la langue de l'interface, sans dépendre de React.
+ */
+export type Traducteur = (
+  cle: string,
+  valeurs?: Record<string, string | number>,
+) => string;
 
 // ============================================================
 // UTILITAIRES
@@ -77,7 +88,11 @@ export function versNombre(valeur: number | string | null | undefined): number {
 const JOUR_EN_MS = 24 * 60 * 60 * 1000;
 
 /** Date relative lisible (« il y a 3 h »), calculée uniquement côté client. */
-export function formatDateRelative(date: string): string {
+export function formatDateRelative(
+  date: string,
+  t: Traducteur,
+  formatCourte: (date: string) => string = formatDateCourte,
+): string {
   const temps = new Date(date).getTime();
   if (!Number.isFinite(temps)) return "";
 
@@ -85,15 +100,17 @@ export function formatDateRelative(date: string): string {
 
   if (difference < 60 * 60 * 1000) {
     const minutes = Math.max(1, Math.floor(difference / (60 * 1000)));
-    return `il y a ${minutes} min`;
+    return t("relative.minutes", { count: minutes });
   }
   if (difference < JOUR_EN_MS) {
-    return `il y a ${Math.floor(difference / (60 * 60 * 1000))} h`;
+    return t("relative.hours", {
+      count: Math.floor(difference / (60 * 60 * 1000)),
+    });
   }
   if (difference < 7 * JOUR_EN_MS) {
-    return `il y a ${Math.floor(difference / JOUR_EN_MS)} j`;
+    return t("relative.days", { count: Math.floor(difference / JOUR_EN_MS) });
   }
-  return formatDateCourte(date);
+  return formatCourte(date);
 }
 
 /**
@@ -106,27 +123,27 @@ export function calculerCompletionProfil(
   const profil = utilisateur.profilEtudiant;
 
   const criteres: Array<{ rempli: boolean; label: string }> = [
-    { rempli: Boolean(utilisateur.photoUrl), label: "photo de profil" },
+    { rempli: Boolean(utilisateur.photoUrl), label: "photo" },
     { rempli: Boolean(profil?.description?.trim()), label: "description" },
     {
       rempli: (profil?.competences?.length ?? 0) > 0,
-      label: "compétences",
+      label: "skills",
     },
-    { rempli: (profil?.langues?.length ?? 0) > 0, label: "langues" },
-    { rempli: Boolean(profil?.universite?.trim()), label: "université" },
+    { rempli: (profil?.langues?.length ?? 0) > 0, label: "languages" },
+    { rempli: Boolean(profil?.universite?.trim()), label: "university" },
     {
       rempli: Boolean(profil?.niveauEtude?.trim()),
-      label: "niveau d'étude",
+      label: "studyLevel",
     },
     {
       rempli: profil?.tarifHoraire != null && versNombre(profil.tarifHoraire) > 0,
-      label: "tarif horaire",
+      label: "hourlyRate",
     },
     {
       rempli: (profil?.portfolioUrls?.length ?? 0) > 0,
       label: "portfolio",
     },
-    { rempli: profil?.disponibilite === true, label: "disponibilité" },
+    { rempli: profil?.disponibilite === true, label: "availability" },
   ];
 
   const champsManquants = criteres

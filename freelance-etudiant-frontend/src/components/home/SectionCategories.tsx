@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { LayoutGrid } from "lucide-react";
 
 import { SectionTitre } from "./SectionTitre";
@@ -24,15 +25,17 @@ export function SectionCategories({
 }: {
   categories: CategorieAccueil[];
 }) {
+  const t = useTranslations("home.categories");
+
   return (
     <section id="categories" className="mx-auto max-w-7xl px-4 pb-7 sm:px-5 sm:pb-10">
       <SectionTitre
         icon={LayoutGrid}
-        eyebrow="Domaines de compétences · Filières"
-        titre="Explorer par catégorie"
-        sousTitre="Chaque domaine regroupe les compétences des étudiants freelances et les besoins confiés par les clients."
+        eyebrow={t("eyebrow")}
+        titre={t("title")}
+        sousTitre={t("subtitle")}
         lienHref="/services"
-        lienLabel="Parcourir le catalogue"
+        lienLabel={t("browse")}
       />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -58,8 +61,8 @@ export function SectionCategories({
                 </span>
                 <span className="block text-xs text-ink-soft/70">
                   {categorie.total !== undefined
-                    ? `${categorie.total} service${categorie.total > 1 ? "s" : ""}`
-                    : "Découvrir"}
+                    ? t("serviceCount", { count: categorie.total })
+                    : t("discover")}
                 </span>
               </span>
             </Link>

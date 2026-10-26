@@ -1,0 +1,16 @@
+{
+  "bell": {
+    "title": "Fanairana",
+    "ariaUnread": "Fanairana ({count} tsy voavaky)",
+    "latest": "Ny fanairana farany azonao",
+    "close": "Hidina",
+    "markAllRead": "Marihina ho voavaky daholo",
+    "emptyTitle": "Tsy misy fanairana",
+    "emptyText": "Tsy mbola misy vaovao ho anao.",
+    "seeAll": "Jereo ny fanairana rehetra",
+    "justNow": "Vao izao",
+    "minutesAgo": "{count} min lasa",
+    "hoursAgo": "{count} ora lasa",
+    "daysAgo": "{count} andro lasa"
+  }
+}

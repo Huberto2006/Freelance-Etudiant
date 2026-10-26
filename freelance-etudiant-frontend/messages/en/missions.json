@@ -1,0 +1,42 @@
+{
+  "list": {
+    "loadError": "Unable to load missions at the moment.",
+    "eyebrow": "Notice board",
+    "title": "Missions",
+    "intro": "Missions open for applications, published by the platform's clients.",
+    "loading": "Loading missions…",
+    "count": "{count, plural, one {# mission open for applications} other {# missions open for applications}}",
+    "filterPlaceholder": "Showcase website, school management…",
+    "filterBudget": "Budget (Ar)",
+    "emptyTitle": "No mission matches these criteria for now.",
+    "emptyHint": "Try widening your filters or come back later: new missions are published regularly.",
+    "seeAll": "See all missions"
+  },
+  "detail": {
+    "applyError": "Unable to send the application",
+    "loading": "Loading…",
+    "loadError": "Unable to load this mission at the moment.",
+    "notFound": "This mission could not be found.",
+    "backToMissions": "Back to missions",
+    "publishedMeta": "Published on {datePublication} · applications open until {dateLimite}",
+    "description": "Description",
+    "requiredSkills": "Required skills",
+    "budget": "Budget",
+    "applicationDeadline": "Application deadline",
+    "clientFallback": "Client",
+    "clientKianjaFallback": "Kianja client",
+    "clientCompany": "Company",
+    "clientIndividual": "Individual",
+    "viewProfile": "View profile",
+    "applySuccess": "Your application has been sent. The client can now review it.",
+    "applyTitle": "Apply to this mission",
+    "proposedPrice": "Proposed price (Ar)",
+    "proposedDelay": "Proposed delay (days)",
+    "messageLabel": "Message (optional)",
+    "messagePlaceholder": "Briefly describe your approach…",
+    "sending": "Sending…",
+    "submitApplication": "Send my application",
+    "cancel": "Cancel",
+    "loginPrompt": "<login>Log in</login> as a student to apply to this mission."
+  }
+}

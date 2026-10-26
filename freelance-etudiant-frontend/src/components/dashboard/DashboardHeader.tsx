@@ -4,7 +4,8 @@ import { clsx } from "clsx";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Tag } from "@/components/ui/Notice";
-import { roleLabel } from "@/lib/auth-context";
+import { useTranslations } from "next-intl";
+import { useLabels } from "@/i18n/use-labels";
 import type { Utilisateur } from "@/lib/types";
 
 /**
@@ -21,6 +22,8 @@ export function DashboardHeader({
   sousTitre: string;
   className?: string;
 }) {
+  const t = useTranslations("dashboardPages.dashboardHeader");
+  const { role } = useLabels();
   const prenom = utilisateur.nom.split(" ")[0] || utilisateur.nom;
 
   return (
@@ -34,18 +37,18 @@ export function DashboardHeader({
 
       <div className="min-w-0 flex-1">
         <p className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
-          Tableau de bord
+          {t("eyebrow")}
         </p>
 
         <h1 className="font-display text-3xl font-semibold leading-tight">
-          Bonjour, {prenom}
+          {t("greeting", { prenom })}
         </h1>
 
         <p className="mt-1 text-sm text-ink-soft">{sousTitre}</p>
       </div>
 
       <div className="hidden shrink-0 sm:block">
-        <Tag tone="ink">{roleLabel(utilisateur.role)}</Tag>
+        <Tag tone="ink">{role(utilisateur.role)}</Tag>
       </div>
     </header>
   );

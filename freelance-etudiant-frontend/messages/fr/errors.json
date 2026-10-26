@@ -1,0 +1,12 @@
+{
+  "notFound": {
+    "title": "Page introuvable",
+    "text": "La page que vous cherchez n'existe pas ou a été déplacée.",
+    "home": "Retour à l'accueil"
+  },
+  "crash": {
+    "title": "Une erreur est survenue",
+    "text": "Un problème inattendu s'est produit. Vous pouvez réessayer.",
+    "retry": "Réessayer"
+  }
+}

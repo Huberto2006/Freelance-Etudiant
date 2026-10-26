@@ -18,8 +18,10 @@ import {
 
 import { api, ApiError, getFileUrl } from "@/lib/api";
 import type { ServiceOffert } from "@/lib/types";
-import { formatArgent } from "@/lib/format";
-import { cleCategorie, iconePourCategorie, optionsCategories } from "@/lib/categories";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { useOptionLabels } from "@/i18n/use-option-labels";
+import { cleCategorie, iconePourCategorie } from "@/lib/categories";
 
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
@@ -72,6 +74,8 @@ function FormulaireService({
   onSuccess: (service: ServiceOffert) => void;
   onCancel?: () => void;
 }) {
+  const t = useTranslations("dashboardPages.myServices.form");
+  const { optionsCategories } = useOptionLabels();
   const [formulaire, setFormulaire] =
     useState<FormulaireServiceData>(initialValues);
 
@@ -96,27 +100,27 @@ function FormulaireService({
     setErreur("");
 
     if (!formulaire.titre.trim()) {
-      setErreur("Le titre est obligatoire.");
+      setErreur(t("titleRequired"));
       return;
     }
 
     if (!formulaire.description.trim()) {
-      setErreur("La description est obligatoire.");
+      setErreur(t("descriptionRequired"));
       return;
     }
 
     if (!formulaire.categorie) {
-      setErreur("La catégorie est obligatoire.");
+      setErreur(t("categoryRequired"));
       return;
     }
 
     if (!formulaire.prix) {
-      setErreur("Le prix est obligatoire.");
+      setErreur(t("priceRequired"));
       return;
     }
 
     if (!formulaire.delaiJours) {
-      setErreur("Le délai est obligatoire.");
+      setErreur(t("delayRequired"));
       return;
     }
 
@@ -125,21 +129,21 @@ function FormulaireService({
 
     if (!Number.isFinite(prix) || prix < 0) {
       setErreur(
-        "Le prix doit être un nombre valide supérieur ou égal à 0.",
+        t("priceInvalid"),
       );
       return;
     }
 
     if (!Number.isInteger(delai) || delai < 1) {
       setErreur(
-        "Le délai doit être un nombre entier d'au moins 1 jour.",
+        t("delayInvalid"),
       );
       return;
     }
 
     if (mode === "edition" && !serviceId) {
       setErreur(
-        "Impossible de modifier le service : identifiant manquant.",
+        t("missingId"),
       );
       return;
     }
@@ -189,7 +193,7 @@ function FormulaireService({
       if (error instanceof ApiError) {
         setErreur(error.message);
       } else {
-        setErreur("Une erreur est survenue.");
+        setErreur(t("genericError"));
       }
     } finally {
       setChargement(false);
@@ -204,33 +208,33 @@ function FormulaireService({
         </div>
       )}
 
-      <Field label="Titre" htmlFor="service-titre">
+      <Field label={t("titleLabel")} htmlFor="service-titre">
         <Input
           id="service-titre"
           value={formulaire.titre}
           onChange={(event) =>
             modifierChamp("titre", event.target.value)
           }
-          placeholder="Ex. Création d'un logo professionnel"
+          placeholder={t("titlePlaceholder")}
           disabled={chargement}
         />
       </Field>
 
-      <Field label="Description" htmlFor="service-description">
+      <Field label={t("descriptionLabel")} htmlFor="service-description">
         <Textarea
           id="service-description"
           value={formulaire.description}
           onChange={(event) =>
             modifierChamp("description", event.target.value)
           }
-          placeholder="Décrivez votre service..."
+          placeholder={t("descriptionPlaceholder")}
           rows={5}
           disabled={chargement}
         />
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Catégorie" htmlFor="service-categorie">
+        <Field label={t("categoryLabel")} htmlFor="service-categorie">
           <Select
             id="service-categorie"
             value={formulaire.categorie}
@@ -240,7 +244,7 @@ function FormulaireService({
             disabled={chargement}
           >
             <option value="" disabled hidden>
-              Sélectionner une catégorie
+              {t("selectCategory")}
             </option>
 
             {optionsCategories(formulaire.categorie).map((option) => (
@@ -251,7 +255,7 @@ function FormulaireService({
           </Select>
         </Field>
 
-        <Field label="Prix (Ar)" htmlFor="service-prix">
+        <Field label={t("priceLabel")} htmlFor="service-prix">
           <Input
             id="service-prix"
             type="number"
@@ -265,7 +269,7 @@ function FormulaireService({
           />
         </Field>
 
-        <Field label="Délai (jours)" htmlFor="service-delai">
+        <Field label={t("delayLabel")} htmlFor="service-delai">
           <Input
             id="service-delai"
             type="number"
@@ -284,22 +288,22 @@ function FormulaireService({
       </div>
 
       <Field
-        label="Compétences"
+        label={t("skillsLabel")}
         htmlFor="service-competences"
-        hint="Sélectionnez ou ajoutez des compétences."
+        hint={t("skillsHint")}
       >
         <MultiSelectCreatable
           id="service-competences"
           value={formulaire.competences}
           onChange={(value) => modifierChamp("competences", value)}
           options={COMPETENCES_PREDEFINIES}
-          placeholder="Rechercher une compétence…"
+          placeholder={t("skillsSearch")}
           allowCreate
           disabled={chargement}
         />
       </Field>
 
-      <Field label="Images" htmlFor="service-images">
+      <Field label={t("imagesLabel")} htmlFor="service-images">
         <SelecteurImages
           valeur={formulaire.imagesUrls}
           onChange={(urls) => modifierChamp("imagesUrls", urls)}
@@ -324,12 +328,11 @@ function FormulaireService({
 
           <div>
             <p className="text-sm font-medium text-ink">
-              Service disponible
+              {t("serviceAvailable")}
             </p>
 
             <p className="text-xs text-ink-soft">
-              Les clients pourront voir et commander ce
-              service.
+              {t("serviceAvailableHint")}
             </p>
           </div>
         </label>
@@ -338,12 +341,11 @@ function FormulaireService({
       {mode === "creation" && (
         <div className="rounded-xl border border-ink/10 bg-ink/5 px-4 py-3">
           <p className="text-sm font-medium text-ink">
-            Publication du service
+            {t("publicationTitle")}
           </p>
 
           <p className="mt-1 text-xs leading-5 text-ink-soft">
-            Votre service sera créé et publié selon les
-            règles de publication définies par le serveur.
+            {t("publicationHint")}
           </p>
         </div>
       )}
@@ -356,7 +358,7 @@ function FormulaireService({
             onClick={onCancel}
             disabled={chargement}
           >
-            Annuler
+            {t("cancel")}
           </Button>
         )}
 
@@ -371,17 +373,17 @@ function FormulaireService({
                 size={16}
                 className="animate-spin"
               />
-              Enregistrement...
+              {t("saving")}
             </>
           ) : mode === "creation" ? (
             <>
               <Plus size={16} />
-              Publier le service
+              {t("publishService")}
             </>
           ) : (
             <>
               <Check size={16} />
-              Enregistrer
+              {t("save")}
             </>
           )}
         </Button>
@@ -391,14 +393,18 @@ function FormulaireService({
 }
 
 export default function MesServicesPage() {
+  const t = useTranslations("dashboardPages.myServices");
   return (
-    <Suspense fallback={<p className="text-sm text-ink-soft">Chargement…</p>}>
+    <Suspense fallback={<p className="text-sm text-ink-soft">{t("loading")}</p>}>
       <MesServicesContent />
     </Suspense>
   );
 }
 
 function MesServicesContent() {
+  const t = useTranslations("dashboardPages.myServices");
+  const { argent: formatArgent } = useFormats();
+  const { categorie: libelleCategorie } = useOptionLabels();
   const searchParams = useSearchParams();
   const idAEditer = searchParams.get("editer");
   const [idAutoEditionFermee, setIdAutoEditionFermee] = useState<string | null>(
@@ -441,13 +447,13 @@ function MesServicesContent() {
         setErreur(error.message);
       } else {
         setErreur(
-          "Impossible de charger vos services.",
+          t("loadError"),
         );
       }
     } finally {
       setChargement(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -572,7 +578,7 @@ function MesServicesContent() {
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de modifier la disponibilité.",
+          : t("availabilityError"),
       );
     }
   };
@@ -604,7 +610,7 @@ function MesServicesContent() {
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible d'archiver le service.",
+          : t("archiveError"),
       );
     }
   };
@@ -632,7 +638,7 @@ function MesServicesContent() {
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de restaurer le service.",
+          : t("restoreError"),
       );
     }
   };
@@ -641,7 +647,7 @@ function MesServicesContent() {
     service: ServiceOffert,
   ) => {
     const confirmation = window.confirm(
-      `Voulez-vous vraiment supprimer « ${service.titre} » ?`,
+      t("confirmDelete", { titre: service.titre }),
     );
 
     if (!confirmation) return;
@@ -664,7 +670,7 @@ function MesServicesContent() {
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de supprimer le service.",
+          : t("deleteError"),
       );
     }
   };
@@ -701,8 +707,8 @@ function MesServicesContent() {
       <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
         <PageHeader
           icon={Wrench}
-          eyebrow="Espace étudiant"
-          title="Mes services"
+          eyebrow={t("eyebrow")}
+          title={t("title")}
           className="mb-0"
         />
 
@@ -714,7 +720,7 @@ function MesServicesContent() {
           className="flex items-center justify-center gap-2"
         >
           <Plus size={17} />
-          Nouveau service
+          {t("newService")}
         </Button>
       </div>
 
@@ -728,7 +734,7 @@ function MesServicesContent() {
 
             <div>
               <p className="font-medium text-ink">
-                Une erreur est survenue
+                {t("errorTitle")}
               </p>
 
               <p className="mt-1 text-sm text-ink-soft">
@@ -741,25 +747,25 @@ function MesServicesContent() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Total"
+          label={t("stats.total")}
           value={total}
           icon={Wrench}
         />
 
         <StatCard
-          label="Actifs"
+          label={t("stats.active")}
           value={actifs}
           icon={Check}
         />
 
         <StatCard
-          label="Archivés"
+          label={t("stats.archived")}
           value={archives}
           icon={Archive}
         />
 
         <StatCard
-          label="Masqués"
+          label={t("stats.hidden")}
           value={masques}
           icon={X}
         />
@@ -770,12 +776,11 @@ function MesServicesContent() {
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold text-ink">
-                Nouveau service
+                {t("newService")}
               </h2>
 
               <p className="mt-1 text-sm text-ink-soft">
-                Présentez clairement le service que vous
-                proposez.
+                {t("newServiceHint")}
               </p>
             </div>
 
@@ -785,7 +790,7 @@ function MesServicesContent() {
                 setAfficherCreation(false)
               }
               className="rounded-lg p-2 text-ink-soft transition hover:bg-ink/5 hover:text-ink"
-              aria-label="Fermer"
+              aria-label={t("close")}
             >
               <X size={18} />
             </button>
@@ -805,11 +810,11 @@ function MesServicesContent() {
         onglets={[
           {
             valeur: "actifs",
-            label: "Actifs",
+            label: t("tabs.active"),
           },
           {
             valeur: "archives",
-            label: "Archivés",
+            label: t("tabs.archived"),
           },
         ]}
         actif={ongletServicesAffiche}
@@ -836,10 +841,10 @@ function MesServicesContent() {
             }
             placeholder={
               ongletServicesAffiche === "archives"
-                ? "Rechercher un service archivé…"
-                : "Rechercher un service actif…"
+                ? t("search.archived")
+                : t("search.active")
             }
-            aria-label="Rechercher un service"
+            aria-label={t("search.label")}
             className="pl-9"
           />
         </div>
@@ -849,10 +854,10 @@ function MesServicesContent() {
           onChange={(event) =>
             setFiltreCategorie(event.target.value)
           }
-          aria-label="Filtrer par catégorie"
+          aria-label={t("filterCategory")}
         >
           <option value="" disabled hidden>
-            Toutes les catégories
+            {t("allCategories")}
           </option>
 
           {categoriesDisponibles.map(
@@ -861,7 +866,7 @@ function MesServicesContent() {
                 key={categorie}
                 value={categorie}
               >
-                {categorie}
+                {libelleCategorie(categorie)}
               </option>
             ),
           )}
@@ -887,16 +892,16 @@ function MesServicesContent() {
 
             <h3 className="font-semibold text-ink">
               {ongletServicesAffiche === "archives"
-                ? "Aucun service archivé"
-                : "Aucun service actif"}
+                ? t("empty.archivedTitle")
+                : t("empty.activeTitle")}
             </h3>
 
             <p className="mt-1 max-w-md text-sm text-ink-soft">
               {recherche || filtreCategorie
-                ? "Aucun service ne correspond aux filtres sélectionnés."
+                ? t("empty.noMatch")
                 : ongletServicesAffiche === "archives"
-                  ? "Les services que vous archivez apparaîtront ici."
-                  : "Créez votre premier service pour commencer à proposer vos compétences."}
+                  ? t("empty.archivedHint")
+                  : t("empty.activeHint")}
             </p>
 
             {ongletServicesAffiche === "actifs" &&
@@ -910,7 +915,7 @@ function MesServicesContent() {
                   }}
                 >
                   <Plus size={16} />
-                  Créer un service
+                  {t("createService")}
                 </Button>
               )}
           </div>
@@ -951,14 +956,14 @@ function MesServicesContent() {
                         </h3>
 
                         <p className="mt-1 text-sm text-ink-soft">
-                          {service.categorie}
+                          {libelleCategorie(service.categorie)}
                         </p>
                       </div>
 
                       <details className="relative shrink-0">
                         <summary
                           className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg text-ink-soft transition hover:bg-ink/5 hover:text-ink [&::-webkit-details-marker]:hidden"
-                          aria-label={`Actions pour ${service.titre}`}
+                          aria-label={t("actionsFor", { titre: service.titre })}
                         >
                           <MoreVertical size={19} />
                         </summary>
@@ -969,7 +974,7 @@ function MesServicesContent() {
                             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink transition hover:bg-ink/5"
                           >
                             <Search size={15} />
-                            Voir
+                            {t("view")}
                           </Link>
 
                           {!service.estArchive && (
@@ -984,7 +989,7 @@ function MesServicesContent() {
                               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink transition hover:bg-ink/5"
                             >
                               <Pencil size={15} />
-                              Modifier
+                              {t("edit")}
                             </button>
                           )}
 
@@ -997,7 +1002,7 @@ function MesServicesContent() {
                               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-brique transition hover:bg-brique/5"
                             >
                               <X size={15} />
-                              Supprimer
+                              {t("delete")}
                             </button>
                           )}
                         </div>
@@ -1010,18 +1015,15 @@ function MesServicesContent() {
                       </Tag>
 
                       <Tag>
-                        {delaiJours} jour
-                        {delaiJours > 1
-                          ? "s"
-                          : ""}
+                        {t("days", { count: delaiJours })}
                       </Tag>
 
                       {service.estArchive ? (
-                        <Tag>Archivé</Tag>
+                        <Tag>{t("tagArchived")}</Tag>
                       ) : service.disponible ? (
-                        <Tag>Disponible</Tag>
+                        <Tag>{t("tagAvailable")}</Tag>
                       ) : (
-                        <Tag>Masqué</Tag>
+                        <Tag>{t("tagHidden")}</Tag>
                       )}
                     </div>
                   </div>
@@ -1064,12 +1066,12 @@ function MesServicesContent() {
                       {service.disponible ? (
                         <>
                           <X size={15} />
-                          Masquer
+                          {t("hide")}
                         </>
                       ) : (
                         <>
                           <Check size={15} />
-                          Republier
+                          {t("republish")}
                         </>
                       )}
                     </Button>
@@ -1085,7 +1087,7 @@ function MesServicesContent() {
                       }
                     >
                       <ArchiveRestore size={15} />
-                      Restaurer
+                      {t("restore")}
                     </Button>
                   ) : (
                     <Button
@@ -1097,7 +1099,7 @@ function MesServicesContent() {
                       }
                     >
                       <Archive size={15} />
-                      Archiver
+                      {t("archive")}
                     </Button>
                   )}
                 </div>
@@ -1112,12 +1114,11 @@ function MesServicesContent() {
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold text-ink">
-                Modifier le service
+                {t("editService")}
               </h2>
 
               <p className="mt-1 text-sm text-ink-soft">
-                Modifiez les informations de votre
-                service.
+                {t("editServiceHint")}
               </p>
             </div>
 
@@ -1127,7 +1128,7 @@ function MesServicesContent() {
                 fermerEdition()
               }
               className="rounded-lg p-2 text-ink-soft transition hover:bg-ink/5 hover:text-ink"
-              aria-label="Fermer"
+              aria-label={t("close")}
             >
               <X size={18} />
             </button>

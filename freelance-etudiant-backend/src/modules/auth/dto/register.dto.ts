@@ -10,6 +10,7 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '../../../common/enums/role.enum';
+import { LANGUES_SUPPORTEES, Langue } from '../../../common/i18n/langues';
 import { TypeClient } from '../../../common/enums/type-client.enum';
 
 export class RegisterDto {
@@ -62,4 +63,15 @@ export class RegisterDto {
   @IsString()
   @MaxLength(150)
   nomEntreprise?: string;
+
+  @ApiProperty({
+    required: false,
+    enum: LANGUES_SUPPORTEES,
+    example: 'fr',
+    description:
+      "Langue initiale du compte ; a defaut, deduite de l'en-tete Accept-Language.",
+  })
+  @IsOptional()
+  @IsIn(LANGUES_SUPPORTEES, { message: 'La langue doit etre fr, mg ou en' })
+  langue?: Langue;
 }

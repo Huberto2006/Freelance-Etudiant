@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MessageSquare, Pencil, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -9,7 +10,7 @@ import { useSocket } from "@/lib/socket-context";
 
 import type { Commentaire, TypeCibleContenu } from "@/lib/types";
 
-import { formatDateCourte } from "@/lib/format";
+import { useFormats } from "@/i18n/use-formats";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { ChampAvecMentions } from "@/components/ui/ChampAvecMentions";
@@ -36,6 +37,8 @@ export function SectionCommentaires({
   cibleType: TypeCibleContenu;
   cibleId: string;
 }) {
+  const t = useTranslations("comments.section");
+  const { dateCourte } = useFormats();
   const { utilisateur } = useAuth();
   const { socket } = useSocket();
 
@@ -86,7 +89,7 @@ export function SectionCommentaires({
           setErreur(
             err instanceof ApiError
               ? err.message
-              : "Erreur lors du chargement des commentaires",
+              : t("errors.load"),
           );
         }
       })
@@ -99,7 +102,7 @@ export function SectionCommentaires({
     return () => {
       actif = false;
     };
-  }, [cibleType, cibleId]);
+  }, [cibleType, cibleId, t]);
 
   /**
    * Connexion Socket.IO à la room de la mission ou du service.
@@ -274,7 +277,7 @@ export function SectionCommentaires({
       setErreur(
         err instanceof ApiError
           ? err.message
-          : "Erreur lors de l'envoi",
+          : t("errors.send"),
       );
     } finally {
       envoiEnCoursRef.current = false;
@@ -347,7 +350,7 @@ export function SectionCommentaires({
       setErreur(
         err instanceof ApiError
           ? err.message
-          : "Erreur lors de la modification",
+          : t("errors.edit"),
       );
     } finally {
       editionEnCoursRef.current = false;
@@ -392,7 +395,7 @@ export function SectionCommentaires({
       setErreur(
         err instanceof ApiError
           ? err.message
-          : "Erreur lors de la suppression",
+          : t("errors.delete"),
       );
     }
   }
@@ -405,9 +408,7 @@ export function SectionCommentaires({
           className="text-ocre-dark"
         />
 
-        Commentaires{" "}
-        {commentaires.length > 0 &&
-          `(${commentaires.length})`}
+        {t("title", { count: commentaires.length })}
       </h2>
 
       {utilisateur && (
@@ -427,7 +428,7 @@ export function SectionCommentaires({
             value={nouveauContenu}
             onChange={setNouveauContenu}
             onEnter={gererToucheNouveauCommentaire}
-            placeholder="Ajouter un commentaire… (taper @ pour identifier un étudiant)"
+            placeholder={t("placeholder")}
             disabled={envoi}
           />
 
@@ -439,7 +440,7 @@ export function SectionCommentaires({
             }
             className="self-start"
           >
-            {envoi ? "Envoi…" : "Publier"}
+            {envoi ? t("sending") : t("publish")}
           </Button>
         </form>
       )}
@@ -452,13 +453,11 @@ export function SectionCommentaires({
 
       {chargement ? (
         <p className="text-sm text-ink-soft">
-          Chargement…
+          {t("loading")}
         </p>
       ) : commentaires.length === 0 ? (
         <p className="text-sm text-ink-soft/70">
-          Aucun commentaire pour le moment.
-          {!utilisateur &&
-            " Connectez-vous pour en laisser un."}
+          {utilisateur ? t("emptyLoggedIn") : t("emptyAnonymous")}
         </p>
       ) : (
         <div className="flex flex-col gap-4">
@@ -481,7 +480,7 @@ export function SectionCommentaires({
                 <Avatar
                   nom={
                     commentaire.auteur?.nom ??
-                    "Utilisateur"
+                    t("defaultUser")
                   }
                   photoUrl={
                     commentaire.auteur?.photoUrl
@@ -493,15 +492,15 @@ export function SectionCommentaires({
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium">
                       {commentaire.auteur?.nom ??
-                        "Utilisateur"}
+                        t("defaultUser")}
                     </p>
 
                     <p className="text-xs text-ink-soft/60">
-                      {formatDateCourte(
-                        commentaire.dateCreation,
-                      )}
-
-                      {modifie && " · modifié"}
+                      {modifie
+                        ? t("editedDate", {
+                            date: dateCourte(commentaire.dateCreation),
+                          })
+                        : dateCourte(commentaire.dateCreation)}
                     </p>
                   </div>
 
@@ -533,7 +532,7 @@ export function SectionCommentaires({
                             )
                           }
                         >
-                          Enregistrer
+                          {t("save")}
                         </Button>
 
                         <Button
@@ -544,7 +543,7 @@ export function SectionCommentaires({
                             setContenuEdition("");
                           }}
                         >
-                          Annuler
+                          {t("cancel")}
                         </Button>
                       </div>
                     </div>
@@ -567,7 +566,7 @@ export function SectionCommentaires({
                               className="inline-flex items-center gap-1 text-xs text-ink-soft/60 hover:text-ocre-dark"
                             >
                               <Pencil size={11} />
-                              Modifier
+                              {t("edit")}
                             </button>
                           )}
 
@@ -581,7 +580,7 @@ export function SectionCommentaires({
                             className="inline-flex items-center gap-1 text-xs text-ink-soft/60 hover:text-brique"
                           >
                             <Trash2 size={11} />
-                            Supprimer
+                            {t("delete")}
                           </button>
                         </div>
                       )}

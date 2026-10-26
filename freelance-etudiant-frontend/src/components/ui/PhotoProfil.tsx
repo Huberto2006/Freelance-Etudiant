@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Camera, Loader2, User as UserIcon } from "lucide-react";
 import { api, ApiError, getFileUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -18,6 +19,7 @@ function ImageProfil({
   nom: string;
   fallback: React.ReactNode;
 }) {
+  const t = useTranslations("extras.upload");
   const [enErreur, setEnErreur] = useState(false);
 
   if (enErreur) return fallback;
@@ -26,7 +28,7 @@ function ImageProfil({
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
-      alt={`Photo de profil de ${nom}`}
+      alt={t("photoAlt", { nom })}
       className="h-full w-full object-cover"
       onError={() => setEnErreur(true)}
     />
@@ -44,6 +46,7 @@ export function PhotoProfil({
   utilisateur: Utilisateur;
   size?: number;
 }) {
+  const t = useTranslations("extras.upload");
   const { rafraichirProfil } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [envoi, setEnvoi] = useState(false);
@@ -70,11 +73,11 @@ export function PhotoProfil({
     setErreur(null);
 
     if (!TYPES_ACCEPTES.includes(fichier.type)) {
-      setErreur("Format non supporté. Utilisez JPG, PNG ou WebP.");
+      setErreur(t("errFormat"));
       return;
     }
     if (fichier.size > TAILLE_MAX) {
-      setErreur("L'image dépasse la taille maximale de 5 Mo.");
+      setErreur(t("photoFileSize"));
       return;
     }
 
@@ -92,7 +95,7 @@ export function PhotoProfil({
       await rafraichirProfil();
     } catch (err) {
       setErreur(
-        err instanceof ApiError ? err.message : "Impossible d'envoyer la photo.",
+        err instanceof ApiError ? err.message : t("errPhoto"),
       );
       setApercu(null);
     } finally {
@@ -111,8 +114,8 @@ export function PhotoProfil({
           type="button"
           onClick={ouvrirSelecteur}
           disabled={envoi}
-          title="Changer la photo de profil"
-          aria-label="Changer la photo de profil"
+          title={t("changePhoto")}
+          aria-label={t("changePhoto")}
           className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border border-ink/15 bg-ocre/10 text-ocre-dark transition-opacity disabled:cursor-wait"
         >
           {photoActuelle ? (
@@ -156,7 +159,7 @@ export function PhotoProfil({
       </div>
 
       <p className="text-xs text-ink-soft/70">
-        JPG, PNG ou WebP · 5 Mo max
+        {t("hint")}
       </p>
       {erreur && <p className="text-xs text-brique">{erreur}</p>}
     </div>

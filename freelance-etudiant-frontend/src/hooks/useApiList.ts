@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ApiError } from "@/lib/api";
 
 /**
@@ -21,6 +22,11 @@ import { ApiError } from "@/lib/api";
  *     useApiList(() => api.get<Mission[]>("/missions/me/mes-missions"));
  */
 export function useApiList<T>(loader: () => Promise<T>, deps: unknown[] = []) {
+  const t = useTranslations("common.states");
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
   const [donnees, setDonnees] = useState<T | null>(null);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -48,7 +54,7 @@ export function useApiList<T>(loader: () => Promise<T>, deps: unknown[] = []) {
           setErreur(
             error instanceof ApiError
               ? error.message
-              : "Impossible de charger les données. Réessayez.",
+              : tRef.current("errLoadData"),
           );
         }
       })

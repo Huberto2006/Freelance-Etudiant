@@ -1,0 +1,42 @@
+{
+  "list": {
+    "loadError": "Tsy afaka naka ny asa amin'izao fotoana izao.",
+    "eyebrow": "Tabilao fanambarana",
+    "title": "Asa",
+    "intro": "Ny asa misokatra amin'ny fangatahana, navoakan'ny mpanjifan'ny sehatra.",
+    "loading": "Mampiditra ny asa…",
+    "count": "{count, plural, one {Asa # misokatra amin'ny fangatahana} other {Asa # misokatra amin'ny fangatahana}}",
+    "filterPlaceholder": "Tranokala fampisehoana, fitantanana sekoly…",
+    "filterBudget": "Teti-bola (Ar)",
+    "emptyTitle": "Tsy misy asa mifanaraka amin'ireo fepetra ireo amin'izao fotoana izao.",
+    "emptyHint": "Andramo ny hanalavitra ny sivana na miverena tatỳ aoriana: misy asa vaovao aboaka tsy tapaka.",
+    "seeAll": "Hijery ny asa rehetra"
+  },
+  "detail": {
+    "applyError": "Tsy afaka naroina ny fangatahana",
+    "loading": "Mampiditra…",
+    "loadError": "Tsy afaka naka ity asa ity amin'izao fotoana izao.",
+    "notFound": "Tsy hita ity asa ity.",
+    "backToMissions": "Hiverina amin'ny asa",
+    "publishedMeta": "Navoaka tamin'ny {datePublication} · misokatra ny fangatahana hatramin'ny {dateLimite}",
+    "description": "Famaritana",
+    "requiredSkills": "Fahaizana ilaina",
+    "budget": "Teti-bola",
+    "applicationDeadline": "Daty farany hanaovana fangatahana",
+    "clientFallback": "Mpanjifa",
+    "clientKianjaFallback": "Mpanjifa Kianja",
+    "clientCompany": "Orinasa",
+    "clientIndividual": "Olon-tsotra",
+    "viewProfile": "Hijery ny mombamomba",
+    "applySuccess": "Voalefa soa aman-tsara ny fangatahanao. Afaka mandinika azy ny mpanjifa izao.",
+    "applyTitle": "Hangataka ity asa ity",
+    "proposedPrice": "Vidiny atolotra (Ar)",
+    "proposedDelay": "Fe-potoana atolotra (andro)",
+    "messageLabel": "Hafatra (tsy voatery)",
+    "messagePlaceholder": "Ambarao fohifohy ny fomba fiasanao…",
+    "sending": "Mandefa…",
+    "submitApplication": "Alefa ny fangatahako",
+    "cancel": "Foanana",
+    "loginPrompt": "<login>Midira</login> amin'ny maha-mpianatra anao mba hangataka ity asa ity."
+  }
+}

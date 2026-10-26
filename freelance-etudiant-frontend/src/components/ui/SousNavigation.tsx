@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
+import { useTranslations } from "next-intl";
 
 export interface OngletSousMenu {
   /** Valeur de filtre locale (onglets gérés côté client) OU href (liens). */
@@ -32,9 +33,10 @@ export function SousNavigation({
   /** Sélection d'un onglet (filtrage client-side). */
   onChanger: (valeur: string) => void;
 }) {
+  const t = useTranslations("extras.shared");
   return (
     <nav
-      aria-label="Filtres de catégorie"
+      aria-label={t("categoryFilters")}
       className="
         -mx-1 mb-6 flex gap-2 overflow-x-auto pb-1
         [scrollbar-width:thin]
@@ -85,11 +87,12 @@ export function SousNavigationLiens({
 }: {
   liens: { href: string; label: string; compte?: number }[];
 }) {
+  const t = useTranslations("extras.shared");
   const pathname = usePathname();
 
   return (
     <nav
-      aria-label="Sous-navigation"
+      aria-label={t("subNav")}
       className="-mx-1 mb-6 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]"
     >
       {liens.map((lien) => {

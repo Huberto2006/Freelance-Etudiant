@@ -2,11 +2,13 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { FileText, Loader2, SendHorizonal, Wrench } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError, getFileUrl } from "@/lib/api";
 import type { ServiceOffert } from "@/lib/types";
-import { formatArgent, formatDate } from "@/lib/format";
+import { useFormats } from "@/i18n/use-formats";
+import { useOptionLabels } from "@/i18n/use-option-labels";
 import { NoticeCard, StampBadge, Tag } from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -27,6 +29,9 @@ export default function ServiceDetailPage({
 }) {
   const { id } = use(params);
   const { utilisateur } = useAuth();
+  const t = useTranslations("services");
+  const { argent: formatArgent, date: formatDate, nombre } = useFormats();
+  const { categorie } = useOptionLabels();
   const [resultatService, setResultatService] = useState<{
     id: string;
     service: ServiceOffert | null;
@@ -86,7 +91,7 @@ export default function ServiceDetailPage({
       setAfficherFormulaire(false);
     } catch (err) {
       setErreur(
-        err instanceof ApiError ? err.message : "Impossible d'envoyer la demande",
+        err instanceof ApiError ? err.message : t("detail.orderError"),
       );
     } finally {
       setEnvoi(false);
@@ -97,7 +102,7 @@ export default function ServiceDetailPage({
     return (
       <p className="mx-auto flex max-w-3xl items-center justify-center gap-2 px-5 py-12 text-sm text-ink-soft">
         <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-        Chargement…
+        {t("detail.loading")}
       </p>
     );
   }
@@ -115,11 +120,11 @@ export default function ServiceDetailPage({
             </span>
             <p className="text-sm text-brique">
               {erreurChargement
-                ? "Impossible de charger ce service pour le moment."
-                : "Ce service est introuvable."}
+                ? t("detail.loadError")
+                : t("detail.notFound")}
             </p>
             <Button variant="secondary" size="sm" href="/services">
-              Retour aux services
+              {t("detail.backToServices")}
             </Button>
           </div>
         </NoticeCard>
@@ -168,16 +173,16 @@ export default function ServiceDetailPage({
       )}
 
       <div className="mb-4 flex items-center gap-3">
-        <Tag tone="ocre">{service.categorie}</Tag>
+        <Tag tone="ocre">{categorie(service.categorie)}</Tag>
         <Tag tone={service.disponible ? "rice" : "ink"}>
-          {service.disponible ? "Disponible" : "Indisponible"}
+          {service.disponible ? t("detail.available") : t("detail.unavailable")}
         </Tag>
       </div>
       <h1 className="mb-3 font-display text-3xl font-semibold sm:text-4xl">
         {service.titre}
       </h1>
       <p className="mb-7 text-sm text-ink-soft">
-        Publié le {formatDate(service.dateCreation)}
+        {t("detail.publishedOn", { date: formatDate(service.dateCreation) })}
       </p>
 
       <div className="flex flex-col-reverse items-start gap-7 lg:flex-row lg:items-start">
@@ -186,7 +191,7 @@ export default function ServiceDetailPage({
 
           <div className="mb-7">
             <h2 className="mb-3 font-display text-xl font-semibold">
-              Description
+              {t("detail.description")}
             </h2>
             <p className="text-sm leading-relaxed text-ink-soft whitespace-pre-line">
               {service.description}
@@ -196,7 +201,7 @@ export default function ServiceDetailPage({
           {service.competences.length > 0 && (
             <div className="mb-8">
               <h2 className="mb-3 font-display text-xl font-semibold">
-                Compétences mobilisées
+                {t("detail.skills")}
               </h2>
               <div className="flex flex-wrap gap-2">
                 {service.competences.map((c) => (
@@ -222,16 +227,16 @@ export default function ServiceDetailPage({
           {/* Carte annonce */}
           <NoticeCard>
             <p className="mb-1 text-xs font-mono uppercase tracking-wider text-ink-soft">
-              Prix
+              {t("detail.price")}
             </p>
             <p className="font-display text-2xl text-ocre-dark">
               {formatArgent(service.prix)}
             </p>
             <div className="mt-4 border-t border-ink/10 pt-4">
               <p className="mb-1 text-xs font-mono uppercase tracking-wider text-ink-soft">
-                Délai de livraison
+                {t("detail.deliveryTime")}
               </p>
-              <p className="font-display text-2xl">{service.delai} jours</p>
+              <p className="font-display text-2xl">{t("detail.days", { count: service.delai })}</p>
             </div>
           </NoticeCard>
 
@@ -240,7 +245,7 @@ export default function ServiceDetailPage({
             <NoticeCard>
               <div className="flex items-center gap-4">
                 <Avatar
-                  nom={etudiant.utilisateur?.nom ?? "Étudiant"}
+                  nom={etudiant.utilisateur?.nom ?? t("detail.studentFallback")}
                   photoUrl={etudiant.utilisateur?.photoUrl}
                   size={64}
                 />
@@ -249,12 +254,17 @@ export default function ServiceDetailPage({
                     {etudiant.utilisateur?.nom}
                   </p>
                   <p className="text-sm text-ink-soft">
-                    {etudiant.universite ?? "Étudiant freelance"}
+                    {etudiant.universite ?? t("detail.freelanceStudent")}
                     {etudiant.niveauEtude ? ` · ${etudiant.niveauEtude}` : ""}
                   </p>
                   <p className="mt-1 text-xs text-ink-soft/70">
-                    {etudiant.nombreMissionsTerminees} projet(s) livré(s) ·
-                    note moyenne {Number(etudiant.noteMoyenne).toFixed(1)}/5
+                    {t("detail.studentStats", {
+                      count: etudiant.nombreMissionsTerminees,
+                      note: nombre(Number(etudiant.noteMoyenne), {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 1,
+                      }),
+                    })}
                   </p>
                   <div className="mt-2 flex items-center gap-2 text-xs text-ink-soft">
                     <StampBadge
@@ -262,17 +272,21 @@ export default function ServiceDetailPage({
                       size={30}
                     />
                     <span>
-                      Réputation{" "}
-                      <span className="font-mono font-semibold text-ink">
-                        {Number(etudiant.scoreReputation) || 0}/100
-                      </span>
+                      {t.rich("detail.reputation", {
+                        score: Number(etudiant.scoreReputation) || 0,
+                        valeur: (chunks) => (
+                          <span className="font-mono font-semibold text-ink">
+                            {chunks}
+                          </span>
+                        ),
+                      })}
                     </span>
                   </div>
                 </div>
               </div>
               <Link href={`/etudiants/${etudiant.utilisateurId}`}>
                 <Button variant="ghost" size="sm" className="mt-4 w-full">
-                  Voir le profil complet
+                  {t("detail.viewFullProfile")}
                 </Button>
               </Link>
             </NoticeCard>
@@ -282,8 +296,7 @@ export default function ServiceDetailPage({
           {succes ? (
             <NoticeCard className="border-rice/50">
               <p className="font-medium text-rice">
-                Votre demande a bien été envoyée avec votre cahier des
-                charges. L&apos;étudiant peut maintenant l&apos;examiner.
+                {t("detail.orderSuccess")}
               </p>
             </NoticeCard>
           ) : utilisateur?.role === "client" && !estProprietaire ? (
@@ -292,16 +305,14 @@ export default function ServiceDetailPage({
                 <div className="mb-4 flex items-center gap-2">
                   <FileText size={18} className="text-ocre-dark" />
                   <h2 className="font-display text-xl font-semibold">
-                    Cahier des charges
+                    {t("detail.specTitle")}
                   </h2>
                 </div>
                 <p className="mb-5 text-sm text-ink-soft">
-                  Décrivez précisément votre besoin : contexte, livrables
-                  attendus, contraintes. L&apos;étudiant s&apos;appuiera sur
-                  ces informations pour réaliser le projet.
+                  {t("detail.specIntro")}
                 </p>
                 <form onSubmit={commander} className="flex flex-col gap-5">
-                  <Field label="Cahier des charges" htmlFor="cahierDesCharges">
+                  <Field label={t("detail.specTitle")} htmlFor="cahierDesCharges">
                     <Textarea
                       id="cahierDesCharges"
                       rows={7}
@@ -309,11 +320,11 @@ export default function ServiceDetailPage({
                       minLength={20}
                       value={cahierDesCharges}
                       onChange={(e) => setCahierDesCharges(e.target.value)}
-                      placeholder="Contexte du projet, pages/fonctionnalités attendues, style souhaité, contraintes techniques…"
+                      placeholder={t("detail.specPlaceholder")}
                     />
                   </Field>
                   <div className="grid gap-5 sm:grid-cols-2">
-                    <Field label="Budget proposé (Ar)" htmlFor="budgetPropose">
+                    <Field label={t("detail.proposedBudget")} htmlFor="budgetPropose">
                       <Input
                         id="budgetPropose"
                         type="number"
@@ -322,7 +333,7 @@ export default function ServiceDetailPage({
                         onChange={(e) => setBudgetPropose(e.target.value)}
                       />
                     </Field>
-                    <Field label="Délai souhaité (jours)" htmlFor="delaiSouhaite">
+                    <Field label={t("detail.desiredDelay")} htmlFor="delaiSouhaite">
                       <Input
                         id="delaiSouhaite"
                         type="number"
@@ -334,7 +345,7 @@ export default function ServiceDetailPage({
                   </div>
                   <div>
                     <p className="mb-1.5 text-xs font-mono uppercase tracking-wider text-ink-soft">
-                      Pièce jointe (optionnel)
+                      {t("detail.attachment")}
                     </p>
                     <SelecteurPieceJointe
                       valeur={pieceJointe}
@@ -350,14 +361,14 @@ export default function ServiceDetailPage({
                       className="flex-1 gap-2"
                     >
                       <SendHorizonal size={15} />
-                      {envoi ? "Envoi…" : "Envoyer ma demande"}
+                      {envoi ? t("detail.sending") : t("detail.submitOrder")}
                     </Button>
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={() => setAfficherFormulaire(false)}
                     >
-                      Annuler
+                      {t("detail.cancel")}
                     </Button>
                   </div>
                 </form>
@@ -369,7 +380,7 @@ export default function ServiceDetailPage({
                 onClick={() => setAfficherFormulaire(true)}
               >
                 <FileText size={16} />
-                Commander ce service
+                {t("detail.orderService")}
               </Button>
             )
           ) : null}

@@ -1,0 +1,16 @@
+{
+  "bell": {
+    "title": "Notifications",
+    "ariaUnread": "Notifications ({count} non lues)",
+    "latest": "Vos dernières notifications",
+    "close": "Fermer",
+    "markAllRead": "Tout marquer comme lu",
+    "emptyTitle": "Aucune notification",
+    "emptyText": "Vous êtes à jour.",
+    "seeAll": "Voir toutes les notifications",
+    "justNow": "À l'instant",
+    "minutesAgo": "Il y a {count} min",
+    "hoursAgo": "Il y a {count} h",
+    "daysAgo": "Il y a {count} j"
+  }
+}

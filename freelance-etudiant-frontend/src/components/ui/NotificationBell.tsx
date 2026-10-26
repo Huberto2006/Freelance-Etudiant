@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   Bell,
   CheckCheck,
@@ -12,6 +13,8 @@ import {
 import { api, lienInterneSur } from "@/lib/api";
 import type { NotificationItem } from "@/lib/types";
 import { useSocket } from "@/lib/socket-context";
+import { etiquetteIntl } from "@/i18n/config";
+import { useFormats } from "@/i18n/use-formats";
 
 /**
  * Le type vient du catalogue central de types du projet
@@ -23,7 +26,16 @@ import { useSocket } from "@/lib/socket-context";
  */
 type Notification = NotificationItem;
 
-function formatDate(date: string) {
+type Traducteur = (
+  cle: "bell.justNow" | "bell.minutesAgo" | "bell.hoursAgo" | "bell.daysAgo",
+  valeurs?: { count: number },
+) => string;
+
+function formatDate(
+  date: string,
+  t: Traducteur,
+  locale: Parameters<typeof etiquetteIntl>[0],
+) {
   const valeur = new Date(date);
   if (Number.isNaN(valeur.getTime())) {
     return "";
@@ -32,20 +44,20 @@ function formatDate(date: string) {
   const difference = maintenant - valeur.getTime();
   const minutes = Math.floor(difference / 60000);
   if (minutes < 1) {
-    return "À l'instant";
+    return t("bell.justNow");
   }
   if (minutes < 60) {
-    return `Il y a ${minutes} min`;
+    return t("bell.minutesAgo", { count: minutes });
   }
   const heures = Math.floor(minutes / 60);
   if (heures < 24) {
-    return `Il y a ${heures} h`;
+    return t("bell.hoursAgo", { count: heures });
   }
   const jours = Math.floor(heures / 24);
   if (jours < 7) {
-    return `Il y a ${jours} j`;
+    return t("bell.daysAgo", { count: jours });
   }
-  return valeur.toLocaleDateString("fr-FR", {
+  return valeur.toLocaleDateString(etiquetteIntl(locale), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -65,6 +77,8 @@ function getIcon(type: string) {
 }
 
 export function NotificationBell() {
+  const t = useTranslations("notifications");
+  const { locale } = useFormats();
   const [total, setTotal] = useState(0);
 
   const [ouvert, setOuvert] = useState(false);
@@ -387,12 +401,12 @@ export function NotificationBell() {
         onClick={
           toggleNotifications
         }
-        title="Notifications"
-        aria-label={`Notifications${
+        title={t("bell.title")}
+        aria-label={
           total > 0
-            ? ` (${total} non lues)`
-            : ""
-        }`}
+            ? t("bell.ariaUnread", { count: total })
+            : t("bell.title")
+        }
         aria-expanded={ouvert}
         aria-haspopup="dialog"
         className={`
@@ -458,7 +472,7 @@ export function NotificationBell() {
       {ouvert && (
         <div
           role="dialog"
-          aria-label="Notifications"
+          aria-label={t("bell.title")}
           className="
             absolute
             right-0
@@ -507,7 +521,7 @@ export function NotificationBell() {
                     text-ink
                   "
                 >
-                  Notifications
+                  {t("bell.title")}
                 </h2>
 
                 {total > 0 && (
@@ -535,8 +549,7 @@ export function NotificationBell() {
                   text-ink-soft
                 "
               >
-                Vos dernières
-                notifications
+                {t("bell.latest")}
               </p>
             </div>
 
@@ -545,7 +558,7 @@ export function NotificationBell() {
               onClick={() =>
                 setOuvert(false)
               }
-              aria-label="Fermer"
+              aria-label={t("bell.close")}
               className="
                 flex
                 h-8
@@ -598,7 +611,7 @@ export function NotificationBell() {
                   size={14}
                 />
 
-                Tout marquer comme lu
+                {t("bell.markAllRead")}
               </button>
             </div>
           )}
@@ -671,7 +684,7 @@ export function NotificationBell() {
                     text-ink
                   "
                 >
-                  Aucune notification
+                  {t("bell.emptyTitle")}
                 </p>
 
                 <p
@@ -681,7 +694,7 @@ export function NotificationBell() {
                     text-ink-soft
                   "
                 >
-                  Vous êtes à jour.
+                  {t("bell.emptyText")}
                 </p>
               </div>
             ) : (
@@ -783,6 +796,8 @@ export function NotificationBell() {
                           >
                             {formatDate(
                               notification.dateCreation,
+                              t as Traducteur,
+                              locale,
                             )}
                           </p>
                         </div>
@@ -897,7 +912,7 @@ export function NotificationBell() {
                 hover:text-ink
               "
             >
-              Voir toutes les notifications
+              {t("bell.seeAll")}
 
               <ChevronRight
                 size={14}

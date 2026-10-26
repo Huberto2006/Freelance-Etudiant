@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { CheckCircle2, Loader2, TriangleAlert } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { api, ApiError } from "@/lib/api";
 import { Field, Input, Textarea } from "@/components/ui/Field";
@@ -30,28 +31,31 @@ const VIDE: ValeursFormulaire = { nom: "", email: "", sujet: "", message: "" };
 
 const MOTIF_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function valider(valeurs: ValeursFormulaire): ErreursFormulaire {
+function valider(
+  valeurs: ValeursFormulaire,
+  t: (cle: "errName" | "errNameMax" | "errEmail" | "errEmailInvalid" | "errSubject" | "errSubjectMax" | "errMessageMin" | "errMessageMax") => string,
+): ErreursFormulaire {
   const erreurs: ErreursFormulaire = {};
   const nom = valeurs.nom.trim();
   const email = valeurs.email.trim();
   const sujet = valeurs.sujet.trim();
   const message = valeurs.message.trim();
 
-  if (!nom) erreurs.nom = "Indiquez votre nom.";
-  else if (nom.length > 100) erreurs.nom = "100 caractères maximum.";
+  if (!nom) erreurs.nom = t("errName");
+  else if (nom.length > 100) erreurs.nom = t("errNameMax");
 
-  if (!email) erreurs.email = "Indiquez votre adresse e-mail.";
+  if (!email) erreurs.email = t("errEmail");
   else if (!MOTIF_EMAIL.test(email) || email.length > 150) {
-    erreurs.email = "Adresse e-mail invalide.";
+    erreurs.email = t("errEmailInvalid");
   }
 
-  if (!sujet) erreurs.sujet = "Indiquez le sujet de votre message.";
-  else if (sujet.length > 150) erreurs.sujet = "150 caractères maximum.";
+  if (!sujet) erreurs.sujet = t("errSubject");
+  else if (sujet.length > 150) erreurs.sujet = t("errSubjectMax");
 
   if (message.length < 10) {
-    erreurs.message = "Le message doit contenir au moins 10 caractères.";
+    erreurs.message = t("errMessageMin");
   } else if (message.length > 3000) {
-    erreurs.message = "3 000 caractères maximum.";
+    erreurs.message = t("errMessageMax");
   }
 
   return erreurs;
@@ -64,6 +68,7 @@ function valider(valeurs: ValeursFormulaire): ErreursFormulaire {
  * serveur, le visiteur en est informé au lieu de croire son message parti.
  */
 export function FormulaireContact() {
+  const t = useTranslations("contact.form");
   const [valeurs, setValeurs] = useState<ValeursFormulaire>(VIDE);
   const [erreurs, setErreurs] = useState<ErreursFormulaire>({});
   const [piege, setPiege] = useState("");
@@ -82,7 +87,7 @@ export function FormulaireContact() {
     event.preventDefault();
     if (etat.statut === "envoi" || !turnstileToken) return;
 
-    const erreursTrouvees = valider(valeurs);
+    const erreursTrouvees = valider(valeurs, t);
     setErreurs(erreursTrouvees);
     if (Object.keys(erreursTrouvees).length > 0) {
       // Place le focus sur le premier champ en erreur.
@@ -109,20 +114,20 @@ export function FormulaireContact() {
       setEtat({ statut: "succes" });
       setValeurs(VIDE);
     } catch (error) {
-      let message = "Une erreur est survenue. Veuillez réessayer.";
+      let message = t("errGeneric");
       if (error instanceof ApiError) {
         if (error.status === 429) {
           message =
-            "Trop de messages envoyés en peu de temps. Patientez une minute avant de réessayer.";
+            t("errRateLimit");
         } else if (error.status === 503) {
           message =
-            "Le service de contact n'est pas disponible pour le moment. Veuillez réessayer plus tard.";
+            t("errUnavailable");
         } else if (error.message) {
           message = error.message;
         }
       } else {
         message =
-          "Impossible de joindre le serveur. Vérifiez votre connexion puis réessayez.";
+          t("errNetwork");
       }
       setEtat({ statut: "erreur", message });
     } finally {
@@ -144,17 +149,17 @@ export function FormulaireContact() {
           <CheckCircle2 size={22} />
         </span>
         <h2 className="mt-3 font-display text-xl font-semibold text-ink">
-          Message envoyé
+          {t("sentTitle")}
         </h2>
         <p className="mt-1 text-sm text-ink-soft">
-          Merci, nous avons bien reçu votre message.
+          {t("sentText")}
         </p>
         <button
           type="button"
           onClick={() => setEtat({ statut: "repos" })}
           className="mt-5 inline-flex items-center justify-center rounded-lg border border-ink/30 px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink hover:bg-ink/5"
         >
-          Envoyer un autre message
+          {t("sendAnother")}
         </button>
       </div>
     );
@@ -183,7 +188,7 @@ export function FormulaireContact() {
       )}
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Nom" htmlFor="contact-nom" error={erreurs.nom}>
+        <Field label={t("name")} htmlFor="contact-nom" error={erreurs.nom}>
           <Input
             id="contact-nom"
             name="nom"
@@ -196,7 +201,7 @@ export function FormulaireContact() {
           />
         </Field>
 
-        <Field label="E-mail" htmlFor="contact-email" error={erreurs.email}>
+        <Field label={t("email")} htmlFor="contact-email" error={erreurs.email}>
           <Input
             id="contact-email"
             name="email"
@@ -211,7 +216,7 @@ export function FormulaireContact() {
         </Field>
       </div>
 
-      <Field label="Sujet" htmlFor="contact-sujet" error={erreurs.sujet}>
+      <Field label={t("subject")} htmlFor="contact-sujet" error={erreurs.sujet}>
         <Input
           id="contact-sujet"
           name="sujet"
@@ -224,10 +229,10 @@ export function FormulaireContact() {
       </Field>
 
       <Field
-        label="Message"
+        label={t("message")}
         htmlFor="contact-message"
         error={erreurs.message}
-        hint={`${valeurs.message.length} / 3 000 caractères`}
+        hint={t("counter", { count: valeurs.message.length })}
       >
         <Textarea
           id="contact-message"
@@ -246,7 +251,7 @@ export function FormulaireContact() {
         aria-hidden="true"
         className="absolute -left-[9999px] h-0 w-0 overflow-hidden"
       >
-        <label htmlFor="contact-site-web">Ne pas remplir</label>
+        <label htmlFor="contact-site-web">{t("doNotFill")}</label>
         <input
           id="contact-site-web"
           type="text"
@@ -276,7 +281,7 @@ export function FormulaireContact() {
             className="animate-spin motion-reduce:animate-none"
           />
         )}
-        {enEnvoi ? "Envoi en cours…" : "Envoyer le message"}
+        {enEnvoi ? t("sending") : t("send")}
       </button>
     </form>
   );

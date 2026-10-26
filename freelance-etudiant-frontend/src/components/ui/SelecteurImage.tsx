@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { api, ApiError, getFileUrl } from "@/lib/api";
 
@@ -29,6 +30,7 @@ export function SelecteurImage({
   disabled = false,
   ratio = "aspect-video",
 }: SelecteurImageProps) {
+  const t = useTranslations("extras.upload");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [envoi, setEnvoi] = useState(false);
@@ -59,7 +61,7 @@ export function SelecteurImage({
      */
     if (!TYPES_ACCEPTES.includes(fichier.type)) {
       setErreur(
-        "Format non supporté. Utilisez JPG, PNG ou WebP.",
+        t("errFormat"),
       );
       return;
     }
@@ -98,7 +100,7 @@ export function SelecteurImage({
        */
       if (!response?.url) {
         throw new Error(
-          "Le serveur n'a pas retourné l'URL de l'image.",
+          t("errNoUrl"),
         );
       }
 
@@ -122,7 +124,7 @@ export function SelecteurImage({
           ? error.message
           : error instanceof Error
             ? error.message
-            : "Impossible d'envoyer l'image.",
+            : t("errSend"),
       );
     } finally {
       setEnvoi(false);
@@ -157,12 +159,12 @@ export function SelecteurImage({
               onClick={choisirImage}
               disabled={disabled || envoi}
               className="block h-full w-full disabled:cursor-wait"
-              title="Cliquer pour remplacer l'image"
+              title={t("replaceTitle")}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imageActuelle}
-                alt="Aperçu de l'image principale"
+                alt={t("previewAlt")}
                 className="h-full w-full object-cover"
                 onError={() => {
                   /*
@@ -170,7 +172,7 @@ export function SelecteurImage({
                    * retournée par l'API n'est pas accessible.
                    */
                   setErreur(
-                    "Impossible d'afficher cette image. Vérifiez l'URL retournée par le serveur.",
+                    t("errDisplay"),
                   );
                 }}
               />
@@ -180,7 +182,7 @@ export function SelecteurImage({
               type="button"
               onClick={retirer}
               disabled={disabled || envoi}
-              aria-label="Retirer l'image"
+              aria-label={t("removeImage")}
               className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-ink/70 text-paper-light hover:bg-brique disabled:cursor-not-allowed"
             >
               <X size={14} />
@@ -204,8 +206,8 @@ export function SelecteurImage({
 
             <span className="text-xs">
               {envoi
-                ? "Envoi…"
-                : "Ajouter une image"}
+                ? t("sendingShort")
+                : t("addImage")}
             </span>
           </button>
         )}
@@ -230,7 +232,7 @@ export function SelecteurImage({
       />
 
       <p className="mt-1.5 text-xs text-ink-soft/70">
-        JPG, PNG ou WebP · 5 Mo max
+        {t("hint")}
       </p>
 
       {erreur && (

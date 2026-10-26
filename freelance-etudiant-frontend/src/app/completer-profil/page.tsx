@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Check,
   ChevronLeft,
@@ -29,13 +30,7 @@ import type { EtudiantProfile, Utilisateur } from "@/lib/types";
    CONSTANTES
 ========================================================= */
 
-const LABELS_ETAPES = [
-  "Informations personnelles",
-  "Études",
-  "Compétences & activité",
-  "Tarification",
-  "Portfolio",
-];
+const CLES_ETAPES = ["s1", "s2", "s3", "s4", "s5"] as const;
 
 const NIVEAUX_ETUDE = ["L1", "L2", "L3", "M1", "M2", "D1", "D2", "D3"];
 
@@ -53,11 +48,11 @@ const STATUTS_DISPONIBILITE = [
   "indisponible",
 ];
 
-const LABELS_STATUT_DISPONIBILITE: Record<string, string> = {
-  disponible: "Disponible",
-  occupe: "Occupé",
-  en_mission: "En mission",
-  indisponible: "Indisponible",
+const CLES_TYPE_FREELANCE: Record<string, string> = {
+  "Temps partiel": "partTime",
+  "Temps plein": "fullTime",
+  "Mission ponctuelle": "oneOff",
+  Stage: "internship",
 };
 
 const TELEPHONE_REGEX = /^\+?[0-9][0-9\s.-]{6,18}[0-9]$/;
@@ -105,6 +100,7 @@ export default function CompleterProfilPage() {
   const { utilisateur, chargement, completionProfil, rafraichirProfil } =
     useAuth();
   const router = useRouter();
+  const t = useTranslations("profilePage");
 
   /*
    * ==========================================================
@@ -243,7 +239,7 @@ export default function CompleterProfilPage() {
   ) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-ink-soft">Chargement…</p>
+        <p className="text-sm text-ink-soft">{t("complete.loading")}</p>
       </div>
     );
   }
@@ -256,52 +252,52 @@ export default function CompleterProfilPage() {
   function validerEtape(n: number): string | null {
     switch (n) {
       case 1:
-        if (!ville.trim()) return "La ville est obligatoire.";
-        if (!telephone.trim()) return "Le téléphone est obligatoire.";
+        if (!ville.trim()) return t("complete.vCity");
+        if (!telephone.trim()) return t("complete.vPhone");
         if (!TELEPHONE_REGEX.test(telephone.trim()))
-          return "Le numéro de téléphone est invalide.";
+          return t("complete.vPhoneInvalid");
         return null;
       case 2:
-        if (!universite.trim()) return "L'université est obligatoire.";
-        if (!niveauEtude) return "Le niveau d'étude est obligatoire.";
-        if (!filiere.trim()) return "La filière est obligatoire.";
-        if (!anneeEtude) return "L'année d'étude est obligatoire.";
+        if (!universite.trim()) return t("complete.vUniversity");
+        if (!niveauEtude) return t("complete.vLevel");
+        if (!filiere.trim()) return t("complete.vField");
+        if (!anneeEtude) return t("complete.vYear");
         if (!listify(langues).length)
-          return "Indiquez au moins une langue.";
+          return t("complete.vLanguage");
         return null;
       case 3:
         if (!listify(competences).length)
-          return "Indiquez au moins une compétence.";
+          return t("complete.vSkill");
         if (
           experience &&
           (Number(experience) < 0 || Number(experience) > 50)
         )
-          return "L'expérience doit être comprise entre 0 et 50 ans.";
+          return t("complete.vExperience");
         return null;
       case 4:
         if (!tarifHoraire || Number(tarifHoraire) <= 0)
-          return "Le tarif horaire est obligatoire et doit être positif.";
+          return t("complete.vHourly");
         if (tarifMinimum && Number(tarifMinimum) < 0)
-          return "Le tarif minimum doit être positif.";
+          return t("complete.vMin");
         if (tarifMaximum && Number(tarifMaximum) < 0)
-          return "Le tarif maximum doit être positif.";
+          return t("complete.vMax");
         if (
           tarifMinimum &&
           tarifMaximum &&
           Number(tarifMinimum) > Number(tarifMaximum)
         )
-          return "Le tarif minimum ne peut pas dépasser le tarif maximum.";
+          return t("errMinMax");
         if (tarifMinimum && Number(tarifHoraire) < Number(tarifMinimum))
-          return "Le tarif horaire ne peut pas être inférieur au tarif minimum.";
+          return t("errHourlyBelowMin");
         if (tarifMaximum && Number(tarifHoraire) > Number(tarifMaximum))
-          return "Le tarif horaire ne peut pas être supérieur au tarif maximum.";
+          return t("errHourlyAboveMax");
         return null;
       case 5: {
-        if (!description.trim()) return "La description est obligatoire.";
+        if (!description.trim()) return t("complete.vDescription");
         const urls = [githubUrl, gitlabUrl, linkedinUrl, siteWeb, ...portfolioUrls];
         for (const url of urls) {
           if (url && !urlValide(url)) {
-            return "Une des URL renseignées est invalide (elle doit commencer par http:// ou https://).";
+            return t("complete.vUrl");
           }
         }
         return null;
@@ -374,7 +370,7 @@ export default function CompleterProfilPage() {
       setErreur(
         err instanceof ApiError
           ? err.message
-          : "Une erreur inattendue est survenue.",
+          : t("errUnexpected"),
       );
       return false;
     } finally {
@@ -433,13 +429,11 @@ export default function CompleterProfilPage() {
     const url = nouvelleUrlPortfolio.trim();
     if (!url) return;
     if (!urlValide(url)) {
-      setErreur(
-        "Le lien de portfolio doit commencer par http:// ou https://.",
-      );
+      setErreur(t("complete.errPortfolioUrl"));
       return;
     }
     if (portfolioUrls.includes(url)) {
-      setErreur("Ce lien fait déjà partie du portfolio.");
+      setErreur(t("errPortfolioDuplicate"));
       return;
     }
     setErreur(null);
@@ -461,8 +455,8 @@ export default function CompleterProfilPage() {
       <div className="space-y-6">
         <PageHeader
           icon={Sparkles}
-          eyebrow="Complétion du profil"
-          title="Dernière vérification…"
+          eyebrow={t("complete.completion")}
+          title={t("complete.lastCheck")}
         />
 
         <NoticeCard>
@@ -470,8 +464,7 @@ export default function CompleterProfilPage() {
             <div className="flex items-center gap-3 text-rice">
               <Check size={18} />
               <p className="text-sm">
-                Votre profil est complet, redirection vers votre tableau de
-                bord…
+                {t("complete.done")}
               </p>
             </div>
           ) : (
@@ -479,8 +472,7 @@ export default function CompleterProfilPage() {
               <div className="flex items-center gap-3 text-ocre-dark">
                 <CircleAlert size={18} />
                 <p className="text-sm font-medium">
-                  Il reste quelques informations obligatoires à compléter
-                  avant l&apos;accès au tableau de bord.
+                  {t("complete.remaining")}
                 </p>
               </div>
 
@@ -491,7 +483,7 @@ export default function CompleterProfilPage() {
                     className="flex items-center justify-between gap-3 rounded-lg border border-ink/10 px-3 py-2"
                   >
                     <span className="text-sm text-ink">
-                      {completionProfil?.missingLabels[i] ?? champ}
+                      {t.has(`complete.missing.${champ}` as never) ? t(`complete.missing.${champ}` as never) : (completionProfil?.missingLabels[i] ?? champ)}
                     </span>
                     <Button
                       type="button"
@@ -499,7 +491,7 @@ export default function CompleterProfilPage() {
                       size="sm"
                       onClick={() => allerA(ETAPE_PAR_CHAMP[champ] ?? 1)}
                     >
-                      Corriger
+                      {t("complete.fix")}
                     </Button>
                   </li>
                 ))}
@@ -520,14 +512,12 @@ export default function CompleterProfilPage() {
     <div className="space-y-6">
       <PageHeader
         icon={Sparkles}
-        eyebrow="Bienvenue sur Kianja"
-        title="Complétez votre profil étudiant"
+        eyebrow={t("complete.welcome")}
+        title={t("complete.completeProfile")}
       />
 
       <p className="-mt-4 text-sm text-ink-soft">
-        Quelques informations sont nécessaires avant d&apos;accéder à votre
-        tableau de bord. Vos réponses sont enregistrées à chaque étape : vous
-        pouvez fermer et reprendre plus tard.
+        {t("complete.intro")}
       </p>
 
       <Stepper etapeActuelle={etape} onAllerA={allerA} />
@@ -622,7 +612,7 @@ export default function CompleterProfilPage() {
             className="flex items-center gap-1.5"
           >
             <ChevronLeft size={16} />
-            Précédent
+            {t("complete.previous")}
           </Button>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -634,7 +624,7 @@ export default function CompleterProfilPage() {
               className="flex items-center gap-1.5"
             >
               <Save size={16} />
-              Enregistrer et continuer plus tard
+              {t("complete.saveLater")}
             </Button>
 
             <Button
@@ -644,10 +634,10 @@ export default function CompleterProfilPage() {
               className="flex items-center gap-1.5"
             >
               {envoi
-                ? "Enregistrement…"
+                ? t("saving")
                 : etape === 5
-                  ? "Terminer"
-                  : "Continuer"}
+                  ? t("complete.finish")
+                  : t("complete.continue")}
               {!envoi && <ChevronRight size={16} />}
             </Button>
           </div>
@@ -668,11 +658,13 @@ function Stepper({
   etapeActuelle: number;
   onAllerA: (n: number) => void;
 }) {
+  const t = useTranslations("profilePage");
+  const labelsEtapes = CLES_ETAPES.map((cle) => t(`complete.steps.${cle}`));
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
         <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
-          Étape {etapeActuelle}/5 — {LABELS_ETAPES[etapeActuelle - 1]}
+          {t("complete.stepOf", { n: etapeActuelle, label: labelsEtapes[etapeActuelle - 1] })}
         </p>
       </div>
 
@@ -684,7 +676,7 @@ function Stepper({
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-1 overflow-x-auto pb-1">
-        {LABELS_ETAPES.map((label, i) => {
+        {labelsEtapes.map((label, i) => {
           const n = i + 1;
           const active = n === etapeActuelle;
           const done = n < etapeActuelle;
@@ -739,12 +731,13 @@ function EtapePersonnelle({
   telephone: string;
   setTelephone: (v: string) => void;
 }) {
+  const t = useTranslations("profilePage");
   return (
     <div className="flex flex-col gap-6">
       <div className="mb-1 flex items-center gap-3">
         <User size={20} className="text-ocre-dark" />
         <h2 className="font-display text-xl font-semibold">
-          Informations personnelles
+          {t("complete.steps.s1")}
         </h2>
       </div>
 
@@ -756,13 +749,13 @@ function EtapePersonnelle({
           </p>
           <p className="text-sm text-ink-soft">{utilisateur.email}</p>
           <p className="mt-1 text-xs text-ink-soft/70">
-            La photo est recommandée mais facultative pour continuer.
+            {t("complete.photoHint")}
           </p>
         </div>
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Ville *" htmlFor="ville">
+        <Field label={`${t("city")} *`} htmlFor="ville">
           <Input
             id="ville"
             value={ville}
@@ -772,9 +765,9 @@ function EtapePersonnelle({
         </Field>
 
         <Field
-          label="Téléphone *"
+          label={`${t("phone")} *`}
           htmlFor="telephone"
-          hint="Utilisé uniquement pour la mise en relation."
+          hint={t("complete.phoneHint")}
         >
           <Input
             id="telephone"
@@ -815,15 +808,16 @@ function EtapeEtudes({
   langues: string;
   setLangues: (v: string) => void;
 }) {
+  const t = useTranslations("profilePage");
   return (
     <div className="flex flex-col gap-6">
       <div className="mb-1 flex items-center gap-3">
         <GraduationCap size={20} className="text-ocre-dark" />
-        <h2 className="font-display text-xl font-semibold">Études</h2>
+        <h2 className="font-display text-xl font-semibold">{t("complete.steps.s2")}</h2>
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Université / établissement *" htmlFor="universite">
+        <Field label={`${t("universityInstitution")} *`} htmlFor="universite">
           <Input
             id="universite"
             value={universite}
@@ -832,7 +826,7 @@ function EtapeEtudes({
           />
         </Field>
 
-        <Field label="Filière *" htmlFor="filiere">
+        <Field label={`${t("field")} *`} htmlFor="filiere">
           <Input
             id="filiere"
             value={filiere}
@@ -841,13 +835,13 @@ function EtapeEtudes({
           />
         </Field>
 
-        <Field label="Niveau d'étude *" htmlFor="niveauEtude">
+        <Field label={`${t("studyLevel")} *`} htmlFor="niveauEtude">
           <Select
             id="niveauEtude"
             value={niveauEtude}
             onChange={(e) => setNiveauEtude(e.target.value)}
           >
-            <option value="" disabled hidden>Sélectionner…</option>
+            <option value="" disabled hidden>{t("select")}</option>
             {NIVEAUX_ETUDE.map((n) => (
               <option key={n} value={n}>
                 {n}
@@ -856,13 +850,13 @@ function EtapeEtudes({
           </Select>
         </Field>
 
-        <Field label="Année d'étude *" htmlFor="anneeEtude">
+        <Field label={`${t("studyYear")} *`} htmlFor="anneeEtude">
           <Select
             id="anneeEtude"
             value={anneeEtude}
             onChange={(e) => setAnneeEtude(e.target.value)}
           >
-            <option value="" disabled hidden>Sélectionner…</option>
+            <option value="" disabled hidden>{t("select")}</option>
             {NIVEAUX_ETUDE.map((n) => (
               <option key={n} value={n}>
                 {n}
@@ -873,16 +867,16 @@ function EtapeEtudes({
       </div>
 
       <Field
-        label="Langues *"
+        label={`${t("languages")} *`}
         htmlFor="langues"
-        hint="Ajoutez vos langues ou sélectionnez dans la liste."
+        hint={t("languagesHint")}
       >
         <MultiSelectCreatable
           id="langues"
           value={langues}
           onChange={setLangues}
           options={LANGUES_PREDEFINIES}
-          placeholder="Rechercher ou saisir une langue…"
+          placeholder={t("searchLanguage")}
           allowCreate
         />
       </Field>
@@ -921,47 +915,54 @@ function EtapeCompetences({
   statutDisponibilite: string;
   setStatutDisponibilite: (v: string) => void;
 }) {
+  const t = useTranslations("profilePage");
+  const libelleDisponibilite = (statut: string) =>
+    t(`availability.${statut}` as never);
+  const libelleTypeFreelance = (valeur: string) => {
+    const cle = CLES_TYPE_FREELANCE[valeur];
+    return cle ? t(`freelanceTypes.${cle}` as never) : valeur;
+  };
   return (
     <div className="flex flex-col gap-6">
       <div className="mb-1 flex items-center gap-3">
         <Sparkles size={20} className="text-ocre-dark" />
         <h2 className="font-display text-xl font-semibold">
-          Compétences et activité freelance
+          {t("complete.skillsActivity")}
         </h2>
       </div>
 
       <Field
-        label="Compétences *"
+        label={`${t("skills")} *`}
         htmlFor="competences"
-        hint="Sélectionnez ou ajoutez des compétences."
+        hint={t("skillsHint")}
       >
         <MultiSelectCreatable
           id="competences"
           value={competences}
           onChange={setCompetences}
           options={COMPETENCES_PREDEFINIES}
-          placeholder="Rechercher une compétence…"
+          placeholder={t("searchSkill")}
           allowCreate
         />
       </Field>
 
       <Field
-        label="Spécialités"
+        label={t("specialities")}
         htmlFor="specialites"
-        hint="Domaines d'intervention principaux (facultatif)."
+        hint={t("complete.specialitiesHint")}
       >
         <MultiSelectCreatable
           id="specialites"
           value={specialites}
           onChange={setSpecialites}
           options={SPECIALITES_PREDEFINIES}
-          placeholder="Saisir une spécialité…"
+          placeholder={t("complete.enterSpeciality")}
           allowCreate
         />
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Expérience (années)" htmlFor="experience">
+        <Field label={t("experienceYears")} htmlFor="experience">
           <Input
             id="experience"
             type="number"
@@ -973,16 +974,16 @@ function EtapeCompetences({
           />
         </Field>
 
-        <Field label="Type de freelance" htmlFor="typeFreelance">
+        <Field label={t("freelanceType")} htmlFor="typeFreelance">
           <Select
             id="typeFreelance"
             value={typeFreelance}
             onChange={(e) => setTypeFreelance(e.target.value)}
           >
-            <option value="" disabled hidden>Sélectionner…</option>
-            {TYPES_FREELANCE.map((t) => (
-              <option key={t} value={t}>
-                {t}
+            <option value="" disabled hidden>{t("select")}</option>
+            {TYPES_FREELANCE.map((type) => (
+              <option key={type} value={type}>
+                {libelleTypeFreelance(type)}
               </option>
             ))}
           </Select>
@@ -990,16 +991,16 @@ function EtapeCompetences({
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Statut de disponibilité" htmlFor="statutDisponibilite">
+        <Field label={t("availabilityStatus")} htmlFor="statutDisponibilite">
           <Select
             id="statutDisponibilite"
             value={statutDisponibilite}
             onChange={(e) => setStatutDisponibilite(e.target.value)}
           >
-            <option value="" disabled hidden>Sélectionner…</option>
+            <option value="" disabled hidden>{t("select")}</option>
             {STATUTS_DISPONIBILITE.map((s) => (
               <option key={s} value={s}>
-                {LABELS_STATUT_DISPONIBILITE[s]}
+                {libelleDisponibilite(s)}
               </option>
             ))}
           </Select>
@@ -1007,7 +1008,7 @@ function EtapeCompetences({
 
         <div className="flex flex-col gap-1.5">
           <span className="text-xs font-mono uppercase tracking-wider text-ink-soft">
-            Disponibilité *
+            {t("availability.title")} *
           </span>
           <label className="flex items-center gap-2.5 rounded-lg border border-ink/30 bg-paper-light px-3 py-2.5 text-sm text-ink">
             <input
@@ -1016,7 +1017,7 @@ function EtapeCompetences({
               onChange={(e) => setDisponibilite(e.target.checked)}
               className="h-4 w-4 accent-ocre"
             />
-            Disponible pour de nouvelles missions
+            {t("availableForNew")}
           </label>
         </div>
       </div>
@@ -1043,17 +1044,18 @@ function EtapeTarification({
   tarifMaximum: string;
   setTarifMaximum: (v: string) => void;
 }) {
+  const t = useTranslations("profilePage");
   return (
     <div className="flex flex-col gap-6">
       <div className="mb-1 flex items-center gap-3">
         <Wallet size={20} className="text-ocre-dark" />
-        <h2 className="font-display text-xl font-semibold">Tarification</h2>
+        <h2 className="font-display text-xl font-semibold">{t("complete.steps.s4")}</h2>
       </div>
 
       <Field
-        label="Tarif horaire (Ar) *"
+        label={`${t("hourlyRateAr")} *`}
         htmlFor="tarifHoraire"
-        hint="Doit rester compris entre le tarif minimum et le tarif maximum si vous les renseignez."
+        hint={t("complete.hourlyHint")}
       >
         <Input
           id="tarifHoraire"
@@ -1066,7 +1068,7 @@ function EtapeTarification({
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Tarif minimum (Ar)" htmlFor="tarifMinimum">
+        <Field label={t("minRate")} htmlFor="tarifMinimum">
           <Input
             id="tarifMinimum"
             type="number"
@@ -1077,7 +1079,7 @@ function EtapeTarification({
           />
         </Field>
 
-        <Field label="Tarif maximum (Ar)" htmlFor="tarifMaximum">
+        <Field label={t("maxRate")} htmlFor="tarifMaximum">
           <Input
             id="tarifMaximum"
             type="number"
@@ -1129,29 +1131,30 @@ function EtapePortfolio({
   siteWeb: string;
   setSiteWeb: (v: string) => void;
 }) {
+  const t = useTranslations("profilePage");
   return (
     <div className="flex flex-col gap-6">
       <div className="mb-1 flex items-center gap-3">
         <FolderOpen size={20} className="text-ocre-dark" />
         <h2 className="font-display text-xl font-semibold">
-          Portfolio et présence professionnelle
+          {t("complete.portfolioPresence")}
         </h2>
       </div>
 
-      <Field label="Description *" htmlFor="description">
+      <Field label={`${t("complete.descriptionLabel")} *`} htmlFor="description">
         <Textarea
           id="description"
           rows={4}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Présentez-vous en quelques phrases : parcours, projets, ce que vous proposez…"
+          placeholder={t("complete.descriptionPlaceholder")}
         />
       </Field>
 
       <Field
-        label="Liens de portfolio"
+        label={t("complete.portfolioLinks")}
         htmlFor="nouvelleUrlPortfolio"
-        hint="URL complète (https://…)."
+        hint={t("complete.fullUrl")}
       >
         <div className="flex gap-2">
           <Input
@@ -1162,7 +1165,7 @@ function EtapePortfolio({
             className="flex-1"
           />
           <Button type="button" variant="ghost" onClick={ajouterUrlPortfolio}>
-            Ajouter
+            {t("add")}
           </Button>
         </div>
       </Field>
@@ -1181,7 +1184,7 @@ function EtapePortfolio({
                 size="sm"
                 onClick={() => retirerUrlPortfolio(i)}
               >
-                Retirer
+                {t("complete.remove")}
               </Button>
             </li>
           ))}
@@ -1216,7 +1219,7 @@ function EtapePortfolio({
           />
         </Field>
 
-        <Field label="Site web" htmlFor="siteWeb">
+        <Field label={t("website")} htmlFor="siteWeb">
           <Input
             id="siteWeb"
             value={siteWeb}

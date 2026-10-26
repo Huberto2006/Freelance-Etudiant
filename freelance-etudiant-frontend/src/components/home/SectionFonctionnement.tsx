@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import {
   ArrowRightLeft,
   BriefcaseBusiness,
@@ -7,73 +8,25 @@ import {
 import { SectionTitre } from "./SectionTitre";
 
 interface EtapeFonctionnement {
-  titre: string;
-  detail: string;
+  cle: string;
 }
 
-const ETAPES_CLIENT: EtapeFonctionnement[] = [
-  {
-    titre: "Publiez votre besoin",
-    detail: "Déposez une mission avec budget et échéance, ou parcourez les services étudiants.",
-  },
-  {
-    titre: "Recevez des candidatures",
-    detail: "Comparez les profils, les portfolios et les propositions des étudiants.",
-  },
-  {
-    titre: "Choisissez votre étudiant",
-    detail: "Sélectionnez le candidat qui correspond le mieux à vos exigences techniques.",
-  },
-  {
-    titre: "Échangez par messagerie",
-    detail: "Communiquez directement via la messagerie interne pour cadrer le travail.",
-  },
-  {
-    titre: "Suivez la réalisation",
-    detail: "Gardez une visibilité complète sur l'avancement jusqu'à la livraison finale.",
-  },
-  {
-    titre: "Validez et évaluez",
-    detail: "Réceptionnez les livrables, débloquez le paiement et notez le freelance.",
-  },
-];
+const ETAPES_CLIENT: EtapeFonctionnement[] = [{ cle: "s1" }, { cle: "s2" }, { cle: "s3" }, { cle: "s4" }, { cle: "s5" }, { cle: "s6" }];
 
-const ETAPES_ETUDIANT: EtapeFonctionnement[] = [
-  {
-    titre: "Créez votre profil",
-    detail: "Indiquez votre filière, votre spécialité et vos compétences clés.",
-  },
-  {
-    titre: "Présentez vos services",
-    detail: "Affichez des prestations prêtes à l'achat ou consultez les missions ouvertes.",
-  },
-  {
-    titre: "Postulez aux missions",
-    detail: "Envoyez votre candidature argumentée avec votre tarif et votre délai.",
-  },
-  {
-    titre: "Échangez avec le client",
-    detail: "Précisez le cahier des charges et fixez les livrables attendus.",
-  },
-  {
-    titre: "Réalisez et livrez",
-    detail: "Produisez un travail de qualité et déposez vos livrables sur la plateforme.",
-  },
-  {
-    titre: "Bâtissez votre réputation",
-    detail: "Obtenez un avis client vérifié qui valorise votre réputation et votre portfolio.",
-  },
-];
+const ETAPES_ETUDIANT: EtapeFonctionnement[] = [{ cle: "s1" }, { cle: "s2" }, { cle: "s3" }, { cle: "s4" }, { cle: "s5" }, { cle: "s6" }];
 
 function Parcours({
+  ns,
   titre,
   etapes,
   accent,
 }: {
+  ns: "client" | "student";
   titre: string;
   etapes: EtapeFonctionnement[];
   accent: "bleu" | "ocre";
 }) {
+  const t = useTranslations("home.process");
   const isBleu = accent === "bleu";
 
   return (
@@ -82,7 +35,7 @@ function Parcours({
 
       <div className="mt-6 space-y-4">
         {etapes.map((etape, index) => (
-          <div key={etape.titre} className="relative flex items-start gap-3.5">
+          <div key={etape.cle} className="relative flex items-start gap-3.5">
             {/* Numérotation */}
             <span
               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-mono text-xs font-bold ${
@@ -95,9 +48,9 @@ function Parcours({
             </span>
 
             <div className="min-w-0 pt-0.5">
-              <h4 className="text-sm font-semibold text-ink">{etape.titre}</h4>
+              <h4 className="text-sm font-semibold text-ink">{t(`${ns}.${etape.cle}.title` as never)}</h4>
               <p className="mt-0.5 text-xs leading-relaxed text-ink-soft">
-                {etape.detail}
+                {t(`${ns}.${etape.cle}.detail` as never)}
               </p>
             </div>
           </div>
@@ -108,13 +61,14 @@ function Parcours({
 }
 
 export function SectionFonctionnement() {
+  const t = useTranslations("home.process");
   return (
     <section id="fonctionnement" className="mx-auto max-w-7xl px-4 pb-7 sm:px-5 sm:pb-10">
       <SectionTitre
         icon={ArrowRightLeft}
-        eyebrow="Processus simplifié"
-        titre="Comment fonctionne la marketplace Kianja"
-        sousTitre="Du premier contact à la validation finale, chaque étape est pensée pour garantir la réussite du projet."
+        eyebrow={t("eyebrow")}
+        titre={t("title")}
+        sousTitre={t("subtitle")}
       />
 
       <div className="grid gap-7 rounded-xl border border-ink/10 bg-paper-light p-6 sm:p-8 lg:grid-cols-2 lg:gap-10">
@@ -125,12 +79,13 @@ export function SectionFonctionnement() {
               <BriefcaseBusiness size={15} aria-hidden="true" />
             </span>
             <span className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-bleu-dark">
-              Parcours Client
+              {t("clientTrack")}
             </span>
           </div>
 
           <Parcours
-            titre="De votre besoin à la livraison finale"
+            ns="client"
+            titre={t("clientTrackTitle")}
             etapes={ETAPES_CLIENT}
             accent="bleu"
           />
@@ -143,12 +98,13 @@ export function SectionFonctionnement() {
               <GraduationCap size={15} aria-hidden="true" />
             </span>
             <span className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-ocre-dark">
-              Parcours Étudiant
+              {t("studentTrack")}
             </span>
           </div>
 
           <Parcours
-            titre="De vos compétences à vos premiers revenus"
+            ns="student"
+            titre={t("studentTrackTitle")}
             etapes={ETAPES_ETUDIANT}
             accent="ocre"
           />

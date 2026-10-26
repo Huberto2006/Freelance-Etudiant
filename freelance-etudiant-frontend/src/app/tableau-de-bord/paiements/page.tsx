@@ -19,12 +19,9 @@ import type {
   Transaction,
 } from "@/lib/types";
 
-import {
-  formatArgent,
-  formatDateCourte,
-  methodePaiementLabel,
-  statutTransactionLabel,
-} from "@/lib/format";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
 
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select } from "@/components/ui/Field";
@@ -145,6 +142,10 @@ function CarteTransaction({
   transaction: Transaction;
   onVerifie?: () => void;
 }) {
+  const t = useTranslations("payments.page");
+  const { argent: formatArgent, dateCourte: formatDateCourte } = useFormats();
+  const { methodePaiement: libelleMethode, statutTransaction: libelleStatut } =
+    useLabels();
   const [verification, setVerification] =
     useState(false);
 
@@ -186,12 +187,12 @@ function CarteTransaction({
 
       setMessageVerification(
         maj.statut === "confirmee"
-          ? `Paiement confirmé par ${fournisseur}.`
+          ? t("confirmedBy", { fournisseur })
           : maj.statut === "annulee"
-            ? `Paiement refusé par ${fournisseur}.`
+            ? t("refusedBy", { fournisseur })
             : transaction.provider === "papi"
-              ? "Papi n'a pas encore confirmé le paiement. Terminez-le sur la page Papi, puis réessayez."
-              : "MVola n'a pas encore confirmé le paiement. Réessayez après avoir validé la demande USSD.",
+              ? t("papiNotConfirmed")
+              : t("mvolaNotConfirmed"),
       );
 
       onVerifie();
@@ -199,7 +200,7 @@ function CarteTransaction({
       setMessageVerification(
         err instanceof ApiError
           ? err.message
-          : "Vérification impossible pour le moment.",
+          : t("verifyUnavailable"),
       );
     } finally {
       setVerification(false);
@@ -212,18 +213,18 @@ function CarteTransaction({
         <div>
           <p className="font-display font-medium">
             {transaction.candidature?.mission?.titre ??
-              "Mission"}
+              t("mission")}
           </p>
 
           <p className="mt-0.5 font-mono text-xs text-ink-soft/70">
-            {methodePaiementLabel[transaction.methode]} · réf.{" "}
+            {libelleMethode(transaction.methode)} · {t("ref")}{" "}
             {transaction.reference}
-            {enLigne ? " · en ligne" : ""}
+            {enLigne ? ` · ${t("online")}` : ""}
           </p>
         </div>
 
         <Tag tone={toneParStatut[transaction.statut]}>
-          {statutTransactionLabel[transaction.statut]}
+          {libelleStatut(transaction.statut)}
         </Tag>
       </div>
 
@@ -243,7 +244,7 @@ function CarteTransaction({
           href={`/tableau-de-bord/paiements/${transaction.id}/facture`}
           className="self-start text-sm text-ink-soft underline underline-offset-4 hover:text-ink"
         >
-          Voir la facture
+          {t("viewInvoice")}
         </a>
       )}
 
@@ -254,7 +255,7 @@ function CarteTransaction({
               href={lienReprise}
               className="inline-flex min-h-10 items-center rounded-lg bg-ink px-4 text-sm font-medium text-paper-light"
             >
-              Reprendre le paiement
+              {t("resumePayment")}
             </a>
           )}
 
@@ -265,8 +266,8 @@ function CarteTransaction({
               onClick={() => void verifier()}
             >
               {verification
-                ? "Vérification…"
-                : `Vérifier le statut auprès de ${fournisseur}`}
+                ? t("verifying")
+                : t("verifyStatus", { fournisseur })}
             </Button>
           )}
         </div>
@@ -294,6 +295,7 @@ function CarteMoyenPaiement({
   selectionne: boolean;
   onSelectionner: () => void;
 }) {
+  const t = useTranslations("payments.page");
   const [copie, setCopie] = useState(false);
 
   async function copierNumero(e: React.MouseEvent) {
@@ -345,7 +347,7 @@ function CarteMoyenPaiement({
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="font-display font-medium">
-                {typeMoyenPaiementLabel[moyen.type]}
+                {moyen.type === "BANQUE" ? t("bankAccount") : typeMoyenPaiementLabel[moyen.type]}
               </p>
 
               {moyen.type === "BANQUE" &&
@@ -364,7 +366,7 @@ function CarteMoyenPaiement({
             </div>
 
             {moyen.principal && (
-              <Tag tone="ocre">Principal</Tag>
+              <Tag tone="ocre">{t("primary")}</Tag>
             )}
           </div>
 
@@ -375,7 +377,7 @@ function CarteMoyenPaiement({
               </p>
 
               <p className="mt-0.5 text-xs text-ink-soft">
-                Titulaire : {moyen.nomTitulaire}
+                {t("holder", { nom: moyen.nomTitulaire })}
               </p>
             </div>
 
@@ -413,17 +415,17 @@ function CarteMoyenPaiement({
                 transition-colors
                 hover:bg-ink/5 hover:text-ink
               "
-              aria-label={`Copier le numéro ${moyen.numero}`}
+              aria-label={t("copyNumber", { numero: moyen.numero })}
             >
               {copie ? (
                 <>
                   <Check size={14} />
-                  Copié
+                  {t("copied")}
                 </>
               ) : (
                 <>
                   <Copy size={14} />
-                  Copier
+                  {t("copy")}
                 </>
               )}
             </span>
@@ -447,6 +449,8 @@ function FormulairePaiement({
   onEnvoye: () => void;
   onFermer: () => void;
 }) {
+  const t = useTranslations("payments.page");
+  const { argent: formatArgent } = useFormats();
   // Le montant n'est PAS modifiable.
   // prixPropose reste la source de vérité côté backend.
   const montant = String(candidature.prixPropose);
@@ -523,7 +527,7 @@ function FormulairePaiement({
         setErreurMoyens(
           err instanceof ApiError
             ? err.message
-            : "Impossible de charger les moyens de paiement de l'étudiant.",
+            : t("errLoadMethods"),
         );
       } finally {
         if (actif) {
@@ -537,7 +541,7 @@ function FormulairePaiement({
     return () => {
       actif = false;
     };
-  }, [candidature.id]);
+  }, [candidature.id, t]);
 
   // RG-PAY-012 : charge mes propres moyens de paiement une seule fois
   // (indépendant de la candidature) et présélectionne le principal —
@@ -595,25 +599,21 @@ function FormulairePaiement({
     setErreur(null);
 
     if (!moyenPaiementId) {
-      setErreur(
-        "Sélectionnez le moyen de paiement de l'étudiant.",
-      );
+      setErreur(t("errSelectMethod"));
       return;
     }
 
     if (!moyenSelectionne) {
-      setErreur(
-        "Le moyen de paiement sélectionné n'est plus disponible.",
-      );
+      setErreur(t("errMethodUnavailable"));
       return;
     }
 
     if (paiementMvola && !saisieLibre && !moyenClientId) {
-      setErreur("Sélectionnez votre numéro MVola.");
+      setErreur(t("errSelectMvola"));
       return;
     }
     if (paiementMvola && saisieLibre && !telephone.trim()) {
-      setErreur("Saisissez votre numéro MVola.");
+      setErreur(t("errEnterMvola"));
       return;
     }
 
@@ -660,7 +660,7 @@ function FormulairePaiement({
       setErreur(
         err instanceof ApiError
           ? err.message
-          : "Erreur lors de l'envoi du paiement.",
+          : t("errSendPayment"),
       );
     } finally {
       setEnvoi(false);
@@ -679,14 +679,15 @@ function FormulairePaiement({
 
       <div className="mb-3 flex items-center justify-between">
         <p className="font-display text-lg font-medium">
-          Déclarer un paiement —{" "}
-          {candidature.mission?.titre ?? "Mission"}
+          {t("declarePaymentTitle", {
+            titre: candidature.mission?.titre ?? t("mission"),
+          })}
         </p>
 
         <button
           type="button"
           onClick={onFermer}
-          aria-label="Fermer le formulaire"
+          aria-label={t("closeForm")}
           className="text-ink-soft transition-colors hover:text-ink"
         >
           <X size={18} />
@@ -700,19 +701,18 @@ function FormulairePaiement({
       <div className="mb-5">
         <div className="mb-2">
           <p className="font-display text-base font-medium">
-            Où effectuer le paiement ?
+            {t("whereToPay")}
           </p>
 
           <p className="mt-0.5 text-xs text-ink-soft">
-            Sélectionnez le compte ou numéro de paiement
-            de l&apos;étudiant.
+            {t("selectAccount")}
           </p>
         </div>
 
         {chargementMoyens && (
           <div className="rounded-xl border border-ink/10 bg-paper-light p-4">
             <p className="text-sm text-ink-soft">
-              Chargement des moyens de paiement…
+              {t("loadingMethods")}
             </p>
           </div>
         )}
@@ -731,14 +731,11 @@ function FormulairePaiement({
           moyensPaiement.length === 0 && (
             <div className="rounded-xl border border-ocre/20 bg-ocre/5 p-4">
               <p className="text-sm text-ink-soft">
-                Aucun moyen de paiement actif n&apos;est
-                actuellement configuré par l&apos;étudiant.
+                {t("noActiveMethod")}
               </p>
 
               <p className="mt-1 text-xs text-ink-soft/70">
-                Le paiement ne peut pas être lancé tant
-                qu&apos;un moyen de paiement n&apos;est pas
-                disponible.
+                {t("cannotStart")}
               </p>
             </div>
           )}
@@ -770,25 +767,15 @@ function FormulairePaiement({
       <p className="mb-4 text-sm text-ink-soft">
         {paiementPapi ? (
           <>
-            Vous serez redirigé vers la page de paiement
-            sécurisée de Papi, où vous choisirez MVola,
-            Orange Money, Airtel Money ou carte Visa. Au
-            retour, la plateforme vérifie le paiement
-            directement auprès de Papi.
+            {t("explainPapi")}
           </>
         ) : paiementMvola ? (
           <>
-            Vous serez débité depuis votre numéro MVola.
-            Une demande de confirmation sera envoyée sur
-            votre téléphone. Le paiement sera ensuite
-            vérifié par la plateforme auprès de MVola.
+            {t("explainMvola")}
           </>
         ) : (
           <>
-            Effectuez le virement vers le compte bancaire
-            sélectionné ci-dessus, puis renseignez la
-            référence du transfert pour permettre sa
-            vérification par un administrateur.
+            {t("explainTransfer")}
           </>
         )}
       </p>
@@ -806,7 +793,7 @@ function FormulairePaiement({
 
           <div className="w-full sm:w-40">
             <Field
-              label="Montant convenu (Ar)"
+              label={t("agreedAmount")}
               htmlFor="montant"
             >
               <Input
@@ -824,7 +811,7 @@ function FormulairePaiement({
 
           <div className="w-full sm:w-48">
             <Field
-              label="Méthode"
+              label={t("method")}
               htmlFor="methode"
             >
               <Select
@@ -837,29 +824,29 @@ function FormulairePaiement({
                 }
               >
                 <option value="papi">
-                  Papi (mobile money ou carte)
+                  {t("optPapi")}
                 </option>
 
                 <option value="mvola">
-                  MVola (paiement en ligne)
+                  {t("optMvola")}
                 </option>
 
                 <option value="virement">
-                  Virement bancaire
+                  {t("optTransfer")}
                 </option>
 
                 <option
                   value="orange_money"
                   disabled
                 >
-                  Orange Money (indisponible)
+                  {t("optOrange")}
                 </option>
 
                 <option
                   value="airtel_money"
                   disabled
                 >
-                  Airtel Money (indisponible)
+                  {t("optAirtel")}
                 </option>
               </Select>
             </Field>
@@ -869,7 +856,7 @@ function FormulairePaiement({
 
           {paiementPapi ? null : paiementMvola ? (
             <div className="w-full sm:w-56">
-              <Field label="Votre numéro MVola" htmlFor="telephone">
+              <Field label={t("yourMvola")} htmlFor="telephone">
                 {!saisieLibre && moyensClient.length > 0 ? (
                   <>
                     <Select
@@ -886,11 +873,11 @@ function FormulairePaiement({
                       {moyensClient.map((moyen) => (
                         <option key={moyen.id} value={moyen.id}>
                           {moyen.numero}
-                          {moyen.principal ? " (principal)" : ""}
+                          {moyen.principal ? ` (${t("primaryLower")})` : ""}
                         </option>
                       ))}
                       <option value="__autre__">
-                        Saisir un autre numéro…
+                        {t("enterOther")}
                       </option>
                     </Select>
                     <p className="mt-1 text-xs text-ink-soft/70">
@@ -898,7 +885,7 @@ function FormulairePaiement({
                         href="/tableau-de-bord/parametres/moyens-paiement-client"
                         className="underline hover:text-ink"
                       >
-                        Gérer mes moyens de paiement
+                        {t("manageMethods")}
                       </a>
                     </p>
                   </>
@@ -917,7 +904,7 @@ function FormulairePaiement({
                         onClick={() => setSaisieLibre(false)}
                         className="mt-1 text-xs text-ink-soft underline hover:text-ink"
                       >
-                        Choisir un numéro enregistré
+                        {t("chooseSaved")}
                       </button>
                     )}
                   </>
@@ -929,7 +916,7 @@ function FormulairePaiement({
 
             <div className="w-full sm:w-56">
               <Field
-                label="Référence du virement"
+                label={t("transferRef")}
                 htmlFor="reference"
               >
                 <Input
@@ -953,15 +940,15 @@ function FormulairePaiement({
         {moyenSelectionne && (
           <div className="rounded-xl border border-ink/10 bg-ink/[0.025] p-4">
             <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-ink-soft/70">
-              Destinataire du paiement
+              {t("recipient")}
             </p>
 
             <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <div>
                 <p className="font-display font-medium">
-                  {typeMoyenPaiementLabel[
-                    moyenSelectionne.type
-                  ]}
+                  {moyenSelectionne.type === "BANQUE"
+                    ? t("bankAccount")
+                    : typeMoyenPaiementLabel[moyenSelectionne.type]}
                   {moyenSelectionne.type ===
                     "BANQUE" &&
                   moyenSelectionne.nomBanque
@@ -976,8 +963,7 @@ function FormulairePaiement({
                 </p>
 
                 <p className="text-xs text-ink-soft">
-                  Titulaire :{" "}
-                  {moyenSelectionne.nomTitulaire}
+                  {t("holder", { nom: moyenSelectionne.nomTitulaire })}
                 </p>
               </div>
 
@@ -1004,20 +990,19 @@ function FormulairePaiement({
           >
             {envoi
               ? paiementPapi
-                ? "Redirection…"
-                : "Envoi…"
+                ? t("redirecting")
+                : t("sending")
               : paiementPapi
-                ? "Payer avec Papi"
+                ? t("payWithPapi")
                 : paiementMvola
-                  ? "Payer avec MVola"
-                  : "Déclarer le paiement"}
+                  ? t("payWithMvola")
+                  : t("declareThePayment")}
           </Button>
 
           {moyensPaiement.length === 0 &&
             !chargementMoyens && (
               <p className="text-xs text-ink-soft">
-                Configurez un moyen de paiement avant de
-                poursuivre.
+                {t("configureFirst")}
               </p>
             )}
         </div>
@@ -1038,6 +1023,8 @@ function FormulairePaiement({
 
 export default function PaiementsPage() {
   const { utilisateur } = useAuth();
+  const t = useTranslations("payments.page");
+  const { argent: formatArgent } = useFormats();
 
   const [transactions, setTransactions] = useState<
     Transaction[]
@@ -1189,15 +1176,15 @@ export default function PaiementsPage() {
         );
         setMessageRetour(
           maj.statut === "confirmee" || maj.statut === "liberee"
-            ? "Paiement confirmé par Papi. Merci !"
+            ? t("returnConfirmed")
             : maj.statut === "annulee"
-              ? "Le paiement a été refusé ou annulé."
-              : "Papi n'a pas encore confirmé le paiement. Il apparaîtra comme confirmé dès réception ; vous pouvez aussi relancer la vérification ci-dessous.",
+              ? t("returnRefused")
+              : t("returnPending"),
         );
         void recharger();
       } catch {
         setMessageRetour(
-          "Vérification impossible pour le moment : relancez-la depuis « En attente ».",
+          t("returnVerifyFailed"),
         );
       }
     }
@@ -1260,8 +1247,8 @@ export default function PaiementsPage() {
 
       <PageHeader
         icon={Wallet}
-        eyebrow="Suivi financier"
-        title="Paiements"
+        eyebrow={t("eyebrow")}
+        title={t("title")}
       />
 
       {messageRetour && (
@@ -1279,7 +1266,7 @@ export default function PaiementsPage() {
       {utilisateur.role === "etudiant" && (
         <NoticeCard className="mb-6">
           <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
-            Total reçu (fonds libérés)
+            {t("totalReceived")}
           </p>
 
           <p className="mt-1 font-display text-3xl">
@@ -1298,7 +1285,7 @@ export default function PaiementsPage() {
             ? [
                 {
                   valeur: "a_payer",
-                  label: "À payer",
+                  label: t("toPay"),
                   compte:
                     candidaturesAPayer.length,
                 },
@@ -1307,21 +1294,21 @@ export default function PaiementsPage() {
 
           {
             valeur: "en_attente",
-            label: "En attente",
+            label: t("pending"),
             compte:
               transactionsEnAttente.length,
           },
 
           {
             valeur: "confirmes",
-            label: "Confirmés",
+            label: t("confirmed"),
             compte:
               transactionsConfirmees.length,
           },
 
           {
             valeur: "historique",
-            label: "Historique",
+            label: t("history"),
             compte: transactions.length,
           },
         ]}
@@ -1338,7 +1325,7 @@ export default function PaiementsPage() {
         candidaturesAPayer.length > 0 && (
           <div className="mb-6">
             <h2 className="mb-3 font-display text-lg font-semibold">
-              Missions en attente de paiement
+              {t("missionsAwaitingPayment")}
             </h2>
 
             {candidatureActive ? (
@@ -1362,7 +1349,7 @@ export default function PaiementsPage() {
                     >
                       <p className="font-display font-medium">
                         {candidature.mission?.titre ??
-                          "Mission"}
+                          t("mission")}
                       </p>
 
                       <p className="font-mono text-sm text-ocre-dark">
@@ -1380,7 +1367,7 @@ export default function PaiementsPage() {
                           )
                         }
                       >
-                        Déclarer le paiement
+                        {t("declareThePayment")}
                       </Button>
                     </NoticeCard>
                   ),
@@ -1399,8 +1386,7 @@ export default function PaiementsPage() {
         candidaturesAPayer.length === 0 && (
           <NoticeCard className="mb-6">
             <p className="text-sm text-ink-soft/70">
-              Aucune mission en attente de paiement
-              pour le moment.
+              {t("noMissionAwaiting")}
             </p>
           </NoticeCard>
         )}
@@ -1413,10 +1399,10 @@ export default function PaiementsPage() {
         <>
           <h2 className="mb-3 font-display text-lg font-semibold">
             {ongletPaiements === "en_attente"
-              ? "En attente"
+              ? t("pending")
               : ongletPaiements === "confirmes"
-                ? "Confirmés"
-                : "Historique"}
+                ? t("confirmed")
+                : t("history")}
           </h2>
 
           {(() => {
@@ -1430,7 +1416,7 @@ export default function PaiementsPage() {
             if (chargement) {
               return (
                 <p className="text-sm text-ink-soft">
-                  Chargement…
+                  {t("loading")}
                 </p>
               );
             }
@@ -1441,8 +1427,7 @@ export default function PaiementsPage() {
               return (
                 <NoticeCard>
                   <p className="text-sm text-ink-soft/70">
-                    Aucun paiement dans cette
-                    catégorie.
+                    {t("noneInCategory")}
                   </p>
                 </NoticeCard>
               );

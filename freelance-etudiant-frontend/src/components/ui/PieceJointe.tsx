@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { FileText, Loader2, Paperclip, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { api, ApiError, ouvrirDocument } from "@/lib/api";
 
 const TAILLE_MAX = 15 * 1024 * 1024; // 15 Mo, aligné sur la limite backend
@@ -32,6 +33,7 @@ export function SelecteurPieceJointe({
    */
   compact?: boolean;
 }) {
+  const t = useTranslations("forms");
   const inputRef = useRef<HTMLInputElement>(null);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -44,7 +46,7 @@ export function SelecteurPieceJointe({
     setErreur(null);
 
     if (fichier.size > TAILLE_MAX) {
-      setErreur("Le fichier dépasse la taille maximale de 15 Mo.");
+      setErreur(t("attachment.tooLarge", { size: 15 }));
       return;
     }
 
@@ -59,7 +61,7 @@ export function SelecteurPieceJointe({
       onChange({ url: res.url, nom: res.nomFichier });
     } catch (err) {
       setErreur(
-        err instanceof ApiError ? err.message : "Impossible d'envoyer le fichier.",
+        err instanceof ApiError ? err.message : t("attachment.uploadError"),
       );
     } finally {
       setEnvoi(false);
@@ -75,7 +77,7 @@ export function SelecteurPieceJointe({
           type="button"
           onClick={() => onChange(null)}
           disabled={disabled}
-          aria-label="Retirer la pièce jointe"
+          aria-label={t("attachment.remove")}
           className="text-ocre-dark/70 hover:text-brique"
         >
           <X size={13} />
@@ -91,8 +93,8 @@ export function SelecteurPieceJointe({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={disabled || envoi}
-          title="Joindre un fichier"
-          aria-label="Joindre un fichier"
+          title={t("attachment.attach")}
+          aria-label={t("attachment.attach")}
           className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ink/25 text-ink-soft transition-colors hover:border-ink/50 hover:text-ink disabled:cursor-wait disabled:opacity-60"
         >
           {envoi ? (
@@ -123,7 +125,7 @@ export function SelecteurPieceJointe({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={disabled || envoi}
-        title="Joindre un fichier"
+        title={t("attachment.attach")}
         className="inline-flex items-center gap-1.5 rounded-full border border-ink/25 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:bg-ink/5 disabled:cursor-wait disabled:opacity-60"
       >
         {envoi ? (
@@ -131,7 +133,7 @@ export function SelecteurPieceJointe({
         ) : (
           <Paperclip size={13} />
         )}
-        {envoi ? "Envoi…" : "Joindre un fichier"}
+        {envoi ? t("attachment.sending") : t("attachment.attach")}
       </button>
       <input
         ref={inputRef}
@@ -156,6 +158,7 @@ export function PieceJointeAffichage({
   url: string;
   nom?: string | null;
 }) {
+  const t = useTranslations("forms");
   const [ouverture, setOuverture] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 
@@ -169,8 +172,8 @@ export function PieceJointeAffichage({
     } catch (e) {
       setErreur(
         e instanceof ApiError && e.status === 403
-          ? "Accès refusé à ce fichier."
-          : "Impossible d'ouvrir le fichier.",
+          ? t("attachment.accessDenied")
+          : t("attachment.openError"),
       );
     } finally {
       setOuverture(false);
@@ -186,7 +189,7 @@ export function PieceJointeAffichage({
         className="inline-flex items-center gap-1.5 rounded-full border border-ink/20 bg-ink/[0.03] px-3 py-1.5 text-xs text-ink-soft hover:bg-ink/[0.06] transition-colors disabled:cursor-wait disabled:opacity-60"
       >
         {ouverture ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} />}
-        <span className="max-w-[200px] truncate">{nom ?? "Pièce jointe"}</span>
+        <span className="max-w-[200px] truncate">{nom ?? t("attachment.default")}</span>
       </button>
       {erreur && <span className="mt-1 text-xs text-brique">{erreur}</span>}
     </span>

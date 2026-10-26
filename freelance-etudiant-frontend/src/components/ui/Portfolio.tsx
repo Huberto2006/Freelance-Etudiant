@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Globe, X } from "lucide-react";
 import { clsx } from "clsx";
+import { useTranslations } from "next-intl";
 import { getFileUrl, lienExterneSur } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { NoticeCard } from "@/components/ui/Notice";
@@ -37,14 +38,17 @@ export function estImageUrl(url: string): boolean {
  * extension pour une image, nom de domaine pour un lien externe.
  * (portfolioUrls ne transporte que des URLs, sans titre ni description.)
  */
-export function libellePortfolioUrl(url: string): string {
+export function libellePortfolioUrl(
+  url: string,
+  repli = "Image du portfolio",
+): string {
   if (estImageUrl(url)) {
     try {
       const chemin = new URL(url, "http://kianja.local").pathname;
       const nom = decodeURIComponent(chemin.split("/").pop() ?? "");
-      return nom.replace(/\.[a-z0-9]+$/i, "") || "Image du portfolio";
+      return nom.replace(/\.[a-z0-9]+$/i, "") || repli;
     } catch {
-      return "Image du portfolio";
+      return repli;
     }
   }
   try {
@@ -67,6 +71,7 @@ function VisionneuseImage({
   legende: string;
   onFermer: () => void;
 }) {
+  const t = useTranslations("extras.portfolio");
   const boutonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -86,7 +91,7 @@ function VisionneuseImage({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Aperçu : ${legende}`}
+      aria-label={t("previewOf", { legende })}
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 p-4 sm:p-8"
       onClick={onFermer}
     >
@@ -108,7 +113,7 @@ function VisionneuseImage({
         ref={boutonRef}
         type="button"
         onClick={onFermer}
-        aria-label="Fermer l'aperçu"
+        aria-label={t("closePreview")}
         className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-paper-light text-ink shadow-lg transition-colors hover:bg-ocre hover:text-paper-light"
       >
         <X size={18} />
@@ -132,6 +137,7 @@ export function PortfolioGalerie({
   urls: string[];
   className?: string;
 }) {
+  const t = useTranslations("extras.portfolio");
   const [apercu, setApercu] = useState<{ url: string; legende: string } | null>(
     null,
   );
@@ -149,13 +155,13 @@ export function PortfolioGalerie({
           {images.map((url, index) => {
             const src = getFileUrl(url);
             if (!src) return null;
-            const legende = libellePortfolioUrl(url);
+            const legende = libellePortfolioUrl(url, t("imageFallback"));
             return (
               <li key={`${url}-${index}`}>
                 <button
                   type="button"
                   onClick={() => setApercu({ url: src, legende })}
-                  title="Agrandir l'image"
+                  title={t("enlarge")}
                   className="group block w-full overflow-hidden rounded-lg border border-ink/15 bg-ink/[0.03] text-left transition-shadow hover:shadow-md"
                 >
                   <span className="block aspect-[4/3] overflow-hidden">
@@ -180,7 +186,7 @@ export function PortfolioGalerie({
       {liens.length > 0 && (
         <ul className="grid gap-4 sm:grid-cols-2">
           {liens.map((url, index) => {
-            const libelle = libellePortfolioUrl(url);
+            const libelle = libellePortfolioUrl(url, t("imageFallback"));
             return (
               <li key={`${url}-${index}`}>
                 <NoticeCard className="flex h-full flex-col gap-3">
@@ -207,7 +213,7 @@ export function PortfolioGalerie({
                     size="sm"
                     className="mt-auto w-fit gap-1.5"
                   >
-                    Voir le projet
+                    {t("viewProject")}
                     <ExternalLink size={14} />
                   </Button>
                 </NoticeCard>

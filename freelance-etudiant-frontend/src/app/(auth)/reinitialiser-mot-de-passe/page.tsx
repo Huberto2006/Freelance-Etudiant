@@ -3,12 +3,14 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { api, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Field, PasswordInput } from "@/components/ui/Field";
 import { NoticeCard } from "@/components/ui/Notice";
 
 function FormulaireReinitialisation() {
+  const t = useTranslations("auth.reset");
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
@@ -24,11 +26,11 @@ function FormulaireReinitialisation() {
     setErreur(null);
 
     if (nouveauMotDePasse !== confirmation) {
-      setErreur("Les deux mots de passe ne correspondent pas.");
+      setErreur(t("errMismatch"));
       return;
     }
     if (!token) {
-      setErreur("Lien de réinitialisation invalide.");
+      setErreur(t("errInvalidLink"));
       return;
     }
 
@@ -43,7 +45,7 @@ function FormulaireReinitialisation() {
       setTimeout(() => router.push("/connexion"), 2500);
     } catch (err) {
       setErreur(
-        err instanceof ApiError ? err.message : "Une erreur est survenue",
+        err instanceof ApiError ? err.message : t("errGeneric"),
       );
     } finally {
       setEnvoi(false);
@@ -54,17 +56,15 @@ function FormulaireReinitialisation() {
     <NoticeCard>
       {succes ? (
         <p className="text-sm text-ink-soft">
-          Mot de passe réinitialisé avec succès. Redirection vers la
-          connexion…
+          {t("success")}
         </p>
       ) : !token ? (
         <p className="text-sm text-brique">
-          Ce lien de réinitialisation est invalide ou incomplet. Merci de
-          refaire une demande depuis la page « mot de passe oublié ».
+          {t("invalidLink")}
         </p>
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
-          <Field label="Nouveau mot de passe" htmlFor="nouveauMotDePasse">
+          <Field label={t("newPassword")} htmlFor="nouveauMotDePasse">
             <PasswordInput
               id="nouveauMotDePasse"
               required
@@ -75,7 +75,7 @@ function FormulaireReinitialisation() {
               placeholder="••••••••"
             />
           </Field>
-          <Field label="Confirmer le mot de passe" htmlFor="confirmation">
+          <Field label={t("confirmPassword")} htmlFor="confirmation">
             <PasswordInput
               id="confirmation"
               required
@@ -90,7 +90,7 @@ function FormulaireReinitialisation() {
           {erreur && <p className="text-sm text-brique">{erreur}</p>}
 
           <Button type="submit" disabled={envoi} className="mt-2">
-            {envoi ? "Réinitialisation…" : "Réinitialiser le mot de passe"}
+            {envoi ? t("resetting") : t("submit")}
           </Button>
         </form>
       )}
@@ -99,16 +99,17 @@ function FormulaireReinitialisation() {
 }
 
 export default function ReinitialiserMotDePassePage() {
+  const t = useTranslations("auth.reset");
   return (
     <div className="mx-auto max-w-md px-5 pb-12">
       <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
-        Récupération de compte
+        {t("eyebrow")}
       </p>
       <h1 className="mb-7 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-        Nouveau mot de passe
+        {t("title")}
       </h1>
 
-      <Suspense fallback={<p className="text-sm text-ink-soft">Chargement…</p>}>
+      <Suspense fallback={<p className="text-sm text-ink-soft">{t("loading")}</p>}>
         <FormulaireReinitialisation />
       </Suspense>
 
@@ -117,7 +118,7 @@ export default function ReinitialiserMotDePassePage() {
           href="/connexion"
           className="font-medium text-ocre-dark hover:underline"
         >
-          Retour à la connexion
+          {t("backToLogin")}
         </Link>
       </p>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { api } from "@/lib/api";
 
@@ -100,6 +101,7 @@ export function ChampAvecMentions({
 
   name?: string;
 }) {
+  const t = useTranslations("extras.shared");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /** Zone @ en cours (null = pas de suggestion a afficher). */
@@ -322,7 +324,7 @@ export function ChampAvecMentions({
       {suggestionsOuvertes && (
         <ul
           role="listbox"
-          aria-label="Suggestions d'utilisateurs à identifier"
+          aria-label={t("mentionSuggestions")}
           className="
             absolute left-0 top-full z-20 mt-1 max-h-56 w-full max-w-md
             overflow-y-auto rounded-lg border border-ink/20 bg-paper-light

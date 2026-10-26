@@ -1,0 +1,36 @@
+{
+  "password": {
+    "show": "Show password",
+    "hide": "Hide password"
+  },
+  "filters": {
+    "title": "Filters",
+    "reset": "Reset",
+    "keywords": "Keywords",
+    "keywordsPlaceholder": "Search by keywords…",
+    "skill": "Skill",
+    "skillPlaceholder": "Figma…",
+    "budget": "Budget (Ar)",
+    "min": "Min",
+    "max": "Max",
+    "minAria": "{label} minimum",
+    "maxAria": "{label} maximum",
+    "submit": "Filter"
+  },
+  "multiSelect": {
+    "remove": "Remove {item}",
+    "searchShort": "Search...",
+    "placeholder": "Search or type a value…",
+    "add": "Add “{value}”"
+  },
+  "attachment": {
+    "tooLarge": "The file exceeds the maximum size of {size} MB.",
+    "uploadError": "Unable to upload the file.",
+    "remove": "Remove the attachment",
+    "attach": "Attach a file",
+    "sending": "Sending…",
+    "accessDenied": "Access to this file is denied.",
+    "openError": "Unable to open the file.",
+    "default": "Attachment"
+  }
+}

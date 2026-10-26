@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { clsx } from "clsx";
 import { Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
 
 import { formatDateRelative } from "@/lib/dashboard";
-import type { EvenementActivite, Ton } from "@/lib/dashboard";
+import type { EvenementActivite, Ton, Traducteur } from "@/lib/dashboard";
 import { NoticeCard } from "@/components/ui/Notice";
 
 const POINTS: Record<Ton, string> = {
@@ -28,8 +30,8 @@ const POINTS: Record<Ton, string> = {
  */
 export function ActiviteRecente({
   evenements,
-  videTitre = "Aucune activité pour le moment.",
-  videDescription = "Vos candidatures, livraisons, paiements et messages apparaîtront ici.",
+  videTitre,
+  videDescription,
   onSupprimer,
   suppressionEnCoursId,
   onToutEffacer,
@@ -47,11 +49,18 @@ export function ActiviteRecente({
   /** État de chargement du « Tout effacer ». */
   effacementEnCours?: boolean;
 }) {
+  const t = useTranslations("dashboardPages.recentActivity");
+  const tl = useTranslations("dashboardPages.dashboardLib") as unknown as Traducteur;
+  const { dateCourte } = useFormats();
   if (evenements.length === 0) {
     return (
       <NoticeCard>
-        <p className="font-display font-medium">{videTitre}</p>
-        <p className="mt-0.5 text-sm text-ink-soft">{videDescription}</p>
+        <p className="font-display font-medium">
+          {videTitre ?? t("emptyTitle")}
+        </p>
+        <p className="mt-0.5 text-sm text-ink-soft">
+          {videDescription ?? t("emptyDescription")}
+        </p>
       </NoticeCard>
     );
   }
@@ -73,7 +82,7 @@ export function ActiviteRecente({
             "
           >
             <Trash2 size={13} aria-hidden="true" />
-            {effacementEnCours ? "Suppression…" : "Tout effacer"}
+            {effacementEnCours ? t("deleting") : t("clearAll")}
           </button>
         </div>
       )}
@@ -107,7 +116,7 @@ export function ActiviteRecente({
                   dateTime={evenement.date}
                   className="font-mono text-xs text-ink-soft/60"
                 >
-                  {formatDateRelative(evenement.date)}
+                  {formatDateRelative(evenement.date, tl, dateCourte)}
                 </time>
               </div>
 
@@ -122,9 +131,9 @@ export function ActiviteRecente({
                   <Link
                     href={evenement.href}
                     className="mt-1 inline-block text-xs font-medium text-ocre-dark hover:underline"
-                    aria-label={`Consulter : ${evenement.titre}`}
+                    aria-label={t("viewLabel", { titre: evenement.titre })}
                   >
-                    Consulter →
+                    {t("view")}
                   </Link>
                 )}
 
@@ -133,7 +142,7 @@ export function ActiviteRecente({
                     type="button"
                     onClick={() => onSupprimer(evenement.id)}
                     disabled={suppressionEnCoursId === evenement.id}
-                    aria-label={`Supprimer l'activité : ${evenement.titre}`}
+                    aria-label={t("deleteLabel", { titre: evenement.titre })}
                     className="
                       mt-1 inline-flex cursor-pointer items-center gap-1
                       text-xs text-ink-soft/50 transition-colors
@@ -143,8 +152,8 @@ export function ActiviteRecente({
                   >
                     <Trash2 size={11} aria-hidden="true" />
                     {suppressionEnCoursId === evenement.id
-                      ? "Suppression…"
-                      : "Supprimer"}
+                      ? t("deleting")
+                      : t("delete")}
                   </button>
                 )}
               </div>

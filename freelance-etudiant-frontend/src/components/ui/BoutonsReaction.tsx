@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { clsx } from "clsx";
 import { api, ApiError } from "@/lib/api";
@@ -23,6 +24,7 @@ export function BoutonsReaction({
   cibleType: TypeCibleContenu;
   cibleId: string;
 }) {
+  const t = useTranslations("comments.reactions");
   const { utilisateur } = useAuth();
   const [info, setInfo] = useState<InfoReactionsContenu | null>(null);
   const [envoi, setEnvoi] = useState(false);
@@ -62,7 +64,7 @@ export function BoutonsReaction({
         type="button"
         onClick={() => reagir("jaime")}
         disabled={!utilisateur || envoi}
-        title={utilisateur ? "J'aime" : "Connectez-vous pour réagir"}
+        title={utilisateur ? t("like") : t("loginRequired")}
         className={clsx(
           "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60",
           info.maReaction === "jaime"
@@ -78,7 +80,7 @@ export function BoutonsReaction({
         type="button"
         onClick={() => reagir("jenaimepas")}
         disabled={!utilisateur || envoi}
-        title={utilisateur ? "Je n'aime pas" : "Connectez-vous pour réagir"}
+        title={utilisateur ? t("dislike") : t("loginRequired")}
         className={clsx(
           "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60",
           info.maReaction === "jenaimepas"

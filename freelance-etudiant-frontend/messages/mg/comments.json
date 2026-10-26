@@ -1,0 +1,44 @@
+{
+  "section": {
+    "title": "{count, plural, =0 {Hevitra} other {Hevitra (#)}}",
+    "placeholder": "Manampia hevitra… (soraty ny @ mba hanononana mpianatra)",
+    "publish": "Alefa",
+    "sending": "Mandefa…",
+    "loading": "Eo am-pakana…",
+    "emptyLoggedIn": "Mbola tsy misy hevitra.",
+    "emptyAnonymous": "Mbola tsy misy hevitra. Midira amin'ny kaonty mba hamela hevitra.",
+    "defaultUser": "Mpampiasa",
+    "editedDate": "{date} · novaina",
+    "save": "Tehirizina",
+    "cancel": "Foana",
+    "edit": "Ovay",
+    "delete": "Fafana",
+    "errors": {
+      "load": "Nisy fahadisoana nitranga tamin'ny fakana ny hevitra",
+      "send": "Nisy fahadisoana nitranga tamin'ny fandefasana",
+      "edit": "Nisy fahadisoana nitranga tamin'ny fanovana",
+      "delete": "Nisy fahadisoana nitranga tamin'ny famafana"
+    }
+  },
+  "mentions": {
+    "suggestionsLabel": "Soso-kevitra mpampiasa azo anononana"
+  },
+  "reactions": {
+    "like": "Tiako",
+    "dislike": "Tsy tiako",
+    "loginRequired": "Midira amin'ny kaonty mba hamaly"
+  },
+  "report": {
+    "button": "Hitatitra",
+    "title": "Tatitra",
+    "close": "Hidio",
+    "success": "Misaotra, nampitaina tamin'ny ekipanay mpanara-maso ny tatitrao.",
+    "reasonLabel": "Antony",
+    "reasonPlaceholder": "Votoaty tsy mety…",
+    "descriptionLabel": "Famaritana",
+    "descriptionPlaceholder": "Faritano amin'ny antsipiriany ny toe-javatra…",
+    "submit": "Alefa ny tatitra",
+    "sending": "Mandefa…",
+    "error": "Nisy fahadisoana nitranga tamin'ny fandefasana"
+  }
+}

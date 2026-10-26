@@ -1,0 +1,99 @@
+{
+  "catalog": {
+    "eyebrow": "General catalogue · Kianja Marketplace",
+    "title": "Publications",
+    "intro": "Discover clients' needs and students' skills on Kianja. A unified space to explore all the opportunities and services available.",
+    "badges": {
+      "total": "{count, plural, one {# publication} other {# publications}}",
+      "missions": "{count, plural, one {# open mission} other {# open missions}}",
+      "services": "{count, plural, one {# service offered} other {# services offered}}"
+    },
+    "errors": {
+      "full": "Unable to load the publications catalogue at the moment.",
+      "missionsPartial": "The missions could not be loaded; only services are shown.",
+      "servicesPartial": "The services could not be loaded; only missions are shown.",
+      "generic": "An error occurred while loading the publications."
+    },
+    "actions": {
+      "publishMission": "Post a mission",
+      "offerService": "Offer a service",
+      "retry": "Try again"
+    },
+    "tabs": {
+      "ariaLabel": "Filter by publication type",
+      "all": "All ({count})",
+      "missions": "Client missions ({count})",
+      "services": "Student services ({count})"
+    },
+    "sort": {
+      "label": "Sort by",
+      "options": {
+        "recent": "Most recent first",
+        "best": "Top rated / budget",
+        "priceAsc": "Price / Budget ascending",
+        "priceDesc": "Price / Budget descending"
+      }
+    },
+    "filters": {
+      "searchPlaceholder": "Search by keyword…",
+      "budgetLabel": "Budget or rate (Ar)"
+    },
+    "targeted": {
+      "title": "Targeted browsing",
+      "intro": "Browse our dedicated catalogues with advanced options:",
+      "missionsOnly": "View missions only",
+      "servicesOnly": "View services only"
+    },
+    "empty": {
+      "missions": "No mission matches your criteria.",
+      "services": "No service matches your criteria.",
+      "all": "No publication matches your search.",
+      "hint": "Try broadening your search terms, resetting your filters or changing category.",
+      "reset": "Reset filters",
+      "showAll": "Show the whole catalogue"
+    },
+    "results": {
+      "found": "<b>{count}</b> {count, plural, one {publication found} other {publications found}}"
+    }
+  },
+  "mine": {
+    "eyebrow": "Dashboard",
+    "title": "My publications",
+    "publishMission": "Post a mission",
+    "offerService": "Offer a service",
+    "adminNotice": "Administrator accounts do not publish missions or services. Find platform management in the Administration section.",
+    "ariaMissions": "My missions",
+    "ariaServices": "My services",
+    "tabMissions": "Missions ({count})",
+    "tabServices": "Services ({count})",
+    "searchPlaceholder": "Search my publications…",
+    "budgetLabel": "Budget or rate (Ar)",
+    "loadError": "Unable to load your publications at the moment.",
+    "retry": "Try again",
+    "emptyMissions": "You have not posted any mission yet.",
+    "emptyServices": "You have not offered any service yet.",
+    "noMatch": "No publication matches your search.",
+    "edit": "Edit",
+    "service": {
+      "archived": "Archived",
+      "hidden": "Hidden",
+      "pause": "Pause",
+      "activate": "Activate",
+      "archive": "Archive",
+      "restore": "Restore",
+      "delete": "Delete",
+      "confirmDelete": "Do you really want to delete \"{title}\"?",
+      "availabilityError": "Unable to change availability.",
+      "restoreError": "Unable to restore the service.",
+      "archiveError": "Unable to archive the service.",
+      "deleteError": "Unable to delete this service."
+    }
+  },
+  "favorites": {
+    "loading": "Loading…",
+    "eyebrow": "My saved items",
+    "title": "Favourites",
+    "empty": "Add missions, services or profiles to your favourites to find them here.",
+    "defaultStudent": "Freelance student"
+  }
+}

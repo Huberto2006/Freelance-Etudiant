@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useTheme } from "@/lib/theme-context";
 
 /**
@@ -8,6 +10,7 @@ import { useTheme } from "@/lib/theme-context";
  * globale et instantanée de tout le frontend.
  */
 export function BasculeTheme() {
+  const t = useTranslations("settings.theme");
   const { mode, basculerMode, estInitialise } = useTheme();
 
   if (!estInitialise) {
@@ -15,8 +18,8 @@ export function BasculeTheme() {
       <button
         type="button"
         disabled
-        aria-label="Chargement du thème"
-        title="Chargement du thème"
+        aria-label={t("loading")}
+        title={t("loading")}
         className="
           flex h-9 w-9
           items-center justify-center
@@ -46,13 +49,13 @@ export function BasculeTheme() {
       onClick={basculerMode}
       aria-label={
         modeSombre
-          ? "Passer en mode clair"
-          : "Passer en mode sombre"
+          ? t("switchToLight")
+          : t("switchToDark")
       }
       title={
         modeSombre
-          ? "Passer en mode clair"
-          : "Passer en mode sombre"
+          ? t("switchToLight")
+          : t("switchToDark")
       }
       className="
 ￼

@@ -1,0 +1,121 @@
+{
+  "themes": {
+    "inscription": {
+      "title": "Fisoratana anarana sy kaonty",
+      "items": {
+        "who": {
+          "question": "Iza no afaka miditra ao amin'ny Kianja?",
+          "answer": "Ny mpianatra te hanolotra ny fahaizany amin'ny freelance, sy ny mpanjifa (olon-tsotra na fikambanana) mitady talenta. Misafidy ny karazan'ny mombamomba ianao rehefa misoratra anarana."
+        },
+        "verify": {
+          "question": "Tsy maintsy hamafiso ny adiresy mailako ve aho?",
+          "answer": "Eny. Aorian'ny fisoratana anarana dia alefa ny mailaka fanamarinana: tsy maintsy tsindrianao ny rohy voaray vao afaka miditra ianao. Raha lany daty ny rohy dia afaka mangataka mailaka vaovao avy amin'ny pejy fidirana."
+        },
+        "forgot": {
+          "question": "Adino ny tenimiafina, inona no atao?",
+          "answer": "Ampiasao ny rohy « Adino ny tenimiafina » eo amin'ny pejy fidirana: hisy mailaka hamela anao hifidy tenimiafina vaovao."
+        }
+      }
+    },
+    "profils": {
+      "title": "Mombamomba",
+      "items": {
+        "fill": {
+          "question": "Inona no tsy maintsy fenoiko ao amin'ny mombamomba ny mpianatra?",
+          "answer": "Aorian'ny fisoratana anarana dia misy fanontaniana manampy anao hamenoana ny mombamomba anao: sampana, fiompiana, fahaizana, fiteny, saran-tseranao, portfolio ary famaritana. Ny mombamomba feno dia manampy ny mpanjifa hamantatra anao tsara kokoa."
+        },
+        "visibility": {
+          "question": "Iza no afaka mijery ny mombamomba ny mpianatra?",
+          "answer": "Ny pejin'ny mpianatra dia natokana ho an'ny mpampiasa efa niditra. Tsy aseho ao ny mailaka na ny laharana finday: ny fampahalalana ilaina amin'ny fiaraha-miasa ihany no hita (fahaizana, fiofanana, fahafahana, tombana, portfolio)."
+        }
+      }
+    },
+    "publications": {
+      "title": "Famoahana",
+      "items": {
+        "diff": {
+          "question": "Inona no tsy fitovian'ny iraka sy ny serivisy?",
+          "answer": "Ny iraka dia filàna navoakan'ny mpanjifa (teti-bola, daty farany, fahaizana ilaina). Ny serivisy kosa dia asa atolotry ny mpianatra. Ireo roa ireo dia hita miaraka ao amin'ny pejy Famoahana."
+        },
+        "account": {
+          "question": "Tsy maintsy manana kaonty ve mba hijery ny famoahana?",
+          "answer": "Tsia, azonao jerena ny iraka sy ny serivisy na tsy niditra aza. Ilaina anefa ny kaonty raha hanao zavatra: hanao fanambarana, hamoaka, hifampiresaka amin'ny hafatra na hijery mombamomba mpianatra."
+        }
+      }
+    },
+    "candidatures": {
+      "title": "Fanambarana",
+      "items": {
+        "apply": {
+          "question": "Ahoana no fanaovana fanambarana amin'ny iraka?",
+          "answer": "Rehefa niditra ho mpianatra ianao dia sokafy ny iraka mahaliana anao ary alefaso ny fanambaranao. Hitanao any amin'ny « Ny fanambarako » ao amin'ny takelaka fitantananao izany avy eo."
+        },
+        "choose": {
+          "question": "Ahoana no fisafidianan'ny mpanjifa mpianatra?",
+          "answer": "Ny mpanjifa dia mandalina ny fanambarana azony amin'ny irany, mijery ny mombamomba ary manaiky ilay mety aminy. Mitohy amin'ny hafatry ny sehatra ny fifampiresahana avy eo."
+        }
+      }
+    },
+    "services": {
+      "title": "Serivisy",
+      "items": {
+        "offer": {
+          "question": "Ahoana no fanolorana serivisy amin'ny maha-mpianatra?",
+          "answer": "Avy ao amin'ny takelaka fitantananao, ny fizarana « Ny serivisiko » dia ahafahanao mamoaka asa miaraka amin'ny famaritana, sokajy, vidiny ary fe-potoana."
+        },
+        "request": {
+          "question": "Ahoana no fangatahan'ny mpanjifa serivisy?",
+          "answer": "Ny mpanjifa niditra dia afaka mandefa fangatahana amin'ny mpianatra avy amin'ny pejin'ny serivisy. Arahina ao amin'ny fizarana « Fangatahana serivisy » ao amin'ny takelaka fitantanana ireo fangatahana."
+        }
+      }
+    },
+    "livraisons": {
+      "title": "Fanaterana",
+      "items": {
+        "delivery": {
+          "question": "Ahoana no fanaterana asa?",
+          "answer": "Apetraky ny mpianatra eo amin'ny sehatra ny vokatra avy amin'ny fizarana « Fanaterana ». Jerena ny mpanjifa dia manamarina izany, ka mamarana ny fanaterana sy mamoaka ny fandoavana."
+        }
+      }
+    },
+    "paiements": {
+      "title": "Fandoavana",
+      "items": {
+        "how": {
+          "question": "Ahoana no fiasan'ny fandoavana?",
+          "answer": "Azo atao ny fandoavana raha vao voaray ny fanambarana. Notehirizin'ny sehatra ny vola mandra-pahamarinan'ny mpanjifa ny fanaterana, dia navoaka ho an'ny mpianatra."
+        },
+        "methods": {
+          "question": "Fomba fandoavana inona no misy?",
+          "answer": "Azo atao an-tserasera amin'ny alalan'ny Papi (MVola, Orange Money, Airtel Money na karatra Visa) ary mivantana amin'ny MVola. Azo ambara ihany koa ny famindrana vola ivelan'ny sehatra; mijanona miandry izany mandra-pahamarinan'ny ekipan'ny fitantanana."
+        },
+        "setup": {
+          "question": "Inona no tsy maintsy ajaniko mba handraisana vola amin'ny maha-mpianatra?",
+          "answer": "Tsy maintsy mandray fomba fandoavana iray mavitrika farafahakeliny ao amin'ny paramétra amin'ny takelaka fitantananao: raha tsy izany dia tsy azo atomboka ny fandoavana ho anao."
+        }
+      }
+    },
+    "securite": {
+      "title": "Fiarovana",
+      "items": {
+        "privacy": {
+          "question": "Hita ve ny mombamomba manokana ahy?",
+          "answer": "Tsia. Ny pejy ho an'ny besinimaro sy ny pejin'ny mombamomba dia tsy mampiseho ny mailaka na ny laharana finday. Ny antontan-taratasy takalozina (vokatra, rakitra) dia hita ihany amin'ireo olona tafiditra."
+        },
+        "report": {
+          "question": "Ahoana no fanambarana fitondran-tena tsy mety?",
+          "answer": "Misy bokotra « Hitatitra » eo amin'ny mombamomba ny mpianatra sy ny mpanjifa ho an'ny mpampiasa niditra. Ny ekipan'ny fitantanana no mandalina ny tatitra."
+        }
+      }
+    }
+  },
+  "eyebrow": "Foibem-panampiana",
+  "title": "Fanontaniana mahazatra",
+  "intro": "Hitanao eto ny valiny amin'ny fanontaniana mahazatra momba ny fiasan'ny Kianja.",
+  "navAria": "Lohahevitry ny FAQ",
+  "noAnswerTitle": "Tsy hitanao ve ny valinteny?",
+  "noAnswerText": "Soraty aminay, hamaly anao izahay raha vao mety.",
+  "contactButton": "Fifandraisana sy fanampiana",
+  "metaTitle": "FAQ — Kianja",
+  "metaDescription": "Valiny amin'ny fanontaniana mahazatra momba ny fisoratana anarana, ny famoahana, ny fanambarana, ny fanaterana ary ny fandoavana ao amin'ny Kianja."
+}

@@ -9,6 +9,7 @@ import {
 import { Exclude } from 'class-transformer';
 import { Role } from '../../../common/enums/role.enum';
 import { AuthProvider } from '../../../common/enums/auth-provider.enum';
+import type { Langue } from '../../../common/i18n/langues';
 import { EtudiantProfile } from '../../etudiants/entities/etudiant-profile.entity';
 import { ClientProfile } from '../../clients/entities/client-profile.entity';
 
@@ -165,6 +166,18 @@ export class Utilisateur {
     nullable: true,
   })
   derniereConnexion!: Date | null;
+
+  /**
+   * Langue d'interface preferee (fr, mg, en). Sert a rendre dans la bonne
+   * langue les emails et notifications. Defaut fr ; toute valeur non
+   * supportee est ramenee au francais (voir common/i18n/langues.ts).
+   */
+  @Column({
+    type: 'varchar',
+    length: 5,
+    default: 'fr',
+  })
+  langue!: Langue;
 
   @CreateDateColumn({
     name: 'date_inscription',

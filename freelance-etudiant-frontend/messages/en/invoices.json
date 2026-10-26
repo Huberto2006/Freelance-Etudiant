@@ -1,0 +1,34 @@
+{
+  "list": {
+    "eyebrow": "Financial tracking",
+    "title": "Invoices",
+    "introStudent": "Invoices for the payments received for your missions and services.",
+    "introClient": "An invoice is issued automatically for every confirmed payment.",
+    "loading": "Loading…",
+    "loadError": "Unable to load invoices right now.",
+    "empty": "No invoices yet. One will appear as soon as a payment is confirmed.",
+    "paidBy": "Paid by {nom}",
+    "provider": "Provider: {nom}"
+  },
+  "detail": {
+    "print": "Print / Save as PDF",
+    "loading": "Loading the invoice…",
+    "loadError": "Unable to load the invoice.",
+    "notFound": "Invoice not found.",
+    "ariaLabel": "Invoice {numero}",
+    "invoice": "Invoice",
+    "issuedOn": "Issued on {date}",
+    "billedTo": "Billed to",
+    "provider": "Provider",
+    "studentVia": "Student · via the {plateforme} platform",
+    "designation": "Description",
+    "amount": "Amount",
+    "serviceBy": "Service performed by {nom}",
+    "totalPaid": "Total paid",
+    "payment": "Payment",
+    "method": "Method",
+    "reference": "Reference",
+    "paymentDate": "Payment date",
+    "footer": "Paid invoice: the payment has been received and confirmed by the platform. Automatically generated document."
+  }
+}

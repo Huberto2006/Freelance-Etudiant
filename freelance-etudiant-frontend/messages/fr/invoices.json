@@ -1,0 +1,34 @@
+{
+  "list": {
+    "eyebrow": "Suivi financier",
+    "title": "Factures",
+    "introStudent": "Les factures des paiements reçus pour vos missions et services.",
+    "introClient": "Une facture est émise automatiquement pour chaque paiement confirmé.",
+    "loading": "Chargement…",
+    "loadError": "Impossible de charger les factures pour le moment.",
+    "empty": "Aucune facture pour le moment. Elle apparaîtra dès qu'un paiement sera confirmé.",
+    "paidBy": "Payée par {nom}",
+    "provider": "Prestataire : {nom}"
+  },
+  "detail": {
+    "print": "Imprimer / Enregistrer en PDF",
+    "loading": "Chargement de la facture…",
+    "loadError": "Impossible de charger la facture.",
+    "notFound": "Facture introuvable.",
+    "ariaLabel": "Facture {numero}",
+    "invoice": "Facture",
+    "issuedOn": "Émise le {date}",
+    "billedTo": "Facturé à",
+    "provider": "Prestataire",
+    "studentVia": "Étudiant · via la plateforme {plateforme}",
+    "designation": "Désignation",
+    "amount": "Montant",
+    "serviceBy": "Prestation réalisée par {nom}",
+    "totalPaid": "Total payé",
+    "payment": "Paiement",
+    "method": "Moyen",
+    "reference": "Référence",
+    "paymentDate": "Date de paiement",
+    "footer": "Facture acquittée : le paiement a été reçu et confirmé par la plateforme. Document généré automatiquement."
+  }
+}

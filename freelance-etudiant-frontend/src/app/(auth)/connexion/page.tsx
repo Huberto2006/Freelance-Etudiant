@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
@@ -15,20 +16,24 @@ import {
 import { BoutonGoogle } from "@/components/auth/BoutonGoogle";
 
 export default function ConnexionPage() {
+  const t = useTranslations("auth.login");
   const { connecter, connecterAvecGoogle } = useAuth();
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
 
-  // Jeton Turnstile et protection contre les doubles envois.
+  // Jeton Turnstile (a usage unique) et garde contre les doubles envois.
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnstile = useRef<TurnstileHandle>(null);
   const enCours = useRef(false);
 
-  // Gestion de la vérification de l'adresse email.
+  /*
+   * Cas specifique "email non verifie" : le backend refuse la connexion
+   * (401) avec un message clair. On affiche ce message et on propose de
+   * renvoyer l'email de verification avec l'adresse saisie.
+   */
   const [erreurVerification, setErreurVerification] = useState<string | null>(
     null,
   );
@@ -37,22 +42,17 @@ export default function ConnexionPage() {
 
   async function onGoogle(idToken: string) {
     if (enCours.current) return;
-
     if (!turnstileToken) {
-      setErreur("Complétez d'abord la vérification anti-robot ci-dessous.");
+      setErreur(t("errCaptchaFirst"));
       return;
     }
-
     enCours.current = true;
     setErreur(null);
     setErreurVerification(null);
-    setRenvoiMessage(null);
     setEnvoi(true);
-
     try {
       const { role, completionProfil, premiereConnexion } =
         await connecterAvecGoogle(idToken, turnstileToken);
-
       router.push(
         role === "a_definir"
           ? "/choix-role"
@@ -66,34 +66,30 @@ export default function ConnexionPage() {
       setErreur(
         err instanceof ApiError
           ? err.message
-          : "Impossible de se connecter avec Google",
+          : t("errGoogle"),
       );
     } finally {
       enCours.current = false;
       setEnvoi(false);
+      // Le jeton Turnstile est a usage unique : on en demande un nouveau.
       turnstile.current?.reset();
-      setTurnstileToken(null);
     }
   }
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-
     if (enCours.current || !turnstileToken) return;
-
     enCours.current = true;
     setErreur(null);
     setErreurVerification(null);
     setRenvoiMessage(null);
     setEnvoi(true);
-
     try {
       const { completionProfil, premiereConnexion } = await connecter(
         email,
         motDePasse,
         turnstileToken,
       );
-
       router.push(
         premiereConnexion &&
           completionProfil?.role === "etudiant" &&
@@ -105,43 +101,38 @@ export default function ConnexionPage() {
       if (
         err instanceof ApiError &&
         err.status === 401 &&
-        /verifi/i.test(err.message)
+        /verifi|fanamarinana|voamarina/i.test(err.message)
       ) {
         setErreurVerification(err.message);
       } else {
         setErreur(
           err instanceof ApiError
             ? err.message
-            : "Impossible de se connecter",
+            : t("errLogin"),
         );
       }
     } finally {
       enCours.current = false;
       setEnvoi(false);
       turnstile.current?.reset();
-      setTurnstileToken(null);
     }
   }
 
   async function renvoyerEmailVerification() {
-    if (renvoiEnCours) return;
-
     setRenvoiEnCours(true);
     setRenvoiMessage(null);
-
     try {
       const reponse = await api.post<{ message: string }>(
         "/auth/resend-verification",
         { email },
         { auth: false },
       );
-
       setRenvoiMessage(reponse.message);
     } catch (err) {
       setRenvoiMessage(
         err instanceof ApiError
           ? err.message
-          : "Impossible de renvoyer l'email",
+          : t("errResend"),
       );
     } finally {
       setRenvoiEnCours(false);
@@ -151,8 +142,12 @@ export default function ConnexionPage() {
   return (
     <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center px-5 pb-12">
       <div className="w-full">
+        <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
+          {t("eyebrow")}
+        </p>
+
         <h1 className="mb-7 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-          Se connecter
+          {t("title")}
         </h1>
 
         <NoticeCard>
@@ -162,24 +157,17 @@ export default function ConnexionPage() {
               texte="continue_with"
               disabled={envoi}
             />
-
             {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
               <div className="flex items-center gap-3 text-xs text-ink-soft">
-                <span
-                  className="h-px flex-1 bg-ink/10"
-                  aria-hidden="true"
-                />
-                ou avec votre email
-                <span
-                  className="h-px flex-1 bg-ink/10"
-                  aria-hidden="true"
-                />
+                <span className="h-px flex-1 bg-ink/10" aria-hidden="true" />
+                {t("orEmail")}
+                <span className="h-px flex-1 bg-ink/10" aria-hidden="true" />
               </div>
             )}
           </div>
 
           <form onSubmit={onSubmit} className="flex flex-col gap-5">
-            <Field label="Adresse email" htmlFor="email">
+            <Field label={t("email")} htmlFor="email">
               <Input
                 id="email"
                 type="email"
@@ -187,12 +175,11 @@ export default function ConnexionPage() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="vous@exemple.mg"
-                className="focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                placeholder={t("emailPlaceholder")}
               />
             </Field>
 
-            <Field label="Mot de passe" htmlFor="motDePasse">
+            <Field label={t("password")} htmlFor="motDePasse">
               <PasswordInput
                 id="motDePasse"
                 required
@@ -200,7 +187,6 @@ export default function ConnexionPage() {
                 value={motDePasse}
                 onChange={(e) => setMotDePasse(e.target.value)}
                 placeholder="••••••••"
-                className="focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
               />
             </Field>
 
@@ -208,25 +194,17 @@ export default function ConnexionPage() {
               href="/mot-de-passe-oublie"
               className="-mt-2 self-end text-xs font-medium text-ocre-dark hover:underline"
             >
-              Mot de passe oublié ?
+              {t("forgot")}
             </Link>
 
-            {erreur && (
-              <p className="text-sm text-brique" role="alert">
-                {erreur}
-              </p>
-            )}
+            {erreur && <p className="text-sm text-brique">{erreur}</p>}
 
             {erreurVerification && (
               <div className="flex flex-col gap-3">
-                <p className="text-sm text-brique" role="alert">
-                  {erreurVerification}
-                </p>
+                <p className="text-sm text-brique">{erreurVerification}</p>
 
                 {renvoiMessage && (
-                  <p className="text-xs text-ink-soft" role="status">
-                    {renvoiMessage}
-                  </p>
+                  <p className="text-xs text-ink-soft">{renvoiMessage}</p>
                 )}
 
                 <Button
@@ -237,8 +215,8 @@ export default function ConnexionPage() {
                   disabled={renvoiEnCours}
                 >
                   {renvoiEnCours
-                    ? "Envoi en cours…"
-                    : "Renvoyer l'email de vérification"}
+                    ? t("sending")
+                    : t("resend")}
                 </Button>
               </div>
             )}
@@ -254,18 +232,18 @@ export default function ConnexionPage() {
               disabled={envoi || !turnstileToken}
               className="mt-2"
             >
-              {envoi ? "Connexion…" : "Se connecter"}
+              {envoi ? t("loggingIn") : t("submit")}
             </Button>
           </form>
         </NoticeCard>
 
         <p className="mt-6 text-center text-sm text-ink-soft">
-          Pas encore de compte?{" "}
+          {t("noAccount")}{" "}
           <Link
             href="/inscription"
             className="font-medium text-ocre-dark hover:underline"
           >
-            S&apos;inscrire
+            {t("signUp")}
           </Link>
         </p>
       </div>

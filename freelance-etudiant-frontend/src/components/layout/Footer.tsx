@@ -1,7 +1,11 @@
-import Link from "next/link";
-import { CATEGORIES_REPERENTIEL } from "@/lib/categories";
+"use client";
 
-const SIGNATURE = "Freelance • Compétences • Opportunités";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+
+import { CATEGORIES_REPERENTIEL } from "@/lib/categories";
+import { useNavLabel } from "@/i18n/use-nav-label";
+import { useOptionLabels } from "@/i18n/use-option-labels";
 
 const colonnes: {
   titre: string;
@@ -10,7 +14,7 @@ const colonnes: {
 }[] = [
   {
     titre: "Explorer",
-    libelleAria: "Explorer la plateforme",
+    libelleAria: "exploreAria",
     liens: [
       { href: "/", label: "Accueil" },
       { href: "/publications", label: "Publications" },
@@ -20,15 +24,15 @@ const colonnes: {
   },
   {
     titre: "Centre d'aide",
-    libelleAria: "Centre d'aide",
+    libelleAria: "helpAria",
     liens: [
       { href: "/faq", label: "FAQ" },
       { href: "/contact", label: "Contact et assistance" },
     ],
   },
   {
-    titre: "Votre compte",
-    libelleAria: "Votre compte",
+    titre: "accountTitle",
+    libelleAria: "accountAria",
     liens: [
       { href: "/connexion", label: "Connexion" },
       { href: "/inscription", label: "Rejoindre Kianja" },
@@ -43,6 +47,11 @@ const colonnes: {
  * d'utilisation) n'existe encore : aucun lien n'y est donc affiché.
  */
 export function Footer() {
+  const t = useTranslations("footer");
+  const tn = useNavLabel().label;
+  const libelleCategorie = useOptionLabels().categorie;
+  const titreColonne = (titre: string) =>
+    titre === "accountTitle" ? t("account") : tn(titre);
   const annee = new Date().getFullYear();
 
   return (
@@ -52,7 +61,7 @@ export function Footer() {
         <div className="sm:col-span-2 lg:col-span-1">
           <Link
             href="/"
-            aria-label="Kianja — accueil"
+            aria-label={t("homeAria")}
             className="inline-flex items-center gap-2.5"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -68,19 +77,18 @@ export function Footer() {
           </Link>
 
           <p className="mt-1 text-[0.65rem] uppercase tracking-wider text-ink-soft/70">
-            {SIGNATURE}
+            {t("signature")}
           </p>
 
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-ink-soft">
-            La place de marché qui connecte les étudiants freelances aux
-            clients qui ont besoin de leurs compétences.
+            {t("tagline")}
           </p>
         </div>
 
         {/* ------------------------------- EXPLORER */}
-        <nav aria-label={colonnes[0].libelleAria}>
+        <nav aria-label={t(colonnes[0].libelleAria as "exploreAria")}>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
-            {colonnes[0].titre}
+            {titreColonne(colonnes[0].titre)}
           </p>
 
           <ul className="mt-4 space-y-2.5 text-sm">
@@ -90,7 +98,7 @@ export function Footer() {
                   href={lien.href}
                   className="text-ink-soft transition-colors hover:text-ocre-dark"
                 >
-                  {lien.label}
+                  {tn(lien.label)}
                 </Link>
               </li>
             ))}
@@ -98,9 +106,9 @@ export function Footer() {
         </nav>
 
         {/* ------------------------------- CATEGORIES */}
-        <nav aria-label="Catégories de services">
+        <nav aria-label={t("categoriesAria")}>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
-            Catégories
+            {t("categories")}
           </p>
 
           <ul className="mt-4 space-y-2.5 text-sm">
@@ -110,7 +118,7 @@ export function Footer() {
                   href={`/services?categorie=${encodeURIComponent(categorie.valeur)}`}
                   className="text-ink-soft transition-colors hover:text-ocre-dark"
                 >
-                  {categorie.libelle}
+                  {libelleCategorie(categorie.valeur)}
                 </Link>
               </li>
             ))}
@@ -119,9 +127,9 @@ export function Footer() {
 
         {/* ------------------------------- AIDE + COMPTE */}
         {colonnes.slice(1).map((colonne) => (
-          <nav key={colonne.titre} aria-label={colonne.libelleAria}>
+          <nav key={colonne.titre} aria-label={t(colonne.libelleAria as "helpAria")}>
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
-              {colonne.titre}
+              {titreColonne(colonne.titre)}
             </p>
 
             <ul className="mt-4 space-y-2.5 text-sm">
@@ -131,7 +139,7 @@ export function Footer() {
                     href={lien.href}
                     className="text-ink-soft transition-colors hover:text-ocre-dark"
                   >
-                    {lien.label}
+                    {tn(lien.label)}
                   </Link>
                 </li>
               ))}
@@ -143,9 +151,9 @@ export function Footer() {
       {/* ------------------------------- MENTIONS */}
       <div className="border-t border-ink/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-5 py-5 text-xs text-ink-soft/70 sm:flex-row">
-          <p>© {annee} Kianja — Freelances étudiants × Clients</p>
+          <p>{t("copyright", { annee })}</p>
           <p className="font-mono">
-            Projet L3 Informatique · Fianarantsoa · Madagascar
+            {t("project")}
           </p>
         </div>
       </div>

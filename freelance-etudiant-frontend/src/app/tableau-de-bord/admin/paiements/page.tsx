@@ -4,12 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Wallet } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import type { Transaction } from "@/lib/types";
-import {
-  formatArgent,
-  formatDateCourte,
-  methodePaiementLabel,
-  statutTransactionLabel,
-} from "@/lib/format";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { useLabels } from "@/i18n/use-labels";
 import { Button } from "@/components/ui/Button";
 import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
@@ -22,6 +19,9 @@ const toneParStatut: Record<string, "ocre" | "rice" | "brique" | "ink"> = {
 };
 
 export default function AdminPaiementsPage() {
+  const t = useTranslations("payments");
+  const { argent, dateCourte } = useFormats();
+  const { methodePaiement, statutTransaction } = useLabels();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -50,7 +50,7 @@ export default function AdminPaiementsPage() {
       await api.patch(`/paiements/${id}/confirmer`);
       charger();
     } catch (err) {
-      setErreur(err instanceof ApiError ? err.message : "Erreur");
+      setErreur(err instanceof ApiError ? err.message : t("adminList.genericError"));
     } finally {
       setEnCours(null);
     }
@@ -63,14 +63,14 @@ export default function AdminPaiementsPage() {
       await api.patch(`/paiements/${id}/annuler`);
       charger();
     } catch (err) {
-      setErreur(err instanceof ApiError ? err.message : "Erreur");
+      setErreur(err instanceof ApiError ? err.message : t("adminList.genericError"));
     } finally {
       setEnCours(null);
     }
   }
 
-  const enAttente = transactions.filter((t) => t.statut === "en_attente");
-  const traitees = transactions.filter((t) => t.statut !== "en_attente");
+  const enAttente = transactions.filter((x) => x.statut === "en_attente");
+  const traitees = transactions.filter((x) => x.statut !== "en_attente");
 
   return (
     <div>
@@ -78,56 +78,57 @@ export default function AdminPaiementsPage() {
         <BoutonRetour repli="/tableau-de-bord/admin" forcer />
       </div>
 
-      <PageHeader icon={Wallet} eyebrow="Administration" title="Paiements" />
+      <PageHeader icon={Wallet} eyebrow={t("adminList.eyebrow")} title={t("adminList.title")} />
       {erreur && <p className="text-sm text-brique mb-4">{erreur}</p>}
 
       {chargement ? (
-        <p className="text-sm text-ink-soft">Chargement…</p>
+        <p className="text-sm text-ink-soft">{t("adminList.loading")}</p>
       ) : (
         <>
           <h2 className="font-display text-lg font-semibold mb-3">
-            À vérifier ({enAttente.length})
+            {t("adminList.toVerify", { count: enAttente.length })}
           </h2>
           {enAttente.length === 0 ? (
             <NoticeCard className="mb-7">
               <p className="text-sm text-ink-soft/70">
-                Aucun paiement en attente de vérification.
+                {t("adminList.noneToVerify")}
               </p>
             </NoticeCard>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 mb-7">
-              {enAttente.map((t) => (
-                <NoticeCard key={t.id} className="flex flex-col gap-2">
+              {enAttente.map((x) => (
+                <NoticeCard key={x.id} className="flex flex-col gap-2">
                   <p className="font-display font-medium">
-                    {t.candidature?.mission?.titre ?? "Mission"}
+                    {x.candidature?.mission?.titre ?? t("adminList.missionFallback")}
                   </p>
                   <p className="text-xs font-mono text-ink-soft/70">
-                    {methodePaiementLabel[t.methode]} · réf. {t.reference}
+                    {t("adminList.methodRef", {
+                      methode: methodePaiement(x.methode),
+                      reference: x.reference,
+                    })}
                   </p>
                   <p className="font-mono text-sm text-ocre-dark">
-                    {formatArgent(t.montant)}
+                    {argent(x.montant)}
                   </p>
-                  {t.provider === "papi" || t.provider === "mvola" ? (
+                  {x.provider === "papi" || x.provider === "mvola" ? (
                     <p className="mt-1 text-xs text-ink-soft">
-                      Paiement en ligne : son statut est vérifié
-                      automatiquement auprès du fournisseur
-                      (aucune confirmation manuelle).
+                      {t("adminList.onlineAuto")}
                     </p>
                   ) : (
                     <div className="flex gap-2 mt-1">
                       <Button
                         variant="secondary"
-                        disabled={enCours === t.id}
-                        onClick={() => confirmer(t.id)}
+                        disabled={enCours === x.id}
+                        onClick={() => confirmer(x.id)}
                       >
-                        Confirmer
+                        {t("adminList.confirm")}
                       </Button>
                       <Button
                         variant="ghost"
-                        disabled={enCours === t.id}
-                        onClick={() => annuler(t.id)}
+                        disabled={enCours === x.id}
+                        onClick={() => annuler(x.id)}
                       >
-                        Annuler
+                        {t("adminList.cancel")}
                       </Button>
                     </div>
                   )}
@@ -137,24 +138,24 @@ export default function AdminPaiementsPage() {
           )}
 
           <h2 className="font-display text-lg font-semibold mb-3">
-            Historique
+            {t("adminList.history")}
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            {traitees.map((t) => (
-              <NoticeCard key={t.id} className="flex flex-col gap-2">
+            {traitees.map((x) => (
+              <NoticeCard key={x.id} className="flex flex-col gap-2">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-display font-medium">
-                    {t.candidature?.mission?.titre ?? "Mission"}
+                    {x.candidature?.mission?.titre ?? t("adminList.missionFallback")}
                   </p>
-                  <Tag tone={toneParStatut[t.statut]}>
-                    {statutTransactionLabel[t.statut]}
+                  <Tag tone={toneParStatut[x.statut]}>
+                    {statutTransaction(x.statut)}
                   </Tag>
                 </div>
                 <p className="font-mono text-sm text-ocre-dark">
-                  {formatArgent(t.montant)}
+                  {argent(x.montant)}
                 </p>
                 <p className="text-xs text-ink-soft/60">
-                  {formatDateCourte(t.dateCreation)}
+                  {dateCourte(x.dateCreation)}
                 </p>
               </NoticeCard>
             ))}

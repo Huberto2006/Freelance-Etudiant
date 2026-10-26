@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { clsx } from "clsx";
+import { useTranslations } from "next-intl";
 import { Briefcase, GraduationCap } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
@@ -14,27 +15,22 @@ type RoleChoisi = "etudiant" | "client";
 
 const OPTIONS: {
   valeur: RoleChoisi;
-  titre: string;
-  description: string;
   Icone: typeof GraduationCap;
 }[] = [
   {
     valeur: "etudiant",
-    titre: "Je suis étudiant",
-    description:
-      "Je propose mes services, je réponds à des missions et je construis ma réputation.",
+    
     Icone: GraduationCap,
   },
   {
     valeur: "client",
-    titre: "Je suis client",
-    description:
-      "Je publie des missions et je fais appel à des étudiants freelances.",
+    
     Icone: Briefcase,
   },
 ];
 
 function ChoixRole() {
+  const t = useTranslations("auth.chooseRole");
   const { utilisateur, chargement, choisirRole } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
@@ -72,36 +68,35 @@ function ChoixRole() {
       setErreur(
         err instanceof ApiError
           ? err.message
-          : "Impossible d'enregistrer votre choix",
+          : t("errSave"),
       );
       setEnvoi(false);
     }
   }
 
   if (chargement || !utilisateur || utilisateur.role !== "a_definir") {
-    return <p className="text-sm text-ink-soft">Chargement…</p>;
+    return <p className="text-sm text-ink-soft">{t("loading")}</p>;
   }
 
   return (
     <div className="mx-auto max-w-xl">
       <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
-        Dernière étape
+        {t("eyebrow")}
       </p>
       <h1 className="mb-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-        Comment utiliserez-vous Kianja ?
+        {t("title")}
       </h1>
       <p className="mb-7 text-sm text-ink-soft">
-        Bienvenue {utilisateur.nom}. Ce choix détermine votre espace et ne
-        pourra pas être modifié ensuite.
+        {t("intro", { nom: utilisateur.nom })}
       </p>
 
       <NoticeCard>
         <div
           role="radiogroup"
-          aria-label="Type de compte"
+          aria-label={t("accountType")}
           className="grid gap-3 sm:grid-cols-2"
         >
-          {OPTIONS.map(({ valeur, titre, description, Icone }) => (
+          {OPTIONS.map(({ valeur, Icone }) => (
             <button
               key={valeur}
               type="button"
@@ -117,8 +112,8 @@ function ChoixRole() {
               )}
             >
               <Icone size={20} aria-hidden="true" />
-              <span className="text-sm font-semibold text-ink">{titre}</span>
-              <span className="text-xs text-ink-soft">{description}</span>
+              <span className="text-sm font-semibold text-ink">{t(`${valeur}.title`)}</span>
+              <span className="text-xs text-ink-soft">{t(`${valeur}.description`)}</span>
             </button>
           ))}
         </div>
@@ -135,7 +130,7 @@ function ChoixRole() {
           disabled={envoi}
           className="mt-5 w-full"
         >
-          {envoi ? "Enregistrement…" : "Continuer"}
+          {envoi ? t("saving") : t("continue")}
         </Button>
       </NoticeCard>
     </div>

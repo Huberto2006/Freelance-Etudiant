@@ -1,0 +1,36 @@
+{
+  "password": {
+    "show": "Afficher le mot de passe",
+    "hide": "Masquer le mot de passe"
+  },
+  "filters": {
+    "title": "Filtres",
+    "reset": "Réinitialiser",
+    "keywords": "Mots-clés",
+    "keywordsPlaceholder": "Rechercher par mots-clés…",
+    "skill": "Compétence",
+    "skillPlaceholder": "Figma…",
+    "budget": "Budget (Ar)",
+    "min": "Min",
+    "max": "Max",
+    "minAria": "{label} minimum",
+    "maxAria": "{label} maximum",
+    "submit": "Filtrer"
+  },
+  "multiSelect": {
+    "remove": "Supprimer {item}",
+    "searchShort": "Rechercher...",
+    "placeholder": "Rechercher ou saisir une valeur…",
+    "add": "Ajouter « {value} »"
+  },
+  "attachment": {
+    "tooLarge": "Le fichier dépasse la taille maximale de {size} Mo.",
+    "uploadError": "Impossible d'envoyer le fichier.",
+    "remove": "Retirer la pièce jointe",
+    "attach": "Joindre un fichier",
+    "sending": "Envoi…",
+    "accessDenied": "Accès refusé à ce fichier.",
+    "openError": "Impossible d'ouvrir le fichier.",
+    "default": "Pièce jointe"
+  }
+}

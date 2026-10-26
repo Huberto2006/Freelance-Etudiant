@@ -1,0 +1,53 @@
+{
+  "metaTitle": "À propos — Kianja",
+  "metaDescription": "Kianja met en relation des étudiants freelances et des clients qui ont besoin de leurs compétences.",
+  "eyebrow": "À propos",
+  "title": "Kianja relie les compétences des étudiants aux besoins des clients",
+  "intro": "Une place de marché pensée pour tous les étudiants qui veulent proposer leurs compétences en freelance, et pour les clients qui cherchent des talents.",
+  "missionTitle": "Notre mission",
+  "mission1": "Kianja a pour mission de faciliter la rencontre entre des étudiants freelances et des clients, particuliers ou organisations, qui ont besoin d'un travail précis : développement, design, rédaction, traduction, marketing et bien d'autres domaines.",
+  "mission2": "La plateforme s'adresse à l'ensemble des étudiants, sans distinction d'établissement : ce qui compte, ce sont leurs compétences.",
+  "problemTitle": "Le problème auquel nous répondons",
+  "problem1": "Beaucoup d'étudiants ont des compétences utiles mais peu de moyens de les faire connaître ou de décrocher leurs premières missions. De leur côté, les clients ont du mal à trouver rapidement des profils fiables pour des besoins ponctuels.",
+  "problem2": "Kianja rassemble missions, services et profils au même endroit et encadre la collaboration, de la candidature jusqu'à la livraison.",
+  "howTitle": "Comment ça fonctionne",
+  "steps": {
+    "need": {
+      "title": "Un besoin ou une compétence",
+      "detail": "Un client publie une mission, ou un étudiant présente un service qu'il propose."
+    },
+    "match": {
+      "title": "Une mise en relation",
+      "detail": "Les étudiants postulent aux missions, les clients examinent les candidatures ou demandent un service, et chacun échange par la messagerie de la plateforme."
+    },
+    "delivery": {
+      "title": "Un travail livré et validé",
+      "detail": "L'étudiant dépose ses livrables, le client les valide, puis le paiement est libéré et chacun peut évaluer l'autre."
+    }
+  },
+  "valuesTitle": "Nos valeurs",
+  "values": {
+    "open": {
+      "title": "Ouvrir des opportunités",
+      "detail": "Permettre à chaque étudiant de valoriser ses compétences dès ses études, quel que soit son établissement."
+    },
+    "clear": {
+      "title": "Rester clair",
+      "detail": "Des missions, des services et des profils lisibles, pour que chacun sache ce qu'il propose ou ce qu'il attend."
+    },
+    "protect": {
+      "title": "Protéger les données",
+      "detail": "Les profils ne montrent que des informations utiles à la collaboration ; les coordonnées privées ne sont pas affichées."
+    },
+    "trust": {
+      "title": "Bâtir la confiance",
+      "detail": "Paiement conservé jusqu'à la validation de la livraison, évaluations et signalements pour des échanges de confiance."
+    }
+  },
+  "visionTitle": "Notre vision",
+  "vision": "Faire de Kianja un point de rencontre de référence où les étudiants construisent leur expérience professionnelle et où les clients trouvent les compétences dont ils ont besoin.",
+  "ctaTitle": "Envie d'en savoir plus ?",
+  "ctaText": "Parcourez les publications ou créez votre compte pour proposer vos compétences ou publier un besoin.",
+  "explore": "Explorer les publications",
+  "join": "Rejoindre Kianja"
+}

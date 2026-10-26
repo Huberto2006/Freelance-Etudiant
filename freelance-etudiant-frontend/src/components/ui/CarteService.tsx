@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { Star, Timer } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { ServiceOffert } from "@/lib/types";
-import { formatArgent } from "@/lib/format";
 import { getFileUrl } from "@/lib/api";
-import { libelleCategorie } from "@/lib/categories";
+import { useFormats } from "@/i18n/use-formats";
+import { useOptionLabels } from "@/i18n/use-option-labels";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { FavoriBouton } from "@/components/ui/FavoriBouton";
@@ -26,6 +27,9 @@ export function CarteService({
   service: ServiceOffert;
   afficherType?: boolean;
 }) {
+  const t = useTranslations("common");
+  const { argent } = useFormats();
+  const { categorie } = useOptionLabels();
   const etudiant = service.etudiant;
   const auteur = etudiant?.utilisateur;
 
@@ -53,11 +57,11 @@ export function CarteService({
           {afficherType && (
             <span className="inline-flex items-center gap-1 rounded-full border border-ocre/30 bg-ocre/90 px-2.5 py-0.5 text-[0.6875rem] font-mono font-semibold uppercase tracking-wide text-white shadow-xs backdrop-blur-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" aria-hidden="true" />
-              Service
+              {t("card.service")}
             </span>
           )}
           <span className="inline-flex items-center rounded-full border border-ink/10 bg-paper-light/90 px-2.5 py-0.5 text-[0.6875rem] font-mono uppercase tracking-wide text-ink-soft backdrop-blur-sm">
-            {libelleCategorie(service.categorie)}
+            {categorie(service.categorie)}
           </span>
         </span>
 
@@ -98,28 +102,28 @@ export function CarteService({
         <div className="mt-auto border-t border-ink/10 pt-3">
           <div className="flex items-center justify-between gap-2">
             <p className="font-mono text-sm font-semibold text-ocre-dark">
-              {formatArgent(service.prix)}
+              {argent(service.prix)}
             </p>
             <p className="inline-flex items-center gap-1 text-xs text-ink-soft/70">
               <Timer size={12} aria-hidden="true" />
-              {service.delai} j
+              {t("card.days", { count: service.delai })}
             </p>
           </div>
 
           <div className="mt-2.5 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <Avatar
-                nom={auteur?.nom ?? "Étudiant"}
+                nom={auteur?.nom ?? t("card.student")}
                 photoUrl={auteur?.photoUrl}
                 size={22}
                 href={etudiant ? `/etudiants/${etudiant.utilisateurId}` : undefined}
               />
               <div className="min-w-0">
                 <p className="truncate text-xs font-medium text-ink">
-                  {auteur?.nom ?? "Étudiant"}
+                  {auteur?.nom ?? t("card.student")}
                 </p>
                 <div className="flex items-center gap-1 text-[0.6875rem] text-ink-soft">
-                  <span>Étudiant</span>
+                  <span>{t("card.student")}</span>
                   {note > 0 && (
                     <span className="inline-flex items-center gap-0.5 font-medium text-ocre-dark">
                       · <Star size={10} className="fill-ocre-dark text-ocre-dark" />
@@ -134,7 +138,7 @@ export function CarteService({
               href={`/services/${service.id}`}
               className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 font-mono text-xs font-semibold text-bleu-dark hover:bg-bleu/10 hover:text-bleu transition-colors"
             >
-              Voir →
+              {t("card.view")}
             </Link>
           </div>
         </div>

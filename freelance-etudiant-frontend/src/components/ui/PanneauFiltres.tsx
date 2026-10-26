@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Search, Wrench, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
@@ -38,8 +39,8 @@ function estVide(filtres: Filtres) {
 export function PanneauFiltres({
   onFiltrer,
   filtresInitiaux,
-  placeholder = "Rechercher par mots-clés…",
-  labelBudget = "Budget (Ar)",
+  placeholder,
+  labelBudget,
 }: {
   onFiltrer: (filtres: Filtres) => void;
   filtresInitiaux?: Filtres;
@@ -47,6 +48,7 @@ export function PanneauFiltres({
   /** Libellé du champ prix/budget : différent pour missions et services. */
   labelBudget?: string;
 }) {
+  const t = useTranslations("forms");
   const [prevFiltres, setPrevFiltres] = useState(filtresInitiaux);
   const [motsCles, setMotsCles] = useState(filtresInitiaux?.motsCles ?? "");
   const [competence, setCompetence] = useState(
@@ -78,6 +80,7 @@ export function PanneauFiltres({
     budgetMax: budgetMax || undefined,
   };
 
+  const budgetLabel = labelBudget ?? t("filters.budget");
   const filtresActifs = !estVide(filtresActuels);
 
   function onSubmit(e: React.FormEvent) {
@@ -100,7 +103,7 @@ export function PanneauFiltres({
     >
       <div className="flex items-center justify-between">
         <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-ink">
-          Filtres
+          {t("filters.title")}
         </h2>
 
         {filtresActifs && (
@@ -110,7 +113,7 @@ export function PanneauFiltres({
             className="inline-flex items-center gap-1 text-xs text-ink-soft/70 hover:text-brique transition-colors"
           >
             <X size={12} />
-            Réinitialiser
+            {t("filters.reset")}
           </button>
         )}
       </div>
@@ -121,7 +124,7 @@ export function PanneauFiltres({
           htmlFor="filtre-mots-cles"
           className="mb-1.5 block text-xs font-mono uppercase tracking-wider text-ink-soft"
         >
-          Mots-clés
+          {t("filters.keywords")}
         </label>
 
         <div className="relative">
@@ -134,7 +137,7 @@ export function PanneauFiltres({
             id="filtre-mots-cles"
             value={motsCles}
             onChange={(e) => setMotsCles(e.target.value)}
-            placeholder={placeholder}
+            placeholder={placeholder ?? t("filters.keywordsPlaceholder")}
             className="w-full rounded-lg py-2 pl-9 pr-3"
           />
         </div>
@@ -146,7 +149,7 @@ export function PanneauFiltres({
           htmlFor="filtre-competence"
           className="mb-1.5 block text-xs font-mono uppercase tracking-wider text-ink-soft"
         >
-          Compétence
+          {t("filters.skill")}
         </label>
 
         <div className="relative">
@@ -159,7 +162,7 @@ export function PanneauFiltres({
             id="filtre-competence"
             value={competence}
             onChange={(e) => setCompetence(e.target.value)}
-            placeholder="Figma…"
+            placeholder={t("filters.skillPlaceholder")}
             className="w-full rounded-lg py-2 pl-9 pr-3"
           />
         </div>
@@ -168,7 +171,7 @@ export function PanneauFiltres({
       {/* Budget / Prix */}
       <div>
         <span className="mb-1.5 block text-xs font-mono uppercase tracking-wider text-ink-soft">
-          {labelBudget}
+          {budgetLabel}
         </span>
 
         <div className="flex items-center gap-2">
@@ -178,8 +181,8 @@ export function PanneauFiltres({
             inputMode="numeric"
             value={budgetMin}
             onChange={(e) => setBudgetMin(e.target.value)}
-            placeholder="Min"
-            aria-label={`${labelBudget} minimum`}
+            placeholder={t("filters.min")}
+            aria-label={t("filters.minAria", { label: budgetLabel })}
             className="w-full rounded-lg py-2"
           />
           <span className="text-ink-soft/60" aria-hidden="true">
@@ -191,8 +194,8 @@ export function PanneauFiltres({
             inputMode="numeric"
             value={budgetMax}
             onChange={(e) => setBudgetMax(e.target.value)}
-            placeholder="Max"
-            aria-label={`${labelBudget} maximum`}
+            placeholder={t("filters.max")}
+            aria-label={t("filters.maxAria", { label: budgetLabel })}
             className="w-full rounded-lg py-2"
           />
         </div>
@@ -204,7 +207,7 @@ export function PanneauFiltres({
         className="w-full flex items-center justify-center gap-2"
       >
         <Search size={15} />
-        <span>Filtrer</span>
+        <span>{t("filters.submit")}</span>
       </Button>
     </form>
   );

@@ -1,50 +1,19 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { BriefcaseBusiness, GraduationCap, Layers } from "lucide-react";
 
 import { SectionTitre } from "./SectionTitre";
 
 interface Pilier {
-  titre: string;
-  description: string;
+  cle: string;
 }
 
-const PILIERS_CLIENT: Pilier[] = [
-  {
-    titre: "Publier des missions",
-    description:
-      "Décrivez vos besoins ponctuels ou récurrents, fixez votre budget et recevez des candidatures ciblées d'étudiants qualifiés.",
-  },
-  {
-    titre: "Trouver des étudiants",
-    description:
-      "Explorez le catalogue de compétences, filtrez par filière ou domaine, et sélectionnez les meilleurs talents étudiants.",
-  },
-  {
-    titre: "Suivre leurs projets",
-    description:
-      "Collaborez via une messagerie intégrée, suivez chaque étape de réalisation et validez la livraison en toute transparence.",
-  },
-];
+const PILIERS_CLIENT: Pilier[] = [{ cle: "publish" }, { cle: "find" }, { cle: "follow" }];
 
-const PILIERS_ETUDIANT: Pilier[] = [
-  {
-    titre: "Proposer leurs services",
-    description:
-      "Mettez en valeur vos compétences techniques, définissez vos offres clés en main, vos tarifs et vos délais de livraison.",
-  },
-  {
-    titre: "Trouver des missions",
-    description:
-      "Parcourez les besoins concrets publiés par des entreprises et particuliers, candidatez en un clic avec votre lettre de motivation.",
-  },
-  {
-    titre: "Développer leur activité",
-    description:
-      "Bâtissez un portfolio certifié, gagnez des points de réputation grâce aux avis clients et financez vos études en toute indépendance.",
-  },
-];
+const PILIERS_ETUDIANT: Pilier[] = [{ cle: "offer" }, { cle: "find" }, { cle: "grow" }];
 
 function Volet({
+  ns,
   accent,
   icone: Icone,
   etiquette,
@@ -54,6 +23,7 @@ function Volet({
   lienHref,
   lienLabel,
 }: {
+  ns: "client" | "student";
   accent: "bleu" | "ocre";
   icone: typeof BriefcaseBusiness;
   etiquette: string;
@@ -63,6 +33,7 @@ function Volet({
   lienHref: string;
   lienLabel: string;
 }) {
+  const t = useTranslations("home.audiences");
   const couleur = accent === "bleu" ? "text-bleu-dark" : "text-ocre-dark";
   const fond = accent === "bleu" ? "bg-bleu/10" : "bg-ocre/10";
 
@@ -89,10 +60,10 @@ function Volet({
 
       <ul className="mt-6 divide-y divide-ink/10 border-y border-ink/10">
         {piliers.map((pilier) => (
-          <li key={pilier.titre} className="py-4">
-            <h4 className="text-sm font-semibold text-ink">{pilier.titre}</h4>
+          <li key={pilier.cle} className="py-4">
+            <h4 className="text-sm font-semibold text-ink">{t(`${ns}.pillars.${pilier.cle}.title` as never)}</h4>
             <p className="mt-1 text-xs leading-relaxed text-ink-soft">
-              {pilier.description}
+              {t(`${ns}.pillars.${pilier.cle}.description` as never)}
             </p>
           </li>
         ))}
@@ -114,38 +85,41 @@ function Volet({
  * services vivent dans leurs sections dédiées juste en dessous.
  */
 export function SectionAudiences() {
+  const t = useTranslations("home.audiences");
   return (
     <section
       id="audiences"
-      className="mx-auto w-full max-w-7xl px-5 pb-12 pt-10 sm:px-8 sm:pb-16 sm:pt-14 lg:px-10"
+      className="mx-auto max-w-6xl px-4 pb-12 pt-10 sm:px-5 sm:pb-16 sm:pt-14"
     >
       <SectionTitre
         icon={Layers}
-        eyebrow="Une marketplace bilatérale"
-        titre="Deux parcours connectés pour réussir ensemble"
-        sousTitre="Que vous ayez un besoin ponctuel ou des compétences à offrir, Kianja offre à chacun un cadre transparent et sécurisé."
+        eyebrow={t("eyebrow")}
+        titre={t("title")}
+        sousTitre={t("subtitle")}
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Volet
+          ns="client"
           accent="bleu"
           icone={BriefcaseBusiness}
-          etiquette="Côté client"
-          titre="Des étudiants prêts à vous aider"
-          intro="Entreprises, startups, associations ou particuliers : accédez aux futurs diplômés pour donner vie à vos projets avec un excellent rapport qualité-prix."
+          etiquette={t("client.label")}
+          titre={t("client.title")}
+          intro={t("client.intro")}
           piliers={PILIERS_CLIENT}
           lienHref="/services"
-          lienLabel="Trouver un étudiant"
+          lienLabel={t("client.link")}
         />
         <Volet
+          ns="student"
           accent="ocre"
           icone={GraduationCap}
-          etiquette="Côté étudiant"
-          titre="Des projets à réaliser"
-          intro="Mettez en pratique vos acquis académiques, générez des revenus durant votre cursus et démarrez votre carrière avec une expérience concrète et vérifiée."
+          etiquette={t("student.label")}
+          titre={t("student.title")}
+          intro={t("student.intro")}
           piliers={PILIERS_ETUDIANT}
           lienHref="/missions"
-          lienLabel="Trouver une mission"
+          lienLabel={t("student.link")}
         />
       </div>
     </section>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell, Loader2, Plus, Users, X } from "lucide-react";
 
+import { useTranslations } from "next-intl";
 import { api, ApiError, lienInterneSur } from "@/lib/api";
 import type { Groupe, Mission, NotificationItem } from "@/lib/types";
 
@@ -24,6 +25,7 @@ type GroupeAffiche = Groupe & {
 };
 
 export default function GroupesPage() {
+  const t = useTranslations("dashboardPages.groups");
   const [groupes, setGroupes] = useState<GroupeAffiche[]>([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -64,12 +66,12 @@ export default function GroupesPage() {
       setErreur(
         error instanceof ApiError
           ? error.message
-          : "Impossible de charger vos groupes.",
+          : t("loadError"),
       );
     } finally {
       setChargement(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -105,8 +107,8 @@ export default function GroupesPage() {
       <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
         <PageHeader
           icon={Users}
-          eyebrow="Espace étudiant"
-          title="Mes groupes"
+          eyebrow={t("eyebrow")}
+          title={t("title")}
           className="mb-0"
         />
 
@@ -118,12 +120,12 @@ export default function GroupesPage() {
           {afficherFormulaire ? (
             <>
               <X size={16} />
-              Fermer
+              {t("close")}
             </>
           ) : (
             <>
               <Plus size={16} />
-              Créer un groupe
+              {t("create")}
             </>
           )}
         </Button>
@@ -134,7 +136,7 @@ export default function GroupesPage() {
           <div className="mb-4 flex items-center gap-2">
             <Bell size={18} className="text-ocre-dark" aria-hidden="true" />
             <h2 className="font-display text-lg font-semibold">
-              Invitations de groupe ({invitations.length})
+              {t("invitations", { count: invitations.length })}
             </h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -144,7 +146,7 @@ export default function GroupesPage() {
                   <p className="font-display font-medium">{invitation.titre}</p>
                   <p className="mt-1 text-sm text-ink-soft">{invitation.message}</p>
                   <p className="mt-2 text-xs text-ink-soft/70">
-                    Ouvrir l&apos;invitation
+                    {t("openInvitation")}
                   </p>
                 </NoticeCard>
               </Link>
@@ -176,7 +178,7 @@ export default function GroupesPage() {
       {chargement ? (
         <p className="flex items-center gap-2 text-sm text-ink-soft">
           <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-          Chargement de vos groupes…
+          {t("loading")}
         </p>
       ) : groupes.length === 0 ? (
         <NoticeCard>
@@ -188,7 +190,7 @@ export default function GroupesPage() {
               <Users size={22} />
             </span>
             <p className="text-sm text-ink-soft">
-              Vous ne faites partie d&apos;aucun groupe pour le moment.
+              {t("empty")}
             </p>
             {!afficherFormulaire && (
               <Button
@@ -198,7 +200,7 @@ export default function GroupesPage() {
                 onClick={() => setAfficherFormulaire(true)}
               >
                 <Plus size={14} aria-hidden="true" />
-                Créer un groupe
+                {t("create")}
               </Button>
             )}
           </div>
@@ -212,10 +214,10 @@ export default function GroupesPage() {
 
                 <p className="text-xs text-ink-soft/70">
                   {groupe.nombreMembres !== undefined
-                    ? `${groupe.nombreMembres} membre${groupe.nombreMembres > 1 ? "s" : ""}`
-                    : "Membres"}
+                    ? t("memberCount", { count: groupe.nombreMembres })
+                    : t("membersLabel")}
                   {" · "}
-                  {groupe.mission?.titre ?? "Sans mission"}
+                  {groupe.mission?.titre ?? t("noMission")}
                 </p>
 
                 {groupe.description && (
@@ -244,6 +246,7 @@ function FormulaireGroupe({
 }: {
   onCree: () => void | Promise<void>;
 }) {
+  const t = useTranslations("dashboardPages.groups");
   const [nom, setNom] = useState("");
   const [description, setDescription] = useState("");
   const [missionId, setMissionId] = useState("");
@@ -291,7 +294,7 @@ function FormulaireGroupe({
       console.error("Erreur lors de la création du groupe :", err);
 
       setErreur(
-        err instanceof ApiError ? err.message : "Erreur inattendue.",
+        err instanceof ApiError ? err.message : t("unexpectedError"),
       );
     } finally {
       setEnvoi(false);
@@ -300,10 +303,9 @@ function FormulaireGroupe({
 
   return (
     <NoticeCard>
-      <h2 className="font-display text-xl font-semibold">Nouveau groupe</h2>
+      <h2 className="font-display text-xl font-semibold">{t("newGroup")}</h2>
       <p className="mt-1 text-sm text-ink-soft">
-        Vous en serez automatiquement le chef et pourrez inviter d&apos;autres
-        étudiants une fois le groupe créé.
+        {t("newGroupHint")}
       </p>
 
       <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-5">
@@ -311,37 +313,37 @@ function FormulaireGroupe({
           <p className="text-sm text-brique">{erreur}</p>
         )}
 
-        <Field label="Nom du groupe *" htmlFor="groupe-nom">
+        <Field label={t("nameLabel")} htmlFor="groupe-nom">
           <Input
             id="groupe-nom"
             required
             maxLength={150}
             value={nom}
             onChange={(e) => setNom(e.target.value)}
-            placeholder="Groupe Web"
+            placeholder={t("namePlaceholder")}
             disabled={envoi}
           />
         </Field>
 
-        <Field label="Description" htmlFor="groupe-description">
+        <Field label={t("descriptionLabel")} htmlFor="groupe-description">
           <Textarea
             id="groupe-description"
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Décrivez l'objectif du groupe (facultatif)"
+            placeholder={t("descriptionPlaceholder")}
             disabled={envoi}
           />
         </Field>
 
-        <Field label="Mission (optionnelle)" htmlFor="groupe-mission">
+        <Field label={t("missionLabel")} htmlFor="groupe-mission">
           <Select
             id="groupe-mission"
             value={missionId}
             onChange={(e) => setMissionId(e.target.value)}
             disabled={envoi}
           >
-            <option value="" disabled hidden>Aucune mission</option>
+            <option value="" disabled hidden>{t("noMissionOption")}</option>
             {missions.map((mission) => (
               <option key={mission.id} value={mission.id}>
                 {mission.titre}
@@ -355,10 +357,10 @@ function FormulaireGroupe({
             {envoi ? (
               <span className="inline-flex items-center gap-2">
                 <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-                Création…
+                {t("creating")}
               </span>
             ) : (
-              "Créer le groupe"
+              t("createGroup")
             )}
           </Button>
         </div>

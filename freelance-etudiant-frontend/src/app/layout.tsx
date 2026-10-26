@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import "@fontsource/zilla-slab/400.css";
 import "@fontsource/zilla-slab/500.css";
@@ -20,11 +22,13 @@ import { SocketProvider } from "@/lib/socket-context";
 import { NavbarConditionnelle } from "@/components/layout/NavbarConditionnelle";
 import { FooterConditionnel } from "@/components/layout/FooterConditionnel";
 
-export const metadata: Metadata = {
-  title: "Kianja — Freelances etudiants x Clients",
-  description:
-    "La place de marche qui connecte les etudiants freelances aux clients qui ont besoin de leurs competences.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata");
+  return {
+    title: t("defaultTitle"),
+    description: t("defaultDescription"),
+  };
+}
 
 /**
  * Script inline exécuté immédiatement avant le rendu du body :
@@ -51,14 +55,15 @@ const themeInitScript = `
 })();
 `;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
   return (
     <html
-      lang="fr"
+      lang={locale}
       className="h-full antialiased"
       suppressHydrationWarning
       data-scroll-behavior="smooth"
@@ -73,6 +78,7 @@ export default function RootLayout({
       </head>
 
       <body className="min-h-full flex flex-col">
+        <NextIntlClientProvider>
         <ThemeProvider>
           <AuthProvider>
             <SocketProvider>
@@ -96,6 +102,7 @@ export default function RootLayout({
             </SocketProvider>
           </AuthProvider>
         </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

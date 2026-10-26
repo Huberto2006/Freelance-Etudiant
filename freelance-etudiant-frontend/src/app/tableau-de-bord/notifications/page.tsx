@@ -11,7 +11,8 @@ import {
 
 import { api, lienInterneSur } from "@/lib/api";
 import type { NotificationItem } from "@/lib/types";
-import { formatDateCourte } from "@/lib/format";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
 import { useApiList } from "@/hooks/useApiList";
 
 import { Button } from "@/components/ui/Button";
@@ -27,6 +28,8 @@ import { SousNavigation } from "@/components/ui/SousNavigation";
 import { clsx } from "clsx";
 
 export default function NotificationsPage() {
+  const t = useTranslations("manage.notificationsPage");
+  const { dateCourte } = useFormats();
   const {
     donnees,
     setDonnees,
@@ -166,7 +169,7 @@ export default function NotificationsPage() {
   async function toutSupprimer() {
     if (
       !window.confirm(
-        "Supprimer toutes vos notifications ? Cette action est définitive.",
+        t("confirmDeleteAll"),
       )
     ) {
       return;
@@ -215,8 +218,8 @@ export default function NotificationsPage() {
       <div className="mb-7 flex items-center justify-between gap-4">
         <PageHeader
           icon={Bell}
-          eyebrow="Suivi"
-          title="Notifications"
+          eyebrow={t("eyebrow")}
+          title={t("title")}
           className="mb-0"
         />
 
@@ -228,7 +231,7 @@ export default function NotificationsPage() {
               onClick={toutMarquerLu}
             >
               <CheckCheck size={15} />
-              Tout marquer lu
+              {t("markAllRead")}
             </Button>
           )}
 
@@ -239,7 +242,7 @@ export default function NotificationsPage() {
               onClick={toutSupprimer}
             >
               <Trash2 size={15} />
-              Tout supprimer
+              {t("deleteAll")}
             </Button>
           )}
         </div>
@@ -249,11 +252,11 @@ export default function NotificationsPage() {
 
       <SousNavigation
         onglets={[
-          { valeur: "toutes", label: "Toutes", compte: notifications.length },
-          { valeur: "non_lues", label: "Non lues", compte: nonLues },
+          { valeur: "toutes", label: t("tabAll"), compte: notifications.length },
+          { valeur: "non_lues", label: t("tabUnread"), compte: nonLues },
           {
             valeur: "lues",
-            label: "Lues",
+            label: t("tabRead"),
             compte: notifications.length - nonLues,
           },
         ]}
@@ -278,10 +281,10 @@ export default function NotificationsPage() {
       ) : notificationsFiltrees.length === 0 ? (
         <EtatVide icon={BellOff}>
           {ongletActif === "toutes"
-            ? "Vous n'avez pas encore de notification."
+            ? t("emptyAll")
             : ongletActif === "non_lues"
-              ? "Aucune notification non lue."
-              : "Aucune notification lue."}
+              ? t("emptyUnread")
+              : t("emptyRead")}
         </EtatVide>
       ) : (
         <div className="flex flex-col gap-3">
@@ -315,7 +318,7 @@ export default function NotificationsPage() {
                     </p>
 
                     <p className="mt-1.5 text-xs font-mono text-ink-soft/60">
-                      {formatDateCourte(
+                      {dateCourte(
                         notification.dateCreation,
                       )}
                     </p>
@@ -333,7 +336,7 @@ export default function NotificationsPage() {
                         notification.id,
                       );
                     }}
-                    aria-label={`Supprimer : ${notification.titre}`}
+                    aria-label={t("deleteOne", { titre: notification.titre })}
                     className="
                       shrink-0 cursor-pointer rounded-lg p-1.5
                       text-ink-soft/40 transition-colors

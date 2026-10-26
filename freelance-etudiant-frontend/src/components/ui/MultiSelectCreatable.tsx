@@ -3,6 +3,7 @@
 import { Check, Plus, X } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { clsx } from "clsx";
+import { useTranslations } from "next-intl";
 
 function normaliserTexte(valeur: string) {
   return valeur
@@ -36,7 +37,7 @@ export function MultiSelectCreatable({
   value,
   onChange,
   options = [],
-  placeholder = "Rechercher ou saisir une valeur…",
+  placeholder,
   allowCreate = true,
   mode = "multiple",
   className,
@@ -52,6 +53,7 @@ export function MultiSelectCreatable({
   className?: string;
   disabled?: boolean;
 }) {
+  const t = useTranslations("forms");
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -146,8 +148,8 @@ export function MultiSelectCreatable({
               <button
                 type="button"
                 disabled={disabled}
-                aria-label={`Supprimer ${item}`}
-                title={`Supprimer ${item}`}
+                aria-label={t("multiSelect.remove", { item })}
+                title={t("multiSelect.remove", { item })}
                 onClick={(event) => {
                   event.stopPropagation();
                   retirerItem(item);
@@ -173,7 +175,11 @@ export function MultiSelectCreatable({
             setIsOpen(true);
           }}
           onKeyDown={handleKeyDown}
-          placeholder={selected.length > 0 && !query ? "Rechercher..." : placeholder}
+          placeholder={
+            selected.length > 0 && !query
+              ? t("multiSelect.searchShort")
+              : (placeholder ?? t("multiSelect.placeholder"))
+          }
           className="kianja-field-control min-w-[140px] flex-1 border-0 bg-transparent px-1 py-1.5 text-sm text-ink placeholder:text-ink-soft/60 focus:outline-none disabled:cursor-not-allowed"
         />
       </div>
@@ -206,7 +212,7 @@ export function MultiSelectCreatable({
                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-ocre-dark transition-colors hover:bg-ocre/5"
               >
                 <Plus size={14} />
-                <span>Ajouter « {customValue} »</span>
+                <span>{t("multiSelect.add", { value: customValue })}</span>
               </button>
             )}
           </div>

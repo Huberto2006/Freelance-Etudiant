@@ -1,0 +1,99 @@
+{
+  "catalog": {
+    "eyebrow": "Catalogue général · Kianja Marketplace",
+    "title": "Publications",
+    "intro": "Découvrez les besoins des clients et les compétences des étudiants sur Kianja. Un espace unifié pour explorer l'ensemble des opportunités et des prestations disponibles.",
+    "badges": {
+      "total": "{count} publications",
+      "missions": "{count} missions ouvertes",
+      "services": "{count} services proposés"
+    },
+    "errors": {
+      "full": "Impossible de charger le catalogue de publications pour le moment.",
+      "missionsPartial": "Les missions n'ont pas pu être chargées ; seuls les services sont affichés.",
+      "servicesPartial": "Les services n'ont pas pu être chargés ; seules les missions sont affichées.",
+      "generic": "Une erreur est survenue lors du chargement des publications."
+    },
+    "actions": {
+      "publishMission": "Publier une mission",
+      "offerService": "Proposer un service",
+      "retry": "Réessayer"
+    },
+    "tabs": {
+      "ariaLabel": "Filtrer par type de publication",
+      "all": "Toutes ({count})",
+      "missions": "Missions clients ({count})",
+      "services": "Services étudiants ({count})"
+    },
+    "sort": {
+      "label": "Trier par",
+      "options": {
+        "recent": "Plus récentes d'abord",
+        "best": "Mieux notés / budget",
+        "priceAsc": "Prix / Budget croissant",
+        "priceDesc": "Prix / Budget décroissant"
+      }
+    },
+    "filters": {
+      "searchPlaceholder": "Rechercher par mot-clé…",
+      "budgetLabel": "Budget ou Tarif (Ar)"
+    },
+    "targeted": {
+      "title": "Navigation ciblée",
+      "intro": "Consultez nos catalogues dédiés avec options avancées :",
+      "missionsOnly": "Voir uniquement les missions",
+      "servicesOnly": "Voir uniquement les services"
+    },
+    "empty": {
+      "missions": "Aucune mission ne correspond à vos critères.",
+      "services": "Aucun service ne correspond à vos critères.",
+      "all": "Aucune publication ne correspond à votre recherche.",
+      "hint": "Essayez d'élargir vos termes de recherche, de réinitialiser vos filtres ou de changer de catégorie.",
+      "reset": "Réinitialiser les filtres",
+      "showAll": "Afficher tout le catalogue"
+    },
+    "results": {
+      "found": "<b>{count}</b> {count, plural, one {publication trouvée} other {publications trouvées}}"
+    }
+  },
+  "mine": {
+    "eyebrow": "Tableau de bord",
+    "title": "Mes publications",
+    "publishMission": "Publier une mission",
+    "offerService": "Proposer un service",
+    "adminNotice": "Les comptes administrateur ne publient pas de missions ou de services. Retrouvez la gestion de la plateforme dans la section Administration.",
+    "ariaMissions": "Mes missions",
+    "ariaServices": "Mes services",
+    "tabMissions": "Missions ({count})",
+    "tabServices": "Services ({count})",
+    "searchPlaceholder": "Rechercher dans mes publications…",
+    "budgetLabel": "Budget ou tarif (Ar)",
+    "loadError": "Impossible de charger vos publications pour le moment.",
+    "retry": "Réessayer",
+    "emptyMissions": "Vous n'avez encore publié aucune mission.",
+    "emptyServices": "Vous n'avez encore proposé aucun service.",
+    "noMatch": "Aucune publication ne correspond à votre recherche.",
+    "edit": "Modifier",
+    "service": {
+      "archived": "Archivé",
+      "hidden": "Masqué",
+      "pause": "Mettre en pause",
+      "activate": "Activer",
+      "archive": "Archiver",
+      "restore": "Restaurer",
+      "delete": "Supprimer",
+      "confirmDelete": "Voulez-vous vraiment supprimer « {title} » ?",
+      "availabilityError": "Impossible de modifier la disponibilité.",
+      "restoreError": "Impossible de restaurer le service.",
+      "archiveError": "Impossible d'archiver le service.",
+      "deleteError": "Impossible de supprimer ce service."
+    }
+  },
+  "favorites": {
+    "loading": "Chargement…",
+    "eyebrow": "Mes sauvegardes",
+    "title": "Favoris",
+    "empty": "Ajoutez des missions, services ou profils à vos favoris pour les retrouver ici.",
+    "defaultStudent": "Étudiant freelance"
+  }
+}

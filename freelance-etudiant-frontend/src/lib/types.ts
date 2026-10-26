@@ -36,6 +36,9 @@
 
     photoUrl?: string | null;
 
+    /** Langue d'interface preferee du compte (fr, mg, en). */
+    langue?: "fr" | "mg" | "en";
+
     estActif: boolean;
 
     estSuspendu: boolean;

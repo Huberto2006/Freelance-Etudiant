@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Heart } from "lucide-react";
 import { clsx } from "clsx";
 import { api } from "@/lib/api";
@@ -20,6 +21,7 @@ export function FavoriBouton({
   cibleId: string;
   className?: string;
 }) {
+  const t = useTranslations("extras.favoriteButton");
   const { utilisateur } = useAuth();
   const [enFavori, setEnFavori] = useState<boolean | null>(null);
   const [envoi, setEnvoi] = useState(false);
@@ -59,8 +61,8 @@ export function FavoriBouton({
       type="button"
       onClick={toggle}
       disabled={envoi}
-      title={enFavori ? "Retirer des favoris" : "Ajouter aux favoris"}
-      aria-label={enFavori ? "Retirer des favoris" : "Ajouter aux favoris"}
+      title={enFavori ? t("remove") : t("add")}
+      aria-label={enFavori ? t("remove") : t("add")}
       className={clsx(
         "inline-flex h-8 w-8 items-center justify-center rounded-full border transition-colors disabled:opacity-60",
         enFavori

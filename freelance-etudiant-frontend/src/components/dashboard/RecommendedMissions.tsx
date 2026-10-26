@@ -4,13 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CalendarClock } from "lucide-react";
 
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { useOptionLabels } from "@/i18n/use-option-labels";
 import { api, ApiError } from "@/lib/api";
 import type { Mission } from "@/lib/types";
-import {
-  formatArgent,
-  formatDateCourte,
-} from "@/lib/format";
-import { libelleCategorie } from "@/lib/categories";
+
 import { getFileUrl } from "@/lib/api";
 import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
 import { Button } from "@/components/ui/Button";
@@ -36,6 +35,7 @@ export function RecommendedMissions({
   /** Identifiants de missions déjà ciblées par une candidature. */
   missionsExcluesIds?: string[];
 }) {
+  const t = useTranslations("dashboardPages.recommendedMissions");
   const [recommandations, setRecommandations] = useState<
     MissionRecommandee[] | null
   >(null);
@@ -70,11 +70,9 @@ export function RecommendedMissions({
 
         if (error instanceof ApiError && error.status === 404) {
           setProfilManquant(true);
-          setErreur(
-            "Complétez votre profil étudiant pour recevoir des recommandations personnalisées.",
-          );
+          setErreur(t("profileMissing"));
         } else {
-          setErreur("Impossible de charger les recommandations.");
+          setErreur(t("loadError"));
         }
       } finally {
         if (actif) setChargement(false);
@@ -84,13 +82,13 @@ export function RecommendedMissions({
     return () => {
       actif = false;
     };
-  }, [tentative]);
+  }, [tentative, t]);
 
   if (chargement) {
     return (
       <div
         role="status"
-        aria-label="Chargement des missions recommandées"
+        aria-label={t("loading")}
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
       >
         <SkeletonMission />
@@ -105,7 +103,7 @@ export function RecommendedMissions({
       <ErreurSection
         message={erreur}
         onReessayer={
-          profilManquant ? undefined : () => setTentative((t) => t + 1)
+          profilManquant ? undefined : () => setTentative((n) => n + 1)
         }
       />
     );
@@ -135,6 +133,9 @@ function CorpsRecommandations({
   /** Instant capturé au chargement (évite un appel impur au rendu). */
   maintenant: number;
 }) {
+  const t = useTranslations("dashboardPages.recommendedMissions");
+  const { argent: formatArgent, dateCourte: formatDateCourte } = useFormats();
+  const { categorie: libelleCategorie } = useOptionLabels();
   const exclues = new Set(missionsExcluesIds);
 
   const liste = recommandations
@@ -150,22 +151,20 @@ function CorpsRecommandations({
     return (
       <NoticeCard className="flex flex-col items-start gap-3">
         <p className="text-sm text-ink-soft">
-          Aucune mission recommandée pour le moment. Ajoutez des compétences à
-          votre profil pour recevoir des missions adaptées, ou explorez les
-          missions ouvertes.
+          {t("emptyDescription")}
         </p>
 
         <div className="flex flex-wrap gap-2">
-          <Link href="/missions" aria-label="Explorer les missions">
-            <Button size="sm">Explorer les missions</Button>
+          <Link href="/missions" aria-label={t("explore")}>
+            <Button size="sm">{t("explore")}</Button>
           </Link>
 
           <Link
             href="/tableau-de-bord/profil"
-            aria-label="Compléter mon profil"
+            aria-label={t("completeProfile")}
           >
             <Button size="sm" variant="ghost">
-              Compléter mon profil
+              {t("completeProfile")}
             </Button>
           </Link>
         </div>
@@ -194,9 +193,9 @@ function CorpsRecommandations({
 
             <span
               className="font-mono text-xs font-semibold text-ocre-dark"
-              title="Score de correspondance calculé par le système de matching"
+              title={t("scoreTitle")}
             >
-              {scoreCompatibilite} % de correspondance
+              {t("match", { score: scoreCompatibilite })}
             </span>
           </div>
 
@@ -232,17 +231,17 @@ function CorpsRecommandations({
 
               <p className="inline-flex items-center gap-1 text-xs text-ink-soft/70">
                 <CalendarClock size={12} aria-hidden="true" />
-                avant le {formatDateCourte(mission.dateLimite)}
+                {t("before", { date: formatDateCourte(mission.dateLimite) })}
               </p>
             </div>
 
             <Link
               href={`/missions/${mission.id}`}
               className="self-start"
-              aria-label={`Voir la mission ${mission.titre}`}
+              aria-label={t("viewMissionLabel", { titre: mission.titre })}
             >
               <Button size="sm" variant="secondary">
-                Voir la mission
+                {t("viewMission")}
               </Button>
             </Link>
           </div>

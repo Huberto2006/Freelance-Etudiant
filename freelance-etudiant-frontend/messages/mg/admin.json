@@ -1,0 +1,25 @@
+{
+  "eyebrow": "Fitantanana",
+  "users": {
+    "title": "Mpampiasa",
+    "loading": "Mampiditra…",
+    "empty": "Tsy nahitana mpampiasa.",
+    "suspended": "Natsahatra",
+    "registeredOn": "nisoratra anarana tamin'ny {date}",
+    "reactivate": "Averina alefa",
+    "suspend": "Atsahatra",
+    "suspendError": "Tsy afaka manatsahatra an'ity mpampiasa ity.",
+    "reactivateError": "Tsy afaka mamerina mampiasa an'ity mpampiasa ity."
+  },
+  "reports": {
+    "title": "Tatitra",
+    "loading": "Mampiditra…",
+    "toProcess": "Hotanterahina ({count})",
+    "noneWaiting": "Tsy misy tatitra miandry.",
+    "resolutionPlaceholder": "Naoty momba ny famahana (tsy voatery)…",
+    "markProcessed": "Marihana ho voatanisa",
+    "processed": "Voatanisa",
+    "resolution": "Famahana : {text}",
+    "genericError": "Hadisoana"
+  }
+}

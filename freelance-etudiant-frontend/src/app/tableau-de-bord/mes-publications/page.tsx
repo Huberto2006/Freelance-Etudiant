@@ -20,6 +20,7 @@ import {
 import { api, ApiError } from "@/lib/api";
 import type { Mission, ServiceOffert } from "@/lib/types";
 import { useAuth } from "@/lib/auth-context";
+import { useTranslations } from "next-intl";
 
 import { PanneauFiltres, type Filtres } from "@/components/ui/PanneauFiltres";
 import { CarteMission } from "@/components/ui/CarteMission";
@@ -54,6 +55,7 @@ const LIEN_GERER_MISSIONS = "/tableau-de-bord/mes-missions";
 const LIEN_GERER_SERVICES = "/tableau-de-bord/mes-services";
 
 export default function MesPublicationsPage() {
+  const t = useTranslations("dashboardPages.myPublications");
   const { utilisateur, chargement: authChargement } = useAuth();
   const role = utilisateur?.role;
 
@@ -90,12 +92,12 @@ export default function MesPublicationsPage() {
       setErreur(
         err instanceof ApiError
           ? err.message
-          : "Impossible de charger vos publications pour le moment.",
+          : t("loadError"),
       );
     } finally {
       setChargement(false);
     }
-  }, [authChargement, role]);
+  }, [authChargement, role, t]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -195,8 +197,8 @@ export default function MesPublicationsPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <PageHeader
           icon={Layers3}
-          eyebrow="Tableau de bord"
-          title="Mes publications"
+          eyebrow={t("eyebrow")}
+          title={t("title")}
           className="mb-0"
         />
 
@@ -204,7 +206,7 @@ export default function MesPublicationsPage() {
           <Link href={lienPublier}>
             <Button variant="secondary" className="gap-2">
               <Plus size={16} />
-              {role === "client" ? "Publier une mission" : "Proposer un service"}
+              {role === "client" ? t("publishMission") : t("offerService")}
             </Button>
           </Link>
         )}
@@ -213,9 +215,7 @@ export default function MesPublicationsPage() {
       {role === "admin" ? (
         <NoticeCard>
           <MessageVide>
-            Les comptes administrateur ne publient pas de missions ou de
-            services. Retrouvez la gestion de la plateforme dans la section
-            Administration.
+            {t("adminNotice")}
           </MessageVide>
         </NoticeCard>
       ) : (
@@ -224,7 +224,7 @@ export default function MesPublicationsPage() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div
               className="inline-flex items-center gap-1.5 rounded-full border border-ink/15 bg-paper-light px-3.5 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-ink"
-              aria-label={role === "client" ? "Mes missions" : "Mes services"}
+              aria-label={role === "client" ? t("myMissions") : t("myServices")}
             >
               {role === "client" ? (
                 <BriefcaseBusiness size={14} aria-hidden="true" />
@@ -233,8 +233,8 @@ export default function MesPublicationsPage() {
               )}
               <span>
                 {role === "client"
-                  ? `Missions (${chargement ? "…" : nbMissions})`
-                  : `Services (${chargement ? "…" : nbServices})`}
+                  ? t("missionsCount", { count: chargement ? "…" : nbMissions })
+                  : t("servicesCount", { count: chargement ? "…" : nbServices })}
               </span>
             </div>
           </div>
@@ -244,8 +244,8 @@ export default function MesPublicationsPage() {
             <aside className="w-full shrink-0 lg:sticky lg:top-[7.5rem] lg:w-72">
               <PanneauFiltres
                 filtresInitiaux={filtres}
-                placeholder="Rechercher dans mes publications…"
-                labelBudget="Budget ou tarif (Ar)"
+                placeholder={t("searchPlaceholder")}
+                labelBudget={t("budgetLabel")}
                 onFiltrer={setFiltres}
               />
             </aside>
@@ -265,7 +265,7 @@ export default function MesPublicationsPage() {
                       className="mt-3"
                     >
                       <RotateCcw size={13} className="mr-1.5" />
-                      Réessayer
+                      {t("retry")}
                     </Button>
                   </div>
                 </NoticeCard>
@@ -282,17 +282,15 @@ export default function MesPublicationsPage() {
                     <MessageVide>
                       {nbTotal === 0
                         ? role === "client"
-                          ? "Vous n'avez encore publié aucune mission."
-                          : "Vous n'avez encore proposé aucun service."
-                        : "Aucune publication ne correspond à votre recherche."}
+                          ? t("emptyMissions")
+                          : t("emptyServices")
+                        : t("emptySearch")}
                     </MessageVide>
 
                     <Link href={lienPublier}>
                       <Button variant="secondary" size="sm" className="gap-1.5 text-xs">
                         <Plus size={14} />
-                        {role === "client"
-                          ? "Publier une mission"
-                          : "Proposer un service"}
+                        {role === "client" ? t("publishMission") : t("offerService")}
                       </Button>
                     </Link>
                   </div>
@@ -309,7 +307,7 @@ export default function MesPublicationsPage() {
                         >
                           <Button variant="ghost" size="sm" className="gap-1.5 text-xs">
                             <Pencil size={13} />
-                            Modifier
+                            {t("edit")}
                           </Button>
                         </Link>
                       </div>
@@ -348,6 +346,7 @@ function CarteServiceGeree({
   onSupprime: (id: string) => void;
   onMisAJour: (service: ServiceOffert) => void;
 }) {
+  const t = useTranslations("dashboardPages.myPublications");
   const [enCours, setEnCours] = useState<
     "disponibilite" | "archive" | "suppression" | null
   >(null);
@@ -363,7 +362,7 @@ function CarteServiceGeree({
       onMisAJour(maj);
     } catch (err) {
       setErreur(
-        err instanceof ApiError ? err.message : "Impossible de modifier la disponibilité.",
+        err instanceof ApiError ? err.message : t("availabilityError"),
       );
     } finally {
       setEnCours(null);
@@ -384,8 +383,8 @@ function CarteServiceGeree({
         err instanceof ApiError
           ? err.message
           : service.estArchive
-          ? "Impossible de restaurer le service."
-          : "Impossible d'archiver le service.",
+          ? t("restoreError")
+          : t("archiveError"),
       );
     } finally {
       setEnCours(null);
@@ -394,7 +393,7 @@ function CarteServiceGeree({
 
   async function supprimer() {
     const confirmation = window.confirm(
-      `Voulez-vous vraiment supprimer « ${service.titre} » ?`,
+      t("confirmDelete", { titre: service.titre }),
     );
     if (!confirmation) return;
 
@@ -405,7 +404,7 @@ function CarteServiceGeree({
       onSupprime(service.id);
     } catch (err) {
       setErreur(
-        err instanceof ApiError ? err.message : "Impossible de supprimer ce service.",
+        err instanceof ApiError ? err.message : t("deleteError"),
       );
       setEnCours(null);
     }
@@ -416,18 +415,17 @@ function CarteServiceGeree({
       <CarteService service={service} />
 
       <div className="flex flex-wrap items-center gap-1.5">
-        {service.estArchive && <Tag tone="ink">Archivé</Tag>}
+        {service.estArchive && <Tag tone="ink">{t("archived")}</Tag>}
         {!service.estArchive && !service.disponible && (
-          <Tag tone="ocre">Masqué</Tag>
+          <Tag tone="ocre">{t("hidden")}</Tag>
         )}
 
         <Link href={`${LIEN_GERER_SERVICES}?editer=${service.id}`}>
           <Button variant="ghost" size="sm" className="gap-1.5 text-xs">
             <Pencil size={13} />
-            Modifier
+            {t("edit")}
           </Button>
         </Link>
-
         <Button
           variant="ghost"
           size="sm"
@@ -442,7 +440,7 @@ function CarteServiceGeree({
           ) : (
             <PlayCircle size={13} />
           )}
-          {service.disponible ? "Mettre en pause" : "Activer"}
+          {service.disponible ? t("pause") : t("activate")}
         </Button>
 
         <Button
@@ -459,7 +457,7 @@ function CarteServiceGeree({
           ) : (
             <Archive size={13} />
           )}
-          {service.estArchive ? "Restaurer" : "Archiver"}
+          {service.estArchive ? t("restore") : t("archive")}
         </Button>
 
         <Button
@@ -474,7 +472,7 @@ function CarteServiceGeree({
           ) : (
             <Trash2 size={13} />
           )}
-          Supprimer
+          {t("delete")}
         </Button>
       </div>
 

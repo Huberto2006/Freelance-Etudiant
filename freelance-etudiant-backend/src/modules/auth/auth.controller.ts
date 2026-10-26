@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   ForbiddenException,
+  Headers,
   HttpCode,
   HttpStatus,
   Post,
@@ -98,8 +99,11 @@ export class AuthController {
   @UseGuards(TurnstileGuard)
   @TurnstileActions('inscription')
   @ApiOperation({ summary: "Inscription d'un etudiant ou d'un client" })
-  async register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  async register(
+    @Body() dto: RegisterDto,
+    @Headers('accept-language') acceptLanguage?: string,
+  ) {
+    return this.authService.register(dto, acceptLanguage);
   }
 
   @Public()
@@ -129,8 +133,12 @@ export class AuthController {
   async google(
     @Body() dto: GoogleIdTokenDto,
     @Res({ passthrough: true }) res: Response,
+    @Headers('accept-language') acceptLanguage?: string,
   ) {
-    const session = await this.authService.loginAvecGoogle(dto.idToken);
+    const session = await this.authService.loginAvecGoogle(
+      dto.idToken,
+      acceptLanguage,
+    );
     return this.repondreSession(res, session);
   }
 

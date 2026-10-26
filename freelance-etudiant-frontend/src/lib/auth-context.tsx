@@ -6,9 +6,13 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
+import { definirLangue } from "@/i18n/actions";
+import { isLocale } from "@/i18n/config";
 import {
   api,
   ApiError,
@@ -72,7 +76,7 @@ interface AuthContextValue {
     turnstileToken: string,
   ) => Promise<ReponseInscription>;
   deconnecter: () => void;
-  rafraichirProfil: () => Promise<CompletionProfil | null>;
+  rafraichirProfil: (apresConnexion?: boolean) => Promise<CompletionProfil | null>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -83,9 +87,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [completionProfil, setCompletionProfil] =
     useState<CompletionProfil | null>(null);
   const router = useRouter();
+  const locale = useLocale();
+  const localeRef = useRef(locale);
+  useEffect(() => {
+    localeRef.current = locale;
+  }, [locale]);
+
+  /**
+   * Langue du compte <-> langue du navigateur.
+   * - Par defaut le compte fait foi : la langue du compte est appliquee (autre
+   *   appareil, nouvelle session) puis la page est rafraichie.
+   * - Exception a la connexion : si le visiteur avait choisi une langue autre
+   *   que le francais et que le compte est reste sur le francais (valeur par
+   *   defaut), son choix est enregistre dans le compte plutot que d'etre perdu.
+   * Un echec reseau n'empeche jamais la connexion.
+   */
+  const synchroniserLangue = useCallback(
+    async (moi: Utilisateur, apresConnexion: boolean) => {
+      const compte = moi.langue;
+      if (!isLocale(compte)) return;
+      const courante = localeRef.current;
+      if (compte === courante) return;
+      try {
+        if (apresConnexion && isLocale(courante) && courante !== "fr" && compte === "fr") {
+          await api.patch("/users/me/langue", { langue: courante });
+          return;
+        }
+        await definirLangue(compte);
+        router.refresh();
+      } catch {
+        /* la langue reste celle du navigateur */
+      }
+    },
+    [router],
+  );
 
   const rafraichirProfil = useCallback(
-    async (): Promise<CompletionProfil | null> => {
+    async (apresConnexion = false): Promise<CompletionProfil | null> => {
       // Le jeton d'acces n'existe qu'en memoire : apres un rechargement on le
       // reobtient via le cookie httpOnly (refresh). Sans session : deconnecte.
       const sessionOk = await restaurerSession();
@@ -99,6 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const moi = await api.get<Utilisateur>("/users/me");
         setUtilisateur(moi);
+        void synchroniserLangue(moi, apresConnexion);
 
         // Seul le parcours étudiant existe pour l'instant (ÉTAPE G) : on ne
         // charge la complétion que pour ce rôle, pour ne rien changer au
@@ -129,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return completionChargee;
     },
-    [],
+    [synchroniserLangue],
   );
 
   useEffect(() => {
@@ -158,7 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Le refresh token est pose par le serveur en cookie httpOnly : il
       // n'apparait jamais dans la reponse ni dans le JavaScript.
       setToken(res.accessToken);
-      const profil = await rafraichirProfil();
+      const profil = await rafraichirProfil(true);
       return {
         completionProfil: profil,
         premiereConnexion: res.premiereConnexion,
@@ -177,7 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         { auth: false, headers: enteteTurnstile(turnstileToken) },
       );
       setToken(res.accessToken);
-      const profil = await rafraichirProfil();
+      const profil = await rafraichirProfil(true);
       return {
         role: res.utilisateur.role,
         completionProfil: profil,
