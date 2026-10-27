@@ -19,7 +19,9 @@
     "join": "Join Kianja",
     "explorePublications": "Explore publications →",
     "statServices": "Services offered",
-    "statMissions": "Open missions"
+    "statMissions": "Open missions",
+    "openMissionsTitle": "Open missions",
+    "openMissionsAll": "All missions"
   },
   "audiences": {
     "eyebrow": "A two-sided marketplace",

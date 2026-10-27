@@ -242,9 +242,7 @@ export function Navbar({
         h-16
         border-b
         border-ink/10
-        bg-paper-light/95
-        shadow-[0_2px_12px_rgba(15,23,42,0.06)]
-        backdrop-blur-md
+        bg-paper-light
         transition-[left]
         duration-200
         ease-in-out
@@ -668,18 +666,20 @@ export function Navbar({
                   <div
                     role="menu"
                     className="
+                      animate-pop
                       absolute
                       right-0
                       top-full
                       z-[100]
                       mt-2
                       w-64
+                      origin-top-right
                       overflow-hidden
-                      rounded-xl
+                      rounded-lg
                       border
                       border-ink/10
                       bg-paper-light
-                      shadow-lg
+                      shadow-[0_12px_32px_-12px_rgba(15,23,42,0.28)]
                     "
                   >
                     {/* ==========================================

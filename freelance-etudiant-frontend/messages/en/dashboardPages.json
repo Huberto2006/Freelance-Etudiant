@@ -61,7 +61,15 @@
       "specifications": "Specifications",
       "accept": "Accept",
       "refuse": "Refuse",
-      "followProject": "Follow the project in “My applications”"
+      "followProject": "Follow the project in “My applications”",
+      "confirmAcceptTitle": "Accept {nom}'s request?",
+      "confirmAcceptDescription": "{montant} · {delai}. A private mission will be created for this client; this decision can no longer be changed.",
+      "confirmAcceptAction": "Accept request",
+      "confirmRefuseTitle": "Decline {nom}'s request?",
+      "confirmRefuseDescription": "A declined request cannot be reopened.",
+      "confirmRefuseAction": "Decline request",
+      "acceptedToast": "Request accepted.",
+      "refusedToast": "Request declined."
     }
   },
   "groupInvitation": {
@@ -291,7 +299,15 @@
       "refuse": "Decline",
       "chatWithStudent": "Chat with the student",
       "trackDelivery": "Track the delivery",
-      "deliveryHint": "Validating and rating the delivery is done from the dedicated deliveries page."
+      "deliveryHint": "Validating and rating the delivery is done from the dedicated deliveries page.",
+      "confirmAcceptTitle": "Select {nom} for this mission?",
+      "confirmAcceptDescription": "{montant} · {delai}. The other pending applications for this mission will be declined and the mission will move to “in progress”.",
+      "confirmAcceptAction": "Select this student",
+      "confirmRefuseTitle": "Decline {nom}'s application?",
+      "confirmRefuseDescription": "A declined application cannot be reopened.",
+      "confirmRefuseAction": "Decline application",
+      "acceptedToast": "Application accepted.",
+      "refusedToast": "Application declined."
     }
   },
   "myServices": {

@@ -20,7 +20,8 @@ import { useOptionLabels } from "@/i18n/use-option-labels";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { MultiSelectCreatable } from "@/components/ui/MultiSelectCreatable";
-import { NoticeCard, PageHeader, StampBadge, StatCard, Tag } from "@/components/ui/Notice";
+import { BadgeStatut, ChargementPage, NoticeCard, PageHeader, StampBadge, StatCard, Tag } from "@/components/ui/Notice";
+import { useToast } from "@/components/ui/Toast";
 import { SelecteurImage } from "@/components/ui/SelecteurImage";
 import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
 import { dateLimiteDepassee } from "@/lib/format";
@@ -874,24 +875,38 @@ function CandidaturesMission({
   const t = useTranslations("dashboardPages.myMissions.applications");
   const { argent: formatArgent } = useFormats();
   const { statutCandidature } = useLabels();
+  const toast = useToast();
   const [candidatures, setCandidatures] = useState<Candidature[]>([]);
 
+  // `chargement` ne vaut true que pour le tout premier chargement : un
+  // rechargement après action garde la liste affichée (pas de clignotement).
   const [chargement, setChargement] = useState(true);
+  // Erreur de CHARGEMENT uniquement. Un échec d'action est signalé par une
+  // notification et ne fait jamais disparaître la liste.
   const [erreur, setErreur] = useState<string | null>(null);
 
+  type ActionCandidature = "accepter" | "refuser";
+
   /**
-   * Identifiant de la candidature en cours de traitement (acceptation ou
-   * refus). Protege contre le double-clic : les deux boutons d'une
-   * candidature sont desactives pendant l'appel, et les autres
-   * candidatures restent utilisables.
+   * Candidature dont une requête est réellement en cours, avec son action.
+   * Protège contre le double-clic : tous les boutons sont désactivés pendant
+   * l'appel, et seul le bouton concerné affiche son indicateur.
    */
-  const [actionEnCours, setActionEnCours] = useState<string | null>(null);
+  const [actionEnCours, setActionEnCours] = useState<{
+    id: string;
+    action: ActionCandidature;
+  } | null>(null);
+
+  /** Décision en attente de confirmation explicite. */
+  const [aConfirmer, setAConfirmer] = useState<{
+    candidature: Candidature;
+    action: ActionCandidature;
+  } | null>(null);
 
   /**
    * Recharge les candidatures.
    */
   const charger = useCallback(async () => {
-    setChargement(true);
     setErreur(null);
 
     try {
@@ -957,63 +972,57 @@ function CandidaturesMission({
   }, [missionId, t]);
 
   /**
-   * Accepter une candidature.
+   * Accepte ou refuse une candidature. Le succès n'est annoncé qu'après la
+   * réponse positive du backend ; en cas d'échec, son message est affiché
+   * et la liste reste intacte.
    */
-  async function accepter(id: string) {
+  async function executer(candidature: Candidature, action: ActionCandidature) {
     if (actionEnCours) return; // anti double-clic
-    setActionEnCours(id);
-    setErreur(null);
+    setActionEnCours({ id: candidature.id, action });
     try {
-      await api.patch(`/candidatures/${id}/accepter`);
+      await api.patch(`/candidatures/${candidature.id}/${action}`);
 
+      toast.succes(t(action === "accepter" ? "acceptedToast" : "refusedToast"));
       await charger();
-      // La mission passe a EN_COURS cote backend : on rafraichit la liste
-      // des missions du parent pour que son statut affiche ne reste pas
-      // "Ouverte" jusqu'au prochain rechargement de page.
-      await onCandidatureAcceptee?.();
-    } catch (error) {
-      console.error("Erreur lors de l'acceptation :", error);
 
-      setErreur(
-        error instanceof ApiError
-          ? error.message
-          : t("acceptError"),
+      if (action === "accepter") {
+        // La mission passe a EN_COURS cote backend : on rafraichit la liste
+        // des missions du parent pour que son statut affiche ne reste pas
+        // "Ouverte" jusqu'au prochain rechargement de page.
+        // Un échec de ce rafraîchissement ne doit jamais être présenté
+        // comme un échec de l'acceptation, qui a bien eu lieu.
+        try {
+          await onCandidatureAcceptee?.();
+        } catch (erreurRafraichissement) {
+          console.error(
+            "Rafraîchissement des missions impossible :",
+            erreurRafraichissement,
+          );
+        }
+      }
+    } catch (error) {
+      console.error(`Erreur lors de l'action « ${action} » :`, error);
+
+      toast.erreur(
+        t(action === "accepter" ? "acceptError" : "refuseError"),
+        error instanceof ApiError ? error.message : undefined,
       );
     } finally {
       setActionEnCours(null);
-    }
-  }
-
-  /**
-   * Refuser une candidature.
-   */
-  async function refuser(id: string) {
-    if (actionEnCours) return; // anti double-clic
-    setActionEnCours(id);
-    setErreur(null);
-    try {
-      await api.patch(`/candidatures/${id}/refuser`);
-
-      await charger();
-    } catch (error) {
-      console.error("Erreur lors du refus :", error);
-
-      setErreur(
-        error instanceof ApiError
-          ? error.message
-          : t("refuseError"),
-      );
-    } finally {
-      setActionEnCours(null);
+      setAConfirmer(null);
     }
   }
 
   if (chargement) {
-    return <p className="text-sm text-ink-soft">{t("loading")}</p>;
+    return <ChargementPage />;
   }
 
-  if (erreur) {
-    return <p className="text-sm text-brique">{erreur}</p>;
+  if (erreur && candidatures.length === 0) {
+    return (
+      <p role="alert" className="text-sm text-brique">
+        {erreur}
+      </p>
+    );
   }
 
   if (candidatures.length === 0) {
@@ -1073,17 +1082,10 @@ function CandidaturesMission({
                 </div>
               </div>
 
-              <Tag
-                tone={
-                  candidature.statut === "acceptee"
-                    ? "rice"
-                    : candidature.statut === "refusee"
-                      ? "brique"
-                      : "ink"
-                }
-              >
-                {statutCandidature(candidature.statut)}
-              </Tag>
+              <BadgeStatut
+                statut={candidature.statut}
+                labels={{ [candidature.statut]: statutCandidature(candidature.statut) }}
+              />
             </div>
 
             {/* =================================================
@@ -1104,21 +1106,35 @@ function CandidaturesMission({
               <div className="mt-3 flex gap-2">
                 <Button
                   size="sm"
+                  loading={
+                    actionEnCours?.id === candidature.id &&
+                    actionEnCours.action === "accepter"
+                  }
                   disabled={actionEnCours !== null}
-                  onClick={() => accepter(candidature.id)}
+                  onClick={() =>
+                    setAConfirmer({ candidature, action: "accepter" })
+                  }
                 >
-                  {actionEnCours === candidature.id
+                  {actionEnCours?.id === candidature.id &&
+                  actionEnCours.action === "accepter"
                     ? t("accepting")
                     : t("accept")}
                 </Button>
 
                 <Button
                   size="sm"
-                  variant="ghost"
+                  variant="danger-ghost"
+                  loading={
+                    actionEnCours?.id === candidature.id &&
+                    actionEnCours.action === "refuser"
+                  }
                   disabled={actionEnCours !== null}
-                  onClick={() => refuser(candidature.id)}
+                  onClick={() =>
+                    setAConfirmer({ candidature, action: "refuser" })
+                  }
                 >
-                  {actionEnCours === candidature.id
+                  {actionEnCours?.id === candidature.id &&
+                  actionEnCours.action === "refuser"
                     ? t("refusing")
                     : t("refuse")}
                 </Button>
@@ -1171,6 +1187,46 @@ function CandidaturesMission({
           </div>
         );
       })}
+
+      {/* Décision engageante : confirmation explicite avant toute requête. */}
+      <ConfirmDialog
+        ouvert={aConfirmer !== null}
+        titre={
+          aConfirmer
+            ? t(
+                aConfirmer.action === "accepter"
+                  ? "confirmAcceptTitle"
+                  : "confirmRefuseTitle",
+                {
+                  nom:
+                    aConfirmer.candidature.etudiant?.utilisateur?.nom ??
+                    t("studentFallback"),
+                },
+              )
+            : ""
+        }
+        description={
+          aConfirmer
+            ? aConfirmer.action === "accepter"
+              ? t("confirmAcceptDescription", {
+                  montant: formatArgent(aConfirmer.candidature.prixPropose),
+                  delai: t("days", { count: aConfirmer.candidature.delaiPropose }),
+                })
+              : t("confirmRefuseDescription")
+            : undefined
+        }
+        libelleConfirmer={
+          aConfirmer?.action === "accepter"
+            ? t("confirmAcceptAction")
+            : t("confirmRefuseAction")
+        }
+        destructif={aConfirmer?.action === "refuser"}
+        enCours={actionEnCours !== null}
+        onConfirmer={() => {
+          if (aConfirmer) void executer(aConfirmer.candidature, aConfirmer.action);
+        }}
+        onAnnuler={() => setAConfirmer(null)}
+      />
     </div>
   );
 }

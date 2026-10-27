@@ -46,20 +46,20 @@ export function SectionCategories({
             <Link
               key={categorie.valeur}
               href={`/services?categorie=${encodeURIComponent(categorie.valeur)}`}
-              className="notice-card group flex items-center gap-3 p-4 transition-all hover:border-bleu/30"
+              className="notice-card card-link group flex items-center gap-3 p-4"
             >
               <span
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-ink-soft transition-colors group-hover:bg-bleu/15 group-hover:text-bleu-dark"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-ink/[0.05] text-ink-soft transition-colors duration-150 group-hover:bg-bleu/10 group-hover:text-bleu-dark"
                 aria-hidden="true"
               >
-                <Icone size={18} />
+                <Icone size={17} />
               </span>
 
               <span className="min-w-0">
-                <span className="block truncate font-display font-medium text-ink transition-colors group-hover:text-bleu-dark">
+                <span className="block truncate font-display font-medium text-ink">
                   {categorie.libelle}
                 </span>
-                <span className="block text-xs text-ink-soft/70">
+                <span className="block text-xs text-ink-soft">
                   {categorie.total !== undefined
                     ? t("serviceCount", { count: categorie.total })
                     : t("discover")}

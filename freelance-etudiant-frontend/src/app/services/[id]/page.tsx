@@ -142,7 +142,7 @@ export default function ServiceDetailPage({
       </div>
 
       {service.imagesUrls?.[0] && (
-        <div className="mb-6 h-64 overflow-hidden rounded-2xl border border-ink/10 sm:h-80">
+        <div className="mb-6 h-64 overflow-hidden rounded-lg border border-ink/10 sm:h-80">
           <ImageAvecRepli
             src={getFileUrl(service.imagesUrls[0])}
             alt=""

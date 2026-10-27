@@ -88,13 +88,18 @@ export default function PageAccueil() {
     ? undefined
     : [
         { label: t("statServices"), valeur: String(services.length) },
-        { label: t("statMissions"), valeur: String(missions.length) },
+        {
+          label: t("statMissions"),
+          // « Missions ouvertes » : on ne compte que les missions dont le
+          // statut backend est réellement « ouverte ».
+          valeur: String(missions.filter((m) => m.statut === "ouverte").length),
+        },
       ];
 
   return (
     <div className="mx-auto">
       {/* 1. Hero : recherche bilatérale, métriques vivantes et accès direct */}
-      <HeroAccueil suggestions={suggestions} stats={stats} />
+      <HeroAccueil suggestions={suggestions} stats={stats} missions={missions} />
 
       {/* 2. Audiences : mise en valeur immédiate des deux côtés de la marketplace */}
       <SectionAudiences />

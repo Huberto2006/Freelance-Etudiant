@@ -9,7 +9,27 @@
     "reactivate": "Reactivate",
     "suspend": "Suspend",
     "suspendError": "Unable to suspend this user.",
-    "reactivateError": "Unable to reactivate this user."
+    "reactivateError": "Unable to reactivate this user.",
+    "searchLabel": "Search users",
+    "searchPlaceholder": "Name or email address",
+    "roleFilter": "Role",
+    "allRoles": "All roles",
+    "statusFilter": "Status",
+    "allStatuses": "All statuses",
+    "active": "Active",
+    "colUser": "User",
+    "colRole": "Role",
+    "colRegistered": "Joined",
+    "colStatus": "Status",
+    "colActions": "Actions",
+    "count": "{count, plural, one {# user} other {# users}}",
+    "noResults": "No users match these filters.",
+    "suspendTitle": "Suspend {nom}?",
+    "suspendDescription": "This user will not be able to sign in until the account is reactivated.",
+    "suspendConfirm": "Suspend account",
+    "suspendedToast": "{nom} has been suspended.",
+    "reactivatedToast": "{nom} has been reactivated.",
+    "inactive": "Inactive"
   },
   "reports": {
     "title": "Reports",
@@ -20,6 +40,7 @@
     "markProcessed": "Mark as processed",
     "processed": "Processed",
     "resolution": "Resolution: {text}",
-    "genericError": "Error"
+    "genericError": "Error",
+    "processedToast": "Report marked as processed."
   }
 }

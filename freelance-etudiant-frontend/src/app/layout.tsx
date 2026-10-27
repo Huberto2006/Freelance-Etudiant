@@ -19,6 +19,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { SocketProvider } from "@/lib/socket-context";
+import { ToastProvider } from "@/components/ui/Toast";
 import { NavbarConditionnelle } from "@/components/layout/NavbarConditionnelle";
 import { FooterConditionnel } from "@/components/layout/FooterConditionnel";
 
@@ -82,6 +83,7 @@ export default async function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <SocketProvider>
+              <ToastProvider>
               {/* Navbar publique — masquée sur /tableau-de-bord, où le
                   layout du dashboard rend sa propre variante hasSidebar. */}
               <NavbarConditionnelle />
@@ -99,6 +101,7 @@ export default async function RootLayout({
               </main>
 
               <FooterConditionnel />
+              </ToastProvider>
             </SocketProvider>
           </AuthProvider>
         </ThemeProvider>

@@ -11,7 +11,15 @@
     "onlineAuto": "Fandoavana an-tserasera: hojerena ho azy ny satany amin'ny mpamatsy (tsy ilaina ny fanamarinana an-tanana).",
     "confirm": "Hamarino",
     "cancel": "Foano",
-    "history": "Tantara"
+    "history": "Tantara",
+    "confirmTitle": "Hamarinina ve ity fandoavana ity?",
+    "confirmDescription": "{montant} · {methode} · tsiahy {reference}. Rehefa voatanisa, tsy azo ovaina intsony ity fandoavana ity.",
+    "confirmAction": "Hamarino ny fandoavana",
+    "cancelTitle": "Hofoanana ve ity fandoavana ity?",
+    "cancelDescription": "{montant} · {methode} · tsiahy {reference}. Rehefa voatanisa, tsy azo ovaina intsony ity fandoavana ity.",
+    "cancelAction": "Foano ny fandoavana",
+    "confirmedToast": "Voamarina ny fandoavana.",
+    "cancelledToast": "Nofoanana ny fandoavana."
   },
   "page": {
     "confirmedBy": "Nohamarinin'i {fournisseur} ny fandoavana.",

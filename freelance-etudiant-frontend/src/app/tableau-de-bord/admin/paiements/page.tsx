@@ -1,76 +1,84 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Wallet } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { api, ApiError } from "@/lib/api";
 import type { Transaction } from "@/lib/types";
-import { useTranslations } from "next-intl";
 import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
+import { useApiList } from "@/hooks/useApiList";
 import { Button } from "@/components/ui/Button";
-import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { BadgeStatut, EtatVide, NoticeCard, PageHeader } from "@/components/ui/Notice";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/Toast";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
-const toneParStatut: Record<string, "ocre" | "rice" | "brique" | "ink"> = {
-  en_attente: "ocre",
-  confirmee: "rice",
-  liberee: "rice",
-  annulee: "brique",
-};
+type Action = "confirmer" | "annuler";
 
 export default function AdminPaiementsPage() {
   const t = useTranslations("payments");
+  const tc = useTranslations("common");
   const { argent, dateCourte } = useFormats();
   const { methodePaiement, statutTransaction } = useLabels();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [chargement, setChargement] = useState(true);
-  const [erreur, setErreur] = useState<string | null>(null);
+  const toast = useToast();
+
+  // `donnees` est conservé pendant un rechargement : après une action la
+  // liste reste affichée au lieu de repasser par un écran de chargement.
+  const { donnees, chargement, erreur, recharger } = useApiList(() =>
+    api.get<Transaction[]>("/paiements"),
+  );
+  const transactions = useMemo(() => donnees ?? [], [donnees]);
+
+  // Transaction dont une requête est réellement en cours.
   const [enCours, setEnCours] = useState<string | null>(null);
+  // Action sensible en attente de confirmation explicite.
+  const [aConfirmer, setAConfirmer] = useState<{
+    transaction: Transaction;
+    action: Action;
+  } | null>(null);
 
-  const charger = useCallback(() => {
-    setChargement(true);
-    api
-      .get<Transaction[]>("/paiements")
-      .then(setTransactions)
-      .finally(() => setChargement(false));
-  }, []);
+  const enAttente = useMemo(
+    () => transactions.filter((x) => x.statut === "en_attente"),
+    [transactions],
+  );
+  const traitees = useMemo(
+    () => transactions.filter((x) => x.statut !== "en_attente"),
+    [transactions],
+  );
 
-  useEffect(() => {
-    // Differre l'appel hors du corps synchrone de l'effet (react-hooks/
-    // set-state-in-effect) : charger() met a jour l'etat des son entree.
-    void Promise.resolve().then(() => {
-      charger();
+  /**
+   * Confirme ou annule un paiement. Le succès n'est annoncé qu'après la
+   * réponse positive du backend ; sinon le message d'erreur du backend est
+   * affiché et la liste n'est pas modifiée.
+   */
+  async function executer(transaction: Transaction, action: Action) {
+    setEnCours(transaction.id);
+    try {
+      await api.patch(`/paiements/${transaction.id}/${action}`);
+      toast.succes(
+        t(action === "confirmer" ? "adminList.confirmedToast" : "adminList.cancelledToast"),
+      );
+      await recharger();
+    } catch (err) {
+      toast.erreur(
+        t("adminList.genericError"),
+        err instanceof ApiError ? err.message : undefined,
+      );
+    } finally {
+      setEnCours(null);
+      setAConfirmer(null);
+    }
+  }
+
+  const premierChargement = chargement && donnees === null;
+
+  const resume = (x: Transaction) =>
+    t("adminList.methodRef", {
+      methode: methodePaiement(x.methode),
+      reference: x.reference,
     });
-  }, [charger]);
-
-  async function confirmer(id: string) {
-    setEnCours(id);
-    setErreur(null);
-    try {
-      await api.patch(`/paiements/${id}/confirmer`);
-      charger();
-    } catch (err) {
-      setErreur(err instanceof ApiError ? err.message : t("adminList.genericError"));
-    } finally {
-      setEnCours(null);
-    }
-  }
-
-  async function annuler(id: string) {
-    setEnCours(id);
-    setErreur(null);
-    try {
-      await api.patch(`/paiements/${id}/annuler`);
-      charger();
-    } catch (err) {
-      setErreur(err instanceof ApiError ? err.message : t("adminList.genericError"));
-    } finally {
-      setEnCours(null);
-    }
-  }
-
-  const enAttente = transactions.filter((x) => x.statut === "en_attente");
-  const traitees = transactions.filter((x) => x.statut !== "en_attente");
 
   return (
     <div>
@@ -78,90 +86,202 @@ export default function AdminPaiementsPage() {
         <BoutonRetour repli="/tableau-de-bord/admin" forcer />
       </div>
 
-      <PageHeader icon={Wallet} eyebrow={t("adminList.eyebrow")} title={t("adminList.title")} />
-      {erreur && <p className="text-sm text-brique mb-4">{erreur}</p>}
+      <PageHeader
+        icon={Wallet}
+        eyebrow={t("adminList.eyebrow")}
+        title={t("adminList.title")}
+      />
 
-      {chargement ? (
-        <p className="text-sm text-ink-soft">{t("adminList.loading")}</p>
+      {erreur && (
+        <NoticeCard className="mb-4 flex flex-wrap items-center justify-between gap-3 border-brique/30">
+          <p role="alert" className="text-sm text-brique">
+            {erreur}
+          </p>
+          <Button
+            size="sm"
+            variant="ghost"
+            loading={chargement}
+            onClick={() => void recharger()}
+          >
+            {tc("actions.retry")}
+          </Button>
+        </NoticeCard>
+      )}
+
+      {premierChargement ? (
+        <ChargementPaiements />
       ) : (
         <>
-          <h2 className="font-display text-lg font-semibold mb-3">
+          {/* ------------------------------------------- À VÉRIFIER */}
+          <h2 className="mb-3 font-display text-lg font-semibold">
             {t("adminList.toVerify", { count: enAttente.length })}
           </h2>
+
           {enAttente.length === 0 ? (
-            <NoticeCard className="mb-7">
-              <p className="text-sm text-ink-soft/70">
-                {t("adminList.noneToVerify")}
-              </p>
-            </NoticeCard>
+            <EtatVide icon={Wallet} className="mb-8">
+              {t("adminList.noneToVerify")}
+            </EtatVide>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 mb-7">
-              {enAttente.map((x) => (
-                <NoticeCard key={x.id} className="flex flex-col gap-2">
-                  <p className="font-display font-medium">
-                    {x.candidature?.mission?.titre ?? t("adminList.missionFallback")}
-                  </p>
-                  <p className="text-xs font-mono text-ink-soft/70">
-                    {t("adminList.methodRef", {
-                      methode: methodePaiement(x.methode),
-                      reference: x.reference,
-                    })}
-                  </p>
-                  <p className="font-mono text-sm text-ocre-dark">
-                    {argent(x.montant)}
-                  </p>
-                  {x.provider === "papi" || x.provider === "mvola" ? (
-                    <p className="mt-1 text-xs text-ink-soft">
-                      {t("adminList.onlineAuto")}
-                    </p>
-                  ) : (
-                    <div className="flex gap-2 mt-1">
-                      <Button
-                        variant="secondary"
-                        disabled={enCours === x.id}
-                        onClick={() => confirmer(x.id)}
-                      >
-                        {t("adminList.confirm")}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        disabled={enCours === x.id}
-                        onClick={() => annuler(x.id)}
-                      >
-                        {t("adminList.cancel")}
-                      </Button>
-                    </div>
-                  )}
-                </NoticeCard>
-              ))}
-            </div>
+            <ul className="mb-8 grid gap-3 sm:grid-cols-2">
+              {enAttente.map((x) => {
+                // Un paiement en ligne (Papi / MVola) est vérifié par le
+                // fournisseur : le backend refuse toute action manuelle,
+                // l'interface ne propose donc aucun bouton dans ce cas.
+                const enLigne = x.provider === "papi" || x.provider === "mvola";
+                return (
+                  <li key={x.id}>
+                    <NoticeCard className="flex h-full flex-col gap-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-display font-medium leading-snug">
+                            {x.candidature?.mission?.titre ??
+                              t("adminList.missionFallback")}
+                          </p>
+                          <p className="mt-0.5 text-xs text-ink-soft">
+                            {resume(x)}
+                          </p>
+                        </div>
+                        <BadgeStatut
+                          statut={x.statut}
+                          labels={{ en_attente: statutTransaction(x.statut) }}
+                        />
+                      </div>
+
+                      <p className="font-mono text-lg font-semibold tabular-nums text-ocre-dark">
+                        {argent(x.montant)}
+                      </p>
+
+                      {enLigne ? (
+                        <p className="rounded-md bg-ink/[0.04] px-3 py-2 text-xs leading-relaxed text-ink-soft">
+                          {t("adminList.onlineAuto")}
+                        </p>
+                      ) : (
+                        <div className="mt-auto flex flex-wrap gap-2">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            loading={
+                              enCours === x.id &&
+                              aConfirmer?.action === "confirmer"
+                            }
+                            disabled={enCours !== null}
+                            onClick={() =>
+                              setAConfirmer({ transaction: x, action: "confirmer" })
+                            }
+                          >
+                            {t("adminList.confirm")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="danger-ghost"
+                            disabled={enCours !== null}
+                            onClick={() =>
+                              setAConfirmer({ transaction: x, action: "annuler" })
+                            }
+                          >
+                            {t("adminList.cancel")}
+                          </Button>
+                        </div>
+                      )}
+                    </NoticeCard>
+                  </li>
+                );
+              })}
+            </ul>
           )}
 
-          <h2 className="font-display text-lg font-semibold mb-3">
+          {/* ------------------------------------------- HISTORIQUE */}
+          <h2 className="mb-3 font-display text-lg font-semibold">
             {t("adminList.history")}
           </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {traitees.map((x) => (
-              <NoticeCard key={x.id} className="flex flex-col gap-2">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-display font-medium">
-                    {x.candidature?.mission?.titre ?? t("adminList.missionFallback")}
-                  </p>
-                  <Tag tone={toneParStatut[x.statut]}>
-                    {statutTransaction(x.statut)}
-                  </Tag>
-                </div>
-                <p className="font-mono text-sm text-ocre-dark">
-                  {argent(x.montant)}
-                </p>
-                <p className="text-xs text-ink-soft/60">
-                  {dateCourte(x.dateCreation)}
-                </p>
-              </NoticeCard>
-            ))}
-          </div>
+
+          {traitees.length === 0 ? (
+            <EtatVide icon={Wallet}>{tc("states.empty")}</EtatVide>
+          ) : (
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {traitees.map((x) => (
+                <li key={x.id}>
+                  <NoticeCard className="flex h-full flex-col gap-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-display font-medium leading-snug">
+                        {x.candidature?.mission?.titre ??
+                          t("adminList.missionFallback")}
+                      </p>
+                      <BadgeStatut
+                        statut={x.statut}
+                        labels={{ [x.statut]: statutTransaction(x.statut) }}
+                      />
+                    </div>
+                    <p className="text-xs text-ink-soft">{resume(x)}</p>
+                    <div className="mt-auto flex items-baseline justify-between gap-3 pt-1">
+                      <p className="font-mono text-sm font-semibold tabular-nums text-ocre-dark">
+                        {argent(x.montant)}
+                      </p>
+                      <p className="text-xs tabular-nums text-ink-soft">
+                        {dateCourte(x.dateCreation)}
+                      </p>
+                    </div>
+                  </NoticeCard>
+                </li>
+              ))}
+            </ul>
+          )}
         </>
       )}
+
+      {/* Valider ou annuler un paiement est irréversible côté backend
+          (« Ce paiement a déjà été traité ») : confirmation obligatoire. */}
+      <ConfirmDialog
+        ouvert={aConfirmer !== null}
+        titre={
+          aConfirmer?.action === "annuler"
+            ? t("adminList.cancelTitle")
+            : t("adminList.confirmTitle")
+        }
+        description={
+          aConfirmer
+            ? t(
+                aConfirmer.action === "annuler"
+                  ? "adminList.cancelDescription"
+                  : "adminList.confirmDescription",
+                {
+                  montant: argent(aConfirmer.transaction.montant),
+                  methode: methodePaiement(aConfirmer.transaction.methode),
+                  reference: aConfirmer.transaction.reference,
+                },
+              )
+            : undefined
+        }
+        libelleConfirmer={
+          aConfirmer?.action === "annuler"
+            ? t("adminList.cancelAction")
+            : t("adminList.confirmAction")
+        }
+        destructif={aConfirmer?.action === "annuler"}
+        enCours={aConfirmer !== null && enCours === aConfirmer.transaction.id}
+        onConfirmer={() => {
+          if (aConfirmer) void executer(aConfirmer.transaction, aConfirmer.action);
+        }}
+        onAnnuler={() => setAConfirmer(null)}
+      />
+    </div>
+  );
+}
+
+function ChargementPaiements() {
+  return (
+    <div aria-hidden="true">
+      <Skeleton className="mb-3 h-5 w-40" />
+      <div className="mb-8 grid gap-3 sm:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, index) => (
+          <div key={index} className="notice-card flex flex-col gap-3 p-5">
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-3 w-1/2" />
+            <Skeleton className="h-6 w-28" />
+            <Skeleton className="h-8 w-44" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

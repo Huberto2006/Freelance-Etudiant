@@ -138,7 +138,7 @@ export default function MissionDetailPage({
         <BoutonRetour repli="/missions" />
       </div>
       {mission.imageUrl && (
-        <div className="mb-6 h-64 overflow-hidden rounded-2xl border border-ink/10 sm:h-80">
+        <div className="mb-6 h-64 overflow-hidden rounded-lg border border-ink/10 sm:h-80">
           <ImageAvecRepli
             src={getFileUrl(mission.imageUrl)}
             alt=""

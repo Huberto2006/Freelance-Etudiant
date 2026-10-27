@@ -9,7 +9,27 @@
     "reactivate": "Réactiver",
     "suspend": "Suspendre",
     "suspendError": "Impossible de suspendre cet utilisateur.",
-    "reactivateError": "Impossible de réactiver cet utilisateur."
+    "reactivateError": "Impossible de réactiver cet utilisateur.",
+    "searchLabel": "Rechercher un utilisateur",
+    "searchPlaceholder": "Nom ou adresse e-mail",
+    "roleFilter": "Rôle",
+    "allRoles": "Tous les rôles",
+    "statusFilter": "Statut",
+    "allStatuses": "Tous les statuts",
+    "active": "Actif",
+    "colUser": "Utilisateur",
+    "colRole": "Rôle",
+    "colRegistered": "Inscription",
+    "colStatus": "Statut",
+    "colActions": "Actions",
+    "count": "{count, plural, one {# utilisateur} other {# utilisateurs}}",
+    "noResults": "Aucun utilisateur ne correspond à ces critères.",
+    "suspendTitle": "Suspendre {nom} ?",
+    "suspendDescription": "Cet utilisateur ne pourra plus se connecter tant que son compte n'est pas réactivé.",
+    "suspendConfirm": "Suspendre le compte",
+    "suspendedToast": "{nom} a été suspendu.",
+    "reactivatedToast": "{nom} a été réactivé.",
+    "inactive": "Inactif"
   },
   "reports": {
     "title": "Signalements",
@@ -20,6 +40,7 @@
     "markProcessed": "Marquer comme traité",
     "processed": "Traités",
     "resolution": "Résolution : {text}",
-    "genericError": "Erreur"
+    "genericError": "Erreur",
+    "processedToast": "Signalement marqué comme traité."
   }
 }

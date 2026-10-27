@@ -138,5 +138,10 @@
   "ratingOutOf": "Rating {valeur} out of 5",
   "workFeedbackPlaceholder": "Share your feedback on the work done…",
   "sendReview": "Send the review",
-  "yourReview": "Your review: {note}/5"
+  "yourReview": "Your review: {note}/5",
+  "confirmValidateTitle": "Validate this delivery?",
+  "confirmValidateDescription": "Once validated, the delivery can no longer be sent back for correction. If a payment has already been confirmed, it will be released to the student.",
+  "confirmValidateAction": "Validate delivery",
+  "validatedToast": "Delivery validated.",
+  "correctionSentToast": "Correction request sent."
 }

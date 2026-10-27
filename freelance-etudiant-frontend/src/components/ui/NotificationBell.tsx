@@ -482,7 +482,7 @@ export function NotificationBell() {
             w-[calc(100vw-2rem)]
             max-w-[390px]
             overflow-hidden
-            rounded-2xl
+            rounded-lg
             border
             border-ink/10
             bg-paper

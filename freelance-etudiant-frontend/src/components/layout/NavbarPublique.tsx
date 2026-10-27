@@ -43,7 +43,7 @@ const styleBoutonConnexion =
   "inline-flex items-center justify-center rounded-lg border border-ink/20 px-3.5 py-1.5 text-sm font-medium text-ink transition-colors hover:border-ink/40 hover:bg-ink/5";
 
 const styleBoutonRejoindre =
-  "inline-flex items-center justify-center rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-paper-light transition-colors hover:bg-ink-soft shadow-2xs";
+  "inline-flex items-center justify-center rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-paper-light transition-colors hover:bg-ink-soft ";
 
 /**
  * Un état d'ouverture n'est valable que pour la route sur laquelle il a
@@ -138,7 +138,7 @@ export function NavbarPublique() {
   return (
     <header
       ref={navbarRef}
-      className="fixed inset-x-0 top-0 z-50 h-16 border-b border-ink/10 bg-paper-light/95 shadow-[0_2px_12px_rgba(15,23,42,0.06)] backdrop-blur-md"
+      className="fixed inset-x-0 top-0 z-50 h-16 border-b border-ink/10 bg-paper-light"
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:gap-6">
         <button
@@ -311,7 +311,7 @@ export function NavbarPublique() {
                 {menuProfilOuvert && (
                   <div
                     role="menu"
-                    className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-ink/10 bg-paper-light shadow-lg"
+                    className="animate-pop absolute right-0 top-full mt-2 w-56 origin-top-right overflow-hidden rounded-lg border border-ink/10 bg-paper-light shadow-[0_12px_32px_-12px_rgba(15,23,42,0.28)]"
                   >
                     <Link
                       href="/tableau-de-bord"
@@ -380,7 +380,7 @@ export function NavbarPublique() {
       {menuMobileOuvert && (
         <div
           id="menu-mobile-public"
-          className="kianja-scrollbar-light max-h-[calc(100dvh-4rem)] overflow-y-auto overflow-x-hidden border-t border-ink/10 bg-paper-light px-4 py-3 lg:hidden"
+          className="animate-slide-down kianja-scrollbar-light max-h-[calc(100dvh-4rem)] overflow-y-auto overflow-x-hidden border-t border-ink/10 bg-paper-light px-4 py-3 lg:hidden"
         >
           <SelecteurLangue variant="inline" className="pb-3" />
           <nav aria-label={t("publicNav.mobileNav")} className="space-y-1">

@@ -42,10 +42,10 @@ export function SectionAvantages() {
           return (
             <NoticeCard key={avantage.cle} className="flex items-start gap-4">
               <span
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bleu/10 text-bleu-dark"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-bleu/10 text-bleu-dark"
                 aria-hidden="true"
               >
-                <Icone size={19} />
+                <Icone size={18} />
               </span>
 
               <div>
@@ -63,7 +63,7 @@ export function SectionAvantages() {
 
       {/* Appel à l'action final : un seul bloc, masqué pour les connectés */}
       {!chargement && !utilisateur && (
-        <div className="mt-14 rounded-2xl border border-ink/10 bg-paper-light px-6 py-10 text-center sm:px-10">
+        <div className="mt-14 rounded-lg border border-ink/10 bg-paper-light px-6 py-10 text-center sm:px-10">
           <h3 className="font-display text-2xl font-semibold sm:text-3xl">
             {t("ctaTitle")}
           </h3>

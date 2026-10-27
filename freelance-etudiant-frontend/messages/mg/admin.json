@@ -9,7 +9,27 @@
     "reactivate": "Averina alefa",
     "suspend": "Atsahatra",
     "suspendError": "Tsy afaka manatsahatra an'ity mpampiasa ity.",
-    "reactivateError": "Tsy afaka mamerina mampiasa an'ity mpampiasa ity."
+    "reactivateError": "Tsy afaka mamerina mampiasa an'ity mpampiasa ity.",
+    "searchLabel": "Hikaroka mpampiasa",
+    "searchPlaceholder": "Anarana na adiresy mailaka",
+    "roleFilter": "Andraikitra",
+    "allRoles": "Ny andraikitra rehetra",
+    "statusFilter": "Toe-javatra",
+    "allStatuses": "Ny toe-javatra rehetra",
+    "active": "Mavitrika",
+    "colUser": "Mpampiasa",
+    "colRole": "Andraikitra",
+    "colRegistered": "Fisoratana anarana",
+    "colStatus": "Toe-javatra",
+    "colActions": "Hetsika",
+    "count": "{count} mpampiasa",
+    "noResults": "Tsy misy mpampiasa mifanaraka amin'ireo fepetra ireo.",
+    "suspendTitle": "Hatsahatra i {nom} ve?",
+    "suspendDescription": "Tsy ho afaka hiditra intsony ity mpampiasa ity raha tsy averina alefa ny kaontiny.",
+    "suspendConfirm": "Atsahatra ny kaontiny",
+    "suspendedToast": "Natsahatra i {nom}.",
+    "reactivatedToast": "Naverina nalefa i {nom}.",
+    "inactive": "Tsy mavitrika"
   },
   "reports": {
     "title": "Tatitra",
@@ -20,6 +40,7 @@
     "markProcessed": "Marihana ho voatanisa",
     "processed": "Voatanisa",
     "resolution": "Famahana : {text}",
-    "genericError": "Hadisoana"
+    "genericError": "Hadisoana",
+    "processedToast": "Voatanisa ny tatitra."
   }
 }

@@ -47,6 +47,8 @@ import type {
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useToast } from "@/components/ui/Toast";
 import {
   Field,
   Input,
@@ -1840,6 +1842,13 @@ function LivraisonClient({
       "valider" | "corriger" | null
     >(null);
 
+  const toast = useToast();
+
+  // La validation est irréversible côté backend (statut « validée ») et
+  // peut libérer un paiement : elle exige une confirmation explicite.
+  const [confirmerValidation, setConfirmerValidation] =
+    useState(false);
+
   // ==========================================================
   // ÉVALUATION OBLIGATOIRE (fin de projet)
   //
@@ -2067,6 +2076,7 @@ function LivraisonClient({
           resultat.statut ??
             "validee",
         );
+        toast.succes(t("validatedToast"));
       } else {
         const resultat =
           await api.patch<Livraison>(
@@ -2081,6 +2091,7 @@ function LivraisonClient({
           resultat.statut ??
             "correction_demandee",
         );
+        toast.succes(t("correctionSentToast"));
       }
     } catch (error) {
       console.error(
@@ -2096,6 +2107,7 @@ function LivraisonClient({
     } finally {
       setEnvoi(false);
       setAction(null);
+      setConfirmerValidation(false);
     }
   }
 
@@ -2270,7 +2282,7 @@ function LivraisonClient({
               variant="ghost"
               className="inline-flex items-center gap-2 border border-rice/30 text-rice hover:bg-rice/10"
               onClick={() =>
-                handleAction("valider")
+                setConfirmerValidation(true)
               }
               disabled={envoi}
             >
@@ -2305,6 +2317,17 @@ function LivraisonClient({
                 : t("requestCorrection")}
             </Button>
           </div>
+
+          <ConfirmDialog
+            ouvert={confirmerValidation}
+            titre={t("confirmValidateTitle")}
+            description={t("confirmValidateDescription")}
+            libelleConfirmer={t("confirmValidateAction")}
+            destructif={false}
+            enCours={envoi && action === "valider"}
+            onConfirmer={() => void handleAction("valider")}
+            onAnnuler={() => setConfirmerValidation(false)}
+          />
         </div>
       )}
 

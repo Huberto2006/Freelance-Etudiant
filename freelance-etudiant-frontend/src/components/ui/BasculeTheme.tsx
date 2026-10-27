@@ -77,7 +77,7 @@ export function BasculeTheme() {
           flex h-full w-full
           items-center justify-center
           transition-transform duration-300
-          group-hover:rotate-12
+          
         "
       >
         {modeSombre ? (

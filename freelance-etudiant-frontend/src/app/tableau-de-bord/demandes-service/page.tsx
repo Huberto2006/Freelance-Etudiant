@@ -10,15 +10,11 @@ import { useTranslations } from "next-intl";
 import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
 import { Button } from "@/components/ui/Button";
-import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
+import { BadgeStatut, ChargementPage, EtatVide, NoticeCard, PageHeader } from "@/components/ui/Notice";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useToast } from "@/components/ui/Toast";
 import { PieceJointeAffichage } from "@/components/ui/PieceJointe";
 import { SousNavigation } from "@/components/ui/SousNavigation";
-
-const toneParStatut: Record<string, "ocre" | "rice" | "brique" | "ink"> = {
-  en_attente: "ocre",
-  acceptee: "rice",
-  refusee: "brique",
-};
 
 /* =========================================================
    VUE CLIENT — mes demandes envoyées
@@ -39,16 +35,10 @@ function VueClient() {
       .finally(() => setChargement(false));
   }, []);
 
-  if (chargement) return <p className="text-sm text-ink-soft">{t("loading")}</p>;
+  if (chargement) return <ChargementPage />;
 
   if (demandes.length === 0) {
-    return (
-      <NoticeCard>
-        <p className="text-sm text-ink-soft/70">
-          {t("client.empty")}
-        </p>
-      </NoticeCard>
-    );
+    return <EtatVide icon={FileText}>{t("client.empty")}</EtatVide>;
   }
 
   const enAttente = demandes.filter((d) => d.statut === "en_attente").length;
@@ -90,9 +80,10 @@ function VueClient() {
                 })}
               </p>
             </div>
-            <Tag tone={toneParStatut[d.statut]}>
-              {statutDemandeService(d.statut)}
-            </Tag>
+            <BadgeStatut
+              statut={d.statut}
+              labels={{ [d.statut]: statutDemandeService(d.statut) }}
+            />
           </div>
 
           <p className="text-sm text-ink-soft whitespace-pre-line">
@@ -136,64 +127,77 @@ function VueEtudiant() {
   const t = useTranslations("dashboardPages.serviceRequests");
   const { argent: formatArgent, dateCourte: formatDateCourte } = useFormats();
   const { statutDemandeService } = useLabels();
+  const toast = useToast();
   const [demandes, setDemandes] = useState<DemandeService[]>([]);
+  // `chargement` ne vaut true que pour le premier chargement : après une
+  // action, la liste reste affichée pendant le rechargement.
   const [chargement, setChargement] = useState(true);
-  const [enCours, setEnCours] = useState<string | null>(null);
-  const [erreur, setErreur] = useState<string | null>(null);
+  const [erreurChargement, setErreurChargement] = useState<string | null>(null);
   const [onglet, setOnglet] = useState("toutes");
 
-  const charger = useCallback(() => {
-    setChargement(true);
-    api
-      .get<DemandeService[]>("/demandes-service/recues")
-      .then(setDemandes)
-      .finally(() => setChargement(false));
-  }, []);
+  type ActionDemande = "accepter" | "refuser";
+  // Demande dont une requête est réellement en cours, avec son action.
+  const [enCours, setEnCours] = useState<{ id: string; action: ActionDemande } | null>(null);
+  // Décision en attente de confirmation explicite.
+  const [aConfirmer, setAConfirmer] = useState<{
+    demande: DemandeService;
+    action: ActionDemande;
+  } | null>(null);
+
+  const charger = useCallback(async () => {
+    try {
+      setDemandes(await api.get<DemandeService[]>("/demandes-service/recues"));
+      setErreurChargement(null);
+    } catch (err) {
+      setErreurChargement(err instanceof ApiError ? err.message : t("genericError"));
+    } finally {
+      setChargement(false);
+    }
+  }, [t]);
 
   useEffect(() => {
     // Differre l'appel hors du corps synchrone de l'effet (react-hooks/
-    // set-state-in-effect) : charger() met a jour l'etat des son entree.
+    // set-state-in-effect).
     void Promise.resolve().then(() => {
-      charger();
+      void charger();
     });
   }, [charger]);
 
-  async function accepter(id: string) {
-    setEnCours(id);
-    setErreur(null);
+  /**
+   * Accepte ou refuse une demande. Le succès n'est annoncé qu'après la
+   * réponse positive du backend ; sinon son message d'erreur est affiché et
+   * la liste reste intacte.
+   */
+  async function executer(demande: DemandeService, action: ActionDemande) {
+    if (enCours) return; // anti double-clic
+    setEnCours({ id: demande.id, action });
     try {
-      await api.patch(`/demandes-service/${id}/accepter`);
-      charger();
+      await api.patch(`/demandes-service/${demande.id}/${action}`);
+      toast.succes(t(action === "accepter" ? "student.acceptedToast" : "student.refusedToast"));
+      await charger();
     } catch (err) {
-      setErreur(err instanceof ApiError ? err.message : t("genericError"));
+      toast.erreur(
+        t("genericError"),
+        err instanceof ApiError ? err.message : undefined,
+      );
     } finally {
       setEnCours(null);
+      setAConfirmer(null);
     }
   }
 
-  async function refuser(id: string) {
-    setEnCours(id);
-    setErreur(null);
-    try {
-      await api.patch(`/demandes-service/${id}/refuser`);
-      charger();
-    } catch (err) {
-      setErreur(err instanceof ApiError ? err.message : t("genericError"));
-    } finally {
-      setEnCours(null);
-    }
-  }
+  if (chargement) return <ChargementPage />;
 
-  if (chargement) return <p className="text-sm text-ink-soft">{t("loading")}</p>;
+  if (erreurChargement && demandes.length === 0) {
+    return (
+      <p role="alert" className="text-sm text-brique">
+        {erreurChargement}
+      </p>
+    );
+  }
 
   if (demandes.length === 0) {
-    return (
-      <NoticeCard>
-        <p className="text-sm text-ink-soft/70">
-          {t("student.empty")}
-        </p>
-      </NoticeCard>
-    );
+    return <EtatVide icon={FileText}>{t("student.empty")}</EtatVide>;
   }
 
   const enAttente = demandes.filter((d) => d.statut === "en_attente").length;
@@ -216,8 +220,6 @@ function VueEtudiant() {
         onChanger={setOnglet}
       />
 
-      {erreur && <p className="mb-3 text-sm text-brique">{erreur}</p>}
-
       {demandesAffichees.length === 0 ? (
         <NoticeCard>
           <p className="text-sm text-ink-soft/70">
@@ -235,9 +237,10 @@ function VueEtudiant() {
                 {t("student.requestFrom", { nom: d.client?.nom ?? t("student.clientFallback") })}
               </p>
             </div>
-            <Tag tone={toneParStatut[d.statut]}>
-              {statutDemandeService(d.statut)}
-            </Tag>
+            <BadgeStatut
+              statut={d.statut}
+              labels={{ [d.statut]: statutDemandeService(d.statut) }}
+            />
           </div>
 
           <div className="rounded-lg border border-ink/10 bg-ink/[0.02] p-3">
@@ -266,14 +269,20 @@ function VueEtudiant() {
 
           {d.statut === "en_attente" && (
             <div className="flex gap-2">
-              <Button size="sm" disabled={enCours === d.id} onClick={() => accepter(d.id)}>
+              <Button
+                size="sm"
+                loading={enCours?.id === d.id && enCours.action === "accepter"}
+                disabled={enCours !== null}
+                onClick={() => setAConfirmer({ demande: d, action: "accepter" })}
+              >
                 {t("student.accept")}
               </Button>
               <Button
                 size="sm"
-                variant="ghost"
-                disabled={enCours === d.id}
-                onClick={() => refuser(d.id)}
+                variant="danger-ghost"
+                loading={enCours?.id === d.id && enCours.action === "refuser"}
+                disabled={enCours !== null}
+                onClick={() => setAConfirmer({ demande: d, action: "refuser" })}
               >
                 {t("student.refuse")}
               </Button>
@@ -292,6 +301,42 @@ function VueEtudiant() {
       ))}
         </div>
       )}
+
+      {/* Décision engageante : confirmation explicite avant toute requête. */}
+      <ConfirmDialog
+        ouvert={aConfirmer !== null}
+        titre={
+          aConfirmer
+            ? t(
+                aConfirmer.action === "accepter"
+                  ? "student.confirmAcceptTitle"
+                  : "student.confirmRefuseTitle",
+                { nom: aConfirmer.demande.client?.nom ?? t("student.clientFallback") },
+              )
+            : ""
+        }
+        description={
+          aConfirmer
+            ? aConfirmer.action === "accepter"
+              ? t("student.confirmAcceptDescription", {
+                  montant: formatArgent(aConfirmer.demande.budgetPropose),
+                  delai: t("daysShort", { count: aConfirmer.demande.delaiSouhaite }),
+                })
+              : t("student.confirmRefuseDescription")
+            : undefined
+        }
+        libelleConfirmer={
+          aConfirmer?.action === "accepter"
+            ? t("student.confirmAcceptAction")
+            : t("student.confirmRefuseAction")
+        }
+        destructif={aConfirmer?.action === "refuser"}
+        enCours={enCours !== null}
+        onConfirmer={() => {
+          if (aConfirmer) void executer(aConfirmer.demande, aConfirmer.action);
+        }}
+        onAnnuler={() => setAConfirmer(null)}
+      />
     </div>
   );
 }

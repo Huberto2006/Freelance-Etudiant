@@ -19,8 +19,12 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Flag,
+  KeyRound,
+  ShieldCheck,
+  UsersRound,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { useNavLabel } from "@/i18n/use-nav-label";
@@ -39,6 +43,19 @@ type SidebarProps = {
   mobileOpen?: boolean;
   onMobileClose?: () => void;
 };
+
+// Mémorisation de l'état réduit/déployé entre deux visites (préférence
+// d'affichage uniquement, aucune donnée métier).
+const CLE_SIDEBAR_REDUITE = "kianja-sidebar-reduite";
+
+function lireEtatReduit(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(CLE_SIDEBAR_REDUITE) === "1";
+  } catch {
+    return false;
+  }
+}
 
 const SIDEBAR_OPEN_WIDTH = "260px";
 const SIDEBAR_CLOSED_WIDTH = "76px";
@@ -83,6 +100,17 @@ const ICONS: Record<
   Favoris: Star,
 
   Paramètres: Settings,
+
+  // Administration
+  Administration: ShieldCheck,
+  Gestion: UsersRound,
+  Signalements: Flag,
+
+  // Publications du compte
+  "Mes missions": BriefcaseBusiness,
+  "Mes services": ShoppingBag,
+
+  "Compte Google": KeyRound,
 };
 
 function getIcon(label: string) {
@@ -127,8 +155,39 @@ export function Sidebar({
   const t = useTranslations("navigation");
   const tn = useNavLabel().label;
 
-  const [collapsed, setCollapsed] =
-    useState(false);
+  // Initialiseur paresseux : la Sidebar ne rend rien tant que
+  // l'authentification charge (return null plus bas), donc aucune
+  // divergence d'hydratation n'est possible.
+  const [collapsed, setCollapsedBrut] =
+    useState(lireEtatReduit);
+
+  function setCollapsed(valeur: boolean) {
+    setCollapsedBrut(valeur);
+    try {
+      window.localStorage.setItem(
+        CLE_SIDEBAR_REDUITE,
+        valeur ? "1" : "0",
+      );
+    } catch {
+      /* stockage indisponible : l'état reste valable pour la session */
+    }
+  }
+
+  /*
+   * TIROIR MOBILE — monté tant que son animation de fermeture n'est pas
+   * terminée. `mobileMonte` est dérivé pendant le rendu (et non via un
+   * effet) quand la prop `mobileOpen` passe à true ; il retombe à false
+   * à la fin de l'animation de sortie (onAnimationEnd).
+   */
+  const [mobileMonte, setMobileMonte] =
+    useState(mobileOpen);
+  const [mobileOpenPrecedent, setMobileOpenPrecedent] =
+    useState(mobileOpen);
+  if (mobileOpen !== mobileOpenPrecedent) {
+    setMobileOpenPrecedent(mobileOpen);
+    if (mobileOpen) setMobileMonte(true);
+  }
+  const tiroirRef = useRef<HTMLDivElement>(null);
 
   /*
    * ==========================================================
@@ -190,6 +249,35 @@ export function Sidebar({
 
   /*
    * ==========================================================
+   * TIROIR MOBILE — FOCUS ET DÉFILEMENT
+   * ==========================================================
+   * À l'ouverture : le focus entre dans le tiroir et la page derrière
+   * ne défile plus. À la fermeture : le focus revient au déclencheur.
+   */
+
+  useEffect(() => {
+    if (!mobileOpen) {
+      return;
+    }
+
+    const declencheur =
+      document.activeElement as HTMLElement | null;
+    const defilementInitial =
+      document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    tiroirRef.current
+      ?.querySelector<HTMLElement>("a, button")
+      ?.focus();
+
+    return () => {
+      document.body.style.overflow = defilementInitial;
+      declencheur?.focus?.();
+    };
+  }, [mobileOpen]);
+
+  /*
+   * ==========================================================
    * CHARGEMENT AUTHENTIFICATION
    * ==========================================================
    */
@@ -206,6 +294,10 @@ export function Sidebar({
    * NAVIGATION SELON LE RÔLE
    * ==========================================================
    */
+
+  // Valeur non nulle figée pour les fonctions déclarées plus bas (TS ne
+  // conserve pas le rétrécissement de type dans une déclaration hoistée).
+  const utilisateurConnecte = utilisateur;
 
   const navigation =
     navigationParRole[
@@ -349,6 +441,12 @@ export function Sidebar({
   }
 
   /*
+   * Le contenu est produit par une fonction paramétrée par `collapsed` :
+   * le bureau suit l'état mémorisé, le tiroir mobile est TOUJOURS
+   * déployé (un tiroir réduit aux icônes n'aurait aucun sens au toucher).
+   */
+  function construireContenu(collapsed: boolean) {
+  /*
    * ==========================================================
    * RENDRE UN ITEM
    * ==========================================================
@@ -449,7 +547,7 @@ export function Sidebar({
                     rounded-lg
                     text-sm
                     font-medium
-                    transition-all
+                    transition-[background-color,color,transform]
                     duration-150
 
                     ${
@@ -460,7 +558,7 @@ export function Sidebar({
 
                     ${
                       active
-                        ? "bg-white/12 text-white font-medium shadow-2xs"
+                        ? "bg-white/12 text-white font-medium before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-white"
                         : "text-white/70 hover:bg-white/8 hover:text-white"
                     }
                   `}
@@ -529,7 +627,7 @@ export function Sidebar({
           rounded-lg
           text-sm
           font-medium
-          transition-all
+          transition-[background-color,color,transform]
           duration-150
 
           ${
@@ -540,7 +638,7 @@ export function Sidebar({
 
           ${
             active
-              ? "bg-white/12 text-white font-medium shadow-2xs"
+              ? "bg-white/12 text-white font-medium before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-white"
               : "text-white/70 hover:bg-white/8 hover:text-white"
           }
         `}
@@ -617,7 +715,7 @@ export function Sidebar({
    * ==========================================================
    */
 
-  const sidebarContent = (
+  return (
     <aside
       className={`
         flex
@@ -707,6 +805,7 @@ export function Sidebar({
               setCollapsed(true)
             }
             aria-label={t("sidebar.collapse")}
+            aria-expanded="true"
             title={t("sidebar.collapseTitle")}
             className="
               hidden
@@ -799,6 +898,7 @@ export function Sidebar({
               : undefined
           }
           className={`
+            relative
             mb-1
             flex
             items-center
@@ -819,7 +919,7 @@ export function Sidebar({
                 pathname,
                 "/tableau-de-bord/profil",
               )
-                ? "bg-white/12 text-white font-medium shadow-2xs"
+                ? "bg-white/12 text-white font-medium before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-white"
                 : "text-white/70 hover:bg-white/8 hover:text-white"
             }
           `}
@@ -838,15 +938,15 @@ export function Sidebar({
               text-white/80
             "
           >
-            {utilisateur.photoUrl ? (
+            {utilisateurConnecte.photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={
                   getFileUrl(
-                    utilisateur.photoUrl,
+                    utilisateurConnecte.photoUrl,
                   ) ?? undefined
                 }
-                alt={utilisateur.nom}
+                alt={utilisateurConnecte.nom}
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -861,7 +961,7 @@ export function Sidebar({
               </span>
 
               <span className="block truncate text-[0.65rem] font-normal text-white/50">
-                {utilisateur.nom}
+                {utilisateurConnecte.nom}
               </span>
             </span>
           )}
@@ -911,6 +1011,10 @@ export function Sidebar({
       </div>
     </aside>
   );
+  }
+
+  const sidebarContent = construireContenu(collapsed);
+  const sidebarMobile = construireContenu(false);
 
   /*
    * ==========================================================
@@ -952,6 +1056,7 @@ export function Sidebar({
               setCollapsed(false)
             }
             aria-label={t("sidebar.expand")}
+            aria-expanded="false"
             title={t("sidebar.expandTitle")}
             className="
               absolute
@@ -969,9 +1074,8 @@ export function Sidebar({
               bg-panel-dark
               text-white/80
               shadow-md
-              transition-all
+              transition-[background-color,color,transform]
               duration-150
-              hover:scale-110
               hover:bg-panel
               hover:text-white
             "
@@ -987,40 +1091,53 @@ export function Sidebar({
           MOBILE
           ===================================================== */}
 
-      {mobileOpen && (
+      {mobileMonte && (
         <div
-          className="
+          className={`
             fixed
             inset-0
             z-[70]
             lg:hidden
-          "
+            ${mobileOpen ? "" : "pointer-events-none"}
+          `}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("sidebar.mainNav")}
         >
-          {/* Overlay */}
+          {/* Voile : simple fondu, sans flou d'arrière-plan */}
 
           <button
             type="button"
             aria-label={t("sidebar.closeMenu")}
             onClick={closeMobile}
-            className="
+            tabIndex={-1}
+            className={`
               absolute
               inset-0
-              bg-ink/30
-              backdrop-blur-sm
-            "
+              bg-ink/40
+              ${mobileOpen ? "animate-in-fade" : "opacity-0 transition-opacity duration-200"}
+            `}
           />
 
-          {/* Sidebar mobile */}
+          {/* Tiroir : glisse depuis la gauche (transform uniquement) */}
 
           <div
-            className="
+            ref={tiroirRef}
+            onAnimationEnd={() => {
+              if (!mobileOpen) {
+                setMobileMonte(false);
+              }
+            }}
+            className={`
               relative
               z-[71]
               h-full
               w-[16.25rem]
-            "
+              max-w-[85vw]
+              ${mobileOpen ? "animate-slide-in-left" : "animate-slide-out-left"}
+            `}
           >
-            {sidebarContent}
+            {sidebarMobile}
           </div>
         </div>
       )}

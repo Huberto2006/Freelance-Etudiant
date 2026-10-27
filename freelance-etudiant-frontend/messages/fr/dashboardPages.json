@@ -61,7 +61,15 @@
       "specifications": "Cahier des charges",
       "accept": "Accepter",
       "refuse": "Refuser",
-      "followProject": "Suivre le projet dans « Mes candidatures »"
+      "followProject": "Suivre le projet dans « Mes candidatures »",
+      "confirmAcceptTitle": "Accepter la demande de {nom} ?",
+      "confirmAcceptDescription": "{montant} · {delai}. Une mission privée sera créée pour ce client ; cette décision ne pourra plus être modifiée.",
+      "confirmAcceptAction": "Accepter la demande",
+      "confirmRefuseTitle": "Refuser la demande de {nom} ?",
+      "confirmRefuseDescription": "Une demande refusée ne peut plus être rouverte.",
+      "confirmRefuseAction": "Refuser la demande",
+      "acceptedToast": "Demande acceptée.",
+      "refusedToast": "Demande refusée."
     }
   },
   "groupInvitation": {
@@ -291,7 +299,15 @@
       "refuse": "Refuser",
       "chatWithStudent": "Discuter avec l'étudiant",
       "trackDelivery": "Suivre la livraison",
-      "deliveryHint": "La validation et l'évaluation de la livraison se font depuis la page dédiée aux livraisons."
+      "deliveryHint": "La validation et l'évaluation de la livraison se font depuis la page dédiée aux livraisons.",
+      "confirmAcceptTitle": "Retenir {nom} pour cette mission ?",
+      "confirmAcceptDescription": "{montant} · {delai}. Les autres candidatures en attente pour cette mission seront refusées et la mission passera « en cours ».",
+      "confirmAcceptAction": "Retenir cet étudiant",
+      "confirmRefuseTitle": "Refuser la candidature de {nom} ?",
+      "confirmRefuseDescription": "Une candidature refusée ne peut plus être rouverte.",
+      "confirmRefuseAction": "Refuser la candidature",
+      "acceptedToast": "Candidature acceptée.",
+      "refusedToast": "Candidature refusée."
     }
   },
   "myServices": {

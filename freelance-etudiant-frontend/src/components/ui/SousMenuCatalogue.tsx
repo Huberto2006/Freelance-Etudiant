@@ -98,7 +98,7 @@ export function SousMenuCatalogue({
   return (
     <nav
       aria-label={t("ariaLabel")}
-      className="sticky top-16 z-20 -mx-4 border-b border-ink/10 bg-paper/95 px-4 py-3 backdrop-blur-sm sm:mx-0 sm:rounded-xl sm:border sm:bg-paper-light/95"
+      className="sticky top-16 z-20 -mx-4 border-b border-ink/10 bg-paper px-4 py-3 sm:mx-0 sm:rounded-lg sm:border sm:bg-paper-light/95"
     >
       <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {/* Tous */}

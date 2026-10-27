@@ -148,7 +148,7 @@ export default async function PageAPropos() {
       {/* ------------------------------------------------ APPEL À L'ACTION */}
       <section
         aria-labelledby="rejoindre"
-        className="rounded-2xl border border-ink/10 bg-paper-light p-6 text-center shadow-sm sm:p-8"
+        className="rounded-lg border border-ink/10 bg-paper-light p-6 text-center sm:p-8"
       >
         <span
           aria-hidden="true"

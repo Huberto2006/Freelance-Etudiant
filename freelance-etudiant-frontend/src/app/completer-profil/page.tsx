@@ -670,7 +670,7 @@ function Stepper({
 
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink/10">
         <div
-          className="h-full rounded-full bg-ocre transition-all duration-300"
+          className="h-full rounded-full bg-ocre transition-[width] duration-300 ease-out-soft"
           style={{ width: `${(etapeActuelle / 5) * 100}%` }}
         />
       </div>

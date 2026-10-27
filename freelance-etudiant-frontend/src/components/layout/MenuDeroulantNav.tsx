@@ -142,7 +142,7 @@ export function MenuDeroulantNav({
       {ouvert && (
         <ul
           id={panneauId}
-          className="absolute left-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-ink/10 bg-paper-light p-1.5 shadow-lg"
+          className="animate-pop absolute left-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] origin-top-left overflow-hidden rounded-lg border border-ink/10 bg-paper-light p-1.5 shadow-[0_12px_32px_-12px_rgba(15,23,42,0.28)]"
         >
           {menu.elements.map((element) => {
             const Icone = element.icon;

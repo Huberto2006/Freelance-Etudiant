@@ -61,7 +61,15 @@
       "specifications": "Tambin'andraikitra",
       "accept": "Mandray",
       "refuse": "Mandà",
-      "followProject": "Hanara-maso ny tetikasa ao amin'ny « Ny fangatahako »"
+      "followProject": "Hanara-maso ny tetikasa ao amin'ny « Ny fangatahako »",
+      "confirmAcceptTitle": "Raisina ve ny fangatahan'i {nom}?",
+      "confirmAcceptDescription": "{montant} · {delai}. Hamboarina asa tsy ho an'ny daholobe ho an'ity mpanjifa ity; tsy azo ovaina intsony ity fanapahan-kevitra ity.",
+      "confirmAcceptAction": "Raiso ny fangatahana",
+      "confirmRefuseTitle": "Holavina ve ny fangatahan'i {nom}?",
+      "confirmRefuseDescription": "Tsy azo averina misokatra intsony ny fangatahana nolavina.",
+      "confirmRefuseAction": "Lavina ny fangatahana",
+      "acceptedToast": "Voaray ny fangatahana.",
+      "refusedToast": "Nolavina ny fangatahana."
     }
   },
   "groupInvitation": {
@@ -291,7 +299,15 @@
       "refuse": "Handà",
       "chatWithStudent": "Hiresaka amin'ny mpianatra",
       "trackDelivery": "Hanara-maso ny fanaterana",
-      "deliveryHint": "Ny fankatoavana sy ny fanombanana ny fanaterana dia ataona ao amin'ny pejy natokana ho an'ny fanaterana."
+      "deliveryHint": "Ny fankatoavana sy ny fanombanana ny fanaterana dia ataona ao amin'ny pejy natokana ho an'ny fanaterana.",
+      "confirmAcceptTitle": "Hotazonina i {nom} ho an'ity asa ity ve?",
+      "confirmAcceptDescription": "{montant} · {delai}. Ho resaka ny fangatahana hafa miandry amin'ity asa ity ary hiditra ao anatin'ny fanaovana ny asa.",
+      "confirmAcceptAction": "Hotazonina ity mpianatra ity",
+      "confirmRefuseTitle": "Holavina ve ny fangatahan'i {nom}?",
+      "confirmRefuseDescription": "Tsy azo averina misokatra intsony ny fangatahana nolavina.",
+      "confirmRefuseAction": "Lavina ny fangatahana",
+      "acceptedToast": "Voaray ny fangatahana.",
+      "refusedToast": "Nolavina ny fangatahana."
     }
   },
   "myServices": {

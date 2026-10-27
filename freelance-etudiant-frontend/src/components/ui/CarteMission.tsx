@@ -12,7 +12,7 @@ import { useOptionLabels } from "@/i18n/use-option-labels";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { FavoriBouton } from "@/components/ui/FavoriBouton";
-import { Tag } from "@/components/ui/Notice";
+import { Tag, toneStatut } from "@/components/ui/Notice";
 import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
 
 /**
@@ -37,45 +37,53 @@ export function CarteMission({
   const image = getFileUrl(mission.imageUrl ?? null);
 
   return (
-    <article className="notice-card group relative flex flex-col">
-      <span className="notice-pin z-10" aria-hidden="true" />
+    <article className="notice-card card-link group relative flex flex-col overflow-hidden">
+      {/* ---------------------------------------------- COUVERTURE
+          Le lien couvre l'image ; le bouton « favori » est un FRÈRE du
+          lien (jamais son enfant) : un contrôle interactif ne doit pas
+          être imbriqué dans un <a>. */}
+      <div className="relative h-32 border-b border-ink/10 sm:h-36">
+        <Link
+          href={`/missions/${mission.id}`}
+          className="absolute inset-0 block overflow-hidden"
+          aria-label={mission.titre}
+        >
+          <ImageAvecRepli
+            src={image}
+            alt=""
+            categorie={mission.categorie}
+            className="h-full w-full object-cover transition-transform duration-300 ease-out-soft group-hover:scale-[1.02]"
+          />
+        </Link>
 
-      {/* ---------------------------------------------- COUVERTURE */}
-      <Link
-        href={`/missions/${mission.id}`}
-        className="relative block h-32 overflow-hidden rounded-t-[15px] border-b border-ink/10 sm:h-36"
-        aria-label={mission.titre}
-      >
-        <ImageAvecRepli
-          src={image}
-          alt=""
-          categorie={mission.categorie}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-        />
-
-        <span className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+        <span className="pointer-events-none absolute left-3 top-3 flex flex-wrap gap-1.5">
           {afficherType && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-bleu/30 bg-bleu/90 px-2.5 py-0.5 text-[0.6875rem] font-mono font-semibold uppercase tracking-wide text-white shadow-xs backdrop-blur-sm">
-              <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" aria-hidden="true" />
+            <span className="inline-flex items-center rounded-md bg-ink px-2 py-0.5 text-xs font-medium text-paper-light">
               {t("card.mission")}
             </span>
           )}
-          <span className="inline-flex items-center rounded-full border border-ink/10 bg-paper-light/90 px-2.5 py-0.5 text-[0.6875rem] font-mono uppercase tracking-wide text-ink-soft backdrop-blur-sm">
+          <span className="inline-flex items-center rounded-md border border-ink/10 bg-paper-light px-2 py-0.5 text-xs font-medium text-ink-soft">
             {categorie(mission.categorie)}
           </span>
-          <span className="inline-flex items-center rounded-full border border-ink/10 bg-paper-light/90 px-2.5 py-0.5 text-[0.6875rem] font-mono uppercase tracking-wide text-ink-soft backdrop-blur-sm">
-            {statutMission(mission.statut)}
+          <span className="rounded-md bg-paper-light">
+            <Tag tone={toneStatut(mission.statut)}>
+              <span
+                className="h-1.5 w-1.5 shrink-0 rounded-full bg-current"
+                aria-hidden="true"
+              />
+              {statutMission(mission.statut)}
+            </Tag>
           </span>
         </span>
 
         <span className="absolute right-3 top-3">
           <FavoriBouton cibleType="mission" cibleId={mission.id} />
         </span>
-      </Link>
+      </div>
 
       {/* ---------------------------------------------- CONTENU */}
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="font-display text-lg font-semibold leading-snug line-clamp-2 transition-colors group-hover:text-ocre-dark">
+        <h3 className="font-display text-lg font-semibold leading-snug line-clamp-2 transition-colors">
           <Link href={`/missions/${mission.id}`} className="hover:underline">
             {mission.titre}
           </Link>
@@ -102,7 +110,7 @@ export function CarteMission({
         {/* ---------------------------------------------- PIED */}
         <div className="mt-auto border-t border-ink/10 pt-3">
           <div className="flex items-center justify-between gap-2 pt-2">
-            <p className="font-mono text-sm font-semibold text-ocre-dark">
+            <p className="font-mono text-sm font-semibold tabular-nums text-ocre-dark">
               {argent(mission.budget)}
             </p>
 
@@ -130,7 +138,7 @@ export function CarteMission({
 
             <Link
               href={`/missions/${mission.id}`}
-              className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 font-mono text-xs font-semibold text-bleu-dark hover:bg-bleu/10 hover:text-bleu transition-colors"
+              className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-bleu-dark transition-colors hover:bg-bleu/10 hover:text-bleu"
             >
               {t("card.view")}
             </Link>

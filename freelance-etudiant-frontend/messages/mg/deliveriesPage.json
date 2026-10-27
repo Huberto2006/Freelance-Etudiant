@@ -138,5 +138,10 @@
   "ratingOutOf": "Naoty {valeur} amin'ny 5",
   "workFeedbackPlaceholder": "Zarao ny hevitrao momba ny asa vita…",
   "sendReview": "Handefa ny fanombanana",
-  "yourReview": "Ny fanombananao: {note}/5"
+  "yourReview": "Ny fanombananao: {note}/5",
+  "confirmValidateTitle": "Hamarinina ve ity fanatitra ity?",
+  "confirmValidateDescription": "Rehefa voamarina, tsy azo angatahana fanitsiana intsony ny fanatitra. Raha efa voamarina ny fandoavana, dia hatolotra ho an'ny mpianatra izany.",
+  "confirmValidateAction": "Hamarino ny fanatitra",
+  "validatedToast": "Voamarina ny fanatitra.",
+  "correctionSentToast": "Lasa ny fangatahana fanitsiana."
 }

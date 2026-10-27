@@ -941,7 +941,7 @@ function MesServicesContent() {
             return (
               <article
                 key={service.id}
-                className="group relative overflow-visible rounded-2xl border border-ink/10 bg-paper p-5 shadow-sm transition hover:border-ink/20 hover:shadow-md"
+                className="group relative overflow-visible rounded-lg border border-ink/10 bg-paper p-5 transition hover:border-ink/20 hover:shadow-md"
               >
                 <div className="flex items-start gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-ink/5 text-ink-soft">

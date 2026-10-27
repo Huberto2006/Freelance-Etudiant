@@ -38,16 +38,16 @@ function Volet({
   const fond = accent === "bleu" ? "bg-bleu/10" : "bg-ocre/10";
 
   return (
-    <div className="flex flex-col rounded-xl border border-ink/10 bg-paper-light p-6 sm:p-8">
+    <div className="flex flex-col rounded-lg border border-ink/10 bg-paper-light p-6 sm:p-8">
       <div className="flex items-center gap-2.5">
         <span
-          className={`flex h-8 w-8 items-center justify-center rounded-lg ${fond} ${couleur}`}
+          className={`flex h-8 w-8 items-center justify-center rounded-md ${fond} ${couleur}`}
           aria-hidden="true"
         >
           <Icone size={16} />
         </span>
         <span
-          className={`font-mono text-[11px] font-semibold uppercase tracking-[0.18em] ${couleur}`}
+          className={`text-xs font-semibold uppercase tracking-[0.08em] ${couleur}`}
         >
           {etiquette}
         </span>

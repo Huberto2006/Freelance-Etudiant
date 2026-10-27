@@ -1,20 +1,35 @@
 import { clsx } from "clsx";
 import { useTranslations } from "next-intl";
 import type { ComponentType, MouseEvent, ReactNode } from "react";
+import { LoaderCircle } from "lucide-react";
 import type { LucideProps } from "lucide-react";
 
+/**
+ * Surface standard (carte, panneau, ligne de liste). Statique par défaut :
+ * bordure fine, ombre quasi nulle. `interactif` ajoute le retour au survol
+ * (élévation de 1 px) et ne doit être posé que sur une surface qui est
+ * réellement cliquable en entier.
+ */
 export function NoticeCard({
   children,
   className,
   onClick,
+  interactif = false,
 }: {
   children: ReactNode;
   className?: string;
   onClick?: (event: MouseEvent<HTMLDivElement>) => void;
+  interactif?: boolean;
 }) {
   return (
-    <div className={clsx("notice-card p-5", className)} onClick={onClick}>
-      <span className="notice-pin" aria-hidden="true" />
+    <div
+      className={clsx(
+        "notice-card p-5",
+        interactif && "card-link cursor-pointer",
+        className,
+      )}
+      onClick={onClick}
+    >
       {children}
     </div>
   );
@@ -53,16 +68,16 @@ export function Tag({
   className?: string;
 }) {
   const tones: Record<ToneTag, string> = {
-    ink: "border-ink/30 text-ink",
-    ocre: "border-ocre-dark/50 text-ocre-dark bg-ocre/10",
-    rice: "border-rice/50 text-rice bg-rice/10",
-    brique: "border-brique/50 text-brique bg-brique/10",
-    bleu: "border-bleu-dark/40 text-bleu-dark bg-bleu-soft",
+    ink: "border-ink/20 text-ink-soft bg-ink/[0.03]",
+    ocre: "border-ocre-dark/35 text-ocre-dark bg-ocre/10",
+    rice: "border-rice/35 text-rice bg-rice/10",
+    brique: "border-brique/35 text-brique bg-brique/10",
+    bleu: "border-bleu-dark/30 text-bleu-dark bg-bleu-soft",
   };
   return (
     <span
       className={clsx(
-        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-mono uppercase tracking-wide",
+        "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium leading-5",
         tones[tone],
         className,
       )}
@@ -142,6 +157,12 @@ export function BadgeStatut({
 }) {
   return (
     <Tag tone={toneStatut(statut)} className={className}>
+      {/* Pastille : le statut ne repose jamais sur la couleur seule, le
+          libellé textuel reste toujours présent. */}
+      <span
+        className="h-1.5 w-1.5 shrink-0 rounded-full bg-current"
+        aria-hidden="true"
+      />
       {labels[statut] ?? statut}
     </Tag>
   );
@@ -184,46 +205,62 @@ export function MessageVide({
 }
 
 /**
- * En-tete de page standard : medaillon-icone + eyebrow + titre.
- * Reprend le meme rythme visuel sur tout le tableau de bord.
+ * En-tête de page standard : rubrique (petite icône + intitulé), titre,
+ * description facultative et zone d'actions facultative alignée à droite.
+ * L'icône sert de repère de rubrique à 14 px ; elle ne forme plus de
+ * médaillon, pour que l'en-tête ne concurrence pas le contenu.
  */
 export function PageHeader({
   icon: Icon,
   eyebrow,
   title,
+  description,
+  actions,
   tone = "ocre",
   className,
 }: {
   icon: ComponentType<LucideProps>;
   eyebrow: string;
   title: ReactNode;
+  description?: ReactNode;
+  /** Actions principales de la page (ex. « Publier une mission »). */
+  actions?: ReactNode;
   tone?: "ocre" | "rice" | "brique" | "ink";
   className?: string;
 }) {
-  const tones: Record<string, string> = {
-    ocre: "bg-ocre/10 text-ocre-dark",
-    rice: "bg-rice/10 text-rice",
-    brique: "bg-brique/10 text-brique",
-    ink: "bg-ink/10 text-ink",
+  const icones: Record<string, string> = {
+    ocre: "text-ocre-dark",
+    rice: "text-rice",
+    brique: "text-brique",
+    ink: "text-ink",
   };
   return (
-    <div className={clsx("mb-7 flex items-center gap-3", className)}>
-      <span
-        className={clsx(
-          "flex h-11 w-11 shrink-0 items-center justify-center rounded-full",
-          tones[tone],
-        )}
-        aria-hidden="true"
-      >
-        <Icon size={20} />
-      </span>
-      <div>
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark mb-1">
+    <header
+      className={clsx(
+        "animate-in mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-3",
+        className,
+      )}
+    >
+      <div className="min-w-0">
+        <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">
+          <Icon size={14} className={icones[tone]} aria-hidden="true" />
           {eyebrow}
         </p>
-        <h1 className="font-display text-3xl font-semibold">{title}</h1>
+        <h1 className="font-display text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
+          {title}
+        </h1>
+        {description && (
+          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-ink-soft">
+            {description}
+          </p>
+        )}
       </div>
-    </div>
+      {actions && (
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {actions}
+        </div>
+      )}
+    </header>
   );
 }
 
@@ -258,12 +295,12 @@ export function EtatVide({
       )}
     >
       <span
-        className="flex h-12 w-12 items-center justify-center rounded-full bg-ink/5 text-ink-soft"
+        className="flex h-10 w-10 items-center justify-center rounded-lg bg-ink/5 text-ink-soft"
         aria-hidden="true"
       >
-        <Icon size={22} />
+        <Icon size={20} />
       </span>
-      <p className="text-sm text-ink-soft/70">{children}</p>
+      <p className="max-w-sm text-sm text-ink-soft">{children}</p>
       {action}
     </NoticeCard>
   );
@@ -279,7 +316,24 @@ export function EtatVide({
 export function ChargementPage({ className }: { className?: string }) {
   const t = useTranslations("common.states");
   return (
-    <p className={clsx("text-sm text-ink-soft", className)}>{t("loading")}</p>
+    // Apparition retardée de 200 ms : un chargement quasi instantané
+    // n'affiche donc aucun indicateur qui clignote.
+    <p
+      role="status"
+      aria-live="polite"
+      style={{ animationDelay: "200ms" }}
+      className={clsx(
+        "animate-in-fade flex items-center gap-2 text-sm text-ink-soft",
+        className,
+      )}
+    >
+      <LoaderCircle
+        size={15}
+        aria-hidden="true"
+        className="shrink-0 motion-safe:animate-spin"
+      />
+      {t("loading")}
+    </p>
   );
 }
 
@@ -303,32 +357,27 @@ export function StatCard({
   tone?: "ocre" | "rice" | "brique" | "ink";
   className?: string;
 }) {
-  const tones: Record<string, string> = {
-    ocre: "bg-ocre/10 text-ocre-dark",
-    rice: "bg-rice/10 text-rice",
-    brique: "bg-brique/10 text-brique",
-    ink: "bg-ink/10 text-ink",
+  const icones: Record<string, string> = {
+    ocre: "text-ocre-dark",
+    rice: "text-rice",
+    brique: "text-brique",
+    ink: "text-ink-soft",
   };
   return (
-    <NoticeCard className={clsx("flex flex-col gap-3", className)}>
-      <div className="flex items-center gap-2.5">
-        <span
-          className={clsx(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-            tones[tone],
-          )}
+    <NoticeCard className={clsx("flex flex-col gap-2", className)}>
+      <p className="flex items-center gap-2 text-xs font-medium text-ink-soft">
+        <Icon
+          size={15}
+          strokeWidth={2}
+          className={clsx("shrink-0", icones[tone])}
           aria-hidden="true"
-        >
-          <Icon size={18} strokeWidth={2} />
-        </span>
-        <p className="text-xs font-mono uppercase tracking-wider text-ink-soft">
-          {label}
-        </p>
-      </div>
-      <p className="font-display text-3xl leading-none">{value}</p>
-      {sublabel && (
-        <p className="text-xs text-ink-soft/70">{sublabel}</p>
-      )}
+        />
+        {label}
+      </p>
+      <p className="font-display text-3xl font-semibold leading-none tabular-nums">
+        {value}
+      </p>
+      {sublabel && <p className="text-xs text-ink-soft/80">{sublabel}</p>}
     </NoticeCard>
   );
 }

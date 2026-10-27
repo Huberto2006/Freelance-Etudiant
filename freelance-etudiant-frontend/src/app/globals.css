@@ -216,11 +216,20 @@
   --font-body: var(--theme-font-body);
   --font-mono: var(--theme-font-mono);
 
-  /* Rayons de bordure */
+  /* Rayons de bordure
+     - sm  : badges, puces, petits contrôles
+     - md  : boutons, champs, éléments de menu
+     - lg  : cartes, panneaux, boîtes de dialogue
+     - xl  : grands blocs éditoriaux (rare) */
   --radius-sm: 6px;
   --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 22px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* Mouvement : une seule courbe d'accélération pour toute l'interface.
+     Durées : 150 ms (états de contrôle), 200 ms (menus, dialogues),
+     300 ms (panneaux latéraux). */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .dark {
@@ -263,15 +272,8 @@ body {
   background-color: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-body);
-  background-image:
-    radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.035) 1px, transparent 0);
-  background-size: 22px 22px;
+  font-feature-settings: "cv11", "ss01";
   transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
-}
-
-.dark body {
-  background-image:
-    radial-gradient(circle at 1px 1px, rgba(241, 245, 249, 0.04) 1px, transparent 0);
 }
 
 ::selection {
@@ -399,6 +401,17 @@ select:active,
   --tw-ring-shadow: 0 0 #0000 !important;
   --tw-ring-offset-shadow: 0 0 #0000 !important;
   --tw-shadow: 0 0 #0000 !important;
+  /* Indicateur de focus : la bordure garde sa largeur (1 px, aucun
+     décalage de mise en page, aucun halo, aucun bleu) mais passe à un
+     gris-ardoise plus soutenu. Sans cela, plus rien ne signalait le champ
+     actif au clavier (WCAG 2.4.7). */
+  border-color: color-mix(in srgb, var(--color-ink) 50%, transparent) !important;
+}
+
+/* Un champ invalide garde sa bordure d'erreur, y compris au focus. */
+.kianja-field-control[aria-invalid="true"]:focus,
+.kianja-field-control[aria-invalid="true"]:focus-visible {
+  border-color: var(--color-brique) !important;
 }
 
 /* Cases à cocher et boutons radio : utilisation de la couleur ocre
@@ -418,20 +431,24 @@ input[type="radio"] {
 }
 
 /* ==========================================================================
-   ANIMATIONS D'ENTRÉE — utilitaires partagés par toutes les pages
+   MOUVEMENT — utilitaires partagés par toutes les pages
    ==========================================================================
-   .animate-in       : apparition + léger glissement vers le haut (en-têtes,
-                        cartes, sections).
-   .animate-in-fade   : simple fondu (écrans de chargement, éléments neutres).
-   .delay-1 à .delay-6 : décalage en cascade pour enchaîner plusieurs blocs
-                        (ex. sections d'une page, cartes d'une grille).
-   Neutralisées automatiquement par la règle prefers-reduced-motion ci-dessus.
+   Principes : transform + opacity uniquement, 150-300 ms, une seule courbe
+   (--ease-out-soft). Toutes ces animations sont neutralisées par la règle
+   prefers-reduced-motion ci-dessus.
+
+   .animate-in         : apparition + glissement de 6 px (en-têtes, sections).
+   .animate-in-fade    : simple fondu (écrans, éléments neutres).
+   .animate-pop        : menus déroulants, popovers, boîtes de dialogue.
+   .animate-slide-*    : tiroir latéral mobile, panneau de menu mobile.
+   .animate-toast-*    : notifications de confirmation / d'erreur.
+   .delay-1 à .delay-6 : cascade courte (pas de 40 ms), jamais sur une action.
    ========================================================================== */
 
 @keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -444,77 +461,156 @@ input[type="radio"] {
   to { opacity: 1; }
 }
 
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slide-out-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes slide-down-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(4px); }
+}
+
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
 .animate-in {
-  animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fade-in-up 0.28s var(--ease-out-soft) both;
 }
 
 .animate-in-fade {
-  animation: fade-in 0.4s ease both;
+  animation: fade-in 0.2s ease both;
 }
 
-.delay-1 { animation-delay: 60ms; }
-.delay-2 { animation-delay: 120ms; }
-.delay-3 { animation-delay: 180ms; }
-.delay-4 { animation-delay: 240ms; }
-.delay-5 { animation-delay: 300ms; }
-.delay-6 { animation-delay: 360ms; }
+.animate-pop {
+  animation: pop-in 0.16s var(--ease-out-soft) both;
+}
 
-/* --- Carte "notice punaisee" : le motif signature de l'interface --- */
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s var(--ease-out-soft) both;
+}
+
+.animate-slide-out-left {
+  animation: slide-out-left 0.22s ease-in both;
+}
+
+.animate-slide-down {
+  animation: slide-down-in 0.2s var(--ease-out-soft) both;
+}
+
+.animate-toast-in {
+  animation: toast-in 0.22s var(--ease-out-soft) both;
+}
+
+.animate-toast-out {
+  animation: toast-out 0.16s ease-in both;
+}
+
+.delay-1 { animation-delay: 40ms; }
+.delay-2 { animation-delay: 80ms; }
+.delay-3 { animation-delay: 120ms; }
+.delay-4 { animation-delay: 160ms; }
+.delay-5 { animation-delay: 200ms; }
+.delay-6 { animation-delay: 240ms; }
+
+/* ==========================================================================
+   SURFACES
+   --------------------------------------------------------------------------
+   .notice-card : surface standard (carte, panneau, ligne de liste). Statique :
+                  bordure fine, ombre quasi nulle. Plus de rotation ni
+                  d'épingle ; le nom est conservé pour ne pas modifier les
+                  dizaines de pages qui l'utilisent.
+   .card-link   : à ajouter UNIQUEMENT sur une surface entièrement cliquable
+                  (carte de mission, de service, de profil). Retour au survol :
+                  élévation de 1 px et bordure plus marquée.
+   ========================================================================== */
 .notice-card {
   position: relative;
   background-color: var(--color-paper-light);
-  border: 1px solid rgba(15, 23, 42, 0.10);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 11%, transparent);
   border-radius: var(--radius-lg);
-  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04), 0 8px 16px -12px rgba(15, 23, 42, 0.20);
-  transition: transform 180ms ease, box-shadow 180ms ease, background-color 200ms ease, border-color 200ms ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition:
+    transform 180ms var(--ease-out-soft),
+    box-shadow 180ms var(--ease-out-soft),
+    border-color 180ms ease,
+    background-color 200ms ease;
 }
 
 .dark .notice-card {
-  border-color: rgba(241, 245, 249, 0.12);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 8px 16px -12px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
-.notice-card:hover {
-  transform: rotate(-0.4deg) translateY(-2px);
-  box-shadow: 0 2px 0 rgba(15, 23, 42, 0.05), 0 16px 28px -14px rgba(15, 23, 42, 0.25);
+.card-link:hover,
+.card-link:focus-within {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-ink) 24%, transparent);
+  box-shadow: 0 6px 16px -8px rgba(15, 23, 42, 0.18);
 }
 
-.dark .notice-card:hover {
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35), 0 16px 28px -14px rgba(0, 0, 0, 0.8);
+.dark .card-link:hover,
+.dark .card-link:focus-within {
+  box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.7);
 }
 
+/* Conservé pour compatibilité : l'épingle décorative n'est plus rendue. */
 .notice-pin {
-  position: absolute;
-  top: -9px;
-  left: 18px;
-  width: 16px;
-  height: 16px;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 35% 30%, var(--color-ocre), var(--color-ocre-dark));
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35);
+  display: none;
 }
 
-/* --- Tampon circulaire de réputation --- */
+/* Score de réputation : pastille circulaire sobre (anciennement « tampon »
+   incliné à bordure pointillée). */
 .stamp {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  border: 2px solid var(--color-ocre-dark);
+  border: 1.5px solid color-mix(in srgb, var(--color-ocre-dark) 55%, transparent);
+  background-color: color-mix(in srgb, var(--color-ocre) 8%, transparent);
   color: var(--color-ocre-dark);
   border-radius: 9999px;
-  transform: rotate(-8deg);
   font-family: var(--font-mono);
-  position: relative;
-}
-
-.stamp::before {
-  content: "";
-  position: absolute;
-  inset: 3px;
-  border: 1px dashed var(--color-ocre-dark);
-  border-radius: 9999px;
-  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
 }
 
 .torn-edge {

@@ -140,7 +140,7 @@ export function FormulaireContact() {
     return (
       <div
         role="status"
-        className="rounded-2xl border border-ink/10 bg-paper-light p-6 text-center shadow-sm sm:p-8"
+        className="rounded-lg border border-ink/10 bg-paper-light p-6 text-center sm:p-8"
       >
         <span
           aria-hidden="true"
@@ -171,7 +171,7 @@ export function FormulaireContact() {
     <form
       onSubmit={envoyer}
       noValidate
-      className="space-y-5 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm sm:p-6"
+      className="space-y-5 rounded-lg border border-ink/10 bg-paper-light p-5 sm:p-6"
     >
       {etat.statut === "erreur" && (
         <div

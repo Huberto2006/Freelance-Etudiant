@@ -77,7 +77,7 @@ export default function ProfilClientPage({
   if (chargement) {
     return (
       <div className="mx-auto max-w-5xl px-5 py-12">
-        <div className="animate-in-fade rounded-2xl border border-ink/10 bg-paper-light p-8 text-sm text-ink-soft shadow-sm">
+        <div className="animate-in-fade rounded-lg border border-ink/10 bg-paper-light p-8 text-sm text-ink-soft">
           {t("public.client.loading")}
         </div>
       </div>
@@ -109,7 +109,7 @@ export default function ProfilClientPage({
       {/* =====================================================
           EN-TÊTE
           ===================================================== */}
-      <header className="animate-in overflow-hidden rounded-2xl border border-ink/10 bg-paper-light">
+      <header className="animate-in overflow-hidden rounded-lg border border-ink/10 bg-paper-light">
       <div className="h-px bg-ink/10" />
 
         <div className="p-6 sm:p-8">
@@ -194,7 +194,7 @@ export default function ProfilClientPage({
             COLONNE PRINCIPALE
             =================================================== */}
         <main className="space-y-6">
-          <section className="animate-in delay-1 rounded-2xl border border-ink/10 bg-paper-light p-6 shadow-sm">
+          <section className="animate-in delay-1 rounded-lg border border-ink/10 bg-paper-light p-6">
             <div className="mb-6 flex items-center gap-3">
               <div className="h-8 w-1 rounded-full bg-ink" />
 
@@ -251,7 +251,7 @@ export default function ProfilClientPage({
             =================================================== */}
         <aside className="space-y-6">
           {/* IDENTITÉ */}
-          <section className="animate-in delay-1 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm">
+          <section className="animate-in delay-1 rounded-lg border border-ink/10 bg-paper-light p-5">
             <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
               {t("public.client.identity")}
             </p>
@@ -282,7 +282,7 @@ export default function ProfilClientPage({
           </section>
 
           {/* STATISTIQUES */}
-          <section className="animate-in delay-2 rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-sm">
+          <section className="animate-in delay-2 rounded-lg border border-ink/10 bg-paper-light p-5">
             <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
               {t("public.client.statistics")}
             </p>

@@ -319,8 +319,8 @@ function CarteMoyenPaiement({
       type="button"
       onClick={onSelectionner}
       className={`
-        w-full rounded-xl border p-4 text-left
-        transition-all
+        w-full rounded-lg border p-4 text-left
+        transition-colors duration-150
         ${
           selectionne
             ? "border-ocre bg-ocre/10 ring-1 ring-ocre/30"

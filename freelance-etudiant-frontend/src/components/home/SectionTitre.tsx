@@ -5,10 +5,10 @@ import type { ComponentType, ReactNode } from "react";
 import type { LucideProps } from "lucide-react";
 
 /**
- * En-tete de section pour la page d'accueil : medaillon-icone + eyebrow
- * mono + titre display, avec un lien "voir tout" optionnel aligne a
- * droite. Reprend exactement le rythme visuel de PageHeader pour rester
- * coherent avec le reste de l'interface.
+ * En-tête de section pour la page d'accueil : rubrique (petite icône +
+ * intitulé), titre display et lien « voir tout » optionnel aligné à
+ * droite. Même grammaire visuelle que PageHeader pour rester cohérent
+ * avec le reste de l'interface.
  */
 export function SectionTitre({
   icon: Icon,
@@ -34,34 +34,32 @@ export function SectionTitre({
         className,
       )}
     >
-      <div className="flex items-center gap-3">
-        <span
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ocre/10 text-ocre-dark"
-          aria-hidden="true"
-        >
-          <Icon size={20} />
-        </span>
-
-        <div>
-          <p className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
-            {eyebrow}
+      <div className="min-w-0">
+        <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">
+          <Icon size={14} className="text-ocre-dark" aria-hidden="true" />
+          {eyebrow}
+        </p>
+        <h2 className="font-display text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
+          {titre}
+        </h2>
+        {sousTitre && (
+          <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-ink-soft">
+            {sousTitre}
           </p>
-          <h2 className="font-display text-2xl font-semibold sm:text-3xl">
-            {titre}
-          </h2>
-          {sousTitre && (
-            <p className="mt-1 max-w-xl text-sm text-ink-soft">{sousTitre}</p>
-          )}
-        </div>
+        )}
       </div>
 
       {lienHref && lienLabel && (
         <Link
           href={lienHref}
-          className="inline-flex items-center gap-1 font-mono text-xs font-semibold text-bleu-dark transition-colors hover:text-bleu"
+          className="group inline-flex items-center gap-1 text-sm font-medium text-bleu-dark transition-colors hover:text-bleu"
         >
           {lienLabel}
-          <ChevronRight size={14} aria-hidden="true" />
+          <ChevronRight
+            size={14}
+            aria-hidden="true"
+            className="transition-transform duration-150 ease-out-soft group-hover:translate-x-0.5"
+          />
         </Link>
       )}
     </div>

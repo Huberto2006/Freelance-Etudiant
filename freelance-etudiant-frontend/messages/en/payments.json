@@ -11,7 +11,15 @@
     "onlineAuto": "Online payment: its status is verified automatically with the provider (no manual confirmation needed).",
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "history": "History"
+    "history": "History",
+    "confirmTitle": "Confirm this payment?",
+    "confirmDescription": "{montant} · {methode} · ref. {reference}. Once processed, this payment can no longer be changed.",
+    "confirmAction": "Confirm payment",
+    "cancelTitle": "Cancel this payment?",
+    "cancelDescription": "{montant} · {methode} · ref. {reference}. Once processed, this payment can no longer be changed.",
+    "cancelAction": "Cancel payment",
+    "confirmedToast": "Payment confirmed.",
+    "cancelledToast": "Payment cancelled."
   },
   "page": {
     "confirmedBy": "Payment confirmed by {fournisseur}.",

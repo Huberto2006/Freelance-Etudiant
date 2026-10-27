@@ -1,9 +1,23 @@
 import { clsx } from "clsx";
-import type { ButtonHTMLAttributes, ComponentPropsWithoutRef } from "react";
+import { LoaderCircle } from "lucide-react";
+import type {
+  ButtonHTMLAttributes,
+  ComponentPropsWithoutRef,
+  Ref,
+} from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost" | "danger";
+  /** React 19 : `ref` est une prop ordinaire, transmise au <button>. */
+  ref?: Ref<HTMLButtonElement>;
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "danger-ghost";
   size?: "sm" | "md" | "lg";
+  /**
+   * Opération asynchrone en cours : le bouton affiche un indicateur,
+   * se désactive (aucune double soumission possible) et expose
+   * `aria-busy`. À piloter UNIQUEMENT par l'état réel de la requête :
+   * il ne doit jamais servir à « simuler » un traitement.
+   */
+  loading?: boolean;
   /**
    * Fourni : le composant rend un lien <a> (mêmes variantes et tailles)
    * au lieu d'un <button>. Utile pour les actions de navigation
@@ -23,27 +37,42 @@ const variants: Record<string, string> = {
     "bg-transparent text-ink border border-ink/30 hover:border-ink hover:bg-ink/5 disabled:opacity-50",
   danger:
     "bg-brique text-paper-light hover:bg-brique-light border border-brique disabled:opacity-50",
+  // Action destructrice discrète : pour les lignes de tableau denses, où un
+  // bouton rouge plein répété sur chaque ligne alourdirait la lecture.
+  "danger-ghost":
+    "bg-transparent text-brique border border-brique/35 hover:border-brique hover:bg-brique/5 disabled:opacity-50",
 };
 
+/*
+ * Hauteurs : compactes à la souris, portées à 44 px sur écran tactile
+ * (pointer-coarse) pour garder des zones de toucher suffisantes sans
+ * alourdir la version desktop.
+ */
 const sizes: Record<string, string> = {
-  sm: "px-3 py-1.5 text-sm",
-  md: "px-4 py-2.5 text-sm",
-  lg: "px-6 py-3.5 text-base",
+  sm: "px-3 py-1.5 text-sm pointer-coarse:min-h-11",
+  md: "px-4 py-2.5 text-sm pointer-coarse:min-h-11",
+  lg: "px-6 py-3.5 text-base pointer-coarse:min-h-12",
 };
 
 export function Button({
   variant = "primary",
   size = "md",
+  loading = false,
   className,
   href,
   target,
   rel,
   type,
   disabled,
+  children,
   ...props
 }: ButtonProps) {
   const classes = clsx(
-    "inline-flex items-center justify-center rounded-lg font-body font-medium tracking-wide transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed",
+    "inline-flex items-center justify-center gap-2 rounded-md font-body font-medium",
+    // Transitions ciblées (jamais `all`) : couleur, bordure et léger
+    // enfoncement au clic. 150 ms, courbe unique du design system.
+    "transition-[background-color,border-color,color,opacity,transform] duration-150 ease-out-soft",
+    "cursor-pointer not-disabled:active:translate-y-px disabled:cursor-not-allowed",
     variants[variant],
     sizes[size],
     className,
@@ -61,16 +90,28 @@ export function Button({
         rel={target === "_blank" ? (rel ?? "noopener noreferrer") : rel}
         className={classes}
         {...propsLien}
-      />
+      >
+        {children}
+      </a>
     );
   }
 
   return (
     <button
       type={type}
-      disabled={disabled}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
       className={classes}
       {...props}
-    />
+    >
+      {loading && (
+        <LoaderCircle
+          size={15}
+          aria-hidden="true"
+          className="shrink-0 motion-safe:animate-spin"
+        />
+      )}
+      {children}
+    </button>
   );
 }

@@ -25,7 +25,7 @@ export default async function PageContact() {
       <div className="grid gap-7 lg:grid-cols-[1fr_20rem]">
         <FormulaireContact />
 
-        <aside className="h-fit rounded-2xl border border-ink/10 bg-paper-light p-5 shadow-xs">
+        <aside className="h-fit rounded-lg border border-ink/10 bg-paper-light p-5">
           <span
             aria-hidden="true"
             className="flex h-10 w-10 items-center justify-center rounded-full bg-bleu-soft text-bleu-dark"

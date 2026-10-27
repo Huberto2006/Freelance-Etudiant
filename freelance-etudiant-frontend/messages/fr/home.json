@@ -19,7 +19,9 @@
     "join": "Rejoindre Kianja",
     "explorePublications": "Explorer les publications →",
     "statServices": "Services proposés",
-    "statMissions": "Missions ouvertes"
+    "statMissions": "Missions ouvertes",
+    "openMissionsTitle": "Missions ouvertes",
+    "openMissionsAll": "Toutes les missions"
   },
   "audiences": {
     "eyebrow": "Une marketplace bilatérale",

@@ -138,5 +138,10 @@
   "ratingOutOf": "Note {valeur} sur 5",
   "workFeedbackPlaceholder": "Partagez votre retour sur le travail réalisé…",
   "sendReview": "Envoyer l'évaluation",
-  "yourReview": "Votre évaluation : {note}/5"
+  "yourReview": "Votre évaluation : {note}/5",
+  "confirmValidateTitle": "Valider cette livraison ?",
+  "confirmValidateDescription": "Une fois validée, la livraison ne peut plus faire l'objet d'une demande de correction. Si un paiement a déjà été confirmé, il sera libéré à l'étudiant.",
+  "confirmValidateAction": "Valider la livraison",
+  "validatedToast": "Livraison validée.",
+  "correctionSentToast": "Demande de correction envoyée."
 }

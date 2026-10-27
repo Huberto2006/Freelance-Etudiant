@@ -11,7 +11,15 @@
     "onlineAuto": "Paiement en ligne : son statut est vérifié automatiquement auprès du fournisseur (aucune confirmation manuelle).",
     "confirm": "Confirmer",
     "cancel": "Annuler",
-    "history": "Historique"
+    "history": "Historique",
+    "confirmTitle": "Confirmer ce paiement ?",
+    "confirmDescription": "{montant} · {methode} · réf. {reference}. Une fois traité, ce paiement ne peut plus être modifié.",
+    "confirmAction": "Confirmer le paiement",
+    "cancelTitle": "Annuler ce paiement ?",
+    "cancelDescription": "{montant} · {methode} · réf. {reference}. Une fois traité, ce paiement ne peut plus être modifié.",
+    "cancelAction": "Annuler le paiement",
+    "confirmedToast": "Paiement confirmé.",
+    "cancelledToast": "Paiement annulé."
   },
   "page": {
     "confirmedBy": "Paiement confirmé par {fournisseur}.",

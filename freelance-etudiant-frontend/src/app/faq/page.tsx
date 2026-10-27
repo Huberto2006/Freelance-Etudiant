@@ -96,7 +96,7 @@ export default async function PageFaq() {
       </div>
 
       {/* Renvoi vers le contact */}
-      <aside className="mt-10 flex flex-col items-start gap-4 rounded-2xl border border-ink/10 bg-paper-light p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <aside className="mt-10 flex flex-col items-start gap-4 rounded-lg border border-ink/10 bg-paper-light p-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
           <span
             aria-hidden="true"

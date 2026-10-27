@@ -19,7 +19,9 @@
     "join": "Hiditra ao amin'i Kianja",
     "explorePublications": "Hijery ny publication rehetra →",
     "statServices": "Tolotra naroso",
-    "statMissions": "Iraka misokatra"
+    "statMissions": "Iraka misokatra",
+    "openMissionsTitle": "Asa misokatra",
+    "openMissionsAll": "Ny asa rehetra"
   },
   "audiences": {
     "eyebrow": "Tsena mifandray amin'ny roa tonta",

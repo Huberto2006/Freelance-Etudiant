@@ -92,7 +92,7 @@ export function SelecteurTheme({
                   onClick={() => setTheme(t.id)}
                   title={`${nomTheme(t.id, t.nom)} — ${t.typographie.nomDisplay}`}
                   className={`
-                    group relative flex flex-col items-center justify-center rounded-lg p-1.5 transition-all
+                    group relative flex flex-col items-center justify-center rounded-lg p-1.5 transition-colors
                     ${
                       estActif
                         ? "bg-ink/10 ring-2 ring-ocre shadow-xs"
@@ -139,7 +139,7 @@ export function SelecteurTheme({
             type="button"
             onClick={() => setMode("clair")}
             className={`
-              flex items-center gap-3 rounded-xl border p-3 text-left transition-all
+              flex items-center gap-3 rounded-xl border p-3 text-left transition-colors
               ${
                 mode === "clair"
                   ? "border-ocre bg-ocre/10 shadow-xs ring-1 ring-ocre"
@@ -160,7 +160,7 @@ export function SelecteurTheme({
             type="button"
             onClick={() => setMode("sombre")}
             className={`
-              flex items-center gap-3 rounded-xl border p-3 text-left transition-all
+              flex items-center gap-3 rounded-xl border p-3 text-left transition-colors
               ${
                 mode === "sombre"
                   ? "border-ocre bg-ocre/10 shadow-xs ring-1 ring-ocre"
@@ -230,7 +230,7 @@ function CarteThemeItem({
       type="button"
       onClick={onSelection}
       className={`
-        group relative flex flex-col justify-between rounded-xl border p-4 text-left transition-all duration-150
+        group relative flex flex-col justify-between rounded-xl border p-4 text-left transition-colors duration-150
         ${
           estActif
             ? "border-ocre bg-ocre/10 shadow-sm ring-2 ring-ocre"
