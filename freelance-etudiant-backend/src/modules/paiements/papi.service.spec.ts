@@ -62,7 +62,7 @@ describe('PapiService', () => {
       const s = creerService(ENV_OK);
       expect(s.estConfigure).toBe(true);
       expect(s.diagnostic()).toEqual({ ok: true, problemes: [] });
-      expect(s.verificationDisponible).toBe(false);
+      expect(s.verificationDisponible).toBe(true); // chemin de statut officiel par defaut
     });
 
     it('2a. cle absente : diagnostic sans secret, aucun appel emis', async () => {
@@ -144,7 +144,7 @@ describe('PapiService', () => {
       const corps = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string) as Record<string, string>;
       expect('notificationUrl' in corps).toBe(false);
       expect(corps.clientName).toHaveLength(100);
-      expect(corps.description).toHaveLength(250);
+      expect(corps.description).toHaveLength(255);
     });
 
     it('respecte les surcharges d\'URL, de chemin et d\'en-tete', async () => {
@@ -159,6 +159,44 @@ describe('PapiService', () => {
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       expect(url).toBe('https://sandbox.papi.test/api/v2/liens');
       expect((init.headers as Record<string, string>)['X-Token']).toBe('Key cle_secrete_papi');
+    });
+
+    it('contrat officiel par defaut : POST /payment-links avec la cle brute dans l\'en-tete Token', async () => {
+      fetchMock.mockResolvedValue(reponse(REPONSE_OK));
+      await creerService(ENV_OK).creerPaiement(PARAMS);
+      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe('https://app.papi.mg/engine/api/payment-links');
+      expect(init.method).toBe('POST');
+      const entetes = init.headers as Record<string, string>;
+      expect(entetes.Token).toBe('cle_secrete_papi');
+      expect(entetes.Authorization).toBeUndefined();
+    });
+
+    it.each([
+      [401, /authentification refusee/],
+      [403, /authentification refusee/],
+      [404, /URL ou chemin introuvable/],
+      [405, /URL ou chemin introuvable/],
+    ])('HTTP %i : cause de configuration signalee et configurationProbable', async (statut, motif) => {
+      fetchMock.mockResolvedValue(reponse({ message: 'detail interne' }, statut));
+      const e = await erreurDe(creerService(ENV_OK).creerPaiement(PARAMS));
+      expect(e.configurationProbable).toBe(true);
+      expect(e.message).toMatch(motif);
+      expect(e.message).not.toContain('cle_secrete_papi');
+    });
+
+    it.each([400, 409, 422])('HTTP %i : refus de la requete, pas un defaut de configuration', async (statut) => {
+      fetchMock.mockResolvedValue(reponse({ error: { code: 'VALIDATION_ERROR' } }, statut));
+      const e = await erreurDe(creerService(ENV_OK).creerPaiement(PARAMS));
+      expect(e.configurationProbable).toBe(false);
+      expect(e.refusDefinitif).toBe(true);
+    });
+
+    it('montant inferieur au minimum Papi (300 Ar) : parametres, aucun appel', async () => {
+      const e = await erreurDe(creerService(ENV_OK).creerPaiement({ ...PARAMS, montantAr: 299 }));
+      expect(e.nature).toBe('parametres');
+      expect(e.message).toMatch(/300/);
+      expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it.each([400, 401, 403, 404, 422])('4. HTTP %i : refus definitif', async (statut) => {
@@ -278,21 +316,35 @@ describe('PapiService', () => {
   describe('verification du statut', () => {
     const ENV_STATUT = { ...ENV_OK, PAPI_STATUS_PATH: '/payments/{paymentReference}' };
 
-    it('12. interroge le chemin configure avec l\'en-tete Token et lit data.status', async () => {
-      fetchMock.mockResolvedValue(reponse({ data: { status: 'PAID' } }));
-      const s = await creerService(ENV_STATUT).verifierStatut({
-        paymentReference: 'PAPI REF/1',
+    it('12. defaut officiel : GET /payment-links/{reference marchande} avec l\'en-tete Token, PAID+SUCCESS = completed', async () => {
+      fetchMock.mockResolvedValue(
+        reponse({ data: { linkStatus: 'PAID', paymentStatus: 'SUCCESS' } }),
+      );
+      const s = await creerService(ENV_OK).verifierStatut({
+        paymentReference: 'UUID-PAPI',
         reference: 'KIANJA-1',
       });
       expect(s).toBe('completed');
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toBe('https://app.papi.mg/engine/api/payments/PAPI%20REF%2F1');
+      expect(url).toBe('https://app.papi.mg/engine/api/payment-links/KIANJA-1');
       expect(init.method).toBe('GET');
       expect((init.headers as Record<string, string>).Token).toBe('cle_secrete_papi');
     });
 
+    it('chemin de statut avec parametre non pris en charge ({id}) : echec ferme sans appel', async () => {
+      const e = await erreurDe(
+        creerService({ ...ENV_OK, PAPI_STATUS_PATH: '/payments/{id}' }).verifierStatut({
+          paymentReference: 'P1',
+          reference: 'KIANJA-1',
+        }),
+      );
+      expect(e.nature).toBe('configuration');
+      expect(e.message).toMatch(/\{id\}/);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
     it('accepte le placeholder {reference} (reference marchande Kianja)', async () => {
-      fetchMock.mockResolvedValue(reponse({ status: 'pending' }));
+      fetchMock.mockResolvedValue(reponse({ linkStatus: 'ACTIVE', paymentStatus: null }));
       await creerService({ ...ENV_OK, PAPI_STATUS_PATH: '/links/{reference}/status' }).verifierStatut({
         reference: 'KIANJA-1',
       });
@@ -302,31 +354,34 @@ describe('PapiService', () => {
     });
 
     it.each([
-      ['completed', 'completed'],
-      ['SUCCESS', 'completed'],
-      ['failed', 'failed'],
-      ['expired', 'failed'],
-      ['cancelled', 'failed'],
-      ['pending', 'pending'],
-      ['created', 'pending'],
-      ['quelque_chose_d_inconnu', 'pending'],
-      [undefined, 'pending'],
-      [null, 'pending'],
-      [42, 'pending'],
-    ])('statut %p -> %s (un statut inconnu n\'est jamais un succes)', async (brut, attendu) => {
-      fetchMock.mockResolvedValue(reponse({ data: { status: brut } }));
+      ['PAID', 'SUCCESS', 'completed'],
+      ['paid', 'success', 'completed'],
+      ['PAID', 'PENDING', 'pending'],
+      ['PAID', null, 'pending'],
+      ['ACTIVE', 'SUCCESS', 'pending'],
+      ['ACTIVE', null, 'pending'],
+      ['ACTIVE', 'PENDING', 'pending'],
+      ['ACTIVE', 'FAILED', 'pending'], // lien reutilisable : jamais annule
+      ['EXPIRED', null, 'failed'],
+      ['EXPIRED', 'FAILED', 'failed'],
+      ['DISABLED', 'FAILED', 'failed'],
+      ['QUELQUE_CHOSE', 'SUCCESS', 'pending'],
+      [undefined, undefined, 'pending'],
+      [42, 'SUCCESS', 'pending'],
+    ])('linkStatus %p / paymentStatus %p -> %s (seul PAID+SUCCESS confirme)', async (lien, paiement, attendu) => {
+      fetchMock.mockResolvedValue(
+        reponse({ linkStatus: lien, paymentStatus: paiement, status: 'SUCCESS' }),
+      );
       await expect(
         creerService(ENV_STATUT).verifierStatut({ paymentReference: 'p', reference: 'r' }),
       ).resolves.toBe(attendu);
     });
 
-    it('echec ferme sans PAPI_STATUS_PATH : aucun appel, aucune confirmation', async () => {
-      const e = await erreurDe(
-        creerService(ENV_OK).verifierStatut({ paymentReference: 'p', reference: 'r' }),
-      );
-      expect(e.nature).toBe('configuration');
-      expect(e.message).toMatch(/PAPI_STATUS_PATH/);
-      expect(fetchMock).not.toHaveBeenCalled();
+    it('ignore un ancien champ `status` : sans linkStatus/paymentStatus, jamais confirme', async () => {
+      fetchMock.mockResolvedValue(reponse({ data: { status: 'PAID' } }));
+      await expect(
+        creerService(ENV_STATUT).verifierStatut({ paymentReference: 'p', reference: 'r' }),
+      ).resolves.toBe('pending');
     });
 
     it('propage une erreur HTTP, un JSON invalide et une erreur reseau', async () => {

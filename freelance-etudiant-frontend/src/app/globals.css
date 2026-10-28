@@ -421,6 +421,13 @@ input[type="radio"] {
   accent-color: var(--color-ocre);
 }
 
+/* Léger flottement vertical des badges du Hero (neutralisé par la règle
+   prefers-reduced-motion ci-dessous : une seule itération de 0,001 ms). */
+@keyframes kianja-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;

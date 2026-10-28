@@ -51,6 +51,10 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:?ADMIN_EMAIL requis dans .env}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD requis dans .env}
       FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL requis dans .env}
+      # URL publique https de l'API AVEC /api/v1 (ex. https://kianja.arato.mg/api/v1) :
+      # requise en production par le paiement Papi (URL de notification).
+      # Absente = Papi indisponible (503).
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-}
       CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN requis dans .env}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
@@ -69,10 +73,15 @@ services:
       PAPI_BASE_URL: ${PAPI_BASE_URL:-}
       PAPI_API_KEY: ${PAPI_API_KEY:-}
       PAPI_WEBHOOK_SECRET: ${PAPI_WEBHOOK_SECRET:-}
-      PAPI_CREATE_PATH: ${PAPI_CREATE_PATH:-/payments}
-      PAPI_STATUS_PATH: ${PAPI_STATUS_PATH:-/payments/{id}}
-      PAPI_AUTH_HEADER: ${PAPI_AUTH_HEADER:-Authorization}
-      PAPI_AUTH_SCHEME: ${PAPI_AUTH_SCHEME-Bearer}
+      # Contrat officiel Papi (docs.papi.mg) : POST /payment-links, cle brute
+      # dans l'en-tete `Token` (sans « Bearer »). Ne surcharger que sur
+      # instruction de Papi.
+      PAPI_CREATE_PATH: ${PAPI_CREATE_PATH:-/payment-links}
+      # Lecture du statut (guide d'integration Papi) : GET /payment-links/{reference}.
+      # Laisser vide : c'est la valeur par defaut du backend.
+      PAPI_STATUS_PATH: ${PAPI_STATUS_PATH:-}
+      PAPI_AUTH_HEADER: ${PAPI_AUTH_HEADER:-Token}
+      PAPI_AUTH_SCHEME: ${PAPI_AUTH_SCHEME:-}
       PAPI_CURRENCY: ${PAPI_CURRENCY:-MGA}
       PAPI_SIGNATURE_HEADER: ${PAPI_SIGNATURE_HEADER:-x-papi-signature}
       PAIEMENT_WEBHOOK_SECRET: ${PAIEMENT_WEBHOOK_SECRET:?PAIEMENT_WEBHOOK_SECRET requis dans .env}

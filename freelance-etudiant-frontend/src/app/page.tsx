@@ -99,7 +99,7 @@ export default function PageAccueil() {
   return (
     <div className="mx-auto">
       {/* 1. Hero : recherche bilatérale, métriques vivantes et accès direct */}
-      <HeroAccueil suggestions={suggestions} stats={stats} missions={missions} />
+      <HeroAccueil suggestions={suggestions} stats={stats} />
 
       {/* 2. Audiences : mise en valeur immédiate des deux côtés de la marketplace */}
       <SectionAudiences />

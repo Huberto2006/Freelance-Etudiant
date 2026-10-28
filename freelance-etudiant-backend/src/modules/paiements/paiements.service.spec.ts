@@ -6,6 +6,9 @@ import { Livraison } from '../livraisons/entities/livraison.entity';
 import { CandidaturesService } from '../candidatures/candidatures.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MvolaService } from './mvola.service';
+import { PapiService } from './papi.service';
+import { ConfigService } from '@nestjs/config';
+import { FacturesService } from '../factures/factures.service';
 import { EmailService } from '../email/email.service';
 import { UsersService } from '../users/users.service';
 import { MoyensPaiementService } from '../moyens-paiement/moyens-paiement.service';
@@ -68,6 +71,10 @@ describe('PaiementsService', () => {
         { provide: NotificationsService, useValue: notificationsService },
         { provide: MvolaService, useValue: mvolaService },
         {
+          provide: PapiService,
+          useValue: { diagnostic: jest.fn(() => ({ ok: false, problemes: [] })) },
+        },
+        {
           provide: EmailService,
           useValue: { envoyerPaiementInitie: jest.fn().mockResolvedValue(true) },
         },
@@ -89,6 +96,8 @@ describe('PaiementsService', () => {
           provide: MoyensPaiementClientService,
           useValue: { trouverPourPaiement: jest.fn() },
         },
+        { provide: ConfigService, useValue: { get: jest.fn() } },
+        { provide: FacturesService, useValue: {} },
       ],
     }).compile();
 

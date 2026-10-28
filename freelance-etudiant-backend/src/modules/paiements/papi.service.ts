@@ -44,6 +44,16 @@ export class PapiError extends Error {
   get refusDefinitif(): boolean {
     return this.options.refusDefinitif === true;
   }
+
+  /**
+   * Vrai pour HTTP 401/403 (cle / en-tete d'authentification refuses) et
+   * 404/405 (URL ou chemin incorrect) : le defaut est tres probablement du
+   * cote de la configuration Kianja, pas dans les donnees du client. Le
+   * client ne doit alors PAS lire « Papi a refuse la transaction ».
+   */
+  get configurationProbable(): boolean {
+    return [401, 403, 404, 405].includes(this.options.statutHttp ?? 0);
+  }
 }
 
 export interface ParamsCreation {
@@ -69,13 +79,17 @@ export interface ResultatCreation {
 
 /** Limites appliquees avant l'envoi (Papi ne les documente pas dans nos sources). */
 const LONGUEUR_MAX_NOM = 100;
-const LONGUEUR_MAX_DESCRIPTION = 250;
+const LONGUEUR_MAX_DESCRIPTION = 255;
 const LONGUEUR_MAX_REFERENCE = 100;
+/** Montant minimum documente par Papi (docs.papi.mg, creation d'un lien : amount >= 300). */
+const MONTANT_MIN_AR = 300;
 const DELAI_PAR_DEFAUT_MS = 15_000;
 
 /** Contrat Papi (fourni par le projet, voir PAPI-INTEGRATION.md). */
 const BASE_URL_PAR_DEFAUT = 'https://app.papi.mg/engine/api';
 const CHEMIN_CREATION_PAR_DEFAUT = '/payment-links';
+/** Lecture du statut : GET /payment-links/{reference marchande} (guide d'integration Papi). */
+const CHEMIN_STATUT_PAR_DEFAUT = '/payment-links/{reference}';
 const ENTETE_AUTH_PAR_DEFAUT = 'Token';
 
 /**
@@ -88,12 +102,15 @@ const ENTETE_AUTH_PAR_DEFAUT = 'Token';
  *              successUrl, failureUrl, notificationUrl }
  *   reponse  { data: { paymentLink, paymentReference, currency, amount } }
  *
- * NON confirme par nos sources (donc non invente par defaut) :
- *   - le chemin de lecture du statut : `PAPI_STATUS_PATH` est OBLIGATOIRE pour
- *     verifier un paiement (placeholders {paymentReference} / {reference}) ;
- *     sans lui, aucun paiement Papi ne peut etre confirme (echec ferme) ;
- *   - le nom exact du champ de statut et de ses valeurs : lecture de
- *     `data.status` (ou `status`) ; tout statut inconnu = « en attente ».
+ * Lecture du statut (guide d'integration Papi) :
+ *   GET {PAPI_BASE_URL}/payment-links/{reference marchande}, meme en-tete
+ *   `Token`. Reponse : `linkStatus` (ACTIVE | EXPIRED | PAID | DISABLED) et
+ *   `paymentStatus` (SUCCESS | PENDING | FAILED | null).
+ *   Un paiement n'est « complete » que pour linkStatus=PAID ET
+ *   paymentStatus=SUCCESS. ACTIVE+FAILED = tentative echouee mais lien
+ *   encore utilisable : le paiement reste EN ATTENTE (jamais annule, le
+ *   client peut encore payer). EXPIRED/DISABLED sans paiement = echoue.
+ *   Tout autre cas = « en attente » (echec ferme).
  */
 @Injectable()
 export class PapiService implements OnModuleInit {
@@ -102,7 +119,7 @@ export class PapiService implements OnModuleInit {
   private readonly baseUrl: string;
   private readonly apiKey: string;
   private readonly cheminCreation: string;
-  private readonly cheminStatut: string | undefined;
+  private readonly cheminStatut: string;
   private readonly enteteAuth: string;
   private readonly schemeAuth: string;
   private readonly delaiMs: number;
@@ -114,13 +131,14 @@ export class PapiService implements OnModuleInit {
     this.baseUrl = (lire('PAPI_BASE_URL') || BASE_URL_PAR_DEFAUT).replace(/\/+$/, '');
     this.apiKey = lire('PAPI_API_KEY') || '';
     this.cheminCreation = lire('PAPI_CREATE_PATH') || CHEMIN_CREATION_PAR_DEFAUT;
-    this.cheminStatut = lire('PAPI_STATUS_PATH') || undefined;
+    this.cheminStatut = lire('PAPI_STATUS_PATH') || CHEMIN_STATUT_PAR_DEFAUT;
     this.enteteAuth = lire('PAPI_AUTH_HEADER') || ENTETE_AUTH_PAR_DEFAUT;
     // Defaut : cle seule, sans « Bearer » (en-tete `Token`).
     this.schemeAuth = lire('PAPI_AUTH_SCHEME') ?? '';
     const delai = Number(lire('PAPI_TIMEOUT_MS'));
     this.delaiMs = Number.isFinite(delai) && delai > 0 ? delai : DELAI_PAR_DEFAUT_MS;
     this.production = lire('NODE_ENV') === 'production';
+
   }
 
   /** Journalise au demarrage l'etat de la configuration (jamais de secret). */
@@ -132,7 +150,23 @@ export class PapiService implements OnModuleInit {
       );
     } else {
       this.logger.log(
-        `Papi configure (base=${this.baseUrl}, en-tete=${this.enteteAuth}, statut=${this.cheminStatut ? 'configure' : 'NON configure'})`,
+        `Papi configure (base=${this.baseUrl}, creation=${this.cheminCreation}, en-tete=${this.enteteAuth}${this.schemeAuth ? ` (prefixe ${this.schemeAuth})` : ' (sans prefixe)'}, statut=${this.cheminStatut})`,
+      );
+    }
+    if (this.cheminCreation !== CHEMIN_CREATION_PAR_DEFAUT || this.enteteAuth !== ENTETE_AUTH_PAR_DEFAUT || this.schemeAuth) {
+      this.logger.warn(
+        `Contrat Papi personnalise : creation=${this.cheminCreation}, en-tete=${this.enteteAuth}, prefixe=${this.schemeAuth || '(aucun)'}. Le contrat officiel (docs.papi.mg) est POST ${CHEMIN_CREATION_PAR_DEFAUT} avec l'en-tete ${ENTETE_AUTH_PAR_DEFAUT} sans prefixe.`,
+      );
+    }
+    const apiPublique = this.configService.get<string>('API_PUBLIC_URL')?.trim();
+    if (apiPublique && !/\/api\//.test(`${apiPublique}/`)) {
+      this.logger.warn(
+        `API_PUBLIC_URL (${apiPublique}) ne contient pas le prefixe global (/api/v1) : l'URL de notification Papi <API_PUBLIC_URL>/paiements/webhook/papi n'atteindrait pas le backend (nginx n'achemine que /api/).`,
+      );
+    }
+    if (this.cheminStatut && /\{(?!paymentReference\}|reference\})[^}]*\}/.test(this.cheminStatut)) {
+      this.logger.warn(
+        `PAPI_STATUS_PATH (${this.cheminStatut}) contient un parametre non pris en charge : la confirmation des paiements echouera.`,
       );
     }
   }
@@ -169,9 +203,9 @@ export class PapiService implements OnModuleInit {
     return this.diagnostic().ok;
   }
 
-  /** Vrai si la verification de statut est possible (chemin configure). */
+  /** Vrai si la verification de statut est possible. */
   get verificationDisponible(): boolean {
-    return Boolean(this.cheminStatut);
+    return this.estConfigure;
   }
 
   private urlValide(valeur: string, autoriserLocalHttp = true): boolean {
@@ -260,7 +294,15 @@ export class PapiService implements OnModuleInit {
   private erreurHttp(etape: string, statut: number): PapiError {
     // 4xx = demande refusee (rien cree), sauf 408/429 : on ne sait pas.
     const refusDefinitif = statut >= 400 && statut < 500 && statut !== 408 && statut !== 429;
-    return new PapiError('http', `Papi a repondu HTTP ${statut} pendant : ${etape}`, {
+    let indice = '';
+    if (statut === 401 || statut === 403) {
+      indice =
+        ' (authentification refusee : verifier PAPI_API_KEY, PAPI_AUTH_HEADER et PAPI_AUTH_SCHEME ; contrat officiel : en-tete `Token` sans prefixe)';
+    } else if (statut === 404 || statut === 405) {
+      indice =
+        ' (URL ou chemin introuvable : verifier PAPI_BASE_URL et PAPI_CREATE_PATH/PAPI_STATUS_PATH ; contrat officiel : POST /payment-links)';
+    }
+    return new PapiError('http', `Papi a repondu HTTP ${statut} pendant : ${etape}${indice}`, {
       statutHttp: statut,
       refusDefinitif,
     });
@@ -270,6 +312,12 @@ export class PapiService implements OnModuleInit {
   private validerParams(params: ParamsCreation): void {
     if (!Number.isFinite(params.montantAr) || params.montantAr <= 0) {
       throw new PapiError('parametres', 'Montant invalide (nombre strictement positif requis)');
+    }
+    if (params.montantAr < MONTANT_MIN_AR) {
+      throw new PapiError(
+        'parametres',
+        `Montant inferieur au minimum accepte par Papi (${MONTANT_MIN_AR} Ar)`,
+      );
     }
     if (!params.reference?.trim() || params.reference.length > LONGUEUR_MAX_REFERENCE) {
       throw new PapiError('parametres', 'Reference marchande manquante ou trop longue');
@@ -322,7 +370,7 @@ export class PapiService implements OnModuleInit {
     if (!reponse.ok) {
       // Le corps d'erreur n'est journalise que tronque et jamais renvoye au client.
       this.logger.error(
-        `Papi creation KO : HTTP ${reponse.statut}, ref=${params.reference}, corps=${reponse.texte.slice(0, 300)}`,
+        `Papi creation KO : HTTP ${reponse.statut}, POST ${this.cheminCreation}, ref=${params.reference}, corps=${reponse.texte.slice(0, 300)}`,
       );
       throw this.erreurHttp('creation du lien de paiement', reponse.statut);
     }
@@ -373,19 +421,19 @@ export class PapiService implements OnModuleInit {
   }
 
   /**
-   * Statut brut du fournisseur -> statut normalise. Tout statut inconnu est
-   * traite comme « en attente » : jamais de confirmation par defaut.
+   * (linkStatus, paymentStatus) Papi -> statut normalise.
+   *  - PAID + SUCCESS            -> completed (seul cas de confirmation) ;
+   *  - EXPIRED / DISABLED        -> failed (aucun paiement ne peut plus aboutir) ;
+   *  - tout le reste (ACTIVE avec PENDING / FAILED / null, valeur inconnue,
+   *    PAID sans SUCCESS) -> pending : ACTIVE+FAILED laisse le client
+   *    reessayer sur le meme lien, donc on n'annule jamais a ce stade.
    */
-  normaliserStatut(brut: unknown): StatutFournisseur {
-    const valeur = typeof brut === 'string' ? brut.trim().toLowerCase() : '';
-    if (['completed', 'paid', 'success', 'succeeded', 'successful'].includes(valeur)) {
-      return 'completed';
-    }
-    if (
-      ['failed', 'cancelled', 'canceled', 'expired', 'rejected', 'declined', 'error'].includes(valeur)
-    ) {
-      return 'failed';
-    }
+  interpreterStatut(linkStatus: unknown, paymentStatus: unknown): StatutFournisseur {
+    const norm = (v: unknown) => (typeof v === 'string' ? v.trim().toUpperCase() : '');
+    const lien = norm(linkStatus);
+    const paiement = norm(paymentStatus);
+    if (lien === 'PAID' && paiement === 'SUCCESS') return 'completed';
+    if (lien === 'EXPIRED' || lien === 'DISABLED') return 'failed';
     return 'pending';
   }
 
@@ -400,16 +448,20 @@ export class PapiService implements OnModuleInit {
     reference: string;
   }): Promise<StatutFournisseur> {
     this.assertConfigure();
-    if (!this.cheminStatut) {
-      throw new PapiError(
-        'configuration',
-        'PAPI_STATUS_PATH non configure : verification du statut impossible',
-      );
-    }
 
     const chemin = this.cheminStatut
       .replace('{paymentReference}', encodeURIComponent(ids.paymentReference ?? ''))
       .replace('{reference}', encodeURIComponent(ids.reference));
+
+    // Un parametre non remplace (ex. `{id}`) serait envoye tel quel a Papi :
+    // echec ferme explicite plutot qu'un 404 trompeur.
+    const restant = chemin.match(/\{[^}]*\}/);
+    if (restant) {
+      throw new PapiError(
+        'configuration',
+        `PAPI_STATUS_PATH contient un parametre non pris en charge : ${restant[0]} (seuls {paymentReference} et {reference} sont remplaces)`,
+      );
+    }
 
     const reponse = await this.appeler(
       `${this.baseUrl}${chemin}`,
@@ -419,7 +471,7 @@ export class PapiService implements OnModuleInit {
 
     if (!reponse.ok) {
       this.logger.error(
-        `Papi statut KO : HTTP ${reponse.statut}, ref=${ids.reference}, corps=${reponse.texte.slice(0, 300)}`,
+        `Papi statut KO : HTTP ${reponse.statut}, GET ${chemin}, ref=${ids.reference}, corps=${reponse.texte.slice(0, 300)}`,
       );
       throw this.erreurHttp('verification du statut', reponse.statut);
     }
@@ -432,6 +484,6 @@ export class PapiService implements OnModuleInit {
       racine.data && typeof racine.data === 'object' && !Array.isArray(racine.data)
         ? (racine.data as Record<string, unknown>)
         : racine;
-    return this.normaliserStatut(data.status);
+    return this.interpreterStatut(data.linkStatus, data.paymentStatus);
   }
 }

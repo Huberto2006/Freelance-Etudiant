@@ -1,9 +1,9 @@
 {
   "hero": {
-    "eyebrow": "Kianja · Tsena ho an'ny mpianatra miasa an-tsehatra",
-    "titleStart": "Ny filàn'ny mpanjifa.",
-    "titleAccent": "Ny fahaizan'ny mpianatra.",
-    "intro": "Mitadiava mpiasa mahafeno fepetra, mamoaha filàna na manolora ny fahaizanao, ao anatin'ny rafitra mazava sy azo antoka.",
+    "eyebrow": "Sehatra ho an'ny mpianatra sy ny mpanjifa",
+    "titleStart": "Hitady iraka na tolotra avy amin'ny mpianatra",
+    "titleAccent": "eo akaikinao",
+    "intro": "Ampifandraisin'i Kianja ny mpianatra manan-talenta sy ny mpanjifa mitady fahaizana azo ino, ao anatin'ny rafitra mazava sy azo antoka.",
     "searchTypeLabel": "Karazana fikarohana",
     "targetServices": "Tolotra",
     "targetMissions": "Iraka",
@@ -20,8 +20,12 @@
     "explorePublications": "Hijery ny publication rehetra →",
     "statServices": "Tolotra naroso",
     "statMissions": "Iraka misokatra",
-    "openMissionsTitle": "Asa misokatra",
-    "openMissionsAll": "Ny asa rehetra"
+    "exploreServices": "Hijery ny tolotra",
+    "discoverMissions": "Hijery ny iraka",
+    "imageAlt": "Mpianatra mitsiky mitazona solosaina finday eo anoloan'ny varavarankely lehibe",
+    "badgeStudents": "Mpianatra",
+    "badgeMissions": "Iraka",
+    "badgeServices": "Tolotra"
   },
   "audiences": {
     "eyebrow": "Tsena mifandray amin'ny roa tonta",

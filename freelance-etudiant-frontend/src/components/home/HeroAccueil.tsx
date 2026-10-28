@@ -1,16 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowRight, CalendarClock, Search } from "lucide-react";
+import { Briefcase, GraduationCap, Layers, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/auth-context";
-import { useFormats } from "@/i18n/use-formats";
-import { useOptionLabels } from "@/i18n/use-option-labels";
-import type { Mission } from "@/lib/types";
 
 export interface SuggestionCategorie {
   valeur: string;
@@ -26,33 +24,24 @@ type CibleRecherche = "services" | "missions";
 
 /**
  * Hero de la page d'accueil, en deux colonnes : à gauche le message, la
- * recherche (sélecteur Services / Missions intégré) et l'action principale ;
- * à droite un extrait des missions réellement ouvertes, pour montrer dès
- * l'arrivée ce qu'on peut faire sur la plateforme. Le panneau n'existe que
- * s'il y a de vraies missions ouvertes : aucun contenu d'illustration.
+ * recherche (sélecteur Services / Missions intégré) et les actions ; à droite
+ * la photo d'un étudiant, avec trois badges HTML (Étudiants, Missions,
+ * Services). Les badges sont décoratifs : aucune donnée chiffrée, aucun
+ * texte incrusté dans l'image.
  */
 export function HeroAccueil({
   suggestions,
   stats,
-  missions = [],
 }: {
   suggestions: SuggestionCategorie[];
   stats?: StatVive[];
-  missions?: Mission[];
 }) {
   const t = useTranslations("home.hero");
-  const tc = useTranslations("common");
   const router = useRouter();
   const { utilisateur, chargement } = useAuth();
-  const { argent, dateCourte } = useFormats();
-  const { categorie } = useOptionLabels();
 
   const [recherche, setRecherche] = useState("");
   const [cible, setCible] = useState<CibleRecherche>("services");
-
-  // Seules les missions réellement ouvertes sont présentées.
-  const ouvertes = missions.filter((m) => m.statut === "ouverte").slice(0, 3);
-  const aPanneau = ouvertes.length > 0;
 
   function lancerRecherche(e: React.FormEvent) {
     e.preventDefault();
@@ -65,22 +54,17 @@ export function HeroAccueil({
   }
 
   return (
-    <section className="border-b border-ink/10 bg-paper-light">
-      <div
-        className={
-          aPanneau
-            ? "mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-5 sm:py-20 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-center lg:gap-14"
-            : "mx-auto max-w-6xl px-4 py-14 sm:px-5 sm:py-20"
-        }
-      >
-        <div className={aPanneau ? "" : "max-w-2xl"}>
-          <p className="animate-in mb-4 text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">
+    <section className="overflow-hidden border-b border-ink/10 bg-paper-light">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-5 sm:py-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center lg:gap-14 lg:py-20">
+        <div>
+          <p className="animate-in mb-5 inline-flex items-center gap-2 rounded-md border border-ink/10 bg-ink/[0.03] px-2.5 py-1 text-xs font-medium text-ink-soft">
+            <GraduationCap size={13} aria-hidden="true" className="text-bleu-dark" />
             {t("eyebrow")}
           </p>
 
           <h1 className="animate-in delay-1 font-display text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
             {t("titleStart")}{" "}
-            <span className="text-ocre-dark">{t("titleAccent")}</span>
+            <span className="text-bleu-dark">{t("titleAccent")}</span>
           </h1>
 
           <p className="animate-in delay-2 mt-5 max-w-xl text-base leading-relaxed text-ink-soft">
@@ -155,6 +139,10 @@ export function HeroAccueil({
           )}
 
           {/* Actions : une principale + un lien secondaire */}
+          {/* Zone réservée pendant la résolution de la session : évite que la
+              colonne ne grandisse (décalage de mise en page) à l'apparition
+              des boutons. */}
+          {chargement && <div aria-hidden="true" className="mt-8 h-12" />}
           {!chargement && (
             <div className="animate-in delay-4 mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
               {utilisateur ? (
@@ -181,21 +169,19 @@ export function HeroAccueil({
                 </>
               ) : (
                 <>
-                  <Button href="/inscription" size="lg">
-                    {t("join")}
+                  <Button href="/services" size="lg">
+                    {t("exploreServices")}
                   </Button>
-                  <Link
-                    href="/publications"
-                    className="text-sm font-medium text-ink underline-offset-4 hover:underline"
-                  >
-                    {t("explorePublications")}
-                  </Link>
+                  <Button href="/missions" size="lg" variant="secondary">
+                    {t("discoverMissions")}
+                  </Button>
                 </>
               )}
             </div>
           )}
 
           {/* Chiffres réels : une ligne de texte, sans cartes */}
+          {!stats && <div aria-hidden="true" className="mt-10 h-[3.75rem]" />}
           {stats && stats.length > 0 && (
             <p className="mt-10 border-t border-ink/10 pt-5 text-sm text-ink-soft">
               {stats.map((stat, index) => (
@@ -215,59 +201,46 @@ export function HeroAccueil({
           )}
         </div>
 
-        {/* Missions ouvertes : extrait réel du catalogue */}
-        {aPanneau && (
-          <aside
-            aria-label={t("openMissionsTitle")}
-            className="animate-in delay-3 rounded-lg border border-ink/10 bg-paper"
-          >
-            <div className="flex items-center justify-between gap-3 border-b border-ink/10 px-5 py-3.5">
-              <h2 className="text-sm font-semibold text-ink">
-                {t("openMissionsTitle")}
-              </h2>
-              <Link
-                href="/missions"
-                className="group inline-flex items-center gap-1 text-xs font-medium text-bleu-dark transition-colors hover:text-bleu"
-              >
-                {t("openMissionsAll")}
-                <ArrowRight
-                  size={13}
-                  aria-hidden="true"
-                  className="transition-transform duration-150 ease-out-soft group-hover:translate-x-0.5"
-                />
-              </Link>
-            </div>
+        {/* Illustration : photo + formes douces + badges */}
+        <div className="animate-in delay-2 relative mx-auto w-full max-w-[19rem] sm:max-w-sm lg:max-w-md">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+            <div className="absolute -right-6 -top-6 h-3/4 w-3/4 rounded-[2.5rem] bg-bleu-soft" />
+            <div className="absolute -bottom-6 -left-6 h-1/2 w-1/2 rounded-full bg-ink/[0.05]" />
+          </div>
 
-            <ul className="divide-y divide-ink/10">
-              {ouvertes.map((mission) => (
-                <li key={mission.id}>
-                  <Link
-                    href={`/missions/${mission.id}`}
-                    className="flex items-start justify-between gap-4 px-5 py-4 transition-colors duration-150 hover:bg-ink/[0.03]"
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate font-display font-medium text-ink">
-                        {mission.titre}
-                      </span>
-                      <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-soft">
-                        <span>{categorie(mission.categorie)}</span>
-                        <span className="inline-flex items-center gap-1 tabular-nums">
-                          <CalendarClock size={12} aria-hidden="true" />
-                          {tc("card.before", {
-                            date: dateCourte(mission.dateLimite),
-                          })}
-                        </span>
-                      </span>
-                    </span>
-                    <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-ocre-dark">
-                      {argent(mission.budget)}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </aside>
-        )}
+          <div className="relative overflow-hidden rounded-xl border border-ink/10 bg-paper">
+            <Image
+              src="/images/hero-etudiant-kianja.webp"
+              alt={t("imageAlt")}
+              width={720}
+              height={861}
+              priority
+              sizes="(min-width: 1024px) 448px, (min-width: 640px) 384px, 304px"
+              className="h-auto w-full"
+            />
+          </div>
+
+          <ul className="contents">
+            <li className="animate-in delay-4 absolute -left-3 top-10 sm:-left-8">
+              <span className="flex items-center gap-2 rounded-lg border border-ink/10 bg-paper-light px-3 py-2 text-xs font-medium text-ink shadow-xs motion-safe:[animation:kianja-float_6s_ease-in-out_infinite]">
+                <GraduationCap size={14} aria-hidden="true" className="text-bleu-dark" />
+                {t("badgeStudents")}
+              </span>
+            </li>
+            <li className="animate-in delay-4 absolute -right-2 top-1/2 sm:-right-6">
+              <span className="flex items-center gap-2 rounded-lg border border-ink/10 bg-paper-light px-3 py-2 text-xs font-medium text-ink shadow-xs motion-safe:[animation:kianja-float_7s_ease-in-out_infinite]">
+                <Briefcase size={14} aria-hidden="true" className="text-bleu-dark" />
+                {t("badgeMissions")}
+              </span>
+            </li>
+            <li className="animate-in delay-4 absolute -bottom-3 -left-4 hidden sm:block">
+              <span className="flex items-center gap-2 rounded-lg border border-ink/10 bg-paper-light px-3 py-2 text-xs font-medium text-ink shadow-xs motion-safe:[animation:kianja-float_8s_ease-in-out_infinite]">
+                <Layers size={14} aria-hidden="true" className="text-bleu-dark" />
+                {t("badgeServices")}
+              </span>
+            </li>
+          </ul>
+        </div>
       </div>
     </section>
   );

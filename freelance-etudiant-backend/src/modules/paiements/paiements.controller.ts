@@ -81,9 +81,10 @@ export class PaiementsController {
   }
 
   /**
-   * Webhook Papi (public mais signe HMAC-SHA256 du corps brut).
-   * Secret : PAPI_WEBHOOK_SECRET ; en-tete : PAPI_SIGNATURE_HEADER
-   * (defaut "x-papi-signature", a confirmer dans la documentation Papi).
+   * Webhook Papi (public mais signe). En-tete `X-Papi-Signature: t=<unix>,v1=<hex>` ;
+   * v1 = HMAC-SHA256 de `<t>.<corps brut>` avec le secret COMPLET (prefixe
+   * `pwhsec_` inclus) ; tolerance 300 s (docs.papi.mg, securing-notifications).
+   * Secret : PAPI_WEBHOOK_SECRET ; en-tete : PAPI_SIGNATURE_HEADER.
    * Comme pour MVola, la notification n'est qu'un declencheur : le statut
    * reel est relu aupres de Papi avant toute confirmation.
    */
@@ -98,7 +99,7 @@ export class PaiementsController {
     const brut = req.headers[nomEntete];
     const signature = Array.isArray(brut) ? brut[0] : brut;
 
-    verifierSignatureWebhook(
+    verifierSignaturePapi(
       req,
       signature,
       this.configService.get<string>('PAPI_WEBHOOK_SECRET'),
@@ -235,6 +236,62 @@ export function verifierSignatureWebhook(
   const b = /^[0-9a-fA-F]+$/.test(recu) ? Buffer.from(recu, 'hex') : Buffer.alloc(0);
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
     throw new UnauthorizedException('Signature webhook invalide');
+  }
+
+  if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+    throw new BadRequestException('Notification invalide');
+  }
+}
+
+
+/** Tolerance maximale entre l'horodatage signe par Papi et l'heure serveur. */
+export const TOLERANCE_SIGNATURE_PAPI_S = 300;
+
+/**
+ * Verifie `X-Papi-Signature: t=<unix>,v1=<hex>` (contrat officiel Papi) :
+ * HMAC-SHA256 de `<t>.<corps brut>`, secret complet, comparaison en temps
+ * constant, horodatage a +/- 300 s (anti-rejeu). Echoue ferme : secret absent
+ * -> 503 ; en-tete absent/mal forme, signature fausse ou horodatage hors
+ * fenetre -> 401 ; corps non objet -> 400.
+ */
+export function verifierSignaturePapi(
+  req: Request,
+  entete: string | undefined,
+  secret: string | undefined,
+  maintenantS: number = Math.floor(Date.now() / 1000),
+): void {
+  const cle = secret?.trim();
+  if (!cle) {
+    throw new ServiceUnavailableException('Webhook non configure');
+  }
+  if (!entete) {
+    throw new UnauthorizedException('Signature webhook manquante');
+  }
+
+  let t: string | undefined;
+  let v1: string | undefined;
+  for (const morceau of entete.split(',')) {
+    const [nom, ...reste] = morceau.trim().split('=');
+    const valeur = reste.join('=').trim();
+    if (nom === 't') t = valeur;
+    if (nom === 'v1') v1 = valeur;
+  }
+  if (!t || !/^\d{1,12}$/.test(t) || !v1 || !/^[0-9a-f]{64}$/.test(v1)) {
+    throw new UnauthorizedException('Signature webhook mal formee');
+  }
+
+  const corpsBrut = (req as Request & { rawBody?: Buffer }).rawBody ?? Buffer.alloc(0);
+  const attendu = crypto
+    .createHmac('sha256', cle)
+    .update(Buffer.concat([Buffer.from(`${t}.`), corpsBrut]))
+    .digest();
+  const recu = Buffer.from(v1, 'hex');
+  if (attendu.length !== recu.length || !crypto.timingSafeEqual(attendu, recu)) {
+    throw new UnauthorizedException('Signature webhook invalide');
+  }
+
+  if (Math.abs(maintenantS - Number(t)) > TOLERANCE_SIGNATURE_PAPI_S) {
+    throw new UnauthorizedException('Notification expiree');
   }
 
   if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {

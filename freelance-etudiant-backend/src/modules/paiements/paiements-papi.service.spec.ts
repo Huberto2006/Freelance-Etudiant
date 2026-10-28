@@ -193,6 +193,25 @@ describe('PaiementsService — creation Papi', () => {
     expect(email.envoyerPaiementInitie).not.toHaveBeenCalled();
   });
 
+  it.each([401, 403, 404, 405])(
+    'HTTP %i de Papi : defaut de configuration, message « indisponible » (jamais « a refuse la transaction »)',
+    async (statut) => {
+      const { service, repo, papi } = creer();
+      papi.creerPaiement.mockRejectedValue(
+        new PapiError('http', `HTTP ${statut}`, { statutHttp: statut, refusDefinitif: true }),
+      );
+      const erreur = await appeler(service).catch((e: Error) => e);
+      expect(erreur).toBeInstanceOf(ServiceUnavailableException);
+      expect((erreur as Error).message).toMatch(/n'est pas disponible/);
+      expect((erreur as Error).message).not.toMatch(/refuse la transaction/);
+      // Rien n'a ete cree chez Papi : le creneau est libere.
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 't1', statut: StatutTransaction.EN_ATTENTE },
+        { statut: StatutTransaction.ANNULEE, providerStatut: 'refuse_par_papi' },
+      );
+    },
+  );
+
   it.each([
     ['5xx', new PapiError('http', 'HTTP 503', { statutHttp: 503 })],
     ['timeout / reseau', new PapiError('reseau', 'Delai depasse')],
@@ -362,6 +381,27 @@ describe('PaiementsService — verification et webhook Papi', () => {
         );
       }
       expect(papi.verifierStatut).not.toHaveBeenCalled();
+    });
+
+    it('retrouve la transaction par merchantPaymentReference uniquement (paymentReference = UUID Papi, ignore)', async () => {
+      const { service, repo, papi } = creer();
+      // Notification reelle Papi : `paymentReference` est l'UUID Papi, pas notre reference.
+      await expect(
+        service.traiterWebhook({ paymentReference: 'uuid-papi-1', paymentStatus: 'SUCCESS' }, 'papi'),
+      ).rejects.toThrow(BadRequestException);
+      expect(repo.findOne).not.toHaveBeenCalled();
+
+      repo.findOne.mockResolvedValue(transaction());
+      papi.verifierStatut.mockResolvedValue('pending');
+      await service.traiterWebhook(
+        {
+          merchantPaymentReference: 'KIANJA-1',
+          paymentReference: 'uuid-papi-1',
+          paymentStatus: 'SUCCESS',
+        },
+        'papi',
+      );
+      expect(JSON.stringify(repo.findOne.mock.calls[0][0].where)).not.toContain('uuid-papi-1');
     });
 
     it('rejette une notification sans reference, et une transaction inconnue', async () => {

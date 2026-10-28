@@ -1,9 +1,9 @@
 {
   "hero": {
-    "eyebrow": "Kianja · Marketplace for freelance students",
-    "titleStart": "Clients' needs.",
-    "titleAccent": "Students' skills.",
-    "intro": "Find a qualified profile, post a need or offer your skills, in a clear and secure setting.",
+    "eyebrow": "Platform for students and clients",
+    "titleStart": "Find student missions or services",
+    "titleAccent": "near you",
+    "intro": "Kianja connects talented students with clients looking for reliable skills, in a clear and secure setting.",
     "searchTypeLabel": "Search type",
     "targetServices": "Services",
     "targetMissions": "Missions",
@@ -20,8 +20,12 @@
     "explorePublications": "Explore publications →",
     "statServices": "Services offered",
     "statMissions": "Open missions",
-    "openMissionsTitle": "Open missions",
-    "openMissionsAll": "All missions"
+    "exploreServices": "Explore services",
+    "discoverMissions": "Discover missions",
+    "imageAlt": "Smiling student holding a laptop in front of a large window",
+    "badgeStudents": "Students",
+    "badgeMissions": "Missions",
+    "badgeServices": "Services"
   },
   "audiences": {
     "eyebrow": "A two-sided marketplace",

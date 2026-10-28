@@ -39,11 +39,18 @@ import {
 export interface WebhookPaiementPayload {
   transactionReference?: string;
   serverCorrelationId?: string;
-  /** Papi : reference marchande Kianja / reference Papi (noms non verifies, tous lus). */
+  /**
+   * Papi (docs.papi.mg) : `merchantPaymentReference` = notre reference,
+   * `paymentReference` = UUID Papi, `paymentStatus` = SUCCESS | PENDING |
+   * FAILED (jamais cru : le statut est relu aupres de Papi). `reference` est
+   * conserve pour compatibilite.
+   */
   reference?: string;
   merchantPaymentReference?: string;
   papiPaymentReference?: string;
   paymentReference?: string;
+  paymentStatus?: string;
+  notificationToken?: string;
   id?: string;
   paymentId?: string;
   status?: string;
@@ -508,9 +515,12 @@ export class PaiementsService {
     } catch (error) {
       await this.traiterEchecCreationPapi(transaction, error);
       throw new ServiceUnavailableException(
-        error instanceof PapiError && error.refusDefinitif
-          ? 'Papi a refuse la transaction. Verifiez vos informations ou utilisez un autre moyen de paiement.'
-          : 'Papi ne repond pas correctement pour le moment. Votre paiement n\'a pas ete debite ; reessayez dans un instant.',
+        error instanceof PapiError && error.configurationProbable
+          ? // 401/403/404/405 : defaut de configuration cote Kianja, pas un refus lie au client.
+            "Le paiement Papi n'est pas disponible pour le moment. Utilisez un autre moyen de paiement ou reessayez plus tard."
+          : error instanceof PapiError && error.refusDefinitif
+            ? 'Papi a refuse la transaction. Verifiez vos informations ou utilisez un autre moyen de paiement.'
+            : 'Papi ne repond pas correctement pour le moment. Votre paiement n\'a pas ete debite ; reessayez dans un instant.',
       );
     }
 
@@ -1224,12 +1234,13 @@ export class PaiementsService {
     const texteCourt = (v: unknown): string | undefined =>
       typeof v === 'string' && v.length > 0 && v.length <= 100 ? v : undefined;
 
+    // Papi : la notification porte notre reference dans
+    // `merchantPaymentReference` ; `paymentReference` est l'UUID Papi, distinct
+    // de la valeur stockee (echo de notre reference) : on ne s'en sert pas
+    // pour retrouver la transaction.
     const correlationId =
       fournisseurAttendu === 'papi'
-        ? (texteCourt(payload?.papiPaymentReference) ??
-          texteCourt(payload?.paymentReference) ??
-          texteCourt(payload?.paymentId) ??
-          texteCourt(payload?.id))
+        ? undefined
         : texteCourt(payload?.serverCorrelationId);
     const reference =
       fournisseurAttendu === 'papi'
@@ -1402,12 +1413,23 @@ export class PaiementsService {
       );
     }
 
-    transaction.statut =
-      StatutTransaction.ANNULEE;
-
-    return this.repo.save(
-      transaction,
+    // Transition atomique : un `save` complet pourrait ecraser une
+    // confirmation commitee entre la lecture et l'ecriture.
+    const resultat = await this.repo.update(
+      { id: transaction.id, statut: StatutTransaction.EN_ATTENTE },
+      { statut: StatutTransaction.ANNULEE },
     );
+
+    if (!resultat.affected) {
+      const aJour = await this.repo.findOne({
+        where: { id },
+        relations: ['candidature', 'candidature.mission'],
+      });
+      return aJour ?? transaction;
+    }
+
+    transaction.statut = StatutTransaction.ANNULEE;
+    return transaction;
   }
 
   /**
