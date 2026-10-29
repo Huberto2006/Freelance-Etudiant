@@ -4,16 +4,16 @@ import { Repository } from 'typeorm';
 import { Commentaire } from './entities/commentaire.entity';
 import { Mention } from './entities/mention.entity';
 import { CreerCommentaireDto, ModifierCommentaireDto } from './dto/commentaire.dto';
-import { TypeCibleContenu } from '../../common/enums/type-cible-contenu.enum';
+import { TypeCibleContenu } from '../cibles/enums/type-cible-contenu.enum';
 import { MissionsService } from '../missions/missions.service';
 import { ServicesService } from '../services/services.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { TypeNotification } from '../notifications/enums/type-notification.enum';
 import { Role } from '../../common/enums/role.enum';
 import { UsersService } from '../users/users.service';
 import { CommentairesGateway } from './commentaires.gateway';
-import { VerificationCibleService } from '../../common/services/verification-cible.service';
-import { projeterCommentaire, CommentairePublic } from '../../common/utils/projection-publique.util';
+import { VerificationCibleService } from '../cibles/verification-cible.service';
+import { projeterCommentaire, CommentairePublic } from './commentaire.projection';
 
 /**
  * Forme de la reponse de GET /commentaires/mentions-suggestions.

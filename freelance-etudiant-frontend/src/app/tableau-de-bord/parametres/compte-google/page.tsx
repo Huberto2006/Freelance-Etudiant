@@ -6,7 +6,7 @@ import { Link2 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
-import { BoutonGoogle } from "@/components/auth/BoutonGoogle";
+import { BoutonGoogle } from "@/features/auth/components/BoutonGoogle";
 import { NoticeCard, PageHeader } from "@/components/ui/Notice";
 
 /**

@@ -18,16 +18,17 @@ import {
 } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
-import type { Mission, ServiceOffert } from "@/lib/types";
+import type { Mission } from "@/types/missions";
+import type { ServiceOffert } from "@/types/services";
 import { useAuth } from "@/lib/auth-context";
 import { useTranslations } from "next-intl";
 
-import { PanneauFiltres, type Filtres } from "@/components/ui/PanneauFiltres";
-import { CarteMission } from "@/components/ui/CarteMission";
-import { CarteService } from "@/components/ui/CarteService";
+import { PanneauFiltres, type Filtres } from "@/features/catalogue/components/PanneauFiltres";
+import { CarteMission } from "@/features/missions/components/CarteMission";
+import { CarteService } from "@/features/services/components/CarteService";
 import { MessageVide, NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
 import { Button } from "@/components/ui/Button";
-import { SqueletteCatalogue } from "@/components/ui/SqueletteCatalogue";
+import { SqueletteCatalogue } from "@/features/catalogue/components/SqueletteCatalogue";
 
 /**
  * « Mes publications » : contrairement à /publications (catalogue général
@@ -35,7 +36,7 @@ import { SqueletteCatalogue } from "@/components/ui/SqueletteCatalogue";
  * l'utilisateur connecté.
  *
  * Un compte n'a jamais les deux à la fois (un client publie des missions,
- * un étudiant propose des services — voir lib/types.ts Role), mais les
+ * un étudiant propose des services — voir types/utilisateurs.ts Role), mais les
  * onglets Toutes/Missions/Services restent affichés pour la cohérence
  * visuelle avec /publications ; l'onglet sans contenu affiche simplement
  * un état vide.

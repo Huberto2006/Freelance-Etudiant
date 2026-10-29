@@ -120,7 +120,8 @@ function getIcon(label: string) {
   );
 }
 
-function isActive(
+/** Vrai si `href` correspond à la page courante ou à l'une de ses sous-pages. */
+function correspond(
   pathname: string,
   href: string,
 ) {
@@ -303,6 +304,28 @@ export function Sidebar({
     navigationParRole[
       utilisateur.role
     ] ?? [];
+
+  /*
+   * Un seul lien actif : celui dont l'adresse correspondante est la plus
+   * précise. Sans cela, /tableau-de-bord/admin restait actif en même temps
+   * que /tableau-de-bord/admin/signalements (correspondance par préfixe).
+   */
+  const hrefActif = [
+    ...navigation.flatMap((groupe) => [
+      groupe.href,
+      ...(groupe.liens ?? []).map((lien) => lien.href),
+    ]),
+    "/tableau-de-bord/profil",
+  ]
+    .filter(
+      (href): href is string =>
+        typeof href === "string" && correspond(pathname, href),
+    )
+    .sort((a, b) => b.length - a.length)[0];
+
+  function isActive(_chemin: string, href: string) {
+    return href === hrefActif;
+  }
 
   /*
    * ==========================================================
@@ -558,7 +581,7 @@ export function Sidebar({
 
                     ${
                       active
-                        ? "bg-white/12 text-white font-medium before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-white"
+                        ? "indicateur-actif bg-white/12 text-white font-medium before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-white"
                         : "text-white/70 hover:bg-white/8 hover:text-white"
                     }
                   `}
@@ -638,7 +661,7 @@ export function Sidebar({
 
           ${
             active
-              ? "bg-white/12 text-white font-medium before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-white"
+              ? "indicateur-actif bg-white/12 text-white font-medium before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-white"
               : "text-white/70 hover:bg-white/8 hover:text-white"
           }
         `}
@@ -919,7 +942,7 @@ export function Sidebar({
                 pathname,
                 "/tableau-de-bord/profil",
               )
-                ? "bg-white/12 text-white font-medium before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-white"
+                ? "indicateur-actif bg-white/12 text-white font-medium before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-white"
                 : "text-white/70 hover:bg-white/8 hover:text-white"
             }
           `}

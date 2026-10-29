@@ -22,9 +22,9 @@ import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { MultiSelectCreatable } from "@/components/ui/MultiSelectCreatable";
 import { NoticeCard, PageHeader } from "@/components/ui/Notice";
-import { PhotoProfil } from "@/components/ui/PhotoProfil";
+import { PhotoProfil } from "@/features/profils/components/PhotoProfil";
 import { COMPETENCES_PREDEFINIES, LANGUES_PREDEFINIES, SPECIALITES_PREDEFINIES } from "@/data/field-options";
-import type { EtudiantProfile, Utilisateur } from "@/lib/types";
+import type { EtudiantProfile, Utilisateur } from "@/types/utilisateurs";
 
 /* =========================================================
    CONSTANTES

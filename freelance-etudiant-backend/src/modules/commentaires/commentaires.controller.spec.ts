@@ -4,7 +4,7 @@ import { Test } from '@nestjs/testing';
 import { CommentairesController } from './commentaires.controller';
 import { CommentairesService } from './commentaires.service';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { TypeCibleContenu } from '../../common/enums/type-cible-contenu.enum';
+import { TypeCibleContenu } from '../cibles/enums/type-cible-contenu.enum';
 
 describe('CommentairesController GET /commentaires', () => {
   let app: INestApplication;

@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ClientProfile } from './entities/client-profile.entity';
 import { UpdateClientProfileDto } from './dto/update-client-profile.dto';
-import { TypeClient } from '../../common/enums/type-client.enum';
+import { TypeClient } from './enums/type-client.enum';
 import { ProfileCompletionService } from '../profile-completion/profile-completion.service';
 
 @Injectable()

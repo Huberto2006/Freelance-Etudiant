@@ -15,9 +15,9 @@ import { UsersService } from '../users/users.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import { Role } from '../../common/enums/role.enum';
-import { StatutAmitie } from '../../common/enums/statut-amitie.enum';
+import { StatutAmitie } from './enums/statut-amitie.enum';
 import { NotificationsService } from '../notifications/notifications.service';
-import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { TypeNotification } from '../notifications/enums/type-notification.enum';
 
 /**
  * Presentation synthetique d'un profil etudiant dans les reponses API.

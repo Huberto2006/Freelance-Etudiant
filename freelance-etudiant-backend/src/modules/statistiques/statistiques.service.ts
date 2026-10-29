@@ -6,8 +6,8 @@ import { Mission } from '../missions/entities/mission.entity';
 import { Candidature } from '../candidatures/entities/candidature.entity';
 import { Livraison } from '../livraisons/entities/livraison.entity';
 import { Role } from '../../common/enums/role.enum';
-import { StatutLivraison } from '../../common/enums/statut-livraison.enum';
-import { StatutCandidature } from '../../common/enums/statut-candidature.enum';
+import { StatutLivraison } from '../livraisons/enums/statut-livraison.enum';
+import { StatutCandidature } from '../candidatures/enums/statut-candidature.enum';
 
 @Injectable()
 export class StatistiquesService {

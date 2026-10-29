@@ -6,7 +6,9 @@ import { Bell, Loader2, Plus, Users, X } from "lucide-react";
 
 import { useTranslations } from "next-intl";
 import { api, ApiError, lienInterneSur } from "@/lib/api";
-import type { Groupe, Mission, NotificationItem } from "@/lib/types";
+import type { Groupe } from "@/types/groupes";
+import type { Mission } from "@/types/missions";
+import type { NotificationItem } from "@/types/notifications";
 
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";

@@ -3,12 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ReactionContenu, TypeReactionContenu } from './entities/reaction-contenu.entity';
 import { ReagirDto } from './dto/reagir.dto';
-import { TypeCibleContenu } from '../../common/enums/type-cible-contenu.enum';
-import { VerificationCibleService } from '../../common/services/verification-cible.service';
+import { TypeCibleContenu } from '../cibles/enums/type-cible-contenu.enum';
+import { VerificationCibleService } from '../cibles/verification-cible.service';
 import { MissionsService } from '../missions/missions.service';
 import { ServicesService } from '../services/services.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { TypeNotification } from '../notifications/enums/type-notification.enum';
 
 export interface InfoReactionsContenu {
   jaime: number;

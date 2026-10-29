@@ -31,10 +31,10 @@ import {
   cheminCorrespond,
   type MenuPublicDeroulant,
 } from "@/lib/navigation-publique";
-import { BasculeTheme } from "@/components/ui/BasculeTheme";
-import { SelecteurLangue } from "@/components/ui/SelecteurLangue";
-import { MessagesLink } from "@/components/ui/MessagesLink";
-import { NotificationBell } from "@/components/ui/NotificationBell";
+import { BasculeTheme } from "@/features/theme/components/BasculeTheme";
+import { SelecteurLangue } from "@/components/layout/SelecteurLangue";
+import { MessagesLink } from "@/features/messagerie/components/MessagesLink";
+import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 import { MenuDeroulantNav } from "@/components/layout/MenuDeroulantNav";
 
 

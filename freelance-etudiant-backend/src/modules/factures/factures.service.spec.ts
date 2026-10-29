@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
 import { FacturesService, formaterNumeroFacture } from './factures.service';
-import { StatutTransaction, MethodePaiement } from '../../common/enums/statut-transaction.enum';
+import { StatutTransaction, MethodePaiement } from '../paiements/enums/statut-transaction.enum';
 import { Role } from '../../common/enums/role.enum';
 
 const CLIENT = { id: 'c1', email: 'c@x.test', role: Role.CLIENT };

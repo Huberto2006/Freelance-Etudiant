@@ -17,11 +17,11 @@ import { CreerPaiementDto } from './dto/creer-paiement.dto';
 import {
   MethodePaiement,
   StatutTransaction,
-} from '../../common/enums/statut-transaction.enum';
-import { StatutLivraison } from '../../common/enums/statut-livraison.enum';
+} from './enums/statut-transaction.enum';
+import { StatutLivraison } from '../livraisons/enums/statut-livraison.enum';
 import { CandidaturesService } from '../candidatures/candidatures.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { TypeNotification } from '../notifications/enums/type-notification.enum';
 import { MvolaService } from './mvola.service';
 import { PapiError, PapiService, type StatutFournisseur } from './papi.service';
 import { ConfigService } from '@nestjs/config';

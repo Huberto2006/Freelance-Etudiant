@@ -17,8 +17,8 @@ import { InviterEtudiantDto } from './dto/inviter-etudiant.dto';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import { Role } from '../../common/enums/role.enum';
 import { NotificationsService } from '../notifications/notifications.service';
-import { TypeNotification } from '../../common/enums/type-notification.enum';
-import { StatutInvitationGroupe } from '../../common/enums/statut-invitation-groupe.enum';
+import { TypeNotification } from '../notifications/enums/type-notification.enum';
+import { StatutInvitationGroupe } from './enums/statut-invitation-groupe.enum';
 
 @Injectable()
 export class GroupesService {

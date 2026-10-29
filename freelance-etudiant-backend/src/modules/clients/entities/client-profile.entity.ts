@@ -7,7 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Utilisateur } from '../../users/entities/utilisateur.entity';
-import { TypeClient } from '../../../common/enums/type-client.enum';
+import { TypeClient } from '../enums/type-client.enum';
 import { Mission } from '../../missions/entities/mission.entity';
 
 /**

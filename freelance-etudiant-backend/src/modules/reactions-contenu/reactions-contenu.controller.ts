@@ -7,7 +7,7 @@ import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interfa
 import { Public } from '../../common/decorators/public.decorator';
 import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { TypeCibleContenu } from '../../common/enums/type-cible-contenu.enum';
+import { TypeCibleContenu } from '../cibles/enums/type-cible-contenu.enum';
 
 @ApiTags('Réactions sur contenu')
 @Controller('reactions-contenu')

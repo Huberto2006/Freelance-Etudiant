@@ -7,8 +7,8 @@ import {
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 
-import { TypeCibleContenu } from '../../common/enums/type-cible-contenu.enum';
-import { CommentairePublic } from '../../common/utils/projection-publique.util';
+import { TypeCibleContenu } from '../cibles/enums/type-cible-contenu.enum';
+import { CommentairePublic } from './commentaire.projection';
 import { SocketAuthentifie } from '../realtime/guards/ws-jwt.guard';
 import { getCorsOrigins } from '../../config/cors.config';
 

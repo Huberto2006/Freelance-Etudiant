@@ -7,7 +7,7 @@ import { QueryFailedError } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { AuthService } from './auth.service';
-import { AuthProvider } from '../../common/enums/auth-provider.enum';
+import { AuthProvider } from '../users/enums/auth-provider.enum';
 import { Role } from '../../common/enums/role.enum';
 import { ChoisirRoleDto } from './dto/choisir-role.dto';
 import { GoogleIdTokenDto } from './dto/google-login.dto';

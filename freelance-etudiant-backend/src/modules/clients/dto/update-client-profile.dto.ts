@@ -11,7 +11,7 @@ import {
   Min,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { TypeClient } from '../../../common/enums/type-client.enum';
+import { TypeClient } from '../enums/type-client.enum';
 
 /*
  * Validations transverses des nouveaux champs de profil client.

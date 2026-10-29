@@ -4,7 +4,7 @@ import { In, QueryFailedError, Repository } from 'typeorm';
 import { Utilisateur } from './entities/utilisateur.entity';
 import { Langue } from '../../common/i18n/langues';
 import { Role } from '../../common/enums/role.enum';
-import { TypeClient } from '../../common/enums/type-client.enum';
+import { TypeClient } from '../clients/enums/type-client.enum';
 import { EtudiantProfile } from '../etudiants/entities/etudiant-profile.entity';
 import { ClientProfile } from '../clients/entities/client-profile.entity';
 

@@ -33,7 +33,7 @@ import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interfa
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Role } from '../../common/enums/role.enum';
-import { StatutTransaction } from '../../common/enums/statut-transaction.enum';
+import { StatutTransaction } from './enums/statut-transaction.enum';
 
 @ApiTags('Paiements')
 @ApiBearerAuth()

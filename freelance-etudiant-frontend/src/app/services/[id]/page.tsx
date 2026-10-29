@@ -6,19 +6,19 @@ import { useTranslations } from "next-intl";
 import { FileText, Loader2, SendHorizonal, Wrench } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError, getFileUrl } from "@/lib/api";
-import type { ServiceOffert } from "@/lib/types";
+import type { ServiceOffert } from "@/types/services";
 import { useFormats } from "@/i18n/use-formats";
 import { useOptionLabels } from "@/i18n/use-option-labels";
 import { NoticeCard, StampBadge, Tag } from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
-import { BoutonsReaction } from "@/components/ui/BoutonsReaction";
-import { SectionCommentaires } from "@/components/ui/SectionCommentaires";
+import { BoutonsReaction } from "@/features/reactions/components/BoutonsReaction";
+import { SectionCommentaires } from "@/features/commentaires/components/SectionCommentaires";
 import {
   SelecteurPieceJointe,
   type PieceJointeValeur,
-} from "@/components/ui/PieceJointe";
+} from "@/components/shared/PieceJointe";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
 

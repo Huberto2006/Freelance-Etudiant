@@ -10,7 +10,7 @@ import { NoticeCard } from "@/components/ui/Notice";
 import {
   TurnstileWidget,
   type TurnstileHandle,
-} from "@/components/auth/TurnstileWidget";
+} from "@/components/shared/TurnstileWidget";
 
 export default function MotDePasseOubliePage() {
   const t = useTranslations("auth.forgot");

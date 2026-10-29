@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 
 import { api } from "@/lib/api";
-import type { ClientProfile, Mission } from "@/lib/types";
+import type { Mission } from "@/types/missions";
+import type { ClientProfile } from "@/types/utilisateurs";
 import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
 import {
@@ -23,8 +24,8 @@ import {
   toneStatut,
 } from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
-import { ReactionProfil } from "@/components/ui/ReactionProfil";
-import { SignalerBouton } from "@/components/ui/SignalerBouton";
+import { ReactionProfil } from "@/features/reactions/components/ReactionProfil";
+import { SignalerBouton } from "@/features/signalements/components/SignalerBouton";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 export default function ProfilClientPage({

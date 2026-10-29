@@ -1,0 +1,77 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Heart } from "lucide-react";
+import { clsx } from "clsx";
+import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import type { TypeCibleFavori } from "@/types/favoris";
+
+/**
+ * Bouton cœur pour ajouter/retirer une mission, un service ou un profil
+ * étudiant de ses favoris. Invisible pour les visiteurs non connectés.
+ */
+export function FavoriBouton({
+  cibleType,
+  cibleId,
+  className,
+}: {
+  cibleType: TypeCibleFavori;
+  cibleId: string;
+  className?: string;
+}) {
+  const t = useTranslations("extras.favoriteButton");
+  const { utilisateur } = useAuth();
+  const [enFavori, setEnFavori] = useState<boolean | null>(null);
+  const [envoi, setEnvoi] = useState(false);
+
+  useEffect(() => {
+    if (!utilisateur) return;
+    api
+      .get<{ cibleType: TypeCibleFavori; cibleId: string }[]>(
+        `/favoris?cibleType=${cibleType}`,
+      )
+      .then((favoris) =>
+        setEnFavori(favoris.some((f) => f.cibleId === cibleId)),
+      )
+      .catch(() => setEnFavori(false));
+  }, [utilisateur, cibleType, cibleId]);
+
+  if (!utilisateur || enFavori === null) return null;
+
+  async function toggle(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (envoi) return;
+    setEnvoi(true);
+    try {
+      const res = await api.post<{ enFavori: boolean }>("/favoris", {
+        cibleType,
+        cibleId,
+      });
+      setEnFavori(res.enFavori);
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      disabled={envoi}
+      title={enFavori ? t("remove") : t("add")}
+      aria-label={enFavori ? t("remove") : t("add")}
+      className={clsx(
+        "inline-flex h-8 w-8 items-center justify-center rounded-full border transition-colors disabled:opacity-60",
+        enFavori
+          ? "border-ocre-dark/50 bg-ocre/10 text-ocre-dark"
+          : "border-ink/25 text-ink-soft hover:bg-ink/5",
+        className,
+      )}
+    >
+      <Heart size={15} fill={enFavori ? "currentColor" : "none"} />
+    </button>
+  );
+}

@@ -13,10 +13,23 @@ import "@fontsource/inter/600.css";
 import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "@fontsource/ibm-plex-mono/600.css";
+// Polices des thèmes de personnalisation (Bleu Océan, Vert Émeraude,
+// Violet). Seules les @font-face sont déclarées : le navigateur ne
+// télécharge un fichier de police que si le thème qui l'utilise est actif.
+import "@fontsource/plus-jakarta-sans/400.css";
+import "@fontsource/plus-jakarta-sans/500.css";
+import "@fontsource/plus-jakarta-sans/600.css";
+import "@fontsource/plus-jakarta-sans/700.css";
+import "@fontsource/outfit/500.css";
+import "@fontsource/outfit/600.css";
+import "@fontsource/outfit/700.css";
+import "@fontsource/playfair-display/500.css";
+import "@fontsource/playfair-display/600.css";
+import "@fontsource/playfair-display/700.css";
 
 import "./globals.css";
 
-import { ThemeProvider } from "@/lib/theme-context";
+import { ThemeProvider } from "@/features/theme/theme-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { SocketProvider } from "@/lib/socket-context";
 import { ToastProvider } from "@/components/ui/Toast";

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FileText, MessageCircle } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
-import type { DemandeService } from "@/lib/types";
+import type { DemandeService } from "@/types/demandes-service";
 import { useTranslations } from "next-intl";
 import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { BadgeStatut, ChargementPage, EtatVide, NoticeCard, PageHeader } from "@/components/ui/Notice";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
-import { PieceJointeAffichage } from "@/components/ui/PieceJointe";
+import { PieceJointeAffichage } from "@/components/shared/PieceJointe";
 import { SousNavigation } from "@/components/ui/SousNavigation";
 
 /* =========================================================

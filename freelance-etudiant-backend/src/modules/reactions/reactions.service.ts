@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { ReactionProfil } from './entities/reaction-profil.entity';
 import { UsersService } from '../users/users.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { TypeNotification } from '../notifications/enums/type-notification.enum';
 import { Role } from '../../common/enums/role.enum';
 
 export interface ReactionInfo {

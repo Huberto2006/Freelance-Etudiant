@@ -11,7 +11,7 @@ import { DataSource, QueryFailedError, Repository } from 'typeorm';
 import { Facture } from './entities/facture.entity';
 import { Transaction } from '../paiements/entities/transaction.entity';
 import { ClientProfile } from '../clients/entities/client-profile.entity';
-import { StatutTransaction } from '../../common/enums/statut-transaction.enum';
+import { StatutTransaction } from '../paiements/enums/statut-transaction.enum';
 import { Role } from '../../common/enums/role.enum';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 

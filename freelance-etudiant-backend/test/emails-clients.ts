@@ -5,9 +5,9 @@
 import 'reflect-metadata';
 import type { ConfigService } from '@nestjs/config';
 import type { DataSource, Repository } from 'typeorm';
-import { StatutCandidature } from '../src/common/enums/statut-candidature.enum';
-import { StatutDemandeService } from '../src/common/enums/statut-demande-service.enum';
-import { StatutLivraison } from '../src/common/enums/statut-livraison.enum';
+import { StatutCandidature } from '../src/modules/candidatures/enums/statut-candidature.enum';
+import { StatutDemandeService } from '../src/modules/demandes-service/enums/statut-demande-service.enum';
+import { StatutLivraison } from '../src/modules/livraisons/enums/statut-livraison.enum';
 import { Candidature } from '../src/modules/candidatures/entities/candidature.entity';
 import { CandidaturesService } from '../src/modules/candidatures/candidatures.service';
 import { CreateCandidatureDto } from '../src/modules/candidatures/dto/create-candidature.dto';

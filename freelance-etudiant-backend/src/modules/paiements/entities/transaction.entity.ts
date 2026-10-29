@@ -14,7 +14,7 @@ import { MoyenPaiementClient } from '../../moyens-paiement-client/entities/moyen
 import {
   MethodePaiement,
   StatutTransaction,
-} from '../../../common/enums/statut-transaction.enum';
+} from '../enums/statut-transaction.enum';
 import { TypeMoyenPaiement } from '../../moyens-paiement/enums/type-moyen-paiement.enum';
 
 /**

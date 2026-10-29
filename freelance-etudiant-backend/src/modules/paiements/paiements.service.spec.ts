@@ -16,7 +16,7 @@ import { MoyensPaiementClientService } from '../moyens-paiement-client/moyens-pa
 import {
   MethodePaiement,
   StatutTransaction,
-} from '../../common/enums/statut-transaction.enum';
+} from './enums/statut-transaction.enum';
 import { TypeMoyenPaiement } from '../moyens-paiement/enums/type-moyen-paiement.enum';
 
 describe('PaiementsService', () => {

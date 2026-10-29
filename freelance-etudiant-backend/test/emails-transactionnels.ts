@@ -21,8 +21,8 @@
 import 'reflect-metadata';
 import type { Repository, DataSource, EntityManager } from 'typeorm';
 
-import { StatutCandidature } from '../src/common/enums/statut-candidature.enum';
-import { StatutMission } from '../src/common/enums/statut-mission.enum';
+import { StatutCandidature } from '../src/modules/candidatures/enums/statut-candidature.enum';
+import { StatutMission } from '../src/modules/missions/enums/statut-mission.enum';
 import { Candidature } from '../src/modules/candidatures/entities/candidature.entity';
 import { Mission } from '../src/modules/missions/entities/mission.entity';
 import { EtudiantProfile } from '../src/modules/etudiants/entities/etudiant-profile.entity';

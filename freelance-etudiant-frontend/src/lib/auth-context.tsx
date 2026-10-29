@@ -22,7 +22,8 @@ import {
   setToken,
   terminerSessionServeur,
 } from "./api";
-import type { AuthResponse, CompletionProfil, ReponseInscription, Role, Utilisateur } from "./types";
+import type { AuthResponse, ReponseInscription } from "@/types/auth";
+import type { CompletionProfil, Role, Utilisateur } from "@/types/utilisateurs";
 
 interface RegisterPayload {
   nom: string;

@@ -6,21 +6,21 @@ import { useTranslations } from "next-intl";
 import { Wrench } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
-import type { ServiceOffert } from "@/lib/types";
+import type { ServiceOffert } from "@/types/services";
 
 import {
   PanneauFiltres,
   type Filtres,
-} from "@/components/ui/PanneauFiltres";
+} from "@/features/catalogue/components/PanneauFiltres";
 import {
   SousMenuCatalogue,
   type OngletCatalogue,
-} from "@/components/ui/SousMenuCatalogue";
-import { CarteService } from "@/components/ui/CarteService";
+} from "@/features/catalogue/components/SousMenuCatalogue";
+import { CarteService } from "@/features/services/components/CarteService";
 import { NoticeCard } from "@/components/ui/Notice";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { Button } from "@/components/ui/Button";
-import { SqueletteCatalogue } from "@/components/ui/SqueletteCatalogue";
+import { SqueletteCatalogue } from "@/features/catalogue/components/SqueletteCatalogue";
 import { useAuth } from "@/lib/auth-context";
 
 export default function ServicesPage() {

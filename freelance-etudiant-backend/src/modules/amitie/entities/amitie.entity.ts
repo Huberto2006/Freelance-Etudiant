@@ -7,7 +7,7 @@ import {
   CreateDateColumn,
 } from 'typeorm';
 import { EtudiantProfile } from '../../etudiants/entities/etudiant-profile.entity';
-import { StatutAmitie } from '../../../common/enums/statut-amitie.enum';
+import { StatutAmitie } from '../enums/statut-amitie.enum';
 
 /**
  * Relation d'amitié entre deux étudiants, indépendante des missions,

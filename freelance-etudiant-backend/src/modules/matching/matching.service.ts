@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Mission } from '../missions/entities/mission.entity';
 import { EtudiantProfile } from '../etudiants/entities/etudiant-profile.entity';
-import { StatutMission } from '../../common/enums/statut-mission.enum';
+import { StatutMission } from '../missions/enums/statut-mission.enum';
 import { dateLimiteDepassee } from '../../common/utils/date-limite.util';
 import { Role } from '../../common/enums/role.enum';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';

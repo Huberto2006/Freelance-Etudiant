@@ -8,7 +8,7 @@ import {
   Unique,
 } from 'typeorm';
 import { Utilisateur } from '../../users/entities/utilisateur.entity';
-import { TypeCibleContenu } from '../../../common/enums/type-cible-contenu.enum';
+import { TypeCibleContenu } from '../../cibles/enums/type-cible-contenu.enum';
 
 export enum TypeReactionContenu {
   JAIME = 'jaime',

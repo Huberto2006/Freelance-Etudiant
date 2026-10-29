@@ -13,7 +13,7 @@ import { CreateServiceDto, UpdateServiceDto } from './dto/service.dto';
 import { FiltrerServicesDto } from './dto/filtrer-services.dto';
 import { Role } from '../../common/enums/role.enum';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
-import { projeterService } from '../../common/utils/projection-publique.util';
+import { projeterService } from './service.projection';
 
 @Injectable()
 export class ServicesService {

@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { api } from "@/lib/api";
-import type { Favori, Mission, ServiceOffert, EtudiantProfile } from "@/lib/types";
+import type { Favori } from "@/types/favoris";
+import type { Mission } from "@/types/missions";
+import type { ServiceOffert } from "@/types/services";
+import type { EtudiantProfile } from "@/types/utilisateurs";
 import { useTranslations } from "next-intl";
 import { useFormats } from "@/i18n/use-formats";
 import { EtatVide, NoticeCard, PageHeader } from "@/components/ui/Notice";
-import { FavoriBouton } from "@/components/ui/FavoriBouton";
+import { FavoriBouton } from "@/features/favoris/components/FavoriBouton";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { useApiList } from "@/hooks/useApiList";
 

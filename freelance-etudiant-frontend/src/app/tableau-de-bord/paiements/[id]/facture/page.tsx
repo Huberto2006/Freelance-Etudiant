@@ -6,7 +6,7 @@ import { Printer } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import type { Facture } from "@/lib/types";
+import type { Facture } from "@/types/paiements";
 import { useTranslations } from "next-intl";
 import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";

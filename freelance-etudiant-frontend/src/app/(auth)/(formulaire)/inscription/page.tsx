@@ -7,15 +7,15 @@ import { clsx } from "clsx";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
-import type { ReponseInscription } from "@/lib/types";
+import type { ReponseInscription } from "@/types/auth";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, PasswordInput } from "@/components/ui/Field";
 import { NoticeCard } from "@/components/ui/Notice";
 import {
   TurnstileWidget,
   type TurnstileHandle,
-} from "@/components/auth/TurnstileWidget";
-import { BoutonGoogle } from "@/components/auth/BoutonGoogle";
+} from "@/components/shared/TurnstileWidget";
+import { BoutonGoogle } from "@/features/auth/components/BoutonGoogle";
 
 /**
  * Delai anti-abus applique cote backend : on aligne le compte a rebours

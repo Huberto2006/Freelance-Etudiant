@@ -31,10 +31,10 @@ import {
   langueDepuisAcceptLanguage,
   normaliserLangue,
 } from "../../common/i18n/langues";
-import { TypeClient } from "../../common/enums/type-client.enum";
+import { TypeClient } from "../clients/enums/type-client.enum";
 import { JwtPayload } from "./interfaces/authenticated-user.interface";
 import { EmailService } from "../email/email.service";
-import { AuthProvider } from "../../common/enums/auth-provider.enum";
+import { AuthProvider } from "../users/enums/auth-provider.enum";
 import {
   GoogleTokenVerifierService,
   IdentiteGoogle,

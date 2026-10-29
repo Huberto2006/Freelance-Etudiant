@@ -11,9 +11,9 @@ import { Field, Input, PasswordInput } from "@/components/ui/Field";
 import {
   TurnstileWidget,
   type TurnstileHandle,
-} from "@/components/auth/TurnstileWidget";
-import { BoutonGoogle } from "@/components/auth/BoutonGoogle";
-import { PanneauPresentation } from "@/components/auth/PanneauPresentation";
+} from "@/components/shared/TurnstileWidget";
+import { BoutonGoogle } from "@/features/auth/components/BoutonGoogle";
+import { PanneauPresentation } from "@/features/auth/components/PanneauPresentation";
 
 export default function ConnexionPage() {
   const t = useTranslations("auth.login");
@@ -142,12 +142,12 @@ export default function ConnexionPage() {
   const googleActif = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
+    <div className="-mt-16 grid min-h-dvh lg:grid-cols-2">
       <PanneauPresentation />
 
       <div className="flex items-center justify-center px-5 py-10 sm:px-8">
         <div className="w-full max-w-md">
-          <div className="rounded-xl border border-ink/10 bg-paper-light p-6 shadow-xs sm:p-8">
+          <div className="scene-in rounded-xl border border-ink/10 bg-paper-light p-6 shadow-xs sm:p-8">
             <Link
               href="/"
               aria-label={t("homeAria")}
@@ -202,14 +202,14 @@ export default function ConnexionPage() {
               </Link>
 
               {erreur && (
-                <p role="alert" className="text-sm text-brique">
+                <p role="alert" className="animate-in text-sm text-brique">
                   {erreur}
                 </p>
               )}
 
               {erreurVerification && (
                 <div className="flex flex-col gap-3">
-                  <p role="alert" className="text-sm text-brique">
+                  <p role="alert" className="animate-in text-sm text-brique">
                     {erreurVerification}
                   </p>
 

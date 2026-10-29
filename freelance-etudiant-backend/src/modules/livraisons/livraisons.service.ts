@@ -17,11 +17,11 @@ import {
   DemanderCorrectionDto,
 } from "./dto/livraison.dto";
 
-import { StatutLivraison } from "../../common/enums/statut-livraison.enum";
+import { StatutLivraison } from "./enums/statut-livraison.enum";
 
 import { CandidaturesService } from "../candidatures/candidatures.service";
 import { NotificationsService } from "../notifications/notifications.service";
-import { TypeNotification } from "../../common/enums/type-notification.enum";
+import { TypeNotification } from "../notifications/enums/type-notification.enum";
 import { PaiementsService } from "../paiements/paiements.service";
 import { EmailsService } from "../emails/emails.service";
 

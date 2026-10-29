@@ -1,6 +1,6 @@
 import { IsEnum, IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { TypeCibleContenu } from '../../../common/enums/type-cible-contenu.enum';
+import { TypeCibleContenu } from '../../cibles/enums/type-cible-contenu.enum';
 
 export class CreerCommentaireDto {
   @ApiProperty({ example: 'Super mission, hâte de candidater !' })

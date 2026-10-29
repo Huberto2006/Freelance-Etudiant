@@ -10,8 +10,8 @@ import { Mission } from '../missions/entities/mission.entity';
 import { MissionsService } from '../missions/missions.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { EmailsService } from '../emails/emails.service';
-import { StatutCandidature } from '../../common/enums/statut-candidature.enum';
-import { StatutMission } from '../../common/enums/statut-mission.enum';
+import { StatutCandidature } from './enums/statut-candidature.enum';
+import { StatutMission } from '../missions/enums/statut-mission.enum';
 
 describe('CandidaturesService accepter', () => {
   let service: CandidaturesService;

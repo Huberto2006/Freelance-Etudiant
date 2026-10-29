@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { CircleHelp, LifeBuoy } from "lucide-react";
 
 import { EnTetePagePublique } from "@/components/layout/EnTetePagePublique";
-import { FormulaireContact } from "@/components/contact/FormulaireContact";
+import { FormulaireContact } from "@/features/contact/components/FormulaireContact";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("contact");

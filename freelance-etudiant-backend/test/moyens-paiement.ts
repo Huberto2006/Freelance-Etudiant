@@ -41,8 +41,8 @@ import { CreerPaiementDto } from '../src/modules/paiements/dto/creer-paiement.dt
 import { DataSource } from 'typeorm';
 
 import { TypeMoyenPaiement } from '../src/modules/moyens-paiement/enums/type-moyen-paiement.enum';
-import { StatutLivraison } from '../src/common/enums/statut-livraison.enum';
-import { MethodePaiement } from '../src/common/enums/statut-transaction.enum';
+import { StatutLivraison } from '../src/modules/livraisons/enums/statut-livraison.enum';
+import { MethodePaiement } from '../src/modules/paiements/enums/statut-transaction.enum';
 
 // Dependances simulees : "import type" est efface a la compilation,
 // aucune vraie classe (SMTP, MVola) n'est chargee.

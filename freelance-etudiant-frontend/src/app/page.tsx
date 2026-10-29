@@ -5,18 +5,19 @@ import { useTranslations } from "next-intl";
 
 import { api } from "@/lib/api";
 import { useOptionLabels } from "@/i18n/use-option-labels";
-import type { Mission, ServiceOffert } from "@/lib/types";
+import type { Mission } from "@/types/missions";
+import type { ServiceOffert } from "@/types/services";
 
-import { HeroAccueil, type StatVive } from "@/components/home/HeroAccueil";
+import { HeroAccueil, type StatVive } from "@/features/accueil/components/HeroAccueil";
 import {
   SectionCategories,
   type CategorieAccueil,
-} from "@/components/home/SectionCategories";
-import { SectionServices } from "@/components/home/SectionServices";
-import { SectionMissions } from "@/components/home/SectionMissions";
-import { SectionAvantages } from "@/components/home/SectionAvantages";
-import { SectionAudiences } from "@/components/home/SectionAudiences";
-import { SectionFonctionnement } from "@/components/home/SectionFonctionnement";
+} from "@/features/accueil/components/SectionCategories";
+import { SectionServices } from "@/features/accueil/components/SectionServices";
+import { SectionMissions } from "@/features/accueil/components/SectionMissions";
+import { SectionAvantages } from "@/features/accueil/components/SectionAvantages";
+import { SectionAudiences } from "@/features/accueil/components/SectionAudiences";
+import { SectionFonctionnement } from "@/features/accueil/components/SectionFonctionnement";
 
 /**
  * Page d'accueil publique de Kianja : hero avec recherche, categories de
@@ -87,12 +88,12 @@ export default function PageAccueil() {
   const stats: StatVive[] | undefined = chargement
     ? undefined
     : [
-        { label: t("statServices"), valeur: String(services.length) },
+        { label: t("statServices"), valeur: services.length },
         {
           label: t("statMissions"),
           // « Missions ouvertes » : on ne compte que les missions dont le
           // statut backend est réellement « ouverte ».
-          valeur: String(missions.filter((m) => m.statut === "ouverte").length),
+          valeur: missions.filter((m) => m.statut === "ouverte").length,
         },
       ];
 

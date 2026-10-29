@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import { api, lienInterneSur } from "@/lib/api";
-import type { NotificationItem } from "@/lib/types";
+import type { NotificationItem } from "@/types/notifications";
 import { useTranslations } from "next-intl";
 import { useFormats } from "@/i18n/use-formats";
 import { useApiList } from "@/hooks/useApiList";

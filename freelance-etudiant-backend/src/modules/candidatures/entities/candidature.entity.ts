@@ -12,7 +12,7 @@ import {
 import { Mission } from '../../missions/entities/mission.entity';
 import { EtudiantProfile } from '../../etudiants/entities/etudiant-profile.entity';
 import { Groupe } from '../../groupes/entities/groupe.entity';
-import { StatutCandidature } from '../../../common/enums/statut-candidature.enum';
+import { StatutCandidature } from '../enums/statut-candidature.enum';
 import { Livraison } from '../../livraisons/entities/livraison.entity';
 
 

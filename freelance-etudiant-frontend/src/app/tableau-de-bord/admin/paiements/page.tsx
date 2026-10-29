@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { api, ApiError } from "@/lib/api";
-import type { Transaction } from "@/lib/types";
+import type { Transaction } from "@/types/paiements";
 import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
 import { useApiList } from "@/hooks/useApiList";

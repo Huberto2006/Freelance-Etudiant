@@ -9,7 +9,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Candidature } from '../../candidatures/entities/candidature.entity';
-import { StatutLivraison } from '../../../common/enums/statut-livraison.enum';
+import { StatutLivraison } from '../enums/statut-livraison.enum';
 import { Evaluation } from '../../evaluations/entities/evaluation.entity';
 
 /**

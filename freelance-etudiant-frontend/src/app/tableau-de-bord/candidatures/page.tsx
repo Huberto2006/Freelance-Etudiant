@@ -6,7 +6,7 @@ import { ClipboardList, MessageCircle, Package } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import type { Candidature } from "@/lib/types";
+import type { Candidature } from "@/types/candidatures";
 import { useApiList } from "@/hooks/useApiList";
 import { SousNavigation } from "@/components/ui/SousNavigation";
 

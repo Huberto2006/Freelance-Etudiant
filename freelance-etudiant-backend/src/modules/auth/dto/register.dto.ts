@@ -11,7 +11,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '../../../common/enums/role.enum';
 import { LANGUES_SUPPORTEES, Langue } from '../../../common/i18n/langues';
-import { TypeClient } from '../../../common/enums/type-client.enum';
+import { TypeClient } from '../../clients/enums/type-client.enum';
 
 export class RegisterDto {
   @ApiProperty({ example: 'Lanja Rakoto' })

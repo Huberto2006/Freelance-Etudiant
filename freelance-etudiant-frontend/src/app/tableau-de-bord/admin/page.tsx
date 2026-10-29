@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Search, ShieldCheck, Users } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
-import type { Utilisateur } from "@/lib/types";
+import type { Utilisateur } from "@/types/utilisateurs";
 import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
 import { useApiList } from "@/hooks/useApiList";

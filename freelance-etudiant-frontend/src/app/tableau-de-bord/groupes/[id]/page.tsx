@@ -14,7 +14,8 @@ import {
 
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
-import type { EtudiantProfile, Groupe, InvitationGroupe } from "@/lib/types";
+import type { Groupe, InvitationGroupe } from "@/types/groupes";
+import type { EtudiantProfile } from "@/types/utilisateurs";
 import { useTranslations } from "next-intl";
 import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";

@@ -9,7 +9,7 @@ import {
 import { ServiceOffert } from '../../services/entities/service.entity';
 import { Utilisateur } from '../../users/entities/utilisateur.entity';
 import { Mission } from '../../missions/entities/mission.entity';
-import { StatutDemandeService } from '../../../common/enums/statut-demande-service.enum';
+import { StatutDemandeService } from '../enums/statut-demande-service.enum';
 
 /**
  * Table DemandeService (commande d'un service par un client) :

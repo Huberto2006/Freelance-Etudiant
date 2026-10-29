@@ -6,7 +6,7 @@ import {
 import { QueryFailedError } from 'typeorm';
 import { PaiementsService } from './paiements.service';
 import { PapiError } from './papi.service';
-import { MethodePaiement, StatutTransaction } from '../../common/enums/statut-transaction.enum';
+import { MethodePaiement, StatutTransaction } from './enums/statut-transaction.enum';
 import type { Transaction } from './entities/transaction.entity';
 
 function creer(options: { diagnosticOk?: boolean } = {}) {

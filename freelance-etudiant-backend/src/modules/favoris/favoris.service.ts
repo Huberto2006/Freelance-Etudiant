@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Favori } from './entities/favori.entity';
-import { TypeCibleFavori } from '../../common/enums/type-cible-favori.enum';
-import { VerificationCibleService } from '../../common/services/verification-cible.service';
+import { TypeCibleFavori } from './enums/type-cible-favori.enum';
+import { VerificationCibleService } from '../cibles/verification-cible.service';
 
 @Injectable()
 export class FavorisService {

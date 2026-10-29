@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Role } from '../../../common/enums/role.enum';
-import { AuthProvider } from '../../../common/enums/auth-provider.enum';
+import { AuthProvider } from '../enums/auth-provider.enum';
 import type { Langue } from '../../../common/i18n/langues';
 import { EtudiantProfile } from '../../etudiants/entities/etudiant-profile.entity';
 import { ClientProfile } from '../../clients/entities/client-profile.entity';

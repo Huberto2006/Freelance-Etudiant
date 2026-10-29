@@ -10,12 +10,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DemandeService } from './entities/demande-service.entity';
 import { CreerDemandeServiceDto } from './dto/creer-demande-service.dto';
-import { StatutDemandeService } from '../../common/enums/statut-demande-service.enum';
+import { StatutDemandeService } from './enums/statut-demande-service.enum';
 import { ServicesService } from '../services/services.service';
 import { MissionsService } from '../missions/missions.service';
 import { CandidaturesService } from '../candidatures/candidatures.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { TypeNotification } from '../notifications/enums/type-notification.enum';
 import { Role } from '../../common/enums/role.enum';
 import { EmailsService } from '../emails/emails.service';
 

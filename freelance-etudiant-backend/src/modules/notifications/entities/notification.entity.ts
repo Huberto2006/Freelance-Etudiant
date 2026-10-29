@@ -8,7 +8,7 @@ import {
   Index,
 } from 'typeorm';
 import { Utilisateur } from '../../users/entities/utilisateur.entity';
-import { TypeNotification } from '../../../common/enums/type-notification.enum';
+import { TypeNotification } from '../enums/type-notification.enum';
 
 /**
  * Table Notification : evenements in-app destines a un utilisateur

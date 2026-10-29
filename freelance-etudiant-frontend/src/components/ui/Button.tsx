@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { clsx } from "clsx";
 import { LoaderCircle } from "lucide-react";
 import type {
@@ -54,6 +55,16 @@ const sizes: Record<string, string> = {
   lg: "px-6 py-3.5 text-base pointer-coarse:min-h-12",
 };
 
+/** Chemin d'une page de l'application (exclut API, fichiers et autres origines). */
+function estPageInterne(href: string): boolean {
+  return (
+    href.startsWith("/") &&
+    !href.startsWith("//") &&
+    !href.startsWith("/api/") &&
+    !href.startsWith("/uploads/")
+  );
+}
+
 export function Button({
   variant = "primary",
   size = "md",
@@ -83,6 +94,17 @@ export function Button({
     // garantit les protections standard si `rel` n'est pas fourni.
     // Les handlers communs (onClick, onMouseEnter…) restent transmis.
     const propsLien = props as unknown as ComponentPropsWithoutRef<"a">;
+
+    // Page interne : navigation côté client (pas de rechargement complet,
+    // la session Socket.IO et l'état de l'interface sont conservés).
+    if (estPageInterne(href) && !target) {
+      return (
+        <Link href={href} rel={rel} className={classes} {...propsLien}>
+          {children}
+        </Link>
+      );
+    }
+
     return (
       <a
         href={href}

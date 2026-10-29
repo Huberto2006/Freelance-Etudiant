@@ -10,7 +10,7 @@ import { Utilisateur } from '../../users/entities/utilisateur.entity';
 import {
   StatutSignalement,
   CibleSignalement,
-} from '../../../common/enums/statut-signalement.enum';
+} from '../enums/statut-signalement.enum';
 
 /**
  * Table Signalement (cf. 2.3 Gestion des litiges et signalements).

@@ -6,7 +6,7 @@ import { UpdateEtudiantProfileDto } from './dto/update-etudiant-profile.dto';
 import { FiltrerEtudiantsDto } from './dto/filtrer-etudiants.dto';
 import { ProfilEtudiantPublicDto } from './dto/profil-etudiant-public.dto';
 import { ProfileCompletionService } from '../profile-completion/profile-completion.service';
-import { projeterEtudiant } from '../../common/utils/projection-publique.util';
+import { projeterEtudiant } from './etudiant.projection';
 
 @Injectable()
 export class EtudiantsService {

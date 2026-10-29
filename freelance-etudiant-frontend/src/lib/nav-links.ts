@@ -6,7 +6,7 @@ import {
   Settings,
 } from "lucide-react";
 
-import type { Role } from "./types";
+import type { Role } from "@/types/utilisateurs";
 
 export interface SousLienNav {
   href: string;

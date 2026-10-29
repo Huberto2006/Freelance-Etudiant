@@ -5,7 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { AppModule } from '../../app.module';
 import { UsersService } from '../../modules/users/users.service';
 import { Role } from '../../common/enums/role.enum';
-import { TypeClient } from '../../common/enums/type-client.enum';
+import { TypeClient } from '../../modules/clients/enums/type-client.enum';
 import { EtudiantProfile } from '../../modules/etudiants/entities/etudiant-profile.entity';
 import { ClientProfile } from '../../modules/clients/entities/client-profile.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';

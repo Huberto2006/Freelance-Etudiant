@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
-import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { TypeNotification } from './enums/type-notification.enum';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 interface CreerNotificationParams {

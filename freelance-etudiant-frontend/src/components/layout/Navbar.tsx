@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ChevronDown,
-  Globe,
+  House,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -23,10 +23,10 @@ import { navigationParRole } from "@/lib/nav-links";
 import { getFileUrl } from "@/lib/api";
 
 import { Button } from "@/components/ui/Button";
-import { BasculeTheme } from "@/components/ui/BasculeTheme";
-import { SelecteurLangue } from "@/components/ui/SelecteurLangue";
-import { MessagesLink } from "@/components/ui/MessagesLink";
-import { NotificationBell } from "@/components/ui/NotificationBell";
+import { BasculeTheme } from "@/features/theme/components/BasculeTheme";
+import { SelecteurLangue } from "@/components/layout/SelecteurLangue";
+import { MessagesLink } from "@/features/messagerie/components/MessagesLink";
+import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 
 type NavbarProps = {
   /**
@@ -486,8 +486,10 @@ export function Navbar({
                       hover:text-ink
                     "
                   >
+                    {/* Retour au site public : icône « accueil », distincte
+                        du globe du sélecteur de langue placé juste avant. */}
                     {estDansDashboard ? (
-                      <Globe
+                      <House
                         size={19}
                         strokeWidth={2}
                       />

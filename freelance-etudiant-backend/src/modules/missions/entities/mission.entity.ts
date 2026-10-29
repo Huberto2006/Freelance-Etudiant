@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { ClientProfile } from '../../clients/entities/client-profile.entity';
 import { Candidature } from '../../candidatures/entities/candidature.entity';
-import { StatutMission } from '../../../common/enums/statut-mission.enum';
+import { StatutMission } from '../enums/statut-mission.enum';
 import { Groupe } from '@/modules/groupes/entities/groupe.entity';
 
 /**

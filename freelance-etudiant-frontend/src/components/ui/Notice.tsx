@@ -4,6 +4,8 @@ import type { ComponentType, MouseEvent, ReactNode } from "react";
 import { LoaderCircle } from "lucide-react";
 import type { LucideProps } from "lucide-react";
 
+import { CompteurAnime } from "./CompteurAnime";
+
 /**
  * Surface standard (carte, panneau, ligne de liste). Statique par défaut :
  * bordure fine, ombre quasi nulle. `interactif` ajoute le retour au survol
@@ -290,7 +292,7 @@ export function EtatVide({
   return (
     <NoticeCard
       className={clsx(
-        "flex flex-col items-center gap-3 py-8 text-center",
+        "animate-in flex flex-col items-center gap-3 py-8 text-center",
         className,
       )}
     >
@@ -375,7 +377,11 @@ export function StatCard({
         {label}
       </p>
       <p className="font-display text-3xl font-semibold leading-none tabular-nums">
-        {value}
+        {typeof value === "number" && Number.isInteger(value) ? (
+          <CompteurAnime valeur={value} />
+        ) : (
+          value
+        )}
       </p>
       {sublabel && <p className="text-xs text-ink-soft/80">{sublabel}</p>}
     </NoticeCard>

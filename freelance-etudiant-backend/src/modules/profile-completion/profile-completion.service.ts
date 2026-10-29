@@ -5,7 +5,7 @@ import { Utilisateur } from '../users/entities/utilisateur.entity';
 import { EtudiantProfile } from '../etudiants/entities/etudiant-profile.entity';
 import { ClientProfile } from '../clients/entities/client-profile.entity';
 import { Role } from '../../common/enums/role.enum';
-import { TypeClient } from '../../common/enums/type-client.enum';
+import { TypeClient } from '../clients/enums/type-client.enum';
 
 /**
  * Etiquettes lisibles des champs obligatoires, groupees par etape du

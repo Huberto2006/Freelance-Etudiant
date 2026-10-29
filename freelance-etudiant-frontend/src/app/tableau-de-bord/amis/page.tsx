@@ -32,10 +32,10 @@ import {
     type RelationAvec,
     type RelationAmitie,
     type RelationsAmitie,
-} from "@/lib/amitie";
+} from "@/features/amitie/services/amitie";
 import { useTranslations } from "next-intl";
 import { api, ApiError } from "@/lib/api";
-import type { EtudiantProfile } from "@/lib/types";
+import type { EtudiantProfile } from "@/types/utilisateurs";
 import { useAuth } from "@/lib/auth-context";
 
 import { Button } from "@/components/ui/Button";

@@ -19,32 +19,30 @@ import {
 
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
-import type {
-  Candidature,
-  Livraison,
-  Mission,
-  NotificationItem,
-  Signalement,
-  Transaction,
-  Utilisateur,
-} from "@/lib/types";
+import type { Candidature } from "@/types/candidatures";
+import type { Livraison } from "@/types/livraisons";
+import type { Mission } from "@/types/missions";
+import type { NotificationItem } from "@/types/notifications";
+import type { Transaction } from "@/types/paiements";
+import type { Signalement } from "@/types/signalements";
+import type { Utilisateur } from "@/types/utilisateurs";
 import { useTranslations } from "next-intl";
 import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
 import { useOptionLabels } from "@/i18n/use-option-labels";
-import { calculerCompletionProfil, versNombre } from "@/lib/dashboard";
-import type { ActionUrgente, EtatSection, Traducteur } from "@/lib/dashboard";
+import { calculerCompletionProfil, versNombre } from "@/features/tableau-de-bord/utils/dashboard";
+import type { ActionUrgente, EtatSection, Traducteur } from "@/features/tableau-de-bord/utils/dashboard";
 import {
   activiteDepuisNotifications,
   activitePlateformeAdmin,
   construireProjetsClient,
   construireProjetsEtudiant,
-} from "@/lib/dashboard-activite";
+} from "@/features/tableau-de-bord/utils/dashboard-activite";
 import {
   construireActionsClient,
   construireActionsEtudiant,
   construireActionsRapidesClient,
-} from "@/lib/dashboard-actions";
+} from "@/features/tableau-de-bord/utils/dashboard-actions";
 
 import { Button } from "@/components/ui/Button";
 import { NoticeCard, StampBadge, StatCard, Tag } from "@/components/ui/Notice";
@@ -52,20 +50,20 @@ import {
   AnneauRepartition,
   BarreMensuelle,
   JaugeCirculaire,
-} from "@/components/ui/Charts";
+} from "@/features/tableau-de-bord/components/Charts";
 import { Skeleton, SkeletonCarte, SkeletonListe } from "@/components/ui/Skeleton";
 
-import { ActiviteRecente } from "@/components/dashboard/ActiviteRecente";
-import { CandidaturesAExaminer } from "@/components/dashboard/CandidaturesAExaminer";
-import { DashboardActions } from "@/components/dashboard/DashboardActions";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { ActiviteRecente } from "@/features/tableau-de-bord/components/ActiviteRecente";
+import { CandidaturesAExaminer } from "@/features/tableau-de-bord/components/CandidaturesAExaminer";
+import { DashboardActions } from "@/features/tableau-de-bord/components/DashboardActions";
+import { DashboardHeader } from "@/features/tableau-de-bord/components/DashboardHeader";
 import {
   DashboardSection,
   ErreurSection,
-} from "@/components/dashboard/DashboardSection";
-import { ProfilCompletion } from "@/components/dashboard/ProfilCompletion";
-import { ProjetsEnCours } from "@/components/dashboard/ProjetsEnCours";
-import { RecommendedMissions } from "@/components/dashboard/RecommendedMissions";
+} from "@/features/tableau-de-bord/components/DashboardSection";
+import { ProfilCompletion } from "@/features/tableau-de-bord/components/ProfilCompletion";
+import { ProjetsEnCours } from "@/features/tableau-de-bord/components/ProjetsEnCours";
+import { RecommendedMissions } from "@/features/tableau-de-bord/components/RecommendedMissions";
 
 // ============================================================
 // CONTRATS DES DONNÉES (formes exactes renvoyées par l'API)

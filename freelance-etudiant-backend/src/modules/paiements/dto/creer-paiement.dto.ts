@@ -10,7 +10,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { MethodePaiement } from '../../../common/enums/statut-transaction.enum';
+import { MethodePaiement } from '../enums/statut-transaction.enum';
 
 export class CreerPaiementDto {
   /**

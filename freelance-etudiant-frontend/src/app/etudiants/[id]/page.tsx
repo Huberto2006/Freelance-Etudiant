@@ -20,11 +20,9 @@ import {
 
 import { api, ApiError, lienExterneSur } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import type {
-  EtudiantProfile,
-  Evaluation,
-  ServiceOffert,
-} from "@/lib/types";
+import type { Evaluation } from "@/types/evaluations";
+import type { ServiceOffert } from "@/types/services";
+import type { EtudiantProfile } from "@/types/utilisateurs";
 import { useFormats } from "@/i18n/use-formats";
 import { useOptionLabels } from "@/i18n/use-option-labels";
 
@@ -35,10 +33,10 @@ import {
   Tag,
 } from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
-import { PortfolioGalerie } from "@/components/ui/Portfolio";
-import { ReactionProfil } from "@/components/ui/ReactionProfil";
-import { FavoriBouton } from "@/components/ui/FavoriBouton";
-import { SignalerBouton } from "@/components/ui/SignalerBouton";
+import { PortfolioGalerie } from "@/features/profils/components/Portfolio";
+import { ReactionProfil } from "@/features/reactions/components/ReactionProfil";
+import { FavoriBouton } from "@/features/favoris/components/FavoriBouton";
+import { SignalerBouton } from "@/features/signalements/components/SignalerBouton";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { Button } from "@/components/ui/Button";
 

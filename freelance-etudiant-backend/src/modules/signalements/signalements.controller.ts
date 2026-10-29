@@ -17,7 +17,7 @@ import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interfa
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Role } from '../../common/enums/role.enum';
-import { StatutSignalement } from '../../common/enums/statut-signalement.enum';
+import { StatutSignalement } from './enums/statut-signalement.enum';
 
 @ApiTags('Signalements')
 @ApiBearerAuth()

@@ -13,12 +13,12 @@ import { Candidature } from './entities/candidature.entity';
 import { CreateCandidatureDto } from './dto/create-candidature.dto';
 import { Mission } from '../missions/entities/mission.entity';
 
-import { StatutCandidature } from '../../common/enums/statut-candidature.enum';
-import { StatutMission } from '../../common/enums/statut-mission.enum';
+import { StatutCandidature } from './enums/statut-candidature.enum';
+import { StatutMission } from '../missions/enums/statut-mission.enum';
 
 import { MissionsService } from '../missions/missions.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { TypeNotification } from '../notifications/enums/type-notification.enum';
 
 import { Utilisateur } from '../users/entities/utilisateur.entity';
 

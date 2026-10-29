@@ -1,0 +1,1208 @@
+"use client";
+
+import { useState } from "react";
+import {
+  User,
+  GraduationCap,
+  Building2,
+  BriefcaseBusiness,
+  Languages,
+  Wallet,
+  CircleCheck,
+  CircleX,
+  Star,
+  FolderOpen,
+  Globe,
+  Image as ImageIcon,
+  FileText,
+  Pencil,
+  X,
+  MapPin,
+  Phone,
+  Clock,
+  Sparkles,
+  Link2,
+} from "lucide-react";
+
+import { useAuth } from "@/lib/auth-context";
+import { api, ApiError, lienExterneSur } from "@/lib/api";
+import { useTranslations } from "next-intl";
+import { useFormats } from "@/i18n/use-formats";
+import { Button } from "@/components/ui/Button";
+import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { MessageVide, NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
+import { MultiSelectCreatable } from "@/components/ui/MultiSelectCreatable";
+import { PhotoProfil } from "@/features/profils/components/PhotoProfil";
+import { PortfolioGalerie, estImageUrl } from "@/features/profils/components/Portfolio";
+import { COMPETENCES_PREDEFINIES, LANGUES_PREDEFINIES, SPECIALITES_PREDEFINIES } from "@/data/field-options";
+import type { EtudiantProfile, OcrCvExtraction, Utilisateur } from "@/types/utilisateurs";
+import { NIVEAUX_ETUDE, TYPES_FREELANCE, STATUTS_DISPONIBILITE, CLES_TYPE_FREELANCE } from "@/features/profils/profil-options";
+import { InfoItem } from "@/features/profils/components/InfoItem";
+
+/* =========================================================
+   PROFIL ÉTUDIANT
+========================================================= */
+
+export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
+  const { rafraichirProfil } = useAuth();
+  const t = useTranslations("profilePage");
+  const { argent: formatArgent } = useFormats();
+  const libelleDisponibilite = (statut: string) =>
+    t.has(`availability.${statut}` as never)
+      ? t(`availability.${statut}` as never)
+      : statut;
+  const libelleTypeFreelance = (valeur: string) => {
+    const cle = CLES_TYPE_FREELANCE[valeur];
+    return cle ? t(`freelanceTypes.${cle}` as never) : valeur;
+  };
+
+  const profil = utilisateur.profilEtudiant;
+
+  const [gestion, setGestion] = useState(false);
+
+  const [niveauEtude, setNiveauEtude] = useState(profil?.niveauEtude ?? "");
+
+  const [universite, setUniversite] = useState(profil?.universite ?? "");
+
+  const [filiere, setFiliere] = useState(profil?.filiere ?? "");
+
+  const [anneeEtude, setAnneeEtude] = useState(profil?.anneeEtude ?? "");
+
+  const [ville, setVille] = useState(profil?.ville ?? "");
+
+  const [telephone, setTelephone] = useState(profil?.telephone ?? "");
+
+  const [description, setDescription] = useState(profil?.description ?? "");
+
+  const [competences, setCompetences] = useState(
+    profil?.competences?.join(", ") ?? "",
+  );
+
+  const [specialites, setSpecialites] = useState(
+    profil?.specialites?.join(", ") ?? "",
+  );
+
+  const [experience, setExperience] = useState(
+    profil?.experience != null ? String(profil.experience) : "",
+  );
+
+  const [typeFreelance, setTypeFreelance] = useState(
+    profil?.typeFreelance ?? "",
+  );
+
+  const [statutDisponibilite, setStatutDisponibilite] = useState(
+    profil?.statutDisponibilite ?? "",
+  );
+
+  const [langues, setLangues] = useState(profil?.langues?.join(", ") ?? "");
+
+  const [tarifHoraire, setTarifHoraire] = useState(
+    profil?.tarifHoraire != null ? String(profil.tarifHoraire) : "",
+  );
+
+  const [tarifMinimum, setTarifMinimum] = useState(
+    profil?.tarifMinimum != null ? String(profil.tarifMinimum) : "",
+  );
+
+  const [tarifMaximum, setTarifMaximum] = useState(
+    profil?.tarifMaximum != null ? String(profil.tarifMaximum) : "",
+  );
+
+  const [disponibilite, setDisponibilite] = useState(
+    profil?.disponibilite ?? true,
+  );
+
+  const [githubUrl, setGithubUrl] = useState(profil?.githubUrl ?? "");
+
+  const [gitlabUrl, setGitlabUrl] = useState(profil?.gitlabUrl ?? "");
+
+  const [linkedinUrl, setLinkedinUrl] = useState(profil?.linkedinUrl ?? "");
+
+  const [siteWeb, setSiteWeb] = useState(profil?.siteWeb ?? "");
+
+  const [portfolioUrls, setPortfolioUrls] = useState<string[]>(
+    profil?.portfolioUrls ?? [],
+  );
+
+  const [nouvelleUrlPortfolio, setNouvelleUrlPortfolio] = useState("");
+
+  const [erreurUrlPortfolio, setErreurUrlPortfolio] = useState<string | null>(
+    null,
+  );
+
+  const [envoi, setEnvoi] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [importCvEnCours, setImportCvEnCours] = useState(false);
+  const [cvDraft, setCvDraft] = useState<OcrCvExtraction | null>(null);
+  const [cvErreur, setCvErreur] = useState<string | null>(null);
+
+  async function importerCv(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportCvEnCours(true);
+    setCvErreur(null);
+    setMessage(null);
+    setErreur(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const resultat = await api.upload<OcrCvExtraction>("/etudiants/me/cv-import", formData);
+      setCvDraft(resultat);
+      setMessage(t("cvAnalysed"));
+    } catch (error) {
+      const messageErreur = error instanceof ApiError ? error.message : t("errCv");
+      setCvErreur(messageErreur);
+    } finally {
+      setImportCvEnCours(false);
+      e.target.value = "";
+    }
+  }
+
+  function appliquerSuggestionCV() {
+    if (!cvDraft) return;
+    const suggestions = cvDraft.fields;
+    if (suggestions.nom?.value) setNiveauEtude((prev) => prev || suggestions.nom?.value || prev);
+    if (suggestions.universite?.value) setUniversite(suggestions.universite.value);
+    if (suggestions.filiere?.value) setFiliere(suggestions.filiere.value);
+    if (suggestions.anneeEtude?.value) setAnneeEtude(suggestions.anneeEtude.value);
+    if (suggestions.ville?.value) setVille(suggestions.ville.value);
+    if (suggestions.telephone?.value) setTelephone(suggestions.telephone.value);
+    if (suggestions.description?.value) setDescription(suggestions.description.value);
+    if (suggestions.competences?.value?.length) setCompetences(suggestions.competences.value.join(", "));
+    if (suggestions.langues?.value?.length) setLangues(suggestions.langues.value.join(", "));
+    if (suggestions.githubUrl?.value) setGithubUrl(suggestions.githubUrl.value);
+    if (suggestions.linkedinUrl?.value) setLinkedinUrl(suggestions.linkedinUrl.value);
+    if (suggestions.siteWeb?.value) setSiteWeb(suggestions.siteWeb.value);
+    if (suggestions.portfolioUrls?.value?.length) setPortfolioUrls(suggestions.portfolioUrls.value);
+    setCvDraft(null);
+    setMessage(t("ocrApplied"));
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    setErreur(null);
+    setMessage(null);
+
+    if (
+      tarifMinimum &&
+      tarifMaximum &&
+      Number(tarifMinimum) > Number(tarifMaximum)
+    ) {
+      setErreur(t("errMinMax"));
+      return;
+    }
+    if (
+      tarifHoraire &&
+      tarifMinimum &&
+      Number(tarifHoraire) < Number(tarifMinimum)
+    ) {
+      setErreur(t("errHourlyBelowMin"));
+      return;
+    }
+    if (
+      tarifHoraire &&
+      tarifMaximum &&
+      Number(tarifHoraire) > Number(tarifMaximum)
+    ) {
+      setErreur(t("errHourlyAboveMax"));
+      return;
+    }
+    setEnvoi(true);
+
+    try {
+      await api.patch<EtudiantProfile>("/etudiants/me", {
+        niveauEtude: niveauEtude || undefined,
+        universite: universite || undefined,
+        filiere: filiere || undefined,
+        anneeEtude: anneeEtude || undefined,
+        ville: ville || undefined,
+        telephone: telephone || undefined,
+        description: description || undefined,
+
+        competences: competences
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean),
+
+        specialites: specialites
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+
+        experience: experience ? Number(experience) : undefined,
+        typeFreelance: typeFreelance || undefined,
+        statutDisponibilite: statutDisponibilite || undefined,
+
+        langues: langues
+          .split(",")
+          .map((l) => l.trim())
+          .filter(Boolean),
+
+        tarifHoraire: tarifHoraire ? Number(tarifHoraire) : undefined,
+        tarifMinimum: tarifMinimum ? Number(tarifMinimum) : undefined,
+        tarifMaximum: tarifMaximum ? Number(tarifMaximum) : undefined,
+
+        disponibilite,
+
+        githubUrl: githubUrl || undefined,
+        gitlabUrl: gitlabUrl || undefined,
+        linkedinUrl: linkedinUrl || undefined,
+        siteWeb: siteWeb || undefined,
+
+        portfolioUrls,
+      });
+
+      await rafraichirProfil();
+
+      setMessage(t("profileUpdated"));
+
+      setGestion(false);
+    } catch (err) {
+      setErreur(
+        err instanceof ApiError
+          ? err.message
+          : t("errUnexpected"),
+      );
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  function annulerModification() {
+    setNiveauEtude(profil?.niveauEtude ?? "");
+    setUniversite(profil?.universite ?? "");
+    setFiliere(profil?.filiere ?? "");
+    setAnneeEtude(profil?.anneeEtude ?? "");
+    setVille(profil?.ville ?? "");
+    setTelephone(profil?.telephone ?? "");
+    setDescription(profil?.description ?? "");
+
+    setCompetences(profil?.competences?.join(", ") ?? "");
+    setSpecialites(profil?.specialites?.join(", ") ?? "");
+    setExperience(profil?.experience != null ? String(profil.experience) : "");
+    setTypeFreelance(profil?.typeFreelance ?? "");
+    setStatutDisponibilite(profil?.statutDisponibilite ?? "");
+
+    setLangues(profil?.langues?.join(", ") ?? "");
+
+    setTarifHoraire(
+      profil?.tarifHoraire != null ? String(profil.tarifHoraire) : "",
+    );
+    setTarifMinimum(
+      profil?.tarifMinimum != null ? String(profil.tarifMinimum) : "",
+    );
+    setTarifMaximum(
+      profil?.tarifMaximum != null ? String(profil.tarifMaximum) : "",
+    );
+
+    setDisponibilite(profil?.disponibilite ?? true);
+
+    setGithubUrl(profil?.githubUrl ?? "");
+    setGitlabUrl(profil?.gitlabUrl ?? "");
+    setLinkedinUrl(profil?.linkedinUrl ?? "");
+    setSiteWeb(profil?.siteWeb ?? "");
+
+    setPortfolioUrls(profil?.portfolioUrls ?? []);
+
+    setNouvelleUrlPortfolio("");
+    setErreurUrlPortfolio(null);
+
+    setErreur(null);
+    setMessage(null);
+    setGestion(false);
+  }
+
+  /** Ajoute une URL au portfolio (lien externe ou chemin d'upload relatif). */
+  function ajouterUrlPortfolio() {
+    const url = nouvelleUrlPortfolio.trim();
+    if (!url) return;
+
+    if (!/^https?:\/\//i.test(url) && !url.startsWith("/")) {
+      setErreurUrlPortfolio(
+        t("errPortfolioLink"),
+      );
+      return;
+    }
+
+    if (portfolioUrls.includes(url)) {
+      setErreurUrlPortfolio(t("errPortfolioDuplicate"));
+      return;
+    }
+
+    setErreurUrlPortfolio(null);
+    setPortfolioUrls([...portfolioUrls, url]);
+    setNouvelleUrlPortfolio("");
+  }
+
+  function retirerUrlPortfolio(index: number) {
+    setErreurUrlPortfolio(null);
+    setPortfolioUrls(portfolioUrls.filter((_, i) => i !== index));
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* En-tête */}
+      <PageHeader icon={User} eyebrow={t("yourAccount")} title={t("myProfile")} />
+
+      {/* =================================================
+          IDENTITÉ
+      ================================================= */}
+
+      <NoticeCard>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-5">
+            <PhotoProfil utilisateur={utilisateur} size={96} />
+
+            <div>
+              <p className="font-display text-2xl font-semibold">
+                {utilisateur.nom}
+              </p>
+
+              <p className="mt-1 text-sm text-ink-soft">{utilisateur.email}</p>
+
+              <div className="mt-3">
+                <Tag>{t("roleStudent")}</Tag>
+              </div>
+            </div>
+          </div>
+
+          {!gestion && (
+            <Button
+              variant="primary"
+              onClick={() => {
+                setMessage(null);
+                setErreur(null);
+                setGestion(true);
+              }}
+              className="flex items-center justify-center gap-2"
+            >
+              <Pencil size={16} />
+              {t("manageProfile")}
+            </Button>
+          )}
+        </div>
+      </NoticeCard>
+
+      {/* =================================================
+          MESSAGE
+      ================================================= */}
+
+      {message && (
+        <NoticeCard>
+          <div className="flex items-center gap-3 text-rice">
+            <CircleCheck size={18} />
+
+            <p className="text-sm">{message}</p>
+          </div>
+        </NoticeCard>
+      )}
+
+      {/* =================================================
+          AFFICHAGE DU PROFIL
+      ================================================= */}
+
+      {!gestion && (
+        <>
+          {/* Coordonnées */}
+
+          <NoticeCard>
+            <div className="mb-6 flex items-center gap-3">
+              <MapPin size={20} className="text-ocre-dark" />
+
+              <h2 className="font-display text-xl font-semibold">
+                {t("contact")}
+              </h2>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <InfoItem
+                icon={MapPin}
+                label={t("city")}
+                value={profil?.ville || t("notProvided")}
+              />
+
+              <InfoItem
+                icon={Phone}
+                label={t("phone")}
+                value={profil?.telephone || t("notProvided")}
+              />
+            </div>
+          </NoticeCard>
+
+          {/* Informations générales */}
+
+          <NoticeCard>
+            <div className="mb-6 flex items-center gap-3">
+              <GraduationCap size={20} className="text-ocre-dark" />
+
+              <h2 className="font-display text-xl font-semibold">
+                {t("academicInfo")}
+              </h2>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <InfoItem
+                icon={GraduationCap}
+                label={t("studyLevel")}
+                value={profil?.niveauEtude || t("notProvided")}
+              />
+
+              <InfoItem
+                icon={Building2}
+                label={t("universityInstitution")}
+                value={profil?.universite || t("notProvided")}
+              />
+
+              <InfoItem
+                icon={BriefcaseBusiness}
+                label={t("field")}
+                value={profil?.filiere || t("notProvided")}
+              />
+
+              <InfoItem
+                icon={GraduationCap}
+                label={t("studyYear")}
+                value={profil?.anneeEtude || t("notProvided")}
+              />
+            </div>
+          </NoticeCard>
+
+          {/* Présentation */}
+
+          <NoticeCard>
+            <div className="mb-5 flex items-center gap-3">
+              <FileText size={20} className="text-ocre-dark" />
+
+              <h2 className="font-display text-xl font-semibold">
+                {t("presentation")}
+              </h2>
+            </div>
+
+            <p className="text-sm leading-7 text-ink-soft">
+              {profil?.description || t("noPresentation")}
+            </p>
+          </NoticeCard>
+
+          {/* Compétences et langues */}
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <NoticeCard>
+              <div className="mb-5 flex items-center gap-3">
+                <BriefcaseBusiness size={20} className="text-ocre-dark" />
+
+                <h2 className="font-display text-xl font-semibold">
+                  {t("skills")}
+                </h2>
+              </div>
+
+              {profil?.competences?.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {profil.competences.map((competence) => (
+                    <Tag key={competence}>
+                      {competence}
+                    </Tag>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-ink-soft">
+                  {t("noSkills")}
+                </p>
+              )}
+
+              {profil?.specialites?.length ? (
+                <div className="mt-4 border-t border-ink/10 pt-4">
+                  <p className="mb-2 text-xs uppercase tracking-wider text-ink-soft">
+                    {t("specialities")}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {profil.specialites.map((specialite) => (
+                      <Tag key={specialite} tone="ocre">
+                        {specialite}
+                      </Tag>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </NoticeCard>
+
+            <NoticeCard>
+              <div className="mb-5 flex items-center gap-3">
+                <Languages size={20} className="text-ocre-dark" />
+
+                <h2 className="font-display text-xl font-semibold">{t("languages")}</h2>
+              </div>
+
+              {profil?.langues?.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {profil.langues.map((langue) => (
+                    <Tag key={langue} tone="ocre">
+                      {langue}
+                    </Tag>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-ink-soft">
+                  {t("noLanguages")}
+                </p>
+              )}
+            </NoticeCard>
+          </div>
+
+          {/* Activité freelance */}
+
+          <NoticeCard>
+            <div className="mb-6 flex items-center gap-3">
+              <Sparkles size={20} className="text-ocre-dark" />
+
+              <h2 className="font-display text-xl font-semibold">
+                {t("freelanceActivity")}
+              </h2>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-3">
+              <InfoItem
+                icon={Clock}
+                label={t("experience")}
+                value={
+                  profil?.experience != null
+                    ? t("years", { count: profil.experience })
+                    : t("notProvided")
+                }
+              />
+
+              <InfoItem
+                icon={BriefcaseBusiness}
+                label={t("freelanceType")}
+                value={
+                  profil?.typeFreelance
+                    ? libelleTypeFreelance(profil.typeFreelance)
+                    : t("notProvided")
+                }
+              />
+
+              <InfoItem
+                icon={CircleCheck}
+                label={t("availabilityStatus")}
+                value={
+                  profil?.statutDisponibilite
+                    ? libelleDisponibilite(profil.statutDisponibilite)
+                    : t("notProvided")
+                }
+              />
+            </div>
+          </NoticeCard>
+
+          {/* Tarif et disponibilité */}
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <NoticeCard>
+              <div className="flex items-center gap-4">
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-ocre/10 text-ocre-dark">
+                  <Wallet size={20} />
+                </span>
+
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-ink-soft">
+                    {t("hourlyRate")}
+                  </p>
+
+                  <p className="mt-1 font-display text-xl font-semibold">
+                    {profil?.tarifHoraire != null
+                      ? formatArgent(profil.tarifHoraire)
+                      : t("notProvided")}
+                  </p>
+
+                  {(profil?.tarifMinimum != null ||
+                    profil?.tarifMaximum != null) && (
+                    <p className="mt-1 text-xs text-ink-soft">
+                      {t("range")}{" "}
+                      {profil?.tarifMinimum != null
+                        ? formatArgent(profil.tarifMinimum)
+                        : "—"}{" "}
+                      –{" "}
+                      {profil?.tarifMaximum != null
+                        ? formatArgent(profil.tarifMaximum)
+                        : "—"}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </NoticeCard>
+
+            <NoticeCard>
+              <div className="flex items-center gap-4">
+                {profil?.disponibilite ? (
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-rice/10 text-rice">
+                    <CircleCheck size={20} />
+                  </span>
+                ) : (
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brique/10 text-brique">
+                    <CircleX size={20} />
+                  </span>
+                )}
+
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-ink-soft">
+                    {t("availability.title")}
+                  </p>
+
+                  <p className="mt-1 font-display text-xl font-semibold">
+                    {profil?.disponibilite ? t("availability.disponible") : t("availability.indisponible")}
+                  </p>
+                </div>
+              </div>
+            </NoticeCard>
+          </div>
+
+          {/* Réputation */}
+
+          <NoticeCard>
+            <div className="mb-6 flex items-center gap-3">
+              <Star size={20} className="text-ocre-dark" />
+
+              <h2 className="font-display text-xl font-semibold">{t("reputation")}</h2>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-3">
+              <InfoItem
+                icon={Star}
+                label={t("reputationScore")}
+                value={
+                  profil?.scoreReputation != null
+                    ? Number(profil.scoreReputation).toFixed(1)
+                    : "0"
+                }
+              />
+
+              <InfoItem
+                icon={Star}
+                label={t("averageRating")}
+                value={
+                  profil?.noteMoyenne != null
+                    ? `${Number(profil.noteMoyenne).toFixed(1)} / 5`
+                    : "0 / 5"
+                }
+              />
+
+              <InfoItem
+                icon={CircleCheck}
+                label={t("completedMissions")}
+                value={
+                  profil?.nombreMissionsTerminees != null
+                    ? String(profil.nombreMissionsTerminees)
+                    : "0"
+                }
+              />
+            </div>
+          </NoticeCard>
+
+          {/* Portfolio */}
+
+          <NoticeCard>
+            <div className="mb-6 flex items-center gap-3">
+              <FolderOpen size={20} className="text-ocre-dark" />
+
+              <h2 className="font-display text-xl font-semibold">{t("portfolio")}</h2>
+            </div>
+
+            {(profil?.portfolioUrls ?? []).filter(Boolean).length > 0 ? (
+              <PortfolioGalerie urls={profil?.portfolioUrls ?? []} />
+            ) : (
+              <MessageVide>
+                {t("noPortfolio")}
+              </MessageVide>
+            )}
+
+            {(profil?.githubUrl ||
+              profil?.gitlabUrl ||
+              profil?.linkedinUrl ||
+              profil?.siteWeb) && (
+              <div className="mt-6 flex flex-wrap gap-2 border-t border-ink/10 pt-5">
+                {profil?.githubUrl && (
+                  <a
+                    href={lienExterneSur(profil.githubUrl) ?? "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
+                  >
+                    <Link2 size={13} />
+                    GitHub
+                  </a>
+                )}
+                {profil?.gitlabUrl && (
+                  <a
+                    href={lienExterneSur(profil.gitlabUrl) ?? "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
+                  >
+                    <Link2 size={13} />
+                    GitLab
+                  </a>
+                )}
+                {profil?.linkedinUrl && (
+                  <a
+                    href={lienExterneSur(profil.linkedinUrl) ?? "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
+                  >
+                    <Link2 size={13} />
+                    LinkedIn
+                  </a>
+                )}
+                {profil?.siteWeb && (
+                  <a
+                    href={lienExterneSur(profil.siteWeb) ?? "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
+                  >
+                    <Globe size={13} />
+                    {t("website")}
+                  </a>
+                )}
+              </div>
+            )}
+          </NoticeCard>
+        </>
+      )}
+
+      {/* =================================================
+          FORMULAIRE DE GESTION
+      ================================================= */}
+
+      {gestion && (
+        <NoticeCard>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
+                {t("management")}
+              </p>
+
+              <h2 className="mt-1 font-display text-2xl font-semibold">
+                {t("editMyProfile")}
+              </h2>
+            </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={annulerModification}
+              title={t("cancel")}
+              aria-label={t("cancel")}
+            >
+              <X size={18} />
+            </Button>
+          </div>
+
+          <div className="mb-6 flex flex-col gap-4 rounded-xl border border-ink/10 bg-paper-light p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-ocre-dark">{t("cvImport")}</p>
+                <h3 className="mt-1 font-display text-xl font-semibold">{t("importMyCv")}</h3>
+              </div>
+              <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-ink/15 bg-paper px-3 py-2 text-sm text-ink transition-colors hover:bg-ink/5">
+                <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" className="hidden" onChange={importerCv} disabled={importCvEnCours} />
+                {importCvEnCours ? t("analysing") : t("chooseFile")}
+              </label>
+            </div>
+
+            {cvErreur && (
+              <p className="text-sm text-brique">{cvErreur}</p>
+            )}
+
+            {cvDraft && (
+              <div className="rounded-xl border border-ocre/30 bg-ocre/5 p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <p className="font-display text-lg font-semibold">{t("ocrSuggestions")}</p>
+                    <p className="text-sm text-ink-soft">{t("ocrHint")}</p>
+                  </div>
+                  <Button type="button" variant="secondary" size="sm" onClick={appliquerSuggestionCV}>{t("applySuggestions")}</Button>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {Object.entries(cvDraft.fields).map(([key, field]) => {
+                    if (!field || !field.value) return null;
+                    const label = t.has(`cvFields.${key}` as never)
+                      ? t(`cvFields.${key}` as never)
+                      : key;
+                    const value = Array.isArray(field.value) ? field.value.join(", ") : field.value;
+                    return (
+                      <div key={key} className="rounded-lg border border-ink/10 bg-paper p-3">
+                        <p className="text-[0.65rem] uppercase tracking-[0.2em] text-ink-soft">{label}</p>
+                        <p className="mt-2 text-sm text-ink">{value}</p>
+                        <p className="mt-1 text-[0.65rem] uppercase tracking-[0.2em] text-ocre-dark">{t("confidence", { niveau: String(field.confidence) })}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {cvDraft.warnings.length > 0 && (
+                  <div className="mt-4 rounded-lg border border-ocre/30 bg-ocre/10 p-3">
+                    <p className="text-xs font-mono uppercase tracking-[0.2em] text-ocre-dark">{t("verification")}</p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink">
+                      {cvDraft.warnings.map((warning) => <li key={warning}>{warning}</li>)}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={onSubmit} className="flex flex-col gap-5">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field label={t("studyLevel")} htmlFor="niveauEtude">
+                <Select
+                  id="niveauEtude"
+                  value={niveauEtude}
+                  onChange={(e) => setNiveauEtude(e.target.value)}
+                >
+                  <option value="" disabled hidden>{t("select")}</option>
+                  {NIVEAUX_ETUDE.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Field label={t("institution")} htmlFor="universite">
+                <Input
+                  id="universite"
+                  value={universite}
+                  onChange={(e) => setUniversite(e.target.value)}
+                  placeholder="EMIT Fianarantsoa"
+                />
+              </Field>
+
+              <Field label={t("field")} htmlFor="filiere">
+                <Input
+                  id="filiere"
+                  value={filiere}
+                  onChange={(e) => setFiliere(e.target.value)}
+                  placeholder="Informatique"
+                />
+              </Field>
+
+              <Field label={t("studyYear")} htmlFor="anneeEtude">
+                <Select
+                  id="anneeEtude"
+                  value={anneeEtude}
+                  onChange={(e) => setAnneeEtude(e.target.value)}
+                >
+                  <option value="" disabled hidden>{t("select")}</option>
+                  {NIVEAUX_ETUDE.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Field label={t("city")} htmlFor="ville">
+                <Input
+                  id="ville"
+                  value={ville}
+                  onChange={(e) => setVille(e.target.value)}
+                  placeholder="Fianarantsoa"
+                />
+              </Field>
+
+              <Field label={t("phone")} htmlFor="telephone">
+                <Input
+                  id="telephone"
+                  value={telephone}
+                  onChange={(e) => setTelephone(e.target.value)}
+                  placeholder="+261 34 12 345 67"
+                />
+              </Field>
+            </div>
+
+            <Field label={t("presentation")} htmlFor="description">
+              <Textarea
+                id="description"
+                rows={5}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t("presentationPlaceholder")}
+              />
+            </Field>
+
+            <Field
+              label={t("skills")}
+              htmlFor="competences"
+              hint={t("skillsHint")}
+            >
+              <MultiSelectCreatable
+                id="competences"
+                value={competences}
+                onChange={setCompetences}
+                options={COMPETENCES_PREDEFINIES}
+                placeholder={t("searchSkill")}
+                allowCreate
+              />
+            </Field>
+
+            <Field
+              label={t("specialities")}
+              htmlFor="specialites"
+              hint={t("specialitiesHint")}
+            >
+              <MultiSelectCreatable
+                id="specialites"
+                value={specialites}
+                onChange={setSpecialites}
+                options={SPECIALITES_PREDEFINIES}
+                placeholder={t("searchSpeciality")}
+                allowCreate
+              />
+            </Field>
+
+            <div className="grid gap-5 sm:grid-cols-3">
+              <Field label={t("experienceYears")} htmlFor="experience">
+                <Input
+                  id="experience"
+                  type="number"
+                  min={0}
+                  max={50}
+                  value={experience}
+                  onChange={(e) => setExperience(e.target.value)}
+                  placeholder="2"
+                />
+              </Field>
+
+              <Field label={t("freelanceType")} htmlFor="typeFreelance">
+                <Select
+                  id="typeFreelance"
+                  value={typeFreelance}
+                  onChange={(e) => setTypeFreelance(e.target.value)}
+                >
+                  <option value="" disabled hidden>{t("select")}</option>
+                  {TYPES_FREELANCE.map((type) => (
+                    <option key={type} value={type}>
+                      {libelleTypeFreelance(type)}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Field label={t("availabilityStatus")} htmlFor="statutDisponibilite">
+                <Select
+                  id="statutDisponibilite"
+                  value={statutDisponibilite}
+                  onChange={(e) => setStatutDisponibilite(e.target.value)}
+                >
+                  <option value="" disabled hidden>{t("select")}</option>
+                  {STATUTS_DISPONIBILITE.map((s) => (
+                    <option key={s} value={s}>
+                      {libelleDisponibilite(s)}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+
+            <Field
+              label={t("languages")}
+              htmlFor="langues"
+              hint={t("languagesHint")}
+            >
+              <MultiSelectCreatable
+                id="langues"
+                value={langues}
+                onChange={setLangues}
+                options={LANGUES_PREDEFINIES}
+                placeholder={t("searchLanguage")}
+                allowCreate
+              />
+            </Field>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field label="GitHub" htmlFor="githubUrl">
+                <Input
+                  id="githubUrl"
+                  value={githubUrl}
+                  onChange={(e) => setGithubUrl(e.target.value)}
+                  placeholder="https://github.com/monprofil"
+                />
+              </Field>
+
+              <Field label="GitLab" htmlFor="gitlabUrl">
+                <Input
+                  id="gitlabUrl"
+                  value={gitlabUrl}
+                  onChange={(e) => setGitlabUrl(e.target.value)}
+                  placeholder="https://gitlab.com/monprofil"
+                />
+              </Field>
+
+              <Field label="LinkedIn" htmlFor="linkedinUrl">
+                <Input
+                  id="linkedinUrl"
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  placeholder="https://linkedin.com/in/monprofil"
+                />
+              </Field>
+
+              <Field label={t("website")} htmlFor="siteWeb">
+                <Input
+                  id="siteWeb"
+                  value={siteWeb}
+                  onChange={(e) => setSiteWeb(e.target.value)}
+                  placeholder="https://monsite.mg"
+                />
+              </Field>
+            </div>
+
+            <div className="flex items-start gap-2">
+              <div className="min-w-0 flex-1">
+                <Field
+                  label={t("portfolio")}
+                  htmlFor="portfolioUrl"
+                  hint={t("portfolioHint")}
+                >
+                  <Input
+                    id="portfolioUrl"
+                    value={nouvelleUrlPortfolio}
+                    onChange={(e) =>
+                      setNouvelleUrlPortfolio(e.target.value)
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        ajouterUrlPortfolio();
+                      }
+                    }}
+                  />
+                </Field>
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                className="mt-1"
+                onClick={ajouterUrlPortfolio}
+                disabled={envoi || !nouvelleUrlPortfolio.trim()}
+              >
+                {t("add")}
+              </Button>
+            </div>
+
+            {erreurUrlPortfolio && (
+              <p className="text-xs text-brique">{erreurUrlPortfolio}</p>
+            )}
+
+            {portfolioUrls.length > 0 && (
+              <ul className="flex flex-col gap-2">
+                {portfolioUrls.map((url, index) => (
+                  <li
+                    key={`${url}-${index}`}
+                    className="flex items-center gap-2.5 rounded-lg border border-ink/20 bg-ink/[0.02] px-3 py-2"
+                  >
+                    <span
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-ink-soft"
+                      aria-hidden="true"
+                    >
+                      {estImageUrl(url) ? (
+                        <ImageIcon size={13} />
+                      ) : (
+                        <Globe size={13} />
+                      )}
+                    </span>
+
+                    <span className="min-w-0 flex-1 truncate text-sm text-ink">
+                      {url}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => retirerUrlPortfolio(index)}
+                      disabled={envoi}
+                      aria-label={t("removeFromPortfolio", { url })}
+                      className="shrink-0 text-ink-soft/60 transition-colors hover:text-brique disabled:opacity-50"
+                    >
+                      <X size={15} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="grid gap-5 sm:grid-cols-3">
+              <Field label={t("minRate")} htmlFor="tarifMinimum">
+                <Input
+                  id="tarifMinimum"
+                  type="number"
+                  min={0}
+                  value={tarifMinimum}
+                  onChange={(e) => setTarifMinimum(e.target.value)}
+                  placeholder="10000"
+                />
+              </Field>
+
+              <Field label={t("hourlyRateAr")} htmlFor="tarifHoraire">
+                <Input
+                  id="tarifHoraire"
+                  type="number"
+                  min={0}
+                  value={tarifHoraire}
+                  onChange={(e) => setTarifHoraire(e.target.value)}
+                  placeholder="15000"
+                />
+              </Field>
+
+              <Field label={t("maxRate")} htmlFor="tarifMaximum">
+                <Input
+                  id="tarifMaximum"
+                  type="number"
+                  min={0}
+                  value={tarifMaximum}
+                  onChange={(e) => setTarifMaximum(e.target.value)}
+                  placeholder="30000"
+                />
+              </Field>
+            </div>
+
+            <div className="flex items-center">
+              <label className="flex items-center gap-2 text-sm text-ink-soft">
+                <input
+                  type="checkbox"
+                  checked={disponibilite}
+                  onChange={(e) => setDisponibilite(e.target.checked)}
+                  className="h-4 w-4 accent-ocre"
+                />
+                {t("availableForNew")}
+              </label>
+            </div>
+
+            {erreur && <p className="text-sm text-brique">{erreur}</p>}
+
+            {message && <p className="text-sm text-rice">{message}</p>}
+
+            <div className="flex flex-wrap gap-3">
+              <Button type="submit" disabled={envoi}>
+                {envoi ? t("saving") : t("saveChanges")}
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={annulerModification}
+                disabled={envoi}
+              >
+                {t("cancel")}
+              </Button>
+            </div>
+          </form>
+        </NoticeCard>
+      )}
+    </div>
+  );
+}

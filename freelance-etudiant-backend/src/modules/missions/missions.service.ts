@@ -13,8 +13,8 @@ import { EtudiantProfile } from '../etudiants/entities/etudiant-profile.entity';
 import { EmailsService } from '../emails/emails.service';
 import { CreateMissionDto, UpdateMissionDto } from './dto/mission.dto';
 import { FiltrerMissionsDto } from './dto/filtrer-missions.dto';
-import { StatutMission } from '../../common/enums/statut-mission.enum';
-import { StatutCandidature } from '../../common/enums/statut-candidature.enum';
+import { StatutMission } from './enums/statut-mission.enum';
+import { StatutCandidature } from '../candidatures/enums/statut-candidature.enum';
 import { Role } from '../../common/enums/role.enum';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import {
@@ -22,7 +22,7 @@ import {
   jourCourant,
   versJourIso,
 } from '../../common/utils/date-limite.util';
-import { projeterMission } from '../../common/utils/projection-publique.util';
+import { projeterMission } from './mission.projection';
 
 @Injectable()
 export class MissionsService {

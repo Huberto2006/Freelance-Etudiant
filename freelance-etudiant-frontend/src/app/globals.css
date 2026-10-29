@@ -230,6 +230,27 @@
      Durées : 150 ms (états de contrôle), 200 ms (menus, dialogues),
      300 ms (panneaux latéraux). */
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Courbe d'emphase, réservée aux scènes (hero, entrée de page) : départ
+     plus franc, arrivée très douce. Jamais de rebond dans l'interface. */
+  --ease-emphase: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Élévation : trois niveaux seulement.
+     - carte    : surface posée (repos)
+     - survol   : surface interactive survolée
+     - flottant : menus, popovers, dialogues, toasts */
+  --shadow-carte: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-survol: 0 10px 24px -14px rgba(15, 23, 42, 0.28), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+  --shadow-flottant: 0 18px 40px -18px rgba(15, 23, 42, 0.35), 0 4px 10px -6px rgba(15, 23, 42, 0.12);
+}
+
+/* Durées du système de mouvement (utilisées par les classes ci-dessous).
+   rapide : états de contrôle · base : menus, cartes · lente : panneaux ·
+   scene : séquences d'entrée importantes (hero, première vue). */
+:root {
+  --duree-rapide: 150ms;
+  --duree-base: 220ms;
+  --duree-lente: 320ms;
+  --duree-scene: 640ms;
 }
 
 .dark {
@@ -421,13 +442,6 @@ input[type="radio"] {
   accent-color: var(--color-ocre);
 }
 
-/* Léger flottement vertical des badges du Hero (neutralisé par la règle
-   prefers-reduced-motion ci-dessous : une seule itération de 0,001 ms). */
-@keyframes kianja-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
@@ -561,6 +575,132 @@ input[type="radio"] {
 .delay-6 { animation-delay: 240ms; }
 
 /* ==========================================================================
+   MOUVEMENT — SCÈNES, DÉFILEMENT, TRANSITIONS DE PAGE
+   ==========================================================================
+   .scene-in        : entrée d'emphase (hero). Montée de 14 px, 640 ms.
+   .scene-media     : révélation d'une illustration (rideau + léger zoom).
+   .scene-1 … 5     : séquence orchestrée (pas de 90 ms) pour une scène.
+   .page-entree     : transition de page (opacité seule, voir note).
+   .cascade > *     : apparition échelonnée des éléments d'une liste au
+                      montage (8 premiers éléments, pas de 35 ms).
+   .reveal          : révélation au défilement (.reveal-grille > * : idem,
+                      par enfant, décalé par colonne)., 100 % CSS (scroll-driven
+                      animations). Sans support navigateur ou avec
+                      prefers-reduced-motion, le contenu est simplement
+                      visible : rien n'est jamais masqué par défaut.
+   .parallaxe       : dérive verticale lente d'un élément DÉCORATIF lié au
+                      défilement (jamais sur du texte ou un contrôle).
+   ========================================================================== */
+
+@keyframes scene-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scene-media {
+  from {
+    opacity: 0;
+    clip-path: inset(8% 8% 8% 8% round 1.25rem);
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0 round 0.75rem);
+    transform: scale(1);
+  }
+}
+
+/* `translate` (et non `transform`) : l'élévation au survol des cartes
+   (.card-link, en transform) reste active une fois la révélation jouée. */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    translate: 0 24px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes derive {
+  from { transform: translateY(18px); }
+  to { transform: translateY(-18px); }
+}
+
+@keyframes indicateur-actif {
+  from { transform: scaleY(0); opacity: 0; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+
+.scene-in {
+  animation: scene-in var(--duree-scene) var(--ease-emphase) both;
+}
+
+.scene-media {
+  animation: scene-media 900ms var(--ease-emphase) both;
+}
+
+.scene-1 { animation-delay: 60ms; }
+.scene-2 { animation-delay: 150ms; }
+.scene-3 { animation-delay: 240ms; }
+.scene-4 { animation-delay: 330ms; }
+.scene-5 { animation-delay: 420ms; }
+
+/* Transition de page : OPACITÉ SEULE et fill-mode `backwards`. Un transform
+   conservé (fill-mode `both`) ferait du conteneur le bloc de référence des
+   éléments `position: fixed` (dialogues, tiroirs) de la page. */
+.page-entree {
+  animation: fade-in var(--duree-base) ease-out backwards;
+}
+
+.cascade > * {
+  animation: fade-in-up 0.32s var(--ease-out-soft) backwards;
+}
+.cascade > :nth-child(2) { animation-delay: 35ms; }
+.cascade > :nth-child(3) { animation-delay: 70ms; }
+.cascade > :nth-child(4) { animation-delay: 105ms; }
+.cascade > :nth-child(5) { animation-delay: 140ms; }
+.cascade > :nth-child(6) { animation-delay: 175ms; }
+.cascade > :nth-child(7) { animation-delay: 210ms; }
+.cascade > :nth-child(n + 8) { animation-delay: 245ms; }
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal,
+    .reveal-grille > * {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 28%;
+    }
+
+    /* Grilles : décalage par colonne (jusqu'à 4) via la plage d'animation,
+       ce qui produit une cascade naturelle liée au défilement. */
+    .reveal-grille > :nth-child(4n + 2) { animation-range: entry 10% cover 31%; }
+    .reveal-grille > :nth-child(4n + 3) { animation-range: entry 15% cover 34%; }
+    .reveal-grille > :nth-child(4n + 4) { animation-range: entry 20% cover 37%; }
+
+    .parallaxe {
+      animation: derive linear both;
+      animation-timeline: view();
+      animation-range: cover;
+    }
+  }
+}
+
+/* Indicateur de l'élément de navigation actif (Sidebar) : la barre
+   verticale « pousse » depuis son centre à chaque changement de page. */
+.indicateur-actif::before {
+  animation: indicateur-actif var(--duree-base) var(--ease-out-soft) both;
+}
+
+/* ==========================================================================
    SURFACES
    --------------------------------------------------------------------------
    .notice-card : surface standard (carte, panneau, ligne de liste). Statique :
@@ -590,9 +730,14 @@ input[type="radio"] {
 
 .card-link:hover,
 .card-link:focus-within {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--color-ink) 24%, transparent);
-  box-shadow: 0 6px 16px -8px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--shadow-survol);
+}
+
+.card-link:active {
+  transform: translateY(0);
+  transition-duration: 80ms;
 }
 
 .dark .card-link:hover,

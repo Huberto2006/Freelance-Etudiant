@@ -4,9 +4,9 @@ import { Repository } from 'typeorm';
 import { EtudiantProfile } from '../etudiants/entities/etudiant-profile.entity';
 import { Evaluation } from '../evaluations/entities/evaluation.entity';
 import { Candidature } from '../candidatures/entities/candidature.entity';
-import { StatutCandidature } from '../../common/enums/statut-candidature.enum';
+import { StatutCandidature } from '../candidatures/enums/statut-candidature.enum';
 import { Livraison } from '../livraisons/entities/livraison.entity';
-import { StatutLivraison } from '../../common/enums/statut-livraison.enum';
+import { StatutLivraison } from '../livraisons/enums/statut-livraison.enum';
 
 /**
  * Module 5.2 du cahier des charges - Systeme de Reputation et Calcul de

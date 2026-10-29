@@ -15,9 +15,9 @@ import { LivraisonsService } from '../livraisons/livraisons.service';
 import { ReputationService } from '../reputation/reputation.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MissionsService } from '../missions/missions.service';
-import { TypeNotification } from '../../common/enums/type-notification.enum';
-import { StatutMission } from '../../common/enums/statut-mission.enum';
-import { StatutTransaction } from '../../common/enums/statut-transaction.enum';
+import { TypeNotification } from '../notifications/enums/type-notification.enum';
+import { StatutMission } from '../missions/enums/statut-mission.enum';
+import { StatutTransaction } from '../paiements/enums/statut-transaction.enum';
 
 @Injectable()
 export class EvaluationsService {

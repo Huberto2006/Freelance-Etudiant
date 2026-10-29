@@ -1,6 +1,6 @@
 import { IsEnum, IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { CibleSignalement } from '../../../common/enums/statut-signalement.enum';
+import { CibleSignalement } from '../enums/statut-signalement.enum';
 
 export class CreateSignalementDto {
   @ApiProperty({ example: 'Contenu inapproprie' })

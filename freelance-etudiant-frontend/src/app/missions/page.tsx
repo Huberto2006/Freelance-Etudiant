@@ -6,21 +6,21 @@ import { useTranslations } from "next-intl";
 import { BriefcaseBusiness } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
-import type { Mission } from "@/lib/types";
+import type { Mission } from "@/types/missions";
 
 import {
   PanneauFiltres,
   type Filtres,
-} from "@/components/ui/PanneauFiltres";
+} from "@/features/catalogue/components/PanneauFiltres";
 import {
   SousMenuCatalogue,
   type OngletCatalogue,
-} from "@/components/ui/SousMenuCatalogue";
-import { CarteMission } from "@/components/ui/CarteMission";
+} from "@/features/catalogue/components/SousMenuCatalogue";
+import { CarteMission } from "@/features/missions/components/CarteMission";
 import { NoticeCard } from "@/components/ui/Notice";
 import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { Button } from "@/components/ui/Button";
-import { SqueletteCatalogue } from "@/components/ui/SqueletteCatalogue";
+import { SqueletteCatalogue } from "@/features/catalogue/components/SqueletteCatalogue";
 import { useAuth } from "@/lib/auth-context";
 
 export default function MissionsPage() {

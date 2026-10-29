@@ -47,13 +47,13 @@ import type { UsersService } from '../src/modules/users/users.service';
 import type { MvolaService } from '../src/modules/paiements/mvola.service';
 import type { MoyensPaiementService } from '../src/modules/moyens-paiement/moyens-paiement.service';
 
-import { StatutCandidature } from '../src/common/enums/statut-candidature.enum';
-import { StatutLivraison } from '../src/common/enums/statut-livraison.enum';
+import { StatutCandidature } from '../src/modules/candidatures/enums/statut-candidature.enum';
+import { StatutLivraison } from '../src/modules/livraisons/enums/statut-livraison.enum';
 import {
   MethodePaiement,
   StatutTransaction,
-} from '../src/common/enums/statut-transaction.enum';
-import { StatutMission } from '../src/common/enums/statut-mission.enum';
+} from '../src/modules/paiements/enums/statut-transaction.enum';
+import { StatutMission } from '../src/modules/missions/enums/statut-mission.enum';
 
 // ============================================================
 // OUTILS

@@ -5,7 +5,7 @@ import { FavorisService } from './favoris.service';
 import { ToggleFavoriDto } from './dto/toggle-favori.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
-import { TypeCibleFavori } from '../../common/enums/type-cible-favori.enum';
+import { TypeCibleFavori } from './enums/type-cible-favori.enum';
 
 @ApiTags('Favoris')
 @ApiBearerAuth()

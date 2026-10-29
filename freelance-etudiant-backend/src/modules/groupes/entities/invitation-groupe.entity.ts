@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { Groupe } from './groupe.entity';
 import { EtudiantProfile } from '../../etudiants/entities/etudiant-profile.entity';
-import { StatutInvitationGroupe } from '../../../common/enums/statut-invitation-groupe.enum';
+import { StatutInvitationGroupe } from '../enums/statut-invitation-groupe.enum';
 
 @Entity('invitations_groupes')
 @Unique('uq_invitation_groupe_invite', ['groupeId', 'inviteId'])

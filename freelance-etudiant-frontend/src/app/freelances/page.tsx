@@ -3,7 +3,7 @@ import { Users } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { EnTetePagePublique } from "@/components/layout/EnTetePagePublique";
-import { ListeFreelances } from "@/components/freelances/ListeFreelances";
+import { ListeFreelances } from "@/features/freelances/components/ListeFreelances";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("freelances");

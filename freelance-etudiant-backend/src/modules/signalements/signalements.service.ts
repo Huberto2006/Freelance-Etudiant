@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Signalement } from './entities/signalement.entity';
 import { CreateSignalementDto, TraiterSignalementDto } from './dto/signalement.dto';
-import { StatutSignalement } from '../../common/enums/statut-signalement.enum';
+import { StatutSignalement } from './enums/statut-signalement.enum';
 
 @Injectable()
 export class SignalementsService {

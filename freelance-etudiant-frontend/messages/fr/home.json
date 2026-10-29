@@ -22,10 +22,7 @@
     "statMissions": "Missions ouvertes",
     "exploreServices": "Explorer les services",
     "discoverMissions": "Découvrir les missions",
-    "imageAlt": "Étudiant souriant tenant un ordinateur portable devant une grande baie vitrée",
-    "badgeStudents": "Étudiants",
-    "badgeMissions": "Missions",
-    "badgeServices": "Services"
+    "imageAlt": "Étudiant souriant tenant un ordinateur portable devant une grande baie vitrée"
   },
   "audiences": {
     "eyebrow": "Une marketplace bilatérale",

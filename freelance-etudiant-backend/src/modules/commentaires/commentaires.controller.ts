@@ -18,7 +18,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import { Public } from '../../common/decorators/public.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { TypeCibleContenu } from '../../common/enums/type-cible-contenu.enum';
+import { TypeCibleContenu } from '../cibles/enums/type-cible-contenu.enum';
 import { Role } from '../../common/enums/role.enum';
 
 @ApiTags('Commentaires')
