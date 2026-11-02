@@ -14,6 +14,7 @@ import {
 } from "@/components/shared/TurnstileWidget";
 import { BoutonGoogle } from "@/features/auth/components/BoutonGoogle";
 import { PanneauPresentation } from "@/features/auth/components/PanneauPresentation";
+import { LienRetourSite } from "@/features/auth/components/LienRetourSite";
 
 export default function ConnexionPage() {
   const t = useTranslations("auth.login");
@@ -142,16 +143,19 @@ export default function ConnexionPage() {
   const googleActif = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
 
   return (
-    <div className="-mt-16 grid min-h-dvh lg:grid-cols-2">
+    // La colonne du formulaire est compactée pour tenir sans défilement sur desktop.
+    <div className="-mt-16 grid min-h-dvh lg:h-dvh lg:grid-cols-2 lg:overflow-hidden">
       <PanneauPresentation />
 
-      <div className="flex items-center justify-center px-5 py-10 sm:px-8">
+      <div className="flex min-h-0 flex-col overflow-y-auto px-5 py-4 sm:px-8 lg:overflow-y-hidden lg:py-3">
+        <LienRetourSite className="-ml-2" />
+        <div className="flex flex-1 items-center justify-center py-2 lg:py-1">
         <div className="w-full max-w-md">
-          <div className="scene-in rounded-xl border border-ink/10 bg-paper-light p-6 shadow-xs sm:p-8">
+          <div className="scene-in rounded-xl border border-ink/10 bg-paper-light p-5 shadow-xs sm:p-6">
             <Link
               href="/"
               aria-label={t("homeAria")}
-              className="mb-6 flex w-fit items-center gap-2.5 rounded-lg"
+              className="mb-4 flex w-fit items-center gap-2.5 rounded-lg"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -168,9 +172,9 @@ export default function ConnexionPage() {
             <h1 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
               {t("welcome")}
             </h1>
-            <p className="mt-1.5 mb-7 text-sm text-ink-soft">{t("subtitle")}</p>
+            <p className="mt-1.5 mb-5 text-sm text-ink-soft">{t("subtitle")}</p>
 
-            <form onSubmit={onSubmit} className="flex flex-col gap-5">
+            <form onSubmit={onSubmit} className="flex flex-col gap-4">
               <Field label={t("email")} htmlFor="email">
                 <Input
                   id="email"
@@ -250,7 +254,7 @@ export default function ConnexionPage() {
             </form>
 
             {googleActif && (
-              <div className="mt-6 flex flex-col gap-5">
+              <div className="mt-5 flex flex-col gap-4">
                 <div className="flex items-center gap-3 text-xs text-ink-soft">
                   <span className="h-px flex-1 bg-ink/10" aria-hidden="true" />
                   {t("or")}
@@ -265,7 +269,7 @@ export default function ConnexionPage() {
             )}
           </div>
 
-          <p className="mt-6 text-center text-sm text-ink-soft">
+          <p className="mt-4 text-center text-sm text-ink-soft">
             {t("noAccount")}{" "}
             <Link
               href="/inscription"
@@ -274,6 +278,7 @@ export default function ConnexionPage() {
               {t("signUp")}
             </Link>
           </p>
+        </div>
         </div>
       </div>
     </div>

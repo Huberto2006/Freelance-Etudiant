@@ -26,9 +26,9 @@ type CibleRecherche = "services" | "missions";
 /**
  * Hero de la page d'accueil, en deux colonnes : à gauche le message, la
  * recherche (sélecteur Services / Missions intégré) et les actions ; à droite
- * l'illustration (ses badges « Étudiants / Missions » sont incrustés dans
- * l'image : aucun badge HTML n'est superposé, pour éviter les doublons).
- * Entrée orchestrée (.scene-*) puis parallaxe légère des formes décoratives.
+ * l'illustration (ses badges « Étudiants / Missions / Services » sont
+ * incrustés dans l'image : aucun badge HTML n'est superposé, pour éviter les
+ * doublons). Entrée orchestrée (.scene-*).
  */
 export function HeroAccueil({
   suggestions,
@@ -56,7 +56,7 @@ export function HeroAccueil({
 
   return (
     <section className="overflow-hidden border-b border-ink/10 bg-paper-light">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-5 sm:py-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center lg:gap-14 lg:py-20">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-5 sm:py-16 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center lg:gap-8 lg:py-16">
         <div>
           <p className="scene-in scene-1 mb-5 inline-flex items-center gap-2 rounded-md border border-ink/10 bg-ink/[0.03] px-2.5 py-1 text-xs font-medium text-ink-soft">
             <GraduationCap size={13} aria-hidden="true" className="text-bleu-dark" />
@@ -202,24 +202,20 @@ export function HeroAccueil({
           )}
         </div>
 
-        {/* Illustration : photo + formes douces + badges */}
-        <div className="relative mx-auto w-full max-w-[19rem] sm:max-w-sm lg:max-w-md">
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-            <div className="parallaxe absolute -right-6 -top-6 h-3/4 w-3/4 rounded-[2.5rem] bg-bleu-soft" />
-            <div className="absolute -bottom-6 -left-6 h-1/2 w-1/2 rounded-full bg-ink/[0.05]" />
-          </div>
-
-          <div className="scene-media scene-2 relative overflow-hidden rounded-xl border border-ink/10 bg-paper">
-            <Image
-              src="/images/heros-kianja.webp"
-              alt={t("imageAlt")}
-              width={1536}
-              height={1024}
-              priority
-              sizes="(min-width: 1024px) 448px, (min-width: 640px) 384px, 304px"
-              className="h-auto w-full"
-            />
-          </div>
+        {/* Illustration : l'image est détourée (fond transparent) et porte déjà
+            sa forme bleue, ses badges et sa signature. Elle se pose donc
+            directement sur le fond du hero : ni cadre, ni bordure, ni forme
+            décorative ajoutée par-dessus. */}
+        <div className="relative mx-auto w-full max-w-md sm:max-w-xl lg:max-w-none">
+          <Image
+            src="/images/heros-kianja.webp"
+            alt={t("imageAlt")}
+            width={1536}
+            height={1024}
+            priority
+            sizes="(min-width: 1280px) 620px, (min-width: 1024px) 50vw, (min-width: 640px) 576px, 90vw"
+            className="scene-media scene-2 h-auto w-full select-none drop-shadow-[0_18px_30px_rgba(37,99,235,0.10)]"
+          />
         </div>
       </div>
     </section>

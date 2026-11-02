@@ -2,8 +2,13 @@ import type { LucideIcon } from "lucide-react";
 
 import {
   Bell,
+  Layers3,
   MessageCircle,
+  Package,
   Settings,
+  ShieldCheck,
+  UsersRound,
+  Wallet,
 } from "lucide-react";
 
 import type { Role } from "@/types/utilisateurs";
@@ -16,96 +21,83 @@ export interface SousLienNav {
 export interface GroupeNav {
   label: string;
   href?: string;
-
-  // Icône uniquement pour les éléments globaux
   icon?: LucideIcon;
-
-  // Sous-liens pour les menus déroulants
   liens?: SousLienNav[];
 }
 
 export const navigationParRole: Record<Role, GroupeNav[]> = {
-  // Role transitoire (compte Google avant le choix etudiant/client) :
-  // aucune navigation, l'utilisateur est redirige vers /choix-role.
   a_definir: [],
-
-  // ==========================================================
-  // ÉTUDIANT
-  // ==========================================================
 
   etudiant: [
     {
       label: "Tableau de bord",
       href: "/tableau-de-bord",
     },
-
-    {
-      label: "Missions",
-      href: "/missions",
-    },
-
-    {
-      label: "Services",
-      href: "/services",
-    },
-
     {
       label: "Mes publications",
-      href: "/tableau-de-bord/mes-publications",
+      icon: Layers3,
+      liens: [
+        {
+          href: "/tableau-de-bord/mes-publications",
+          label: "Mes publications",
+        },
+        {
+          href: "/tableau-de-bord/mes-services",
+          label: "Mes services",
+        },
+        {
+          href: "/tableau-de-bord/candidatures",
+          label: "Mes candidatures",
+        },
+        {
+          href: "/tableau-de-bord/demandes-service",
+          label: "Demandes de service",
+        },
+      ],
     },
-
-    {
-      label: "Mes services",
-      href: "/tableau-de-bord/mes-services",
-    },
-
-    {
-      label: "Mes candidatures",
-      href: "/tableau-de-bord/candidatures",
-    },
-
-    {
-      label: "Groupes",
-      href: "/tableau-de-bord/groupes",
-    },
-
-    {
-      label: "Amis",
-      href: "/tableau-de-bord/amis",
-    },
-
-    {
-      label: "Demandes de service",
-      href: "/tableau-de-bord/demandes-service",
-    },
-
     {
       label: "Livraisons",
       href: "/tableau-de-bord/livraisons",
+      icon: Package,
     },
-
     {
-      label: "Paiements",
-      href: "/tableau-de-bord/paiements",
+      label: "Communauté",
+      icon: UsersRound,
+      liens: [
+        {
+          href: "/tableau-de-bord/groupes",
+          label: "Groupes",
+        },
+        {
+          href: "/tableau-de-bord/amis",
+          label: "Amis",
+        },
+      ],
     },
-
     {
-      label: "Factures",
-      href: "/tableau-de-bord/factures",
+      label: "Finances",
+      icon: Wallet,
+      liens: [
+        {
+          href: "/tableau-de-bord/paiements",
+          label: "Paiements",
+        },
+        {
+          href: "/tableau-de-bord/factures",
+          label: "Factures",
+        },
+      ],
     },
-
     {
       label: "Notifications",
       href: "/tableau-de-bord/notifications",
       icon: Bell,
     },
-
     {
       label: "Messages",
       href: "/tableau-de-bord/messages",
       icon: MessageCircle,
     },
-
     {
       label: "Paramètres",
       icon: Settings,
@@ -114,12 +106,10 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
           href: "/tableau-de-bord/parametres/paiements",
           label: "Moyens de paiement",
         },
-
         {
           href: "/tableau-de-bord/parametres/compte-google",
           label: "Compte Google",
         },
-
         {
           href: "/tableau-de-bord/favoris",
           label: "Favoris",
@@ -127,83 +117,71 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
       ],
     },
   ],
-
-  // ==========================================================
-  // CLIENT
-  // ==========================================================
 
   client: [
     {
       label: "Tableau de bord",
       href: "/tableau-de-bord",
     },
-
-    {
-      label: "Missions",
-      href: "/missions",
-    },
-
-    {
-      label: "Services",
-      href: "/services",
-    },
-
     {
       label: "Mes publications",
-      href: "/tableau-de-bord/mes-publications",
+      icon: Layers3,
+      liens: [
+        {
+          href: "/tableau-de-bord/mes-publications",
+          label: "Mes publications",
+        },
+        {
+          href: "/tableau-de-bord/mes-missions",
+          label: "Mes missions",
+        },
+        {
+          href: "/tableau-de-bord/demandes-service",
+          label: "Demandes de service",
+        },
+      ],
     },
-
-    {
-      label: "Mes missions",
-      href: "/tableau-de-bord/mes-missions",
-    },
-
-    {
-      label: "Demandes de service",
-      href: "/tableau-de-bord/demandes-service",
-    },
-
     {
       label: "Livraisons",
       href: "/tableau-de-bord/livraisons",
+      icon: Package,
     },
-
     {
-      label: "Notifications",
-      href: "/tableau-de-bord/notifications",
-      icon: Bell,
-    },
-
-    {
-      label: "Messages",
-      href: "/tableau-de-bord/messages",
-      icon: MessageCircle,
-    },
-
-    {
-      label: "Paramètres",
-      icon: Settings,
+      label: "Finances",
+      icon: Wallet,
       liens: [
         {
           href: "/tableau-de-bord/paiements",
           label: "Paiements",
         },
-
         {
           href: "/tableau-de-bord/factures",
           label: "Factures",
         },
-
         {
           href: "/tableau-de-bord/parametres/moyens-paiement-client",
           label: "Moyens de paiement",
         },
-
+      ],
+    },
+    {
+      label: "Notifications",
+      href: "/tableau-de-bord/notifications",
+      icon: Bell,
+    },
+    {
+      label: "Messages",
+      href: "/tableau-de-bord/messages",
+      icon: MessageCircle,
+    },
+    {
+      label: "Paramètres",
+      icon: Settings,
+      liens: [
         {
           href: "/tableau-de-bord/parametres/compte-google",
           label: "Compte Google",
         },
-
         {
           href: "/tableau-de-bord/favoris",
           label: "Favoris",
@@ -212,48 +190,39 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
     },
   ],
 
-  // ==========================================================
-  // ADMINISTRATEUR
-  // ==========================================================
-
   admin: [
     {
       label: "Tableau de bord",
       href: "/tableau-de-bord",
     },
-
     {
       label: "Administration",
+      icon: ShieldCheck,
       liens: [
         {
           href: "/tableau-de-bord/admin",
           label: "Gestion",
         },
-
         {
           href: "/tableau-de-bord/admin/signalements",
           label: "Signalements",
         },
-
         {
           href: "/tableau-de-bord/admin/paiements",
           label: "Paiements",
         },
       ],
     },
-
     {
       label: "Notifications",
       href: "/tableau-de-bord/notifications",
       icon: Bell,
     },
-
     {
       label: "Messages",
       href: "/tableau-de-bord/messages",
       icon: MessageCircle,
     },
-
     {
       label: "Paramètres",
       icon: Settings,
@@ -265,4 +234,11 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
       ],
     },
   ],
+};
+
+export const profilEnPiedParRole: Record<Role, boolean> = {
+  a_definir: false,
+  etudiant: true,
+  client: true,
+  admin: false,
 };

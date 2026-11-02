@@ -4,13 +4,15 @@ import { useTranslations } from "next-intl";
 
 /**
  * Les données de navigation (src/lib/nav-links.ts, navigation-publique.ts)
- * gardent leurs libellés français comme identifiants stables (la Sidebar
- * s'en sert pour classer les éléments). Ce hook traduit uniquement
- * l'AFFICHAGE : un libellé inconnu est renvoyé tel quel.
+ * gardent leurs libellés français comme identifiants stables. Ce hook
+ * traduit uniquement l'AFFICHAGE : un libellé inconnu est renvoyé tel quel.
  */
 const CLES: Record<string, string> = {
   "Tableau de bord": "dashboard",
   Dashboard: "dashboard",
+  "Mon activité": "myActivity",
+  Communauté: "community",
+  Finances: "finances",
   Missions: "missions",
   Services: "services",
   Publications: "publications",

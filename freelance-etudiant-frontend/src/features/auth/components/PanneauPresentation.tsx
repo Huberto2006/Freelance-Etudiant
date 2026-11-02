@@ -1,19 +1,22 @@
+import Image from "next/image";
 import { useTranslations } from "next-intl";
-import {
-  Briefcase,
-  GraduationCap,
-  Layers,
-  Users,
-  UsersRound,
-} from "lucide-react";
+import { Briefcase, GraduationCap, UsersRound } from "lucide-react";
 
 /**
- * Colonne de présentation de la page de connexion (desktop uniquement).
- * Purement informative : aucun chiffre, aucune donnée inventée. Les formes
- * et pastilles sont décoratives (aria-hidden).
+ * Colonne de présentation des pages de connexion et d'inscription (desktop
+ * uniquement). Purement informative : aucun chiffre, aucune donnée inventée.
+ * Les formes sont décoratives (aria-hidden). Le titre et l'introduction
+ * changent selon la page ; les trois points et l'illustration sont communs.
  */
-export function PanneauPresentation() {
+export function PanneauPresentation({
+  titre,
+  intro,
+}: {
+  titre?: string;
+  intro?: string;
+}) {
   const t = useTranslations("auth.login");
+  const th = useTranslations("home.hero");
 
   const points = [
     { icone: GraduationCap, titre: t("panel.students.title"), texte: t("panel.students.text") },
@@ -30,22 +33,13 @@ export function PanneauPresentation() {
         <div className="absolute bottom-24 left-12 h-24 w-24 rounded-3xl bg-ocre/[0.06] rotate-12" />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-xl flex-col px-10 py-14 xl:px-16">
-        {/* Fond blanc fixe : le logo (texte bleu nuit) reste lisible en mode sombre. */}
-        <div className="animate-in mb-10 flex h-24 w-fit items-center rounded-xl border border-ink/10 bg-white px-4 shadow-xs">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/logo-kianja.png"
-            alt="Kianja"
-            className="h-20 w-auto object-contain"
-          />
-        </div>
+      <div className="relative mx-auto flex w-full max-w-xl flex-col px-10 py-10 xl:px-16">
 
         <h2 className="animate-in font-display text-4xl font-semibold leading-tight tracking-tight text-ink xl:text-5xl">
-          {t("panel.title")}
+          {titre ?? t("panel.title")}
         </h2>
         <p className="animate-in mt-4 max-w-md text-base leading-relaxed text-ink-soft [animation-delay:40ms]">
-          {t("panel.intro")}
+          {intro ?? t("panel.intro")}
         </p>
 
         <ul className="mt-9 flex flex-col gap-5">
@@ -66,21 +60,17 @@ export function PanneauPresentation() {
           ))}
         </ul>
 
-        {/* Pastilles : composition décalée, sans donnée chiffrée */}
-        <div aria-hidden="true" className="mt-12 flex flex-wrap items-center gap-3">
-          <span className="flex items-center gap-2 rounded-lg border border-ink/10 bg-paper-light px-3 py-2 text-xs font-medium text-ink shadow-xs">
-            <Briefcase size={14} className="text-ocre-dark" />
-            {t("panel.badgeMissions")}
-          </span>
-          <span className="flex translate-y-2 items-center gap-2 rounded-lg border border-ink/10 bg-paper-light px-3 py-2 text-xs font-medium text-ink shadow-xs">
-            <Layers size={14} className="text-ocre-dark" />
-            {t("panel.badgeServices")}
-          </span>
-          <span className="flex items-center gap-2 rounded-lg border border-ink/10 bg-paper-light px-3 py-2 text-xs font-medium text-ink shadow-xs">
-            <Users size={14} className="text-ocre-dark" />
-            {t("panel.badgeStudents")}
-          </span>
-        </div>
+        {/* Illustration détourée : sa forme bleue et ses badges sont incrustés
+            dans l'image (aucune pastille HTML en doublon). Sa hauteur suit
+            celle de l'écran pour que la colonne ne déborde jamais. */}
+        <Image
+          src="/images/heros-kianja.webp"
+          alt={th("imageAlt")}
+          width={1536}
+          height={1024}
+          sizes="(min-width: 1280px) 520px, 440px"
+          className="animate-in mx-auto mt-8 h-auto max-h-[32dvh] w-auto max-w-full select-none object-contain [animation-delay:200ms]"
+        />
       </div>
     </aside>
   );

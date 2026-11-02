@@ -17,6 +17,7 @@ import {
   UserRoundPlus,
   LogOut,
   Settings,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Flag,
@@ -24,7 +25,7 @@ import {
   ShieldCheck,
   UsersRound,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { useNavLabel } from "@/i18n/use-nav-label";
@@ -35,6 +36,8 @@ import {
 
 import {
   navigationParRole,
+  profilEnPiedParRole,
+  type SousLienNav,
 } from "@/lib/nav-links";
 
 import { getFileUrl } from "@/lib/api";
@@ -161,6 +164,14 @@ export function Sidebar({
   // divergence d'hydratation n'est possible.
   const [collapsed, setCollapsedBrut] =
     useState(lireEtatReduit);
+  const [groupeOuvert, setGroupeOuvert] =
+    useState<string | null>(null);
+  const [groupeFlottant, setGroupeFlottant] =
+    useState<string | null>(null);
+  const [routeFlottante, setRouteFlottante] =
+    useState(pathname);
+  const [positionFlottante, setPositionFlottante] =
+    useState({ top: 0, left: 0 });
 
   function setCollapsed(valeur: boolean) {
     setCollapsedBrut(valeur);
@@ -248,6 +259,55 @@ export function Sidebar({
     onMobileClose,
   ]);
 
+  useEffect(() => {
+    if (!groupeFlottant) return;
+
+    function fermerAvecEchap(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setGroupeFlottant(null);
+      }
+    }
+
+    document.addEventListener("keydown", fermerAvecEchap);
+    return () => {
+      document.removeEventListener("keydown", fermerAvecEchap);
+    };
+  }, [groupeFlottant]);
+
+  const role = utilisateur?.role;
+  const navigation = useMemo(
+    () => (role ? navigationParRole[role] ?? [] : []),
+    [role],
+  );
+  const hrefActif = [
+    ...navigation.flatMap((groupe) => [
+      groupe.href,
+      ...(groupe.liens ?? []).map((lien) => lien.href),
+    ]),
+    "/tableau-de-bord/profil",
+  ]
+    .filter(
+      (href): href is string =>
+        typeof href === "string" && correspond(pathname, href),
+    )
+    .sort((a, b) => b.length - a.length)[0];
+
+  function isActive(_chemin: string, href: string) {
+    return href === hrefActif;
+  }
+
+  useEffect(() => {
+    const groupeActif = navigation.find((groupe) =>
+      (groupe.liens ?? []).some((lien) => lien.href === hrefActif),
+    );
+
+    if (groupeActif) {
+      // The sidebar layout persists across navigation, so keep its active parent expanded.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setGroupeOuvert(groupeActif.label);
+    }
+  }, [hrefActif, navigation]);
+
   /*
    * ==========================================================
    * TIROIR MOBILE — FOCUS ET DÉFILEMENT
@@ -300,153 +360,13 @@ export function Sidebar({
   // conserve pas le rétrécissement de type dans une déclaration hoistée).
   const utilisateurConnecte = utilisateur;
 
-  const navigation =
-    navigationParRole[
-      utilisateur.role
-    ] ?? [];
-
-  /*
-   * Un seul lien actif : celui dont l'adresse correspondante est la plus
-   * précise. Sans cela, /tableau-de-bord/admin restait actif en même temps
-   * que /tableau-de-bord/admin/signalements (correspondance par préfixe).
-   */
-  const hrefActif = [
-    ...navigation.flatMap((groupe) => [
-      groupe.href,
-      ...(groupe.liens ?? []).map((lien) => lien.href),
-    ]),
-    "/tableau-de-bord/profil",
-  ]
-    .filter(
-      (href): href is string =>
-        typeof href === "string" && correspond(pathname, href),
-    )
-    .sort((a, b) => b.length - a.length)[0];
-
-  function isActive(_chemin: string, href: string) {
-    return href === hrefActif;
-  }
-
   /*
    * ==========================================================
    * ÉLÉMENTS GÉRÉS PAR LE NAVBAR
    * ==========================================================
    */
 
-  const navigationSidebar =
-    navigation.filter(
-      (item) =>
-        ![
-          "Messages",
-          "Notifications",
-        ].includes(item.label),
-    );
-
-  /*
-   * ==========================================================
-   * TABLEAU DE BORD
-   * ==========================================================
-   */
-
-  const dashboard =
-    navigationSidebar.find(
-      (item) =>
-        item.href ===
-          "/tableau-de-bord" ||
-        item.label ===
-          "Tableau de bord" ||
-        item.label ===
-          "Dashboard",
-    );
-
-  /*
-   * ==========================================================
-   * AUTRES ITEMS
-   * ==========================================================
-   */
-
-  const autresItems =
-    navigationSidebar.filter(
-      (item) =>
-        item !== dashboard,
-    );
-
-  const parametres =
-    autresItems.find(
-      (item) =>
-        item.label === "Paramètres",
-    );
-
-  /*
-   * Le profil est toujours affiché
-   * dans la partie inférieure.
-   */
-
-  const items =
-    autresItems.filter(
-      (item) =>
-        item.label !== "Profil" &&
-        item.label !== "Mon profil" &&
-        item.label !== "Paramètres",
-    );
-
-  /*
-   * ==========================================================
-   * SECTIONS
-   * ==========================================================
-   */
-
-  const trouverLabels = [
-    "Publications",
-    "Missions",
-    "Services",
-    "Explorer",
-  ];
-
-  const activiteLabels = [
-    "Mes publications",
-    "Mes services",
-    "Mes missions",
-    "Mes candidatures",
-    "Candidatures",
-    "Demandes de service",
-    "Livraisons",
-    "Mes livraisons",
-    "Paiements",
-    "Mes paiements",
-    "Factures",
-    "Évaluations",
-    "Mes évaluations",
-    "Evaluations",
-  ];
-
-  const communauteLabels = [
-    "Groupes",
-    "Amis",
-    "Favoris",
-  ];
-
-  const trouver = items.filter((item) =>
-    trouverLabels.includes(item.label),
-  );
-
-  const activite = items.filter((item) =>
-    activiteLabels.includes(item.label),
-  );
-
-  const communaute = items.filter((item) =>
-    communauteLabels.includes(item.label),
-  );
-
-  const principal = [
-    ...(dashboard ? [dashboard] : []),
-    ...items.filter(
-      (item) =>
-        !trouverLabels.includes(item.label) &&
-        !activiteLabels.includes(item.label) &&
-        !communauteLabels.includes(item.label),
-    ),
-  ];
+  const navigationSidebar = navigation;
 
   /*
    * ==========================================================
@@ -478,8 +398,8 @@ export function Sidebar({
   function renderItem(
     item: (typeof navigationSidebar)[number],
   ) {
-    const Icon =
-      getIcon(item.label);
+    const Icon = item.icon ?? getIcon(item.label);
+    const liens = item.liens;
 
     /*
      * ========================================================
@@ -488,122 +408,165 @@ export function Sidebar({
      */
 
     if (
-      item.liens &&
-      item.liens.length > 0
+      liens &&
+      liens.length > 0
     ) {
+      const actif =
+        liens.some((link) =>
+          isActive(pathname, link.href),
+        );
+      const ouvert = groupeOuvert === item.label;
+      const afficheSousMenu = collapsed
+        ? groupeFlottant === item.label && routeFlottante === pathname
+        : ouvert;
+
+      function renderLien(link: SousLienNav) {
+        const active = isActive(pathname, link.href);
+        const LinkIcon = getIcon(link.label);
+
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            onClick={() => {
+              closeMobile();
+              setGroupeFlottant(null);
+            }}
+            title={collapsed && !afficheSousMenu ? tn(link.label) : undefined}
+            aria-current={active ? "page" : undefined}
+            className={`
+              group
+              relative
+              flex
+              min-h-10
+              items-center
+              gap-3
+              rounded-lg
+              text-sm
+              font-medium
+              transition-[background-color,color,transform]
+              duration-150
+              ${collapsed && !afficheSousMenu ? "justify-center px-0 w-10 h-10 mx-auto" : "px-3 py-2"}
+              ${
+                active
+                  ? "indicateur-actif bg-white/12 text-white before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-white"
+                  : "text-white/70 hover:bg-white/8 hover:text-white"
+              }
+            `}
+          >
+            <LinkIcon
+              size={18}
+              strokeWidth={active ? 2.2 : 1.8}
+              className="shrink-0"
+            />
+            {(!collapsed || afficheSousMenu) && (
+              <span className="truncate">{tn(link.label)}</span>
+            )}
+          </Link>
+        );
+      }
+
       return (
-        <div
-          key={item.label}
-          className="space-y-1"
-        >
-          {!collapsed ? (
-            <div
-              className="
-                flex
-                items-center
-                gap-2
-                px-3
-                pb-2
-                pt-2
-                text-[0.65rem]
-                font-semibold
-                uppercase
-                tracking-[0.16em]
-                text-white/45
-              "
-            >
-              <Icon size={13} strokeWidth={2} />
-              <span>{tn(item.label)}</span>
-            </div>
-          ) : (
-            <div
-              className="
-                flex
-                justify-center
-                pb-1
-                text-white/45
-              "
-              title={tn(item.label)}
-              aria-label={tn(item.label)}
-            >
-              <Icon size={16} strokeWidth={2} />
+        <div key={item.label} className="space-y-1">
+          <button
+            type="button"
+            onClick={(event) => {
+              if (collapsed) {
+                if (
+                  groupeFlottant === item.label &&
+                  routeFlottante === pathname
+                ) {
+                  setGroupeFlottant(null);
+                  setGroupeOuvert(null);
+                  return;
+                }
+
+                const bounds = event.currentTarget.getBoundingClientRect();
+                const hauteurMenu = Math.min(
+                  380,
+                  liens.length * 44 + 48,
+                );
+                setPositionFlottante({
+                  top: Math.max(
+                    8,
+                    Math.min(bounds.top, window.innerHeight - hauteurMenu - 8),
+                  ),
+                  left: bounds.right + 8,
+                });
+                setGroupeOuvert(item.label);
+                setGroupeFlottant(item.label);
+                setRouteFlottante(pathname);
+                return;
+              }
+
+              setGroupeOuvert(ouvert ? null : item.label);
+              setGroupeFlottant(null);
+            }}
+            aria-label={tn(item.label)}
+            aria-expanded={afficheSousMenu}
+            title={collapsed ? tn(item.label) : undefined}
+            className={`
+              relative
+              flex
+              min-h-10
+              w-full
+              items-center
+              gap-3
+              rounded-lg
+              text-sm
+              font-medium
+              transition-colors
+              ${
+                collapsed
+                  ? "justify-center px-0 w-10 h-10 mx-auto"
+                  : "px-3 py-2"
+              }
+              ${
+                actif || ouvert
+                  ? "bg-white/10 text-white"
+                  : "text-white/70 hover:bg-white/8 hover:text-white"
+              }
+            `}
+          >
+            <Icon
+              size={18}
+              strokeWidth={actif ? 2.2 : 1.8}
+              className="shrink-0"
+            />
+            {!collapsed && (
+              <>
+                <span className="flex-1 truncate text-left">
+                  {tn(item.label)}
+                </span>
+                <ChevronDown
+                  size={15}
+                  className={`shrink-0 transition-transform ${ouvert ? "rotate-180" : ""}`}
+                />
+              </>
+            )}
+          </button>
+
+          {!collapsed && ouvert && (
+            <div className="animate-slide-down ml-3 space-y-1 border-l border-white/10 pl-2">
+              {liens.map(renderLien)}
             </div>
           )}
 
-          {item.liens.map(
-            (link) => {
-              const active =
-                isActive(
-                  pathname,
-                  link.href,
-                );
-
-              const LinkIcon =
-                getIcon(
-                  link.label,
-                );
-
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={
-                    closeMobile
-                  }
-                  title={
-                    collapsed
-                      ? tn(link.label)
-                      : undefined
-                  }
-                  aria-current={
-                    active
-                      ? "page"
-                      : undefined
-                  }
-                  className={`
-                    group
-                    relative
-                    flex
-                    min-h-10
-                    items-center
-                    gap-3
-                    rounded-lg
-                    text-sm
-                    font-medium
-                    transition-[background-color,color,transform]
-                    duration-150
-
-                    ${
-                      collapsed
-                        ? "justify-center px-0 w-10 h-10 mx-auto"
-                        : "px-3 py-2"
-                    }
-
-                    ${
-                      active
-                        ? "indicateur-actif bg-white/12 text-white font-medium before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-white"
-                        : "text-white/70 hover:bg-white/8 hover:text-white"
-                    }
-                  `}
-                >
-                  <LinkIcon
-                    size={18}
-                    strokeWidth={
-                      active
-                        ? 2.2
-                        : 1.8
-                    }
-                    className="shrink-0"
-                  />
-
-                  {!collapsed && (
-                    <span className="truncate pl-1">
-                      {tn(link.label)}
-                    </span>
-                  )}
-                </Link>
-              );
-            },
+          {collapsed && afficheSousMenu && (
+            <div
+              role="region"
+              aria-label={tn(item.label)}
+              className="animate-slide-down fixed z-[80] min-w-52 rounded-xl border border-white/10 bg-panel p-2 shadow-xl"
+              style={{
+                top: positionFlottante.top,
+                left: positionFlottante.left,
+              }}
+            >
+              <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white/55">
+                {tn(item.label)}
+              </p>
+              <div className="space-y-1">{liens.map(renderLien)}</div>
+            </div>
           )}
         </div>
       );
@@ -619,17 +582,16 @@ export function Sidebar({
       return null;
     }
 
-    const active =
-      isActive(
-        pathname,
-        item.href,
-      );
+    const active = isActive(pathname, item.href);
 
     return (
       <Link
         key={item.href}
         href={item.href}
-        onClick={closeMobile}
+        onClick={() => {
+          closeMobile();
+          setGroupeFlottant(null);
+        }}
         title={
           collapsed
             ? tn(item.label)
@@ -666,15 +628,7 @@ export function Sidebar({
           }
         `}
       >
-        <Icon
-          size={18}
-          strokeWidth={
-            active
-              ? 2.2
-              : 1.8
-          }
-          className="shrink-0"
-        />
+        <Icon size={18} strokeWidth={active ? 2.2 : 1.8} className="shrink-0" />
 
         {!collapsed && (
           <span className="truncate">
@@ -682,53 +636,6 @@ export function Sidebar({
           </span>
         )}
       </Link>
-    );
-  }
-
-  /*
-   * ==========================================================
-   * RENDRE UNE SECTION
-   * ==========================================================
-   */
-
-  function renderSection(
-    title: string,
-    sectionItems:
-      typeof navigationSidebar,
-  ) {
-    if (
-      sectionItems.length === 0
-    ) {
-      return null;
-    }
-
-    return (
-      <div className="mb-4">
-        {!collapsed ? (
-          <p
-            className="
-              px-3
-              pb-1.5
-              pt-2
-              text-[0.65rem]
-              font-semibold
-              uppercase
-              tracking-[0.16em]
-              text-white/45
-            "
-          >
-            {title}
-          </p>
-        ) : (
-          <div className="my-2 h-px bg-white/8" />
-        )}
-
-        <div className="space-y-1">
-          {sectionItems.map(
-            renderItem,
-          )}
-        </div>
-      </div>
     );
   }
 
@@ -866,35 +773,9 @@ export function Sidebar({
           py-3
         "
       >
-        {renderSection(
-          t("sections.main"),
-          principal,
-        )}
-
-        {!collapsed && (
-          <div className="mb-5 h-px bg-white/10" />
-        )}
-
-        {renderSection(
-          t("sections.find"),
-          trouver,
-        )}
-
-        {renderSection(
-          t("sections.activity"),
-          activite,
-        )}
-
-        {renderSection(
-          t("sections.community"),
-          communaute,
-        )}
-
-        {parametres && (
-          <div className="mb-6">
-            {renderItem(parametres)}
-          </div>
-        )}
+        <div className="space-y-1">
+          {navigationSidebar.map(renderItem)}
+        </div>
       </nav>
 
       {/* =====================================================
@@ -912,6 +793,7 @@ export function Sidebar({
       >
         {/* Profil */}
 
+        {profilEnPiedParRole[utilisateurConnecte.role] && (
         <Link
           href="/tableau-de-bord/profil"
           onClick={closeMobile}
@@ -989,6 +871,7 @@ export function Sidebar({
             </span>
           )}
         </Link>
+        )}
 
         {/* Déconnexion */}
 

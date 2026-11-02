@@ -1,17 +1,25 @@
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
 import {
   ChevronDown,
   House,
+  Info,
   LayoutDashboard,
+  LogIn,
   LogOut,
   Menu,
   Search,
   Settings,
+  Globe,
   User,
+  UserPlus,
+  CircleHelp,
+  UserRoundCog,
 } from "lucide-react";
 
 import { useTranslations } from "next-intl";
@@ -22,24 +30,31 @@ import { useNavLabel } from "@/i18n/use-nav-label";
 import { navigationParRole } from "@/lib/nav-links";
 import { getFileUrl } from "@/lib/api";
 
-import { Button } from "@/components/ui/Button";
 import { BasculeTheme } from "@/features/theme/components/BasculeTheme";
 import { SelecteurLangue } from "@/components/layout/SelecteurLangue";
 import { MessagesLink } from "@/features/messagerie/components/MessagesLink";
 import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 
 type NavbarProps = {
-  /**
-   * true lorsque le Navbar est utilisé
-   * avec la Sidebar du dashboard.
-   */
   hasSidebar?: boolean;
-
-  /**
-   * Ouvre la Sidebar mobile.
-   */
   onMenuClick?: () => void;
 };
+
+const menuItemStyles = `
+  flex w-full items-center gap-3
+  px-4 py-2.5
+  text-sm font-medium
+  text-ink
+  transition-colors duration-150
+  hover:bg-ink/5
+`;
+
+const menuSectionStyles = `
+  px-4 pt-3 pb-1
+  text-[10px] font-semibold
+  uppercase tracking-wider
+  text-ink-soft/65
+`;
 
 export function Navbar({
   hasSidebar = false,
@@ -48,6 +63,7 @@ export function Navbar({
   const t = useTranslations("navigation.dashboardNav");
   const tn = useNavLabel().label;
   const libelleRole = useLabels().role;
+
   const {
     utilisateur,
     deconnecter,
@@ -56,13 +72,10 @@ export function Navbar({
 
   const pathname = usePathname();
 
-  const [
-    menuProfilOuvert,
-    setMenuProfilOuvert,
-  ] = useState(false);
+  const [menuProfilOuvert, setMenuProfilOuvert] =
+    useState(false);
 
-  const navbarRef =
-    useRef<HTMLElement>(null);
+  const navbarRef = useRef<HTMLElement>(null);
 
   /*
    * ==========================================================
@@ -72,9 +85,7 @@ export function Navbar({
 
   const estDansDashboard =
     pathname === "/tableau-de-bord" ||
-    pathname.startsWith(
-      "/tableau-de-bord/",
-    );
+    pathname.startsWith("/tableau-de-bord/");
 
   /*
    * ==========================================================
@@ -96,15 +107,13 @@ export function Navbar({
    * ==========================================================
    */
 
-  const hrefBascule =
-    estDansDashboard
-      ? "/"
-      : "/tableau-de-bord";
+  const hrefBascule = estDansDashboard
+    ? "/"
+    : "/tableau-de-bord";
 
-  const labelBascule =
-    estDansDashboard
-      ? t("backToSite")
-      : tn("Tableau de bord");
+  const labelBascule = estDansDashboard
+    ? t("backToSite")
+    : tn("Tableau de bord");
 
   /*
    * ==========================================================
@@ -113,39 +122,29 @@ export function Navbar({
    */
 
   const groupes = utilisateur
-    ? navigationParRole[
-        utilisateur.role
-      ] ?? []
+    ? navigationParRole[utilisateur.role] ?? []
     : [];
 
   /*
    * ==========================================================
-   * PARAMÈTRES
+   * PARAMÈTRES DU COMPTE
    * ==========================================================
    */
 
-  const itemParametres =
-    groupes.find(
-      (item) =>
-        item.label === "Paramètres",
-    );
+  const itemParametres = groupes.find(
+    (item) => item.label === "Paramètres",
+  );
 
-  const liensParametres =
-    (itemParametres?.liens ?? []).filter(
-      (link) =>
-        ![
-          "Paiements",
-          "Factures",
-          "Favoris",
-        ].includes(link.label),
-    );
-
-  const hrefParametres =
-    itemParametres?.href;
+  const liensParametres = (
+    itemParametres?.liens ?? []
+  ).filter(
+    (link) =>
+      !["Paiements", "Factures"].includes(link.label),
+  );
 
   /*
    * ==========================================================
-   * FERMER LES MENUS
+   * FERMETURE DES MENUS
    * ==========================================================
    */
 
@@ -171,22 +170,16 @@ export function Navbar({
    */
 
   useEffect(() => {
-    function handleClickOutside(
-      event: MouseEvent,
-    ) {
+    function handleClickOutside(event: MouseEvent) {
       if (
         navbarRef.current &&
-        !navbarRef.current.contains(
-          event.target as Node,
-        )
+        !navbarRef.current.contains(event.target as Node)
       ) {
         closeMenus();
       }
     }
 
-    function handleKeyboard(
-      event: KeyboardEvent,
-    ) {
+    function handleKeyboard(event: KeyboardEvent) {
       if (event.key === "Escape") {
         closeMenus();
       }
@@ -214,6 +207,16 @@ export function Navbar({
       );
     };
   }, []);
+
+  /*
+   * ==========================================================
+   * FERMER LE MENU LORS DU CHANGEMENT DE PAGE
+   * ==========================================================
+   */
+
+  useEffect(() => {
+    closeMenus();
+  }, [pathname]);
 
   /*
    * ==========================================================
@@ -246,7 +249,6 @@ export function Navbar({
         transition-[left]
         duration-200
         ease-in-out
-
         ${
           hasSidebar
             ? "left-0 lg:left-[var(--sidebar-width)]"
@@ -274,12 +276,8 @@ export function Navbar({
             aria-label={t("openMenu")}
             title={t("menu")}
             className="
-              flex
-              h-9
-              w-9
-              shrink-0
-              items-center
-              justify-center
+              flex h-9 w-9 shrink-0
+              items-center justify-center
               rounded-lg
               text-ink-soft
               transition-colors
@@ -298,17 +296,8 @@ export function Navbar({
 
         {!hasSidebar && (
           <Link
-            href={
-              utilisateur
-                ? "/tableau-de-bord"
-                : "/"
-            }
-            className="
-              flex
-              items-center
-              gap-2
-              sm:gap-3
-            "
+            href={utilisateur ? "/tableau-de-bord" : "/"}
+            className="flex items-center gap-2 sm:gap-3"
             aria-label="Kianja"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -316,18 +305,14 @@ export function Navbar({
               src="/images/logo-kianja.png"
               alt={t("logoAlt")}
               className="
-                h-10
-                w-10
-                shrink-0
+                h-10 w-10 shrink-0
                 rounded-xl
-                border
-                border-ink/10
+                border border-ink/10
                 bg-white
                 object-contain
                 p-1
                 shadow-xs
-                sm:h-11
-                sm:w-11
+                sm:h-11 sm:w-11
               "
             />
           </Link>
@@ -343,13 +328,8 @@ export function Navbar({
             ACTIONS TOPBAR
             ==================================================== */}
 
-        <div
-          className="
-            flex
-            min-w-0
-            items-center
-          "
-        >
+        <div className="flex min-w-0 items-center">
+
           {/* ==================================================
               RECHERCHE DESKTOP
               ================================================== */}
@@ -357,27 +337,14 @@ export function Navbar({
           <form
             action="/services"
             role="search"
-            className="
-              mr-2
-              hidden
-              md:block
-            "
+            className="mr-2 hidden md:block"
           >
-            <div
-              className="
-                relative
-                w-52
-                lg:w-64
-                xl:w-72
-              "
-            >
+            <div className="relative w-52 lg:w-64 xl:w-72">
               <Search
                 size={15}
                 className="
                   pointer-events-none
-                  absolute
-                  left-3
-                  top-1/2
+                  absolute left-3 top-1/2
                   -translate-y-1/2
                   text-ink-soft/60
                 "
@@ -391,16 +358,12 @@ export function Navbar({
                 aria-label={t("searchService")}
                 className="
                   kianja-field-control
-                  h-9
-                  w-full
+                  h-9 w-full
                   rounded-full
-                  border
-                  border-ink/15
+                  border border-ink/15
                   bg-paper-light
-                  pl-9
-                  pr-3
-                  text-xs
-                  text-ink
+                  pl-9 pr-3
+                  text-xs text-ink
                   transition-colors
                   placeholder:text-ink-soft/45
                   hover:border-ink/25
@@ -414,14 +377,8 @@ export function Navbar({
               GROUPE DES ACTIONS
               ================================================== */}
 
-          <div
-            className="
-              flex
-              items-center
-              gap-0.5
-              sm:gap-1
-            "
-          >
+          <div className="flex items-center gap-0.5 sm:gap-1">
+
             {/* ==============================================
                 RECHERCHE MOBILE
                 ============================================== */}
@@ -431,12 +388,8 @@ export function Navbar({
               aria-label={t("search")}
               title={t("search")}
               className="
-                flex
-                h-9
-                w-9
-                shrink-0
-                items-center
-                justify-center
+                flex h-9 w-9 shrink-0
+                items-center justify-center
                 rounded-lg
                 text-ink-soft
                 transition-colors
@@ -449,208 +402,165 @@ export function Navbar({
             </Link>
 
             {/* ==============================================
-                MODE SOMBRE
-                ACCESSIBLE À TOUS
-                ============================================== */}
-
-            <SelecteurLangue />
-
-            <BasculeTheme />
-
-            {/* ==============================================
-                UTILISATEUR CONNECTÉ
+                ACTIONS RÉSERVÉES AU DASHBOARD
                 ============================================== */}
 
             {!chargement &&
-              utilisateur && (
+              utilisateur &&
+              estDansDashboard && (
                 <>
-                  {/* ==========================================
-                      BASCULE SITE / DASHBOARD
-                      ========================================== */}
-
-                  <Link
-                    href={hrefBascule}
-                    aria-label={labelBascule}
-                    title={labelBascule}
-                    className="
-                      flex
-                      h-9
-                      w-9
-                      shrink-0
-                      items-center
-                      justify-center
-                      rounded-lg
-                      text-ink-soft
-                      transition-colors
-                      hover:bg-ink/5
-                      hover:text-ink
-                    "
-                  >
-                    {/* Retour au site public : icône « accueil », distincte
-                        du globe du sélecteur de langue placé juste avant. */}
-                    {estDansDashboard ? (
-                      <House
-                        size={19}
-                        strokeWidth={2}
-                      />
-                    ) : (
-                      <LayoutDashboard
-                        size={19}
-                        strokeWidth={2}
-                      />
-                    )}
-                  </Link>
-
-                  {/* ==========================================
-                      MESSAGES
-                      ========================================== */}
+                  <BasculeTheme />
 
                   <MessagesLink />
 
-                  {/* ==========================================
-                      NOTIFICATIONS
-                      ========================================== */}
-
                   <NotificationBell />
-
-                  {/* ==========================================
-                      SÉPARATEUR
-                      ========================================== */}
-
-                  <div
-                    className="
-                      mx-1.5
-                      h-6
-                      w-px
-                      shrink-0
-                      bg-ink/10
-                      sm:mx-2
-                    "
-                    aria-hidden="true"
-                  />
                 </>
               )}
 
+            {/* ==============================================
+                BASCULE SITE / DASHBOARD
+                ============================================== */}
+
+            {!chargement && utilisateur && (
+              <Link
+                href={hrefBascule}
+                aria-label={labelBascule}
+                title={labelBascule}
+                className="
+                  flex h-9 w-9 shrink-0
+                  items-center justify-center
+                  rounded-lg
+                  text-ink-soft
+                  transition-colors
+                  hover:bg-ink/5
+                  hover:text-ink
+                "
+              >
+                {estDansDashboard ? (
+                  <House size={19} strokeWidth={2} />
+                ) : (
+                  <LayoutDashboard
+                    size={19}
+                    strokeWidth={2}
+                  />
+                )}
+              </Link>
+            )}
+
+            {/* ==============================================
+                SÉPARATEUR
+                ============================================== */}
+
+            {!chargement && utilisateur && (
+              <div
+                className="
+                  mx-1.5 h-6 w-px shrink-0
+                  bg-ink/10 sm:mx-2
+                "
+                aria-hidden="true"
+              />
+            )}
+
             {/* ==================================================
-                PROFIL
+                MENU PERSONNE / PROFIL
                 ================================================== */}
 
-            {chargement ? null : utilisateur ? (
+            {!chargement && (
               <div className="relative shrink-0">
+
+                {/* ==========================================
+                    BOUTON PERSONNE
+                    ========================================== */}
+
                 <button
                   type="button"
-                  onClick={() => {
-                    setMenuProfilOuvert(
-                      (value) =>
-                        !value,
-                    );
-                  }}
-                  aria-label={t("profileMenu")}
-                  aria-expanded={
-                    menuProfilOuvert
+                  onClick={() =>
+                    setMenuProfilOuvert((value) => !value)
                   }
+                  aria-label={utilisateur
+                    ? t("profileMenu")
+                    : tn("Menu utilisateur")}
+                  aria-expanded={menuProfilOuvert}
                   aria-haspopup="menu"
-                  title={t("profile")}
-                  className="
-                    flex
-                    h-9
-                    items-center
-                    gap-2
-                    rounded-lg
+                  title={utilisateur
+                    ? t("profile")
+                    : tn("Mon compte")}
+                  className={`
+                    flex h-10 items-center
+                    gap-2 rounded-full
+                    border border-ink/10
                     px-2
                     transition-colors
                     hover:bg-ink/5
-                  "
+                    ${
+                      menuProfilOuvert
+                        ? "bg-ink/5"
+                        : "bg-transparent"
+                    }
+                    ${
+                      utilisateur
+                        ? "sm:rounded-lg"
+                        : "w-10 justify-center rounded-full"
+                    }
+                  `}
                 >
-                  {/* ==========================================
-                      AVATAR
-                      ========================================== */}
+
+                  {/* AVATAR */}
 
                   <div
                     className="
-                      flex
-                      h-8
-                      w-8
-                      shrink-0
-                      items-center
-                      justify-center
+                      flex h-8 w-8 shrink-0
+                      items-center justify-center
                       overflow-hidden
                       rounded-full
-                      border
-                      border-ink/15
+                      border border-ink/10
                       bg-ink/5
                       text-ink-soft
                     "
                   >
-                    {utilisateur.photoUrl ? (
+                    {utilisateur?.photoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={
-                          getFileUrl(
-                            utilisateur.photoUrl,
-                          ) ?? undefined
+                          getFileUrl(utilisateur.photoUrl) ??
+                          undefined
                         }
-                        alt={
-                          utilisateur.nom
-                        }
-                        className="
-                          h-full
-                          w-full
-                          object-cover
-                        "
+                        alt={utilisateur.nom}
+                        className="h-full w-full object-cover"
                       />
                     ) : (
-                      <User size={15} />
+                      <User size={19} strokeWidth={1.8} />
                     )}
                   </div>
 
-                  {/* ==========================================
-                      NOM
-                      ========================================== */}
+                  {/* NOM UTILISATEUR */}
 
-                  <div
-                    className="
-                      hidden
-                      max-w-36
-                      text-left
-                      leading-tight
-                      sm:block
-                    "
-                  >
-                    <p
-                      className="
-                        truncate
-                        text-xs
-                        font-medium
-                        text-ink
-                      "
-                    >
-                      {utilisateur.nom}
-                    </p>
+                  {utilisateur && (
+                    <div className="hidden max-w-36 text-left leading-tight sm:block">
+                      <p className="truncate text-xs font-medium text-ink">
+                        {utilisateur.nom}
+                      </p>
 
-                    <p
-                      className="
+                      <p className="
                         truncate
                         font-mono
                         text-[0.625rem]
                         uppercase
                         tracking-wider
                         text-ink-soft/60
-                      "
-                    >
-                      {libelleRole(utilisateur.role)}
-                    </p>
-                  </div>
+                      ">
+                        {libelleRole(utilisateur.role)}
+                      </p>
+                    </div>
+                  )}
 
                   <ChevronDown
                     size={13}
                     className={`
-                      hidden
+                      shrink-0
                       text-ink-soft/70
                       transition-transform
                       duration-150
-                      sm:block
-
                       ${
                         menuProfilOuvert
                           ? "rotate-180 text-ink"
@@ -660,77 +570,120 @@ export function Navbar({
                   />
                 </button>
 
-                {/* ==============================================
-                    MENU PROFIL
-                    ============================================== */}
+                {/* ==================================================
+                    MENU VISITEUR NON CONNECTÉ
+                    ================================================== */}
 
-                {menuProfilOuvert && (
+                {menuProfilOuvert && !utilisateur && (
                   <div
                     role="menu"
                     className="
                       animate-pop
-                      absolute
-                      right-0
-                      top-full
-                      z-[100]
-                      mt-2
-                      w-64
+                      absolute right-0 top-full z-[100]
+                      mt-2 w-64
                       origin-top-right
                       overflow-hidden
-                      rounded-lg
-                      border
-                      border-ink/10
+                      rounded-xl
+                      border border-ink/10
                       bg-paper-light
                       shadow-[0_12px_32px_-12px_rgba(15,23,42,0.28)]
                     "
                   >
-                    {/* ==========================================
-                        INFORMATIONS UTILISATEUR
-                        ========================================== */}
 
-                    <div
-                      className="
-                        border-b
-                        border-ink/10
-                        bg-ink/[0.02]
-                        px-4
-                        py-3
-                      "
+                    {/* CONNEXION */}
+
+                    <Link
+                      href="/connexion"
+                      onClick={closeMenus}
+                      role="menuitem"
+                      className={menuItemStyles}
                     >
-                      <p
-                        className="
-                          truncate
-                          text-sm
-                          font-medium
-                          text-ink
-                        "
-                      >
-                        {utilisateur.nom}
-                      </p>
+                      <LogIn size={16} />
+                      <span>{t("login")}</span>
+                    </Link>
 
-                      <p
-                        className="
-                          truncate
-                          text-xs
-                          text-ink-soft
-                        "
-                      >
-                        {utilisateur.email}
-                      </p>
+                    {/* INSCRIPTION */}
 
-                      <p
-                        className="
-                          mt-1
-                          font-mono
-                          text-[0.625rem]
-                          uppercase
-                          tracking-wider
-                          text-ink-soft/60
-                        "
-                      >
-                        {libelleRole(utilisateur.role)}
-                      </p>
+                    <Link
+                      href="/inscription"
+                      onClick={closeMenus}
+                      role="menuitem"
+                      className={menuItemStyles}
+                    >
+                      <UserPlus size={16} />
+                      <span>{tn("Inscription")}</span>
+                    </Link>
+
+                    <div className="my-1 border-t border-ink/10" />
+
+                    {/* CENTRE D'AIDE */}
+
+                    <Link
+                      href="/aide-et-faq"
+                      onClick={closeMenus}
+                      role="menuitem"
+                      className={menuItemStyles}
+                    >
+                      <CircleHelp size={16} />
+                      <span>{tn("Centre d'aide")}</span>
+                    </Link>
+
+                    {/* À PROPOS */}
+
+                    <Link
+                      href="/a-propos"
+                      onClick={closeMenus}
+                      role="menuitem"
+                      className={menuItemStyles}
+                    >
+                      <Info size={16} />
+                      <span>{tn("À propos")}</span>
+                    </Link>
+
+                    <div className="my-1 border-t border-ink/10" />
+
+                    {/* PRÉFÉRENCES */}
+
+                    <p className={menuSectionStyles}>
+                      {tn("Préférences")}
+                    </p>
+
+                    <div className="
+                      flex items-center gap-3
+                      px-4 py-3
+                      text-sm text-ink
+                    ">
+                      <Globe
+                        size={16}
+                        className="shrink-0 text-ink-soft"
+                      />
+
+                      <div className="min-w-0 flex-1">
+                        <SelecteurLangue />
+                      </div>
                     </div>
+                  </div>
+                )}
+
+                {/* ==================================================
+                    MENU UTILISATEUR CONNECTÉ
+                    ================================================== */}
+
+                {menuProfilOuvert && utilisateur && (
+                  <div
+                    role="menu"
+                    className="
+                      animate-pop
+                      absolute right-0 top-full z-[100]
+                      mt-2 w-64
+                      origin-top-right
+                      overflow-hidden
+                      rounded-xl
+                      border border-ink/10
+                      bg-paper-light
+                      shadow-[0_12px_32px_-12px_rgba(15,23,42,0.28)]
+                    "
+                  >
 
                     {/* ==========================================
                         MON PROFIL
@@ -740,174 +693,127 @@ export function Navbar({
                       href="/tableau-de-bord/profil"
                       onClick={closeMenus}
                       role="menuitem"
-                      className="
-                        flex
-                        items-center
-                        gap-3
-                        px-4
-                        py-2.5
-                        text-sm
-                        text-ink-soft
-                        transition-colors
-                        hover:bg-ink/5
-                        hover:text-ink
-                      "
+                      className={menuItemStyles}
                     >
-                      <User size={15} />
-
-                      <span>
-                        {tn("Mon profil")}
-                      </span>
+                      <User size={16} />
+                      <span>{tn("Mon profil")}</span>
                     </Link>
 
+                    {/* CENTRE D'AIDE */}
+
+                    <Link
+                      href="/aide-et-faq"
+                      onClick={closeMenus}
+                      role="menuitem"
+                      className={menuItemStyles}
+                    >
+                      <CircleHelp size={16} />
+                      <span>{tn("Centre d'aide")}</span>
+                    </Link>
+
+                    <div className="my-1 border-t border-ink/10" />
+
                     {/* ==========================================
-                        PARAMÈTRES
+                        SECTION MON COMPTE
                         ========================================== */}
 
-                    {liensParametres.length >
-                    0 ? (
-                      liensParametres.map(
-                        (link) => {
-                          if (!link.href) {
-                            return null;
-                          }
+                    <p className={menuSectionStyles}>
+                      {tn("Mon compte")}
+                    </p>
 
-                          return (
-                            <Link
-                              key={
-                                link.href
-                              }
-                              href={
-                                link.href
-                              }
-                              onClick={
-                                closeMenus
-                              }
-                              role="menuitem"
-                              className="
-                                flex
-                                items-center
-                                gap-3
-                                border-t
-                                border-ink/10
-                                px-4
-                                py-2.5
-                                text-sm
-                                text-ink-soft
-                                transition-colors
-                                hover:bg-ink/5
-                                hover:text-ink
-                              "
-                            >
-                              <Settings
-                                size={15}
-                              />
+                    <Link
+                      href="/tableau-de-bord/profil"
+                      onClick={closeMenus}
+                      role="menuitem"
+                      className={menuItemStyles}
+                    >
+                      <UserRoundCog size={16} />
+                      <span>{tn("Mon compte")}</span>
+                    </Link>
 
-                              <span>
-                                {tn(link.label)}
-                              </span>
-                            </Link>
-                          );
-                        },
-                      )
-                    ) : hrefParametres ? (
-                      <Link
-                        href={
-                          hrefParametres
-                        }
-                        onClick={
-                          closeMenus
-                        }
-                        role="menuitem"
-                        className="
-                          flex
-                          items-center
-                          gap-3
-                          border-t
-                          border-ink/10
-                          px-4
-                          py-2.5
-                          text-sm
-                          text-ink-soft
-                          transition-colors
-                          hover:bg-ink/5
-                          hover:text-ink
-                        "
-                      >
-                        <Settings
-                          size={15}
-                        />
+                    {/* PARAMÈTRES PAR RÔLE */}
 
-                        <span>
-                          {tn("Paramètres")}
-                        </span>
-                      </Link>
-                    ) : null}
+                    {liensParametres.map((link) => {
+                      if (!link.href) {
+                        return null;
+                      }
+
+                      return (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          onClick={closeMenus}
+                          role="menuitem"
+                          className={menuItemStyles}
+                        >
+                          <Settings size={16} />
+                          <span>{tn(link.label)}</span>
+                        </Link>
+                      );
+                    })}
+
+                    {/* ==========================================
+                        SECTION PRÉFÉRENCES
+                        ========================================== */}
+
+                    <div className="my-1 border-t border-ink/10" />
+
+                    <p className={menuSectionStyles}>
+                      {tn("Préférences")}
+                    </p>
+
+                    <div className="
+                      flex items-center gap-3
+                      px-4 py-3
+                      text-sm text-ink
+                    ">
+                      <Globe
+                        size={16}
+                        className="shrink-0 text-ink-soft"
+                      />
+
+                      <div className="min-w-0 flex-1">
+                        <SelecteurLangue />
+                      </div>
+                    </div>
+
+                    {/* À PROPOS */}
+
+                    <Link
+                      href="/a-propos"
+                      onClick={closeMenus}
+                      role="menuitem"
+                      className={menuItemStyles}
+                    >
+                      <Info size={16} />
+                      <span>{tn("À propos")}</span>
+                    </Link>
 
                     {/* ==========================================
                         DÉCONNEXION
                         ========================================== */}
+
+                    <div className="border-t border-ink/10" />
 
                     <button
                       type="button"
                       onClick={logout}
                       role="menuitem"
                       className="
-                        flex
-                        w-full
-                        items-center
-                        gap-3
-                        border-t
-                        border-ink/10
-                        px-4
-                        py-2.5
-                        text-left
-                        text-sm
+                        flex w-full items-center gap-3
+                        px-4 py-3
+                        text-left text-sm font-medium
                         text-brique
                         transition-colors
                         hover:bg-brique/5
                       "
                     >
-                      <LogOut
-                        size={15}
-                      />
-
-                      <span>
-                        {t("logout")}
-                      </span>
+                      <LogOut size={16} />
+                      <span>{t("logout")}</span>
                     </button>
+
                   </div>
                 )}
-              </div>
-            ) : (
-              /* ==================================================
-                 UTILISATEUR NON CONNECTÉ
-                 ================================================== */
-
-              <div
-                className="
-                  flex
-                  items-center
-                  gap-2
-                "
-              >
-                <Link href="/connexion">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                  >
-                    {t("login")}
-                  </Button>
-                </Link>
-
-                <Link href="/inscription">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                  >
-                    S&apos;inscrire
-                  </Button>
-                </Link>
               </div>
             )}
           </div>
