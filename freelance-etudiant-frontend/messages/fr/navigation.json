@@ -11,6 +11,14 @@
     "myServices": "Mes services",
     "myMissions": "Mes missions",
     "myApplications": "Mes candidatures",
+    "receivedApplications": "Candidatures reçues",
+    "missionDetail": "Détail de la mission",
+    "serviceDetail": "Détail du service",
+    "freelanceProfile": "Profil freelance",
+    "clientProfile": "Profil client",
+    "groupDetail": "Détail du groupe",
+    "groupInvitation": "Invitation",
+    "invoice": "Facture",
     "finances": "Finances",
     "applications": "Candidatures",
     "groups": "Groupes",
@@ -32,6 +40,7 @@
     "reviews": "Évaluations",
     "home": "Accueil",
     "about": "À propos",
+    "contact": "Contact",
     "allPublications": "Toutes les publications",
     "discoverFreelances": "Découvrir les freelances",
     "helpCenter": "Centre d'aide",
@@ -103,5 +112,9 @@
     "profile": "Profil",
     "logout": "Se déconnecter",
     "login": "Se connecter"
+  },
+  "breadcrumb": {
+    "ariaLabel": "Fil d’Ariane",
+    "showParents": "Afficher les pages précédentes"
   }
 }

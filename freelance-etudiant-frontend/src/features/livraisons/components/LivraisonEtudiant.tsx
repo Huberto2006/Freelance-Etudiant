@@ -13,8 +13,10 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useLabels } from "@/i18n/use-labels";
+import { useFormats } from "@/i18n/use-formats";
 
 import { api, ApiError, lienExterneSur } from "@/lib/api";
+import { PieceJointeAffichage } from "@/components/shared/PieceJointe";
 import { useAuth } from "@/lib/auth-context";
 
 import type { Candidature } from "@/types/candidatures";
@@ -53,6 +55,7 @@ export function LivraisonEtudiant({
   const { utilisateur } = useAuth();
   const t = useTranslations("deliveriesPage");
   const { statutLivraison: libelleStatutLivraison } = useLabels();
+  const { dateHeure } = useFormats();
 
   const clientId =
     candidature.mission?.client
@@ -98,9 +101,7 @@ export function LivraisonEtudiant({
   const [erreur, setErreur] =
     useState<string | null>(null);
 
-  // Étapes du formulaire de dépôt : 1) méthode, 2) informations,
-  // 3) aperçu avant envoi. N'a d'effet que sur la présentation ; la
-  // soumission (onSubmit) reste inchangée.
+  // Étapes du formulaire : méthode, informations, puis aperçu avant envoi.
   const [etape, setEtape] = useState<1 | 2 | 3>(1);
 
   function etapeSuivante() {
@@ -123,16 +124,16 @@ export function LivraisonEtudiant({
     }
 
     setErreur(null);
-    setEtape(3);
+    setEtape((etapeActuelle) =>
+      etapeActuelle === 2 ? 3 : etapeActuelle,
+    );
   }
 
   function etapePrecedente() {
     setErreur(null);
-    if (etape === 3) {
-      setEtape(2);
-    } else if (etape === 2) {
-      setEtape(1);
-    }
+    setEtape((etapeActuelle) =>
+      etapeActuelle === 3 ? 2 : etapeActuelle === 2 ? 1 : etapeActuelle,
+    );
   }
 
   // ==========================================================
@@ -265,7 +266,11 @@ export function LivraisonEtudiant({
   ) {
     event.preventDefault();
 
-    if (envoi) {
+    const peutSoumettre =
+      !livraison ||
+      (livraison.statut === "correction_demandee" &&
+        !livraison.correctionUtilisee);
+    if (envoi || !peutSoumettre) {
       return;
     }
 
@@ -289,7 +294,7 @@ export function LivraisonEtudiant({
         piecesJointes: methode === "fichiers" ? piecesJointes : undefined,
         commentaireLivraison: commentaireLivraison.trim() || undefined,
       });
-      window.location.reload();
+      await onRafraichir();
     } catch (error) {
       console.error("Erreur lors de l'envoi de la livraison :", error);
       setErreur(
@@ -359,6 +364,19 @@ export function LivraisonEtudiant({
           >
             {libelleStatutLivraison(livraison.statut)}
           </Tag>
+          <p className="mt-2 text-sm text-ink-soft">
+            {t("deliverySentOn", {
+              date: dateHeure(
+                livraison.dateDerniereSoumission ?? livraison.dateLivraison,
+              ),
+            })}
+          </p>
+        </div>
+      )}
+
+      {livraison?.statut === "en_attente" && (
+        <div className="mt-5 rounded-lg border border-ocre/20 bg-ocre/5 p-4">
+          <p className="text-sm text-ink">{t("deliveryAwaitingClient")}</p>
         </div>
       )}
 
@@ -388,6 +406,13 @@ export function LivraisonEtudiant({
           <p className="text-sm text-rice">
             {t("validatedByClient")}
           </p>
+          {livraison.dateValidation && (
+            <p className="mt-2 text-sm text-ink-soft">
+              {t("deliveryValidatedOn", {
+                date: dateHeure(livraison.dateValidation),
+              })}
+            </p>
+          )}
         </div>
       )}
 
@@ -409,16 +434,74 @@ export function LivraisonEtudiant({
         </div>
       )}
 
+      {livraison?.historique && livraison.historique.length > 0 && (
+        <section className="mt-5 border-t border-ink/15 pt-5">
+          <h3 className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+            {t("deliveryHistory")}
+          </h3>
+          <ol className="mt-3 space-y-3">
+            {livraison.historique.map((version, index) => (
+              <li
+                key={`${version.dateArchive}-${index}`}
+                className="rounded-lg border border-ink/10 bg-ink/[0.03] p-3 text-sm"
+              >
+                <p className="text-ink-soft">
+                  {t("previousSubmission", {
+                    date: dateHeure(version.dateDerniereSoumission),
+                  })}
+                </p>
+                {version.commentaireCorrection && (
+                  <p className="mt-2">
+                    <span className="font-medium">{t("correctionRequested")}: </span>
+                    {version.commentaireCorrection}
+                  </p>
+                )}
+                {version.lienLivrable && (
+                  <a
+                    href={lienExterneSur(version.lienLivrable) ?? "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-2 break-all text-ocre-dark hover:underline"
+                  >
+                    <ExternalLink size={14} />
+                    {t("openDeliverable")}
+                  </a>
+                )}
+                {version.piecesJointes && version.piecesJointes.length > 0 && (
+                  <ul className="mt-2 space-y-2">
+                    {version.piecesJointes.map((piece) => (
+                      <li key={piece.url}>
+                        <PieceJointeAffichage url={piece.url} nom={piece.nom} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {version.commentaireLivraison && (
+                  <p className="mt-2">{version.commentaireLivraison}</p>
+                )}
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
       {/* FORMULAIRE — présenté en 3 étapes : méthode, informations, aperçu */}
 
-      {livraison?.statut !==
-        "validee" && (
+      {(!livraison ||
+        (livraison.statut === "correction_demandee" &&
+          !livraison.correctionUtilisee)) && (
         <div className="mt-6 max-w-xl border-t border-ink/15 pt-6">
           <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
             {livraison
-              ? t("editMyDelivery")
-              : t("submitMyDelivery")}
+              ? t("correctMyDelivery")
+              : t("sendDelivery")}
           </p>
+
+          {livraison && (
+            <p className="mt-2 text-sm text-ink-soft">
+              {t("singleCorrectionHint")}
+            </p>
+          )}
 
           {/* INDICATEUR D'ÉTAPES */}
 
@@ -671,8 +754,8 @@ export function LivraisonEtudiant({
                   {envoi
                     ? t("sending")
                     : livraison
-                      ? t("updateDelivery")
-                      : t("submitMyDelivery")}
+                      ? t("correctMyDelivery")
+                      : t("sendDelivery")}
                 </Button>
               )}
             </div>

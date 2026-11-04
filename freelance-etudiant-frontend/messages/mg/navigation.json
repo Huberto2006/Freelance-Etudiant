@@ -11,6 +11,14 @@
     "myServices": "Ny serivisiko",
     "myMissions": "Ny irako",
     "myApplications": "Ny fanambarako",
+    "receivedApplications": "Fangatahana voaray",
+    "missionDetail": "Antsipirian’ny asa",
+    "serviceDetail": "Antsipirian’ny tolotra",
+    "freelanceProfile": "Mombamomba ny mpiasa mahaleo tena",
+    "clientProfile": "Mombamomba ny mpanjifa",
+    "groupDetail": "Antsipirian’ny vondrona",
+    "groupInvitation": "Fanasana",
+    "invoice": "Faktiora",
     "finances": "Fitantanam-bola",
     "applications": "Fanambarana",
     "groups": "Vondrona",
@@ -32,6 +40,7 @@
     "reviews": "Tombana",
     "home": "Fandraisana",
     "about": "Momba anay",
+    "contact": "Fifandraisana",
     "allPublications": "Ny famoahana rehetra",
     "discoverFreelances": "Hamantatra ny freelance",
     "helpCenter": "Foibem-panampiana",
@@ -103,5 +112,9 @@
     "profile": "Mombamomba",
     "logout": "Hiala",
     "login": "Hiditra"
+  },
+  "breadcrumb": {
+    "ariaLabel": "Lalan’ny pejy",
+    "showParents": "Asehoy ireo pejy teo aloha"
   }
 }

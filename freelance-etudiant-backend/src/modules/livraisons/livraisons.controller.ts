@@ -42,13 +42,13 @@ export class LivraisonsController {
   ) {}
 
   // =========================================================
-  // ÉTUDIANT — DÉPOSER OU MODIFIER UNE LIVRAISON
+  // ÉTUDIANT — DÉPOSER OU CORRIGER UNE LIVRAISON
   // =========================================================
 
   @Roles(Role.ETUDIANT)
   @Post("candidatures/:candidatureId/livraison")
   @ApiOperation({
-    summary: "Déposer ou modifier une livraison",
+    summary: "Déposer une livraison ou envoyer l'unique correction",
   })
   async livrer(
     @Param("candidatureId", ParseUUIDPipe) candidatureId: string,

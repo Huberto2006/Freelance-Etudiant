@@ -18,10 +18,8 @@ import {
 } from "@/features/catalogue/components/SousMenuCatalogue";
 import { CarteService } from "@/features/services/components/CarteService";
 import { NoticeCard } from "@/components/ui/Notice";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { Button } from "@/components/ui/Button";
 import { SqueletteCatalogue } from "@/features/catalogue/components/SqueletteCatalogue";
-import { useAuth } from "@/lib/auth-context";
 
 export default function ServicesPage() {
   return (
@@ -67,7 +65,6 @@ function noteDuService(service: ServiceOffert): number {
 
 function ServicesContent() {
   const t = useTranslations("services");
-  const { utilisateur } = useAuth();
   const searchParams = useSearchParams();
   const cleParams = searchParams.toString();
 
@@ -173,12 +170,6 @@ function ServicesContent() {
   return (
     <div className="container mx-auto max-w-7xl px-4 pb-8 pt-7">
       {/* ---------------------------------------- EN-TETE */}
-      <div className="mb-4">
-        <BoutonRetour
-          repli={utilisateur ? "/tableau-de-bord" : "/"}
-          forcer
-        />
-      </div>
       <div className="mb-6">
         <p className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
           {t("list.eyebrow")}

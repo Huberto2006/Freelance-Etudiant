@@ -8,6 +8,12 @@ export type MethodePaiement =
   | "airtel_money"
   | "virement";
 
+export type FournisseurPapi =
+  | "MVOLA"
+  | "ORANGE_MONEY"
+  | "AIRTEL_MONEY"
+  | "BRED";
+
 export type StatutTransaction =
   | "en_attente"
   | "confirmee"
@@ -48,6 +54,15 @@ export interface Transaction {
 
   /** Dernier statut brut renvoye par le fournisseur (ex. "Pending"). */
   providerStatut?: string | null;
+
+  /** Devise du montant (ex. "MGA"). */
+  devise?: string;
+
+  /** Operateur reel du paiement Papi (MVOLA, ORANGE_MONEY, AIRTEL_MONEY, BRED). */
+  methodeFournisseur?: string | null;
+
+  /** Date d'expiration du lien de paiement Papi. */
+  dateExpirationLien?: string | null;
 
   dateCreation: string;
 

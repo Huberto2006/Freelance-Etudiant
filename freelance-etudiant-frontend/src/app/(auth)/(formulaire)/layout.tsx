@@ -1,4 +1,4 @@
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
+import { LienRetourSite } from "@/features/auth/components/LienRetourSite";
 
 /**
  * Écrans d'authentification « formulaire seul » (inscription, mot de passe
@@ -16,7 +16,7 @@ export default function FormulaireAuthLayout({
     // l'espace que <main> lui réserve (aucune bande vide en haut).
     <div className="-mt-16">
       <div className="mx-auto max-w-md px-5 pb-4 pt-5">
-        <BoutonRetour repli="/" forcer />
+        <LienRetourSite />
       </div>
       {children}
     </div>

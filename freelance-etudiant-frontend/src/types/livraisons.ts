@@ -25,6 +25,10 @@ export interface Livraison {
 
   commentaireCorrection?: string | null;
 
+  correctionUtilisee?: boolean;
+
+  historique?: VersionLivraison[];
+
   candidature?: Candidature;
 
   /**
@@ -36,6 +40,24 @@ export interface Livraison {
   evaluations?: Evaluation[];
 
   dateLivraison: string;
+
+  dateDerniereSoumission?: string;
+
+  dateValidation?: string | null;
+}
+
+export interface VersionLivraison {
+  fichierUrl?: string | null;
+  piecesJointes?: PieceJointeLivraison[] | null;
+  lienLivrable?: string | null;
+  branche?: string | null;
+  commentaireLivraison?: string | null;
+  statut: StatutLivraison;
+  commentaireCorrection?: string | null;
+  dateLivraison: string;
+  dateDerniereSoumission: string;
+  dateValidation?: string | null;
+  dateArchive: string;
 }
 
 export interface PieceJointeLivraison {

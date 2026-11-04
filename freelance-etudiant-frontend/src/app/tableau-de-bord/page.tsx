@@ -259,13 +259,6 @@ export default function TableauDeBordVueEnsemble() {
 
   return (
     <div>
-      {/*
-        Flèche « ← Retour » : sur le tableau de bord, elle permet de
-        revenir à la page consultée juste avant (accueil public, missions,
-        services…) via l'historique navigateur — jamais une redirection
-        fixe.
-      */}
-      
       {role === "etudiant" && donneesEtudiant && (
         <VueEtudiant
           utilisateur={utilisateur}

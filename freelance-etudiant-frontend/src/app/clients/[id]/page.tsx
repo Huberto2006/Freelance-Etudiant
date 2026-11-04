@@ -26,7 +26,7 @@ import {
 import { Avatar } from "@/components/ui/Avatar";
 import { ReactionProfil } from "@/features/reactions/components/ReactionProfil";
 import { SignalerBouton } from "@/features/signalements/components/SignalerBouton";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
+import { useBreadcrumbTitle } from "@/components/navigation/Breadcrumb";
 
 export default function ProfilClientPage({
   params,
@@ -40,6 +40,7 @@ export default function ProfilClientPage({
   const [client, setClient] = useState<ClientProfile | null>(null);
   const [missions, setMissions] = useState<Mission[]>([]);
   const [chargement, setChargement] = useState(true);
+  useBreadcrumbTitle(client?.nomEntreprise || client?.utilisateur?.nom);
 
   useEffect(() => {
     let cancelled = false;
@@ -100,13 +101,6 @@ export default function ProfilClientPage({
 
   return (
     <div className="mx-auto max-w-5xl px-5 pb-12 pt-6">
-      {/* =====================================================
-          RETOUR
-          ===================================================== */}
-      <div className="mb-5">
-        <BoutonRetour repli="/" />
-      </div>
-
       {/* =====================================================
           EN-TÊTE
           ===================================================== */}

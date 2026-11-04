@@ -13,7 +13,7 @@ import { useLabels } from "@/i18n/use-labels";
 
 import { Button } from "@/components/ui/Button";
 import { NoticeCard } from "@/components/ui/Notice";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
+import { useBreadcrumbTitle } from "@/components/navigation/Breadcrumb";
 
 /**
  * Facture d'un paiement confirmé : feuille A4 imprimable. « Imprimer /
@@ -32,6 +32,7 @@ export default function FacturePaiementPage() {
   const [facture, setFacture] = useState<Facture | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [chargement, setChargement] = useState(true);
+  useBreadcrumbTitle(facture?.numero);
 
   useEffect(() => {
     if (!utilisateur || !idPaiement) return;
@@ -71,8 +72,6 @@ export default function FacturePaiementPage() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <BoutonRetour repli="/tableau-de-bord/factures" forcer />
-
         {facture && (
           <Button onClick={() => window.print()} className="gap-2">
             <Printer size={16} aria-hidden="true" />

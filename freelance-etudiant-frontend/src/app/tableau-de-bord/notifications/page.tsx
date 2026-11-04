@@ -22,7 +22,6 @@ import {
   NoticeCard,
   PageHeader,
 } from "@/components/ui/Notice";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { SousNavigation } from "@/components/ui/SousNavigation";
 
 import { clsx } from "clsx";
@@ -211,9 +210,6 @@ export default function NotificationsPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-11">
-      <div className="mb-4">
-        <BoutonRetour repli="/tableau-de-bord" forcer />
-      </div>
 
       <div className="mb-7 flex items-center justify-between gap-4">
         <PageHeader

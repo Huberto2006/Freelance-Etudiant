@@ -35,6 +35,10 @@ import { SocketProvider } from "@/lib/socket-context";
 import { ToastProvider } from "@/components/ui/Toast";
 import { NavbarConditionnelle } from "@/components/layout/NavbarConditionnelle";
 import { FooterConditionnel } from "@/components/layout/FooterConditionnel";
+import {
+  Breadcrumb,
+  BreadcrumbTitleProvider,
+} from "@/components/navigation/Breadcrumb";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("metadata");
@@ -95,6 +99,7 @@ export default async function RootLayout({
         <NextIntlClientProvider>
         <ThemeProvider>
           <AuthProvider>
+            <BreadcrumbTitleProvider>
             <SocketProvider>
               <ToastProvider>
               {/* Navbar publique — masquée sur /tableau-de-bord, où le
@@ -110,12 +115,14 @@ export default async function RootLayout({
                   endroit, il n'ajoute donc aucun padding supplémentaire.
               */}
               <main className="flex-1 pt-16">
+                <Breadcrumb scope="public" />
                 {children}
               </main>
 
               <FooterConditionnel />
               </ToastProvider>
             </SocketProvider>
+            </BreadcrumbTitleProvider>
           </AuthProvider>
         </ThemeProvider>
         </NextIntlClientProvider>

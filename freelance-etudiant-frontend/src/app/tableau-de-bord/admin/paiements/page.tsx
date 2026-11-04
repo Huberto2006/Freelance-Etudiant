@@ -13,7 +13,6 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { BadgeStatut, EtatVide, NoticeCard, PageHeader } from "@/components/ui/Notice";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 type Action = "confirmer" | "annuler";
 
@@ -83,7 +82,6 @@ export default function AdminPaiementsPage() {
   return (
     <div>
       <div className="mb-4">
-        <BoutonRetour repli="/tableau-de-bord/admin" forcer />
       </div>
 
       <PageHeader

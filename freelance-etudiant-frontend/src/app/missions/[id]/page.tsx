@@ -18,8 +18,8 @@ import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { BoutonsReaction } from "@/features/reactions/components/BoutonsReaction";
 import { SectionCommentaires } from "@/features/commentaires/components/SectionCommentaires";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
+import { useBreadcrumbTitle } from "@/components/navigation/Breadcrumb";
 
 export default function MissionDetailPage({
   params,
@@ -42,6 +42,7 @@ export default function MissionDetailPage({
   const mission =
     resultatMission?.id === id ? resultatMission.mission : null;
   const chargement = resultatMission?.id !== id;
+  useBreadcrumbTitle(mission?.titre);
   const [afficherFormulaire, setAfficherFormulaire] = useState(false);
   const [prixPropose, setPrixPropose] = useState("");
   const [delaiPropose, setDelaiPropose] = useState("");
@@ -119,9 +120,6 @@ export default function MissionDetailPage({
                 ? t("detail.loadError")
                 : t("detail.notFound")}
             </p>
-            <Button variant="secondary" size="sm" href="/missions">
-              {t("detail.backToMissions")}
-            </Button>
           </div>
         </NoticeCard>
       </div>
@@ -134,9 +132,6 @@ export default function MissionDetailPage({
   return (
 
     <div className="mx-auto max-w-4xl px-5 pt-7 pb-11">
-      <div className="mb-4">
-        <BoutonRetour repli="/missions" />
-      </div>
       {mission.imageUrl && (
         <div className="mb-6 h-64 overflow-hidden rounded-lg border border-ink/10 sm:h-80">
           <ImageAvecRepli

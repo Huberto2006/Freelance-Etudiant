@@ -97,7 +97,8 @@ export function CarteTransaction({
           </p>
 
           <p className="mt-0.5 font-mono text-xs text-ink-soft/70">
-            {libelleMethode(transaction.methode)} · {t("ref")}{" "}
+            {libelleMethode(transaction.methode)}
+            {transaction.methodeFournisseur ? ` (${transaction.methodeFournisseur})` : ""} · {t("ref")}{" "}
             {transaction.reference}
             {enLigne ? ` · ${t("online")}` : ""}
           </p>

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useLabels } from "@/i18n/use-labels";
+import { useFormats } from "@/i18n/use-formats";
 
 import { api, ApiError, lienExterneSur } from "@/lib/api";
 import { PieceJointeAffichage } from "@/components/shared/PieceJointe";
@@ -55,6 +56,7 @@ export function LivraisonClient({
 }) {
   const t = useTranslations("deliveriesPage");
   const { statutLivraison: libelleStatutLivraison } = useLabels();
+  const { dateHeure } = useFormats();
   const etudiantId =
     candidature.etudiant
       ?.utilisateur?.id ??
@@ -430,6 +432,13 @@ export function LivraisonClient({
         >
           {libelleStatutLivraison(statut)}
         </Tag>
+        <p className="mt-2 text-sm text-ink-soft">
+          {t("deliverySentOn", {
+            date: dateHeure(
+              livraison.dateDerniereSoumission ?? livraison.dateLivraison,
+            ),
+          })}
+        </p>
       </div>
 
       {/* LIVRABLE */}
@@ -481,6 +490,57 @@ export function LivraisonClient({
         </div>
       )}
 
+      {livraison.historique && livraison.historique.length > 0 && (
+        <section className="mt-5 border-t border-ink/15 pt-5">
+          <h3 className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+            {t("deliveryHistory")}
+          </h3>
+          <ol className="mt-3 space-y-3">
+            {livraison.historique.map((version, index) => (
+              <li
+                key={`${version.dateArchive}-${index}`}
+                className="rounded-lg border border-ink/10 bg-ink/[0.03] p-3 text-sm"
+              >
+                <p className="text-ink-soft">
+                  {t("previousSubmission", {
+                    date: dateHeure(version.dateDerniereSoumission),
+                  })}
+                </p>
+                {version.commentaireCorrection && (
+                  <p className="mt-2">
+                    <span className="font-medium">{t("correctionRequested")}: </span>
+                    {version.commentaireCorrection}
+                  </p>
+                )}
+                {version.lienLivrable && (
+                  <a
+                    href={lienExterneSur(version.lienLivrable) ?? "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-2 break-all text-ocre-dark hover:underline"
+                  >
+                    <ExternalLink size={14} />
+                    {t("openDeliverable")}
+                  </a>
+                )}
+                {version.piecesJointes && version.piecesJointes.length > 0 && (
+                  <ul className="mt-2 space-y-2">
+                    {version.piecesJointes.map((piece) => (
+                      <li key={piece.url}>
+                        <PieceJointeAffichage url={piece.url} nom={piece.nom} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {version.commentaireLivraison && (
+                  <p className="mt-2">{version.commentaireLivraison}</p>
+                )}
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
       {/* COMMENTAIRE CORRECTION */}
 
       {statut ===
@@ -501,12 +561,13 @@ export function LivraisonClient({
 
       {/* ACTIONS CLIENT */}
 
-      {statut !== "validee" && (
+      {statut === "en_attente" && (
         <div className="mt-6 border-t border-ink/15 pt-6">
           <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
             {t("actions")}
           </p>
 
+          {!livraison.correctionUtilisee && (
           <div className="mt-4">
             <Field
               label={t("correctionComment")}
@@ -528,6 +589,13 @@ export function LivraisonClient({
               />
             </Field>
           </div>
+          )}
+
+          {livraison.correctionUtilisee && (
+            <p className="mt-4 text-sm text-ink-soft">
+              {t("noMoreCorrection")}
+            </p>
+          )}
 
           {erreur && (
             <p className="mt-3 text-xs text-brique">
@@ -558,6 +626,7 @@ export function LivraisonClient({
 
             {/* CORRECTION */}
 
+            {!livraison.correctionUtilisee && (
             <Button
               type="button"
               size="sm"
@@ -578,6 +647,7 @@ export function LivraisonClient({
                 ? t("sending")
                 : t("requestCorrection")}
             </Button>
+            )}
           </div>
 
           <ConfirmDialog

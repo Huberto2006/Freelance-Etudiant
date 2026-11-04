@@ -37,8 +37,8 @@ import { PortfolioGalerie } from "@/features/profils/components/Portfolio";
 import { ReactionProfil } from "@/features/reactions/components/ReactionProfil";
 import { FavoriBouton } from "@/features/favoris/components/FavoriBouton";
 import { SignalerBouton } from "@/features/signalements/components/SignalerBouton";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { Button } from "@/components/ui/Button";
+import { useBreadcrumbTitle } from "@/components/navigation/Breadcrumb";
 
 const TONS_STATUT_DISPONIBILITE: Record<
   string,
@@ -68,6 +68,7 @@ export default function ProfilEtudiantPage({
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [chargement, setChargement] = useState(true);
   const [connexionRequise, setConnexionRequise] = useState(false);
+  useBreadcrumbTitle(etudiant?.utilisateur?.nom);
 
   useEffect(() => {
     // On attend d'abord de savoir si une session existe : inutile de
@@ -172,13 +173,6 @@ export default function ProfilEtudiantPage({
 
   return (
     <div className="mx-auto max-w-5xl px-5 pb-12 pt-6">
-      {/* =====================================================
-          RETOUR
-          ===================================================== */}
-      <div className="mb-5">
-        <BoutonRetour repli="/" />
-      </div>
-
       {/* =====================================================
           EN-TÊTE CV
           ===================================================== */}

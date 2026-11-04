@@ -411,6 +411,31 @@ export const CATALOGUE_ERREURS: readonly EntreeCatalogue[] = [
     "Ny kandidatiora efa ekena ihany no mahafaka mandefa fanaterana.",
     'Only an accepted application allows a delivery to be submitted.',
   ],
+  [
+    "La mission n'est plus en cours : aucune livraison ne peut être déposée.",
+    "Tsy mandeha intsony ity asa ity ka tsy azo alefa ny fanaterana.",
+    'The mission is no longer in progress, so a delivery cannot be submitted.',
+  ],
+  [
+    'Une livraison est déjà en attente de validation pour cette mission.',
+    'Efa misy fanaterana miandry fankatoavana amin’ity asa ity.',
+    'A delivery is already awaiting validation for this mission.',
+  ],
+  [
+    'La correction unique de cette livraison a déjà été utilisée.',
+    'Efa nampiasaina ny fanitsiana tokana amin’ity fanaterana ity.',
+    'The one correction allowed for this delivery has already been used.',
+  ],
+  [
+    "Cette livraison n'est plus en attente de validation.",
+    'Tsy miandry fankatoavana intsony ity fanaterana ity.',
+    'This delivery is no longer awaiting validation.',
+  ],
+  [
+    "Cette livraison ne peut plus faire l'objet d'une demande de correction.",
+    'Tsy azo angatahana fanitsiana intsony ity fanaterana ity.',
+    'A correction can no longer be requested for this delivery.',
+  ],
 
   // ------------------------------------------------------------------
   // Services / demandes de service
@@ -596,6 +621,31 @@ export const CATALOGUE_ERREURS: readonly EntreeCatalogue[] = [
     'Verification fournisseur indisponible',
     "Tsy azo atao ny fanamarinana amin'ny mpamatsy.",
     'Provider verification unavailable.',
+  ],
+  [
+    'Devise de la notification incoherente',
+    "Tsy mifanaraka ny vola ampiasain'ny fampandrenesana.", // RELIRE
+    'Notification currency mismatch.',
+  ],
+  [
+    'Notification non authentique',
+    'Tsy azo itokisana ny fampandrenesana.', // RELIRE
+    'Notification is not authentic.',
+  ],
+  [
+    'Papi a refuse la transaction. Verifiez vos informations ou utilisez un autre moyen de paiement.',
+    "Nolavin'i Papi ny fandoavam-bola. Hamarino ny mombamomba anao na ampiasao fomba fandoavam-bola hafa.", // RELIRE
+    'Papi refused the transaction. Check your details or use another payment method.',
+  ],
+  [
+    "Papi ne repond pas correctement pour le moment. Votre paiement n'a pas ete debite ; reessayez dans un instant.",
+    "Tsy mamaly tsara i Papi amin'izao fotoana izao. Tsy voaesotra ny volanao; andramo indray afaka fotoana fohy.", // RELIRE
+    'Papi is not responding correctly at the moment. You have not been charged; please try again shortly.',
+  ],
+  [
+    'Un lien de paiement Papi est deja actif pour ce paiement avec un autre montant. Reessayez apres son expiration.',
+    "Efa misy rohy fandoavam-bola Papi mandeha ho an'ity fandoavam-bola ity amin'ny habetsahana hafa. Andramo indray rehefa lany daty izy.", // RELIRE
+    'A Papi payment link is already active for this payment with a different amount. Try again after it expires.',
   ],
   [
     'Un paiement en ligne (MVola / Papi) ne peut pas etre confirme manuellement : utilisez la verification fournisseur.',

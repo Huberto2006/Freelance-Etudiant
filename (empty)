@@ -1,0 +1,9 @@
+.env.example:PAPI_BASE_URL 5
+.env.example:PAPI_API_KEY 5
+.env.example:PAPI_WEBHOOK_SECRET 5
+.env.example:PAPI_CREATE_PATH 5
+.env.example:PAPI_STATUS_PATH 5
+.env.example:PAPI_AUTH_HEADER 5
+.env.example:PAPI_AUTH_SCHEME 5
+.env.example:PAPI_CURRENCY 5
+.env.example:PAPI_SIGNATURE_HEADER 5

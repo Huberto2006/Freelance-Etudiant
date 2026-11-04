@@ -1,5 +1,6 @@
 import {
   IsEnum,
+  IsIn,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -11,6 +12,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { MethodePaiement } from '../enums/statut-transaction.enum';
+import { FOURNISSEURS_PAPI, type FournisseurPapi } from '../papi.service';
 
 export class CreerPaiementDto {
   /**
@@ -101,4 +103,18 @@ export class CreerPaiementDto {
   @IsOptional()
   @IsUUID()
   moyenPaiementClientId?: string;
+
+  /**
+   * Papi uniquement : restreint le lien a un operateur (MVOLA,
+   * ORANGE_MONEY, AIRTEL_MONEY, BRED = carte bancaire). Absent : le client
+   * choisit sur la page Papi.
+   */
+  @ApiPropertyOptional({
+    enum: FOURNISSEURS_PAPI,
+    description:
+      'Papi uniquement : operateur impose sur la page de paiement (MVOLA, ORANGE_MONEY, AIRTEL_MONEY, BRED = carte). Absent : choix libre sur la page Papi.',
+  })
+  @ValidateIf((o) => o.methode === MethodePaiement.PAPI && o.fournisseurPapi !== undefined)
+  @IsIn(FOURNISSEURS_PAPI)
+  fournisseurPapi?: FournisseurPapi;
 }

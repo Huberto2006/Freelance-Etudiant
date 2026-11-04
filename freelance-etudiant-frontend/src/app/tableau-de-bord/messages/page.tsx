@@ -29,6 +29,7 @@ import { clsx } from "clsx";
 
 import { useAuth } from "@/lib/auth-context";
 import { useTranslations } from "next-intl";
+import { useBreadcrumbTitle } from "@/components/navigation/Breadcrumb";
 import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
 import { useChatHelpers } from "@/features/messagerie/hooks/use-chat-helpers";
@@ -70,7 +71,7 @@ export default function MessagesPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-[calc(100dvh-8rem)] min-h-[560px] items-center justify-center md:h-[calc(100dvh-9rem)]">
+        <div className="flex h-[calc(100dvh-10rem)] min-h-[560px] items-center justify-center md:h-[calc(100dvh-11rem)]">
           <div className="flex items-center gap-2 text-sm text-ink-soft">
             <Loader2
               size={16}
@@ -377,6 +378,7 @@ function MessagesContent() {
           : null,
     [contactActif, groupeActif],
   );
+  useBreadcrumbTitle(conversationActive?.nom);
 
   /* =========================================================
      CHARGEMENT DES CONVERSATIONS
@@ -1852,7 +1854,7 @@ function MessagesContent() {
      ========================================================= */
 
   return (
-    <div className="flex h-[calc(100dvh-8rem)] min-h-[560px] flex-col overflow-hidden md:h-[calc(100dvh-9rem)]">
+    <div className="flex h-[calc(100dvh-10rem)] min-h-[560px] flex-col overflow-hidden md:h-[calc(100dvh-11rem)]">
 
       {erreur && (
         <div

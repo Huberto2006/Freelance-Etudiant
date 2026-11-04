@@ -11,7 +11,6 @@ import { useTranslations } from "next-intl";
 import { useFormats } from "@/i18n/use-formats";
 import { EtatVide, NoticeCard, PageHeader } from "@/components/ui/Notice";
 import { FavoriBouton } from "@/features/favoris/components/FavoriBouton";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { useApiList } from "@/hooks/useApiList";
 
 type FavorisEnrichis = {
@@ -58,7 +57,6 @@ export default function FavorisPage() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-11">
       <div className="mb-4">
-        <BoutonRetour repli="/tableau-de-bord" forcer />
       </div>
 
       <PageHeader icon={Heart} eyebrow={t("eyebrow")} title={t("title")} />

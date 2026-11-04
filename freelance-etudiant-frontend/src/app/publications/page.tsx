@@ -30,7 +30,6 @@ import {
 import { CarteMission } from "@/features/missions/components/CarteMission";
 import { CarteService } from "@/features/services/components/CarteService";
 import { NoticeCard } from "@/components/ui/Notice";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { Button } from "@/components/ui/Button";
 import { SqueletteCatalogue } from "@/features/catalogue/components/SqueletteCatalogue";
 import { useAuth } from "@/lib/auth-context";

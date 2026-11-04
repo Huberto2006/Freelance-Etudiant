@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { PaiementsService } from './paiements.service';
 import { Transaction } from './entities/transaction.entity';
+import { EvenementPaiement } from './entities/evenement-paiement.entity';
 import { Livraison } from '../livraisons/entities/livraison.entity';
 import { CandidaturesService } from '../candidatures/candidatures.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -98,6 +99,10 @@ describe('PaiementsService', () => {
         },
         { provide: ConfigService, useValue: { get: jest.fn() } },
         { provide: FacturesService, useValue: {} },
+        {
+          provide: getRepositoryToken(EvenementPaiement),
+          useValue: { insert: jest.fn().mockResolvedValue({}) },
+        },
       ],
     }).compile();
 

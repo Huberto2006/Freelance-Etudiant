@@ -15,7 +15,6 @@ import { Input, Select } from "@/components/ui/Field";
 import { EtatVide, NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 type EtatCompte = "actif" | "suspendu" | "inactif";
 
@@ -109,7 +108,6 @@ export default function AdminPage() {
   return (
     <div>
       <div className="mb-4">
-        <BoutonRetour repli="/tableau-de-bord" forcer />
       </div>
 
       <PageHeader

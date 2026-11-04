@@ -8,9 +8,12 @@ import {
 } from "@nestjs/common";
 
 import { InjectRepository } from "@nestjs/typeorm";
-import { Not, QueryFailedError, Repository } from "typeorm";
+import { QueryFailedError, Repository } from "typeorm";
 
 import { Livraison } from "./entities/livraison.entity";
+import { Candidature } from "../candidatures/entities/candidature.entity";
+import { Mission } from "../missions/entities/mission.entity";
+import { StatutMission } from "../missions/enums/statut-mission.enum";
 
 import {
   CreerLivraisonDto,
@@ -43,7 +46,7 @@ export class LivraisonsService {
   ) {}
 
   // ============================================================
-  // CRÉER OU MODIFIER UNE LIVRAISON
+  // DÉPOSER OU CORRIGER UNE LIVRAISON
   // ============================================================
 
   async creer(
@@ -51,20 +54,12 @@ export class LivraisonsService {
     etudiantId: string,
     dto: CreerLivraisonDto,
   ): Promise<Livraison> {
-    const candidature =
-      await this.candidaturesService.findOne(candidatureId);
-
-    // Vérifier que l'étudiant possède bien cette candidature
+    const candidature = await this.candidaturesService.findOne(candidatureId);
     if (candidature.etudiantId !== etudiantId) {
       throw new ForbiddenException(
         "Vous ne pouvez livrer que vos propres candidatures.",
       );
     }
-
-    // Vérifier que la candidature est acceptée
-    this.candidaturesService.assertCandidatureAcceptee(
-      candidature,
-    );
 
     if (dto.lienLivrable) {
       const plateforme = dto.plateforme?.toLowerCase();
@@ -83,127 +78,125 @@ export class LivraisonsService {
       }
     }
 
-    // Chercher une livraison existante
-    const existante = await this.repo.findOne({
-      where: {
-        candidatureId,
-      },
-    });
-
-    // ==========================================================
-    // MODIFICATION D'UNE LIVRAISON EXISTANTE
-    // ==========================================================
-
-    if (existante) {
-      if (
-        existante.statut ===
-        StatutLivraison.VALIDEE
-      ) {
-        throw new BadRequestException(
-          "Cette livraison a déjà été validée et ne peut plus être modifiée.",
-        );
-      }
-
-      if (dto.fichierUrl !== undefined) {
-        existante.fichierUrl = dto.fichierUrl;
-      }
-
-      if (dto.lienLivrable !== undefined) {
-        existante.lienLivrable = dto.lienLivrable;
-      }
-
-      if (dto.branche !== undefined) {
-        existante.branche = dto.branche.trim() || undefined;
-      }
-
-      // Livraison par fichiers : la nouvelle liste remplace l'ancienne
-      // (les pieces uploadees ne sont rattachees qu'au dernier envoi).
-      if (dto.piecesJointes !== undefined) {
-        existante.piecesJointes = dto.piecesJointes;
-      }
-
-      if (dto.commentaireLivraison !== undefined) {
-        existante.commentaireLivraison =
-          dto.commentaireLivraison;
-      }
-
-      existante.statut = StatutLivraison.EN_ATTENTE;
-
-      // Réinitialiser l'ancienne demande de correction
-      existante.commentaireCorrection = undefined;
-
-      const saved = await this.repo.save(existante);
-
-      // Notification au client
-      await this.notificationsService.creer({
-        destinataireId: candidature.mission.clientId,
-
-        type: TypeNotification.LIVRAISON_DEPOSEE,
-
-        titre: "Nouvelle livraison déposée",
-
-        message: `Une nouvelle livraison a été déposée pour "${candidature.mission.titre}".`,
-
-        // IMPORTANT :
-        // On transmet l'identifiant de la candidature
-        // afin que la notification ouvre directement
-        // la livraison concernée.
-        lienUrl: `/tableau-de-bord/livraisons?candidature=${encodeURIComponent(candidatureId)}`,
-      });
-
-      return saved;
-    }
-
-    // ==========================================================
-    // PREMIÈRE LIVRAISON
-    // ==========================================================
-
-    const livraison = this.repo.create({
-      candidatureId,
-      statut: StatutLivraison.EN_ATTENTE,
-
-      fichierUrl: dto.fichierUrl,
-
-      lienLivrable: dto.lienLivrable,
-
-      branche: dto.branche?.trim() || undefined,
-
-      piecesJointes: dto.piecesJointes,
-
-      commentaireLivraison: dto.commentaireLivraison,
-    });
-
     let saved: Livraison;
     try {
-      saved = await this.repo.save(livraison);
+      saved = await this.repo.manager.transaction(async (manager) => {
+        // Même ordre de verrouillage que l'acceptation d'une candidature :
+        // mission, candidature, puis livraison.
+        const mission = await manager.findOne(Mission, {
+          where: { id: candidature.missionId },
+          lock: { mode: "pessimistic_write" },
+        });
+        if (!mission) {
+          throw new NotFoundException("Mission introuvable.");
+        }
+
+        const candidatureVerrouillee = await manager.findOne(Candidature, {
+          where: { id: candidatureId },
+          lock: { mode: "pessimistic_write" },
+        });
+        if (!candidatureVerrouillee) {
+          throw new NotFoundException("Candidature introuvable.");
+        }
+        if (candidatureVerrouillee.etudiantId !== etudiantId) {
+          throw new ForbiddenException(
+            "Vous ne pouvez livrer que vos propres candidatures.",
+          );
+        }
+        this.candidaturesService.assertCandidatureAcceptee(
+          candidatureVerrouillee,
+        );
+        if (mission.statut !== StatutMission.EN_COURS) {
+          throw new ConflictException(
+            "La mission n'est plus en cours : aucune livraison ne peut être déposée.",
+          );
+        }
+
+        const existante = await manager.findOne(Livraison, {
+          where: { candidatureId },
+          lock: { mode: "pessimistic_write" },
+        });
+
+        if (existante) {
+          if (existante.statut === StatutLivraison.EN_ATTENTE) {
+            throw new ConflictException(
+              "Une livraison est déjà en attente de validation pour cette mission.",
+            );
+          }
+          if (existante.statut === StatutLivraison.VALIDEE) {
+            throw new ConflictException(
+              "Cette livraison a déjà été validée et ne peut plus être modifiée.",
+            );
+          }
+          if (
+            existante.statut !== StatutLivraison.CORRECTION_DEMANDEE ||
+            existante.correctionUtilisee
+          ) {
+            throw new ConflictException(
+              "La correction unique de cette livraison a déjà été utilisée.",
+            );
+          }
+
+          existante.historique = [
+            ...(existante.historique ?? []),
+            {
+              fichierUrl: existante.fichierUrl ?? null,
+              piecesJointes: existante.piecesJointes ?? null,
+              lienLivrable: existante.lienLivrable ?? null,
+              branche: existante.branche ?? null,
+              commentaireLivraison: existante.commentaireLivraison ?? null,
+              statut: existante.statut,
+              commentaireCorrection: existante.commentaireCorrection ?? null,
+              dateLivraison: existante.dateLivraison,
+              dateDerniereSoumission: existante.dateDerniereSoumission,
+              dateValidation: existante.dateValidation ?? null,
+              dateArchive: new Date(),
+            },
+          ];
+          this.appliquerNouvelleVersion(existante, dto);
+          existante.statut = StatutLivraison.EN_ATTENTE;
+          existante.correctionUtilisee = true;
+          existante.commentaireCorrection = undefined;
+          existante.dateDerniereSoumission = new Date();
+          return manager.save(Livraison, existante);
+        }
+
+        return manager.save(
+          Livraison,
+          manager.create(Livraison, {
+            candidatureId,
+            statut: StatutLivraison.EN_ATTENTE,
+            correctionUtilisee: false,
+            historique: [],
+            dateDerniereSoumission: new Date(),
+            fichierUrl: dto.fichierUrl,
+            lienLivrable: dto.lienLivrable?.trim(),
+            branche: dto.branche?.trim() || undefined,
+            piecesJointes: dto.piecesJointes,
+            commentaireLivraison: dto.commentaireLivraison?.trim() || undefined,
+          }),
+        );
+      });
     } catch (error) {
-      // Filet d'anti-doublon : la colonne candidature_id porte une
-      // contrainte UNIQUE (relation OneToOne). Deux POST simultanes sur
-      // une candidature sans livraison passeraient tous deux la
-      // verification `existante` ci-dessus ; la contrainte rejette le
-      // second insert et on renvoie une erreur 409 explicite au lieu
-      // d'un 500 brut.
       if (
         error instanceof QueryFailedError &&
-        (error as unknown as { code?: string }).code === '23505'
+        (error as QueryFailedError & { driverError?: { code?: string } })
+          .driverError?.code === "23505"
       ) {
         throw new ConflictException(
-          'Une livraison existe déjà pour cette candidature.',
+          "Une livraison existe déjà pour cette candidature.",
         );
       }
       throw error;
     }
 
-    // Notification au client
+    // Les effets secondaires partent après le commit : une seule requête
+    // gagnante peut notifier le client, y compris pour la correction.
     await this.notificationsService.creer({
       destinataireId: candidature.mission.clientId,
-
       type: TypeNotification.LIVRAISON_DEPOSEE,
-
       titre: "Livraison déposée",
-
       message: `Une livraison a été déposée pour "${candidature.mission.titre}".`,
-
       lienUrl: `/tableau-de-bord/livraisons?candidature=${encodeURIComponent(candidatureId)}`,
     });
 
@@ -213,7 +206,7 @@ export class LivraisonsService {
         nomClient: candidature.mission.client?.utilisateur?.nom,
         titre: candidature.mission.titre,
         nomEtudiant: candidature.etudiant?.utilisateur?.nom ?? 'Étudiant',
-        date: saved.dateLivraison,
+        date: saved.dateDerniereSoumission,
         routeKianja: `/tableau-de-bord/livraisons?candidature=${encodeURIComponent(candidatureId)}`,
       })
       .catch((error) => {
@@ -225,6 +218,18 @@ export class LivraisonsService {
       });
 
     return saved;
+  }
+
+  private appliquerNouvelleVersion(
+    livraison: Livraison,
+    dto: CreerLivraisonDto,
+  ): void {
+    livraison.fichierUrl = dto.fichierUrl;
+    livraison.lienLivrable = dto.lienLivrable?.trim() || undefined;
+    livraison.branche = dto.branche?.trim() || undefined;
+    livraison.piecesJointes = dto.piecesJointes ?? null;
+    livraison.commentaireLivraison =
+      dto.commentaireLivraison?.trim() || undefined;
   }
 
   // ============================================================
@@ -462,39 +467,26 @@ export class LivraisonsService {
       );
     }
 
-    if (
-      livraison.statut ===
-      StatutLivraison.VALIDEE
-    ) {
-      throw new BadRequestException(
-        "Cette livraison est déjà validée.",
-      );
-    }
-
-    // ============================================================
-    // Transition ATOMIQUE : UPDATE conditionnel (ne transitionne que si
-    // la livraison n'est pas deja validee). Un double-clic ou deux
-    // requetes concurrentes ne peuvent jamais valider deux fois : le
-    // second appel echoue (409) sans dupliquer notification ni
-    // liberation de fonds (libererSiConfirmee est elle-meme atomique).
-    // ============================================================
+    const dateValidation = new Date();
     const resultat = await this.repo.update(
       {
         id,
-        statut: Not(StatutLivraison.VALIDEE),
+        statut: StatutLivraison.EN_ATTENTE,
       },
       {
         statut: StatutLivraison.VALIDEE,
+        dateValidation,
       },
     );
 
     if (!resultat.affected || resultat.affected === 0) {
       throw new ConflictException(
-        "Cette livraison a déjà été traitée.",
+        "Cette livraison n'est plus en attente de validation.",
       );
     }
 
     livraison.statut = StatutLivraison.VALIDEE;
+    livraison.dateValidation = dateValidation;
 
     const saved = livraison;
 
@@ -563,22 +555,26 @@ export class LivraisonsService {
       );
     }
 
-    if (
-      livraison.statut ===
-      StatutLivraison.VALIDEE
-    ) {
-      throw new BadRequestException(
-        "Une livraison déjà validée ne peut plus être envoyée en correction.",
+    const resultat = await this.repo.update(
+      {
+        id,
+        statut: StatutLivraison.EN_ATTENTE,
+        correctionUtilisee: false,
+      },
+      {
+        statut: StatutLivraison.CORRECTION_DEMANDEE,
+        commentaireCorrection: dto.commentaireCorrection,
+      },
+    );
+    if (!resultat.affected || resultat.affected === 0) {
+      throw new ConflictException(
+        "Cette livraison ne peut plus faire l'objet d'une demande de correction.",
       );
     }
 
-    livraison.statut =
-      StatutLivraison.CORRECTION_DEMANDEE;
-
-    livraison.commentaireCorrection =
-      dto.commentaireCorrection;
-
-    const saved = await this.repo.save(livraison);
+    livraison.statut = StatutLivraison.CORRECTION_DEMANDEE;
+    livraison.commentaireCorrection = dto.commentaireCorrection;
+    const saved = livraison;
 
     // Notification à l'étudiant
     await this.notificationsService.creer({

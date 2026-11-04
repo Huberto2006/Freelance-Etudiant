@@ -6,6 +6,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Candidature } from '../../candidatures/entities/candidature.entity';
 import { Utilisateur } from '../../users/entities/utilisateur.entity';
@@ -38,6 +39,12 @@ import { TypeMoyenPaiement } from '../../moyens-paiement/enums/type-moyen-paieme
 @Index('uq_transaction_active_par_candidature', ['candidatureId'], {
   unique: true,
   where: "statut != 'annulee'",
+})
+// Reference marchande Papi = cle d'idempotence cote Papi et cle de
+// rapprochement des notifications : unique parmi les transactions Papi.
+@Index('uq_transaction_reference_papi', ['reference'], {
+  unique: true,
+  where: "provider = 'papi'",
 })
 export class Transaction {
   @PrimaryGeneratedColumn('uuid')
@@ -89,9 +96,9 @@ export class Transaction {
   provider?: string | null;
 
   /**
-   * Identifiant serveur du fournisseur (serverCorrelationId MVola).
-   * Cle d'idempotence : un meme webhook/polling ne peut valider deux
-   * fois la meme transaction.
+   * Identifiant serveur du fournisseur : serverCorrelationId MVola, ou
+   * UUID Papi de la tentative (papiPaymentReference), connu seulement
+   * apres une tentative de paiement.
    */
   @Column({
     name: 'provider_correlation_id',
@@ -129,8 +136,40 @@ export class Transaction {
   @Column({ name: 'provider_statut', type: 'varchar', length: 50, nullable: true })
   providerStatut?: string | null;
 
+  /** Devise du montant (Papi ne regle que MGA). */
+  @Column({ type: 'varchar', length: 3, default: 'MGA' })
+  devise: string;
+
+  /**
+   * Operateur du paiement en ligne : restriction choisie a la creation,
+   * puis operateur reellement utilise (MVOLA, ORANGE_MONEY, AIRTEL_MONEY,
+   * BRED) une fois le paiement relu chez Papi.
+   */
+  @Column({ name: 'methode_fournisseur', type: 'varchar', length: 30, nullable: true })
+  methodeFournisseur?: string | null;
+
+  /**
+   * Jeton Papi du lien (notificationToken) : repris dans chaque
+   * notification, controle apres la signature. Jamais expose par l'API.
+   */
+  @Column({
+    name: 'notification_token',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+    select: false,
+  })
+  notificationToken?: string | null;
+
+  /** Expiration du lien de paiement Papi. */
+  @Column({ name: 'date_expiration_lien', type: 'timestamptz', nullable: true })
+  dateExpirationLien?: Date | null;
+
   @CreateDateColumn({ name: 'date_creation', type: 'timestamptz' })
   dateCreation: Date;
+
+  @UpdateDateColumn({ name: 'date_mise_a_jour', type: 'timestamptz' })
+  dateMiseAJour: Date;
 
   // ============================================================
   // SNAPSHOT DES COORDONNEES UTILISEES AU MOMENT DU PAIEMENT

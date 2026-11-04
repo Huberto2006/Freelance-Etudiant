@@ -19,7 +19,6 @@ import {
   NoticeCard,
   PageHeader,
 } from "@/components/ui/Notice";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { SousNavigation } from "@/components/ui/SousNavigation";
 import { CarteTransaction } from "@/features/paiements/components/CarteTransaction";
 import { FormulairePaiement } from "@/features/paiements/components/FormulairePaiement";
@@ -246,10 +245,6 @@ export default function PaiementsPage() {
   return (
     <div>
       <div className="mb-4">
-        <BoutonRetour
-          repli="/tableau-de-bord"
-          forcer
-        />
       </div>
 
       <PageHeader

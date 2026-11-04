@@ -42,6 +42,7 @@ export function FormulairePaiement({
 
   const [methode, setMethode] =
     useState<MethodePaiement>("papi");
+  const [fournisseurPapi, setFournisseurPapi] = useState<string>("");
 
   const [telephone, setTelephone] = useState("");
   const [reference, setReference] = useState("");
@@ -212,6 +213,7 @@ export function FormulairePaiement({
               montant: Number(montant),
               methode,
               moyenPaiementId,
+              ...(fournisseurPapi ? { fournisseurPapi } : {}),
             }
           : paiementMvola
           ? {
@@ -437,9 +439,25 @@ export function FormulairePaiement({
             </Field>
           </div>
 
-          {/* NUMÉRO MVOLA DU CLIENT */}
+          {/* OPÉRATEUR PAPI (optionnel : choix libre par défaut) OU NUMÉRO MVOLA */}
 
-          {paiementPapi ? null : paiementMvola ? (
+          {paiementPapi ? (
+            <div className="w-full sm:w-64">
+              <Field label={t("papiOperator")} htmlFor="fournisseurPapi">
+                <Select
+                  id="fournisseurPapi"
+                  value={fournisseurPapi}
+                  onChange={(e) => setFournisseurPapi(e.target.value)}
+                >
+                  <option value="">{t("optPapiAll")}</option>
+                  <option value="MVOLA">{t("optPapiMvola")}</option>
+                  <option value="ORANGE_MONEY">{t("optPapiOrange")}</option>
+                  <option value="AIRTEL_MONEY">{t("optPapiAirtel")}</option>
+                  <option value="BRED">{t("optPapiCard")}</option>
+                </Select>
+              </Field>
+            </div>
+          ) : paiementMvola ? (
             <div className="w-full sm:w-56">
               <Field label={t("yourMvola")} htmlFor="telephone">
                 {!saisieLibre && moyensClient.length > 0 ? (

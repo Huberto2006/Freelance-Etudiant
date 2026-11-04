@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 
 export default function TableauDeBordLayout({
   children,
@@ -187,6 +188,7 @@ export default function TableauDeBordLayout({
             }
           `}
         >
+          <Breadcrumb scope="dashboard" />
           {children}
         </div>
       </div>

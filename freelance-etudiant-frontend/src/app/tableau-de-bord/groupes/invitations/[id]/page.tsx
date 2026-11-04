@@ -12,9 +12,9 @@ import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
 
 import { Button } from "@/components/ui/Button";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
+import { useBreadcrumbTitle } from "@/components/navigation/Breadcrumb";
 
 export default function InvitationGroupePage({
   params,
@@ -33,6 +33,7 @@ export default function InvitationGroupePage({
   const [succes, setSucces] = useState<string | null>(null);
   const [groupe, setGroupe] = useState<Groupe | null>(null);
   const [inviteur, setInviteur] = useState<EtudiantProfile | null>(null);
+  useBreadcrumbTitle(groupe?.nom ?? invitation?.groupe?.nom);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,7 +126,6 @@ export default function InvitationGroupePage({
   if (!invitation) {
     return (
       <div className="mx-auto max-w-2xl">
-        <BoutonRetour repli="/tableau-de-bord/notifications" className="mb-6" />
         <NoticeCard>
           <p className="text-sm text-brique">
             {erreur ?? t("notFound")}
@@ -144,8 +144,6 @@ export default function InvitationGroupePage({
 
   return (
     <div className="mx-auto max-w-2xl">
-      <BoutonRetour repli="/tableau-de-bord/notifications" className="mb-6" />
-
       <PageHeader
         icon={Users}
         eyebrow={t("eyebrow")}

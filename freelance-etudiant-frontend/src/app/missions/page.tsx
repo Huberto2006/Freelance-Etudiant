@@ -18,7 +18,6 @@ import {
 } from "@/features/catalogue/components/SousMenuCatalogue";
 import { CarteMission } from "@/features/missions/components/CarteMission";
 import { NoticeCard } from "@/components/ui/Notice";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { Button } from "@/components/ui/Button";
 import { SqueletteCatalogue } from "@/features/catalogue/components/SqueletteCatalogue";
 import { useAuth } from "@/lib/auth-context";
@@ -198,12 +197,6 @@ function MissionsContent() {
   return (
     <div className="container mx-auto max-w-7xl px-4 pb-8 pt-7">
       {/* ---------------------------------------- EN-TETE */}
-      <div className="mb-4">
-        <BoutonRetour
-          repli={utilisateur ? "/tableau-de-bord" : "/"}
-          forcer
-        />
-      </div>
       <div className="mb-6">
         <p className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
           {t("list.eyebrow")}

@@ -24,7 +24,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
 import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
+import { useBreadcrumbTitle } from "@/components/navigation/Breadcrumb";
 
 export default function GroupeDetailPage({
   params,
@@ -38,6 +38,7 @@ export default function GroupeDetailPage({
   const { roleMembreGroupe, statutInvitationGroupe } = useLabels();
 
   const [groupe, setGroupe] = useState<Groupe | null>(null);
+  useBreadcrumbTitle(groupe?.nom);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
 
@@ -213,11 +214,6 @@ export default function GroupeDetailPage({
   if (!groupe) {
     return (
       <div>
-        <BoutonRetour
-          repli="/tableau-de-bord/groupes"
-          className="mb-6"
-        />
-
         <NoticeCard>
           <div className="flex flex-col items-center gap-3 py-6 text-center">
             <span
@@ -248,11 +244,6 @@ export default function GroupeDetailPage({
 
   return (
     <div>
-      <BoutonRetour
-        repli="/tableau-de-bord/groupes"
-        className="mb-6"
-      />
-
       <PageHeader
         icon={Users}
         eyebrow={t("eyebrow")}

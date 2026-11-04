@@ -1,13 +1,40 @@
 import {
+  BadGatewayException,
   BadRequestException,
   ConflictException,
+  GatewayTimeoutException,
+  HttpException,
   ServiceUnavailableException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
 import { PaiementsService } from './paiements.service';
-import { PapiError } from './papi.service';
+import { PapiError, type EtatPaiementPapi, type StatutFournisseur } from './papi.service';
 import { MethodePaiement, StatutTransaction } from './enums/statut-transaction.enum';
 import type { Transaction } from './entities/transaction.entity';
+
+/** Relecture Papi coherente avec transaction() (montant, devise, reference). */
+function etatDe(
+  statut: StatutFournisseur | undefined,
+  reference: string,
+  extra: Partial<EtatPaiementPapi> = {},
+): EtatPaiementPapi {
+  const s = statut ?? 'pending';
+  return {
+    statut: s,
+    etat: s === 'completed' ? 'reussi' : s === 'failed' ? 'expire' : 'cree',
+    linkStatus: s === 'completed' ? 'PAID' : s === 'failed' ? 'EXPIRED' : 'ACTIVE',
+    paymentStatus: s === 'completed' ? 'SUCCESS' : null,
+    montant: 75000,
+    devise: 'MGA',
+    referenceMarchande: reference,
+    referencePapi: s === 'completed' ? 'uuid-papi-1' : null,
+    methode: s === 'completed' ? 'MVOLA' : null,
+    notificationToken: null,
+    message: null,
+    ...extra,
+  };
+}
 
 function creer(options: { diagnosticOk?: boolean } = {}) {
   const ordre: string[] = [];
@@ -19,7 +46,9 @@ function creer(options: { diagnosticOk?: boolean } = {}) {
     }),
     create: jest.fn((t: unknown) => t),
     update: jest.fn().mockResolvedValue({ affected: 1 }),
+    find: jest.fn().mockResolvedValue([]),
   };
+  const evenements = { insert: jest.fn().mockResolvedValue({}) };
   const papi = {
     diagnostic: jest.fn().mockReturnValue(
       options.diagnosticOk === false
@@ -30,12 +59,19 @@ function creer(options: { diagnosticOk?: boolean } = {}) {
       ordre.push('papi');
       return Promise.resolve({
         lienPaiement: 'https://pay.papi.mg/l/abc',
-        referencePapi: 'PAPI-REF-1',
+        notificationToken: 'jeton-lien-1',
         devise: 'MGA',
+        expiration: new Date('2026-11-05T10:00:00Z'),
       });
     }),
     verifierStatut: jest.fn(),
+    // Par defaut : relecture coherente construite a partir de verifierStatut.
+    lireStatut: jest.fn(),
+    urlNotification: jest.fn(() => 'https://api.kianja.test/api/v1/paiements/webhook/papi'),
   };
+  papi.lireStatut.mockImplementation(async (ids: { reference: string; paymentReference?: string | null }) =>
+    etatDe(await (papi.verifierStatut(ids) as Promise<StatutFournisseur | undefined>), ids.reference),
+  );
   const mvola = { estConfigure: true, verifierStatut: jest.fn(), initierPaiement: jest.fn() };
   const config = {
     get: (k: string) =>
@@ -58,8 +94,9 @@ function creer(options: { diagnosticOk?: boolean } = {}) {
     noop as never,
     { trouverPourPaiement: jest.fn() } as never,
     { genererSansBloquer: jest.fn() } as never,
+    evenements as never,
   );
-  return { service, repo, papi, mvola, notifications, email, ordre };
+  return { service, repo, papi, mvola, notifications, email, ordre, evenements };
 }
 
 function transaction(extra: Partial<Transaction> = {}): Transaction {
@@ -107,21 +144,24 @@ describe('PaiementsService — creation Papi', () => {
         methode: MethodePaiement.PAPI,
         statut: StatutTransaction.EN_ATTENTE,
         montant: 75000,
+        devise: 'MGA',
       }),
     );
     // Le lien est enregistre par une mise a jour ciblee, sans toucher au statut.
+    // Aucune « reference Papi » a la creation : Papi renvoie l'echo de la notre.
     expect(repo.update).toHaveBeenCalledWith(
       { id: 't1', statut: StatutTransaction.EN_ATTENTE },
       {
-        providerCorrelationId: 'PAPI-REF-1',
         lienPaiement: 'https://pay.papi.mg/l/abc',
-        providerStatut: 'pending',
+        notificationToken: 'jeton-lien-1',
+        dateExpirationLien: new Date('2026-11-05T10:00:00Z'),
+        devise: 'MGA',
+        providerStatut: 'cree',
       },
     );
-    expect(t).toMatchObject({
-      providerCorrelationId: 'PAPI-REF-1',
-      lienPaiement: 'https://pay.papi.mg/l/abc',
-    });
+    expect(t).toMatchObject({ lienPaiement: 'https://pay.papi.mg/l/abc', providerStatut: 'cree' });
+    // Le jeton de notification n'est jamais renvoye au navigateur.
+    expect(t.notificationToken).toBeUndefined();
 
     const appel = (papi.creerPaiement.mock.calls[0] as [Record<string, unknown>])[0];
     expect(appel.montantAr).toBe(75000);
@@ -184,7 +224,9 @@ describe('PaiementsService — creation Papi', () => {
     papi.creerPaiement.mockRejectedValue(
       new PapiError('http', 'HTTP 422', { statutHttp: 422, refusDefinitif: true }),
     );
-    await expect(appeler(service)).rejects.toThrow(/refuse la transaction/);
+    const e = await appeler(service).catch((x: Error) => x);
+    expect(e).toBeInstanceOf(BadGatewayException);
+    expect((e as Error).message).toMatch(/refuse la transaction/);
     expect(repo.update).toHaveBeenCalledWith(
       { id: 't1', statut: StatutTransaction.EN_ATTENTE },
       { statut: StatutTransaction.ANNULEE, providerStatut: 'refuse_par_papi' },
@@ -213,14 +255,18 @@ describe('PaiementsService — creation Papi', () => {
   );
 
   it.each([
-    ['5xx', new PapiError('http', 'HTTP 503', { statutHttp: 503 })],
-    ['timeout / reseau', new PapiError('reseau', 'Delai depasse')],
-    ['reponse mal formee', new PapiError('reponse_invalide', 'sans lien')],
-    ['erreur inconnue', new Error('boom')],
-  ])('%s : resultat INCERTAIN, la transaction n\'est jamais annulee', async (_nom, erreur) => {
+    ['5xx', new PapiError('http', 'HTTP 503', { statutHttp: 503 }), 502],
+    ['erreur reseau', new PapiError('reseau', 'Erreur reseau (DNS ENOTFOUND)'), 502],
+    ['timeout', new PapiError('reseau', 'Delai depasse', { delaiDepasse: true }), 504],
+    ['429', new PapiError('http', 'HTTP 429', { statutHttp: 429 }), 502],
+    ['reponse mal formee', new PapiError('reponse_invalide', 'sans lien'), 502],
+    ['erreur inconnue', new Error('boom'), 503],
+  ])('%s : resultat INCERTAIN, la transaction n\'est jamais annulee', async (_nom, erreur, code) => {
     const { service, repo, papi, notifications } = creer();
     papi.creerPaiement.mockRejectedValue(erreur);
-    await expect(appeler(service)).rejects.toThrow(ServiceUnavailableException);
+    const e = await appeler(service).catch((x: Error) => x);
+    expect(e).toBeInstanceOf(HttpException);
+    expect((e as HttpException).getStatus()).toBe(code);
 
     const misesAJour = repo.update.mock.calls.map((c) => c[1] as Record<string, unknown>);
     expect(misesAJour).toContainEqual({ providerStatut: 'creation_incertaine' });
@@ -238,10 +284,12 @@ describe('PaiementsService — creation Papi', () => {
   });
 
   describe('reprise d\'un paiement en attente', () => {
-    it('avec lien : le meme lien est renvoye, Papi non rappele, aucune notification', async () => {
+    it('avec lien encore actif : l\'etat est relu, le meme lien est renvoye, aucun nouveau lien', async () => {
       const { service, repo, papi, notifications } = creer();
+      papi.verifierStatut.mockResolvedValue('pending');
       const existante = transaction({ lienPaiement: 'https://pay.papi.mg/l/abc' });
       await expect(appeler(service, candidature(), existante)).resolves.toBe(existante);
+      expect(papi.lireStatut).toHaveBeenCalledWith({ paymentReference: 'PAPI-REF-1', reference: 'KIANJA-1' });
       expect(papi.creerPaiement).not.toHaveBeenCalled();
       expect(repo.save).not.toHaveBeenCalled();
       expect(notifications.creer).not.toHaveBeenCalled();
@@ -286,7 +334,7 @@ describe('PaiementsService — verification et webhook Papi', () => {
       expect(repo.save).not.toHaveBeenCalled();
       expect(repo.update).toHaveBeenCalledWith(
         { id: 't1', statut: StatutTransaction.EN_ATTENTE },
-        { providerStatut: 'pending' },
+        { providerStatut: 'cree' },
       );
     });
 
@@ -297,7 +345,7 @@ describe('PaiementsService — verification et webhook Papi', () => {
       const confirmer = jest.spyOn(service as never, 'marquerConfirmee' as never);
       const annuler = jest
         .spyOn(service as never, 'marquerAnnulee' as never)
-        .mockResolvedValue(undefined as never);
+        .mockResolvedValue(transaction({ statut: StatutTransaction.ANNULEE }) as never);
       await expect(
         service.traiterWebhook({ reference: 'KIANJA-1', status: 'paid' }, 'papi'),
       ).resolves.toEqual({ status: 'cancelled' });
@@ -311,7 +359,7 @@ describe('PaiementsService — verification et webhook Papi', () => {
       papi.verifierStatut.mockResolvedValue('completed');
       const confirmer = jest
         .spyOn(service as never, 'marquerConfirmee' as never)
-        .mockResolvedValue(undefined as never);
+        .mockResolvedValue(transaction({ statut: StatutTransaction.CONFIRMEE }) as never);
       await expect(service.traiterWebhook({ reference: 'KIANJA-1' }, 'papi')).resolves.toEqual({
         status: 'confirmed',
       });
@@ -323,7 +371,7 @@ describe('PaiementsService — verification et webhook Papi', () => {
       papi.verifierStatut.mockResolvedValue('completed');
       const confirmer = jest
         .spyOn(service as never, 'marquerConfirmee' as never)
-        .mockResolvedValue(undefined as never);
+        .mockResolvedValue(transaction({ statut: StatutTransaction.CONFIRMEE }) as never);
 
       repo.findOne.mockResolvedValueOnce(transaction());
       await service.traiterWebhook({ reference: 'KIANJA-1' }, 'papi');
@@ -460,13 +508,21 @@ describe('PaiementsService — verification et webhook Papi', () => {
       expect(papi.verifierStatut).toHaveBeenCalledWith({ paymentReference: null, reference: 'KIANJA-1' });
     });
 
-    it('verifier() : echec fournisseur -> 503 propre (pas de trace brute)', async () => {
-      const { service, repo, papi } = creer();
-      repo.findOne.mockResolvedValue(transaction({ clientId: 'c1' } as never));
-      papi.verifierStatut.mockRejectedValue(new PapiError('http', 'HTTP 500 secret interne'));
-      const e = await service.verifier('t1', 'c1').catch((x: Error) => x);
-      expect(e).toBeInstanceOf(ServiceUnavailableException);
-      expect((e as Error).message).not.toContain('secret interne');
+    it('verifier() : echec fournisseur -> code precis, message propre (pas de trace brute)', async () => {
+      const cas: [PapiError, new (...a: never[]) => HttpException][] = [
+        [new PapiError('http', 'HTTP 500 secret interne', { statutHttp: 500 }), BadGatewayException],
+        [new PapiError('reseau', 'Delai depasse', { delaiDepasse: true }), GatewayTimeoutException],
+        [new PapiError('authentification', 'cle refusee', { statutHttp: 401 }), ServiceUnavailableException],
+        [new PapiError('configuration', 'PAPI_API_KEY absente'), ServiceUnavailableException],
+      ];
+      for (const [erreur, attendue] of cas) {
+        const { service, repo, papi } = creer();
+        repo.findOne.mockResolvedValue(transaction({ clientId: 'c1' } as never));
+        papi.verifierStatut.mockRejectedValue(erreur);
+        const e = await service.verifier('t1', 'c1').catch((x: Error) => x);
+        expect(e).toBeInstanceOf(attendue);
+        expect((e as Error).message).not.toContain('secret interne');
+      }
     });
 
     it('un paiement Papi ne peut etre confirme ni annule a la main', async () => {
@@ -490,5 +546,300 @@ describe('PaiementsService — verification et webhook Papi', () => {
       expect.objectContaining({ type: 'paiement_confirme' }),
     );
     expect(email.envoyerPaiementInitie).not.toHaveBeenCalled();
+  });
+});
+
+describe('PaiementsService — fiabilisation Papi', () => {
+  const confirmeEspion = (service: PaiementsService) =>
+    jest.spyOn(service as never, 'marquerConfirmee' as never).mockResolvedValue(undefined as never);
+
+  describe('controles de coherence avant confirmation', () => {
+    it.each([
+      ['montant', { montant: 100 }, 'anomalie_montant'],
+      ['montant absent', { montant: null }, 'anomalie_montant'],
+      ['devise', { devise: 'EUR' }, 'anomalie_devise'],
+      ['reference', { referenceMarchande: 'KIANJA-AUTRE' }, 'anomalie_reference'],
+      ['jeton', { notificationToken: 'autre-jeton' }, 'anomalie_jeton'],
+    ])('PAID+SUCCESS mais %s incoherent : jamais confirme', async (_nom, extra, motif) => {
+      const { service, repo, papi } = creer();
+      repo.findOne.mockResolvedValue(
+        transaction({ clientId: 'c1', notificationToken: 'jeton-lien-1' } as never),
+      );
+      papi.lireStatut.mockResolvedValue(etatDe('completed', 'KIANJA-1', extra as never));
+      const confirmer = confirmeEspion(service);
+
+      const t = await service.verifier('t1', 'c1');
+
+      expect(confirmer).not.toHaveBeenCalled();
+      expect(t.statut).toBe(StatutTransaction.EN_ATTENTE);
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 't1', statut: StatutTransaction.EN_ATTENTE },
+        expect.objectContaining({ providerStatut: motif }),
+      );
+    });
+
+    it('PAID+SUCCESS coherent : confirme et enregistre l\'UUID Papi et l\'operateur reel', async () => {
+      const { service, repo, papi } = creer();
+      repo.findOne.mockResolvedValue(
+        transaction({ clientId: 'c1', providerCorrelationId: null, notificationToken: 'jeton-lien-1' } as never),
+      );
+      papi.lireStatut.mockResolvedValue(
+        etatDe('completed', 'KIANJA-1', { notificationToken: 'jeton-lien-1', methode: 'ORANGE_MONEY' }),
+      );
+      const confirmer = confirmeEspion(service);
+      await service.verifier('t1', 'c1');
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 't1', statut: StatutTransaction.EN_ATTENTE },
+        { providerStatut: 'reussi', providerCorrelationId: 'uuid-papi-1', methodeFournisseur: 'ORANGE_MONEY' },
+      );
+      expect(confirmer).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      ['ACTIVE + FAILED (le client peut reessayer)', 'tentative_echouee'],
+      ['ACTIVE + PENDING', 'en_cours'],
+      ['statut inconnu', 'inconnu'],
+    ])('%s : reste EN_ATTENTE, ni confirme ni annule', async (_nom, etat) => {
+      const { service, repo, papi } = creer();
+      repo.findOne.mockResolvedValue(transaction({ clientId: 'c1' } as never));
+      papi.lireStatut.mockResolvedValue({ ...etatDe('pending', 'KIANJA-1'), etat: etat as never });
+      const confirmer = confirmeEspion(service);
+      const annuler = jest.spyOn(service as never, 'marquerAnnulee' as never);
+      const t = await service.verifier('t1', 'c1');
+      expect(t.statut).toBe(StatutTransaction.EN_ATTENTE);
+      expect(confirmer).not.toHaveBeenCalled();
+      expect(annuler).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('webhook Papi', () => {
+    it('notificationToken different de celui du lien : 401, Papi non relu', async () => {
+      const { service, repo, papi } = creer();
+      repo.findOne.mockResolvedValue(transaction({ notificationToken: 'jeton-lien-1' } as never));
+      await expect(
+        service.traiterWebhook(
+          { merchantPaymentReference: 'KIANJA-1', notificationToken: 'forge' },
+          'papi',
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(papi.lireStatut).not.toHaveBeenCalled();
+    });
+
+    it('notificationToken absent alors qu\'un jeton est connu : 401', async () => {
+      const { service, repo } = creer();
+      repo.findOne.mockResolvedValue(transaction({ notificationToken: 'jeton-lien-1' } as never));
+      await expect(
+        service.traiterWebhook({ merchantPaymentReference: 'KIANJA-1' }, 'papi'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('bon jeton + Papi confirme : confirmed', async () => {
+      const { service, repo, papi } = creer();
+      repo.findOne.mockResolvedValue(transaction({ notificationToken: 'jeton-lien-1' } as never));
+      papi.lireStatut.mockResolvedValue(
+        etatDe('completed', 'KIANJA-1', { notificationToken: 'jeton-lien-1' }),
+      );
+      jest
+        .spyOn(service as never, 'marquerConfirmee' as never)
+        .mockResolvedValue(transaction({ statut: StatutTransaction.CONFIRMEE }) as never);
+      await expect(
+        service.traiterWebhook(
+          {
+            merchantPaymentReference: 'KIANJA-1',
+            notificationToken: 'jeton-lien-1',
+            paymentStatus: 'SUCCESS',
+            amount: 75000,
+            currency: 'MGA',
+          },
+          'papi',
+        ),
+      ).resolves.toEqual({ status: 'confirmed' });
+    });
+
+    it('devise annoncee autre que MGA : 400, Papi non relu', async () => {
+      const { service, repo, papi } = creer();
+      repo.findOne.mockResolvedValue(transaction());
+      await expect(
+        service.traiterWebhook({ merchantPaymentReference: 'KIANJA-1', currency: 'EUR' }, 'papi'),
+      ).rejects.toThrow(/Devise/);
+      expect(papi.lireStatut).not.toHaveBeenCalled();
+    });
+
+    it('relecture incoherente (montant) : 2xx « anomaly », jamais confirme', async () => {
+      const { service, repo, papi } = creer();
+      repo.findOne.mockResolvedValue(transaction());
+      papi.lireStatut.mockResolvedValue(etatDe('completed', 'KIANJA-1', { montant: 1 }));
+      const confirmer = jest.spyOn(service as never, 'marquerConfirmee' as never);
+      await expect(
+        service.traiterWebhook({ merchantPaymentReference: 'KIANJA-1' }, 'papi'),
+      ).resolves.toEqual({ status: 'anomaly' });
+      expect(confirmer).not.toHaveBeenCalled();
+    });
+
+    it('ne cherche que parmi les transactions Papi', async () => {
+      const { service, repo, papi } = creer();
+      repo.findOne.mockResolvedValue(transaction());
+      papi.verifierStatut.mockResolvedValue('pending');
+      await service.traiterWebhook({ merchantPaymentReference: 'KIANJA-1' }, 'papi');
+      expect(repo.findOne.mock.calls[0][0].where).toEqual({ reference: 'KIANJA-1', provider: 'papi' });
+    });
+
+    it('journalise chaque notification avec son issue, sans jeton ni signature', async () => {
+      const { service, repo, papi, evenements } = creer();
+      repo.findOne.mockResolvedValue(transaction());
+      papi.verifierStatut.mockResolvedValue('pending');
+      await service.traiterWebhook(
+        { merchantPaymentReference: 'KIANJA-1', paymentReference: 'uuid-1', paymentStatus: 'PENDING', amount: 75000 },
+        'papi',
+      );
+      expect(evenements.insert).toHaveBeenLastCalledWith({
+        fournisseur: 'papi',
+        reference: 'KIANJA-1',
+        referenceFournisseur: 'uuid-1',
+        transactionId: 't1',
+        statutAnnonce: 'PENDING',
+        montantAnnonce: '75000',
+        resultat: 'pending',
+        codeHttp: 201,
+      });
+
+      repo.findOne.mockResolvedValue(null);
+      await service
+        .traiterWebhook({ merchantPaymentReference: 'KIANJA-X', notificationToken: 'secret-ne-pas-stocker' }, 'papi')
+        .catch(() => undefined);
+      const dernier = evenements.insert.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+      expect(dernier).toMatchObject({ resultat: 'rejet:Transaction inconnue', codeHttp: 404 });
+      expect(JSON.stringify(dernier)).not.toContain('secret-ne-pas-stocker');
+    });
+
+    it('un journal indisponible ne bloque jamais le traitement', async () => {
+      const { service, repo, papi, evenements } = creer();
+      repo.findOne.mockResolvedValue(transaction());
+      papi.verifierStatut.mockResolvedValue('pending');
+      evenements.insert.mockRejectedValue(new Error('table absente'));
+      await expect(
+        service.traiterWebhook({ merchantPaymentReference: 'KIANJA-1' }, 'papi'),
+      ).resolves.toEqual({ status: 'pending' });
+    });
+  });
+
+  describe('reprise et paiements interrompus', () => {
+    it('lien expire : ancienne transaction annulee, NOUVELLE reference et nouveau lien', async () => {
+      const { service, repo, papi } = creer();
+      papi.lireStatut.mockResolvedValue(etatDe('failed', 'KIANJA-1'));
+      const annuler = jest
+        .spyOn(service as never, 'marquerAnnulee' as never)
+        .mockImplementation(((t: Transaction) =>
+          Promise.resolve({ ...t, statut: StatutTransaction.ANNULEE })) as never);
+      const existante = transaction({ lienPaiement: 'https://pay.papi.mg/l/vieux' });
+
+      await appeler(service, candidature(), existante);
+
+      expect(annuler).toHaveBeenCalledTimes(1);
+      expect(repo.save).toHaveBeenCalledTimes(1);
+      const appel = (papi.creerPaiement.mock.calls[0] as [Record<string, unknown>])[0];
+      expect(appel.reference).not.toBe('KIANJA-1');
+    });
+
+    it('lien deja paye : confirme, aucun nouveau lien (pas de double paiement)', async () => {
+      const { service, papi, repo } = creer();
+      papi.lireStatut.mockResolvedValue(etatDe('completed', 'KIANJA-1'));
+      const confirmer = jest
+        .spyOn(service as never, 'marquerConfirmee' as never)
+        .mockResolvedValue(transaction({ statut: StatutTransaction.CONFIRMEE }) as never);
+      const t = await appeler(service, candidature(), transaction({ lienPaiement: 'https://pay.papi.mg/l/abc' }));
+      expect(confirmer).toHaveBeenCalledTimes(1);
+      expect(t.statut).toBe(StatutTransaction.CONFIRMEE);
+      expect(papi.creerPaiement).not.toHaveBeenCalled();
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    it('relecture impossible pendant la reprise : le lien existant est renvoye, rien de cree', async () => {
+      const { service, papi, repo } = creer();
+      papi.lireStatut.mockRejectedValue(new PapiError('reseau', 'Delai depasse', { delaiDepasse: true }));
+      const existante = transaction({ lienPaiement: 'https://pay.papi.mg/l/abc' });
+      await expect(appeler(service, candidature(), existante)).resolves.toBe(existante);
+      expect(papi.creerPaiement).not.toHaveBeenCalled();
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    it('404 Papi sur une transaction SANS lien : rien n\'a ete cree, annulee', async () => {
+      const { service, repo, papi } = creer();
+      repo.findOne.mockResolvedValue(transaction({ clientId: 'c1', lienPaiement: null } as never));
+      papi.lireStatut.mockRejectedValue(
+        new PapiError('introuvable', 'HTTP 404', { statutHttp: 404, refusDefinitif: true }),
+      );
+      const annuler = jest
+        .spyOn(service as never, 'marquerAnnulee' as never)
+        .mockResolvedValue(transaction({ statut: StatutTransaction.ANNULEE }) as never);
+      await service.verifier('t1', 'c1');
+      expect(annuler).toHaveBeenCalledTimes(1);
+    });
+
+    it('404 Papi sur une transaction AVEC lien : anomalie, jamais annulee (503)', async () => {
+      const { service, repo, papi } = creer();
+      repo.findOne.mockResolvedValue(
+        transaction({ clientId: 'c1', lienPaiement: 'https://pay.papi.mg/l/abc' } as never),
+      );
+      papi.lireStatut.mockRejectedValue(
+        new PapiError('introuvable', 'HTTP 404', { statutHttp: 404, refusDefinitif: true }),
+      );
+      const annuler = jest.spyOn(service as never, 'marquerAnnulee' as never);
+      await expect(service.verifier('t1', 'c1')).rejects.toThrow(ServiceUnavailableException);
+      expect(annuler).not.toHaveBeenCalled();
+    });
+
+    it('reconciliation : relit les paiements en attente, s\'arrete sur une panne reseau', async () => {
+      const { service, repo, papi } = creer();
+      repo.find.mockResolvedValue([
+        transaction({ id: 'a', reference: 'KIANJA-A' }),
+        transaction({ id: 'b', reference: 'KIANJA-B' }),
+        transaction({ id: 'c', reference: 'KIANJA-C' }),
+      ]);
+      papi.lireStatut
+        .mockResolvedValueOnce(etatDe('pending', 'KIANJA-A'))
+        .mockRejectedValueOnce(new PapiError('reseau', 'Erreur reseau'));
+      await expect(service.reconcilierPapiEnAttente()).resolves.toEqual({ verifiees: 1, erreurs: 1 });
+      expect(papi.lireStatut).toHaveBeenCalledTimes(2); // C n'est pas tente
+      const filtre = repo.find.mock.calls[0][0].where;
+      expect(filtre).toMatchObject({ provider: 'papi', statut: StatutTransaction.EN_ATTENTE });
+    });
+  });
+
+  describe('creation', () => {
+    it('409 PAYMENT_LINK_CONFLICT : 409, creneau libere', async () => {
+      const { service, repo, papi } = creer();
+      papi.creerPaiement.mockRejectedValue(
+        new PapiError('conflit', 'HTTP 409', { statutHttp: 409, refusDefinitif: true, codePapi: 'PAYMENT_LINK_CONFLICT' }),
+      );
+      await expect(appeler(service)).rejects.toThrow(ConflictException);
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 't1', statut: StatutTransaction.EN_ATTENTE },
+        { statut: StatutTransaction.ANNULEE, providerStatut: 'conflit_papi' },
+      );
+    });
+
+    it('cle API refusee : 503 « indisponible », trace cle_papi_refusee', async () => {
+      const { service, repo, papi } = creer();
+      papi.creerPaiement.mockRejectedValue(
+        new PapiError('authentification', 'API key invalide', { statutHttp: 400, refusDefinitif: true }),
+      );
+      const e = await appeler(service).catch((x: Error) => x);
+      expect(e).toBeInstanceOf(ServiceUnavailableException);
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 't1', statut: StatutTransaction.EN_ATTENTE },
+        { statut: StatutTransaction.ANNULEE, providerStatut: 'cle_papi_refusee' },
+      );
+    });
+
+    it('operateur choisi (Orange Money) transmis a Papi et enregistre', async () => {
+      const { service, repo, papi } = creer();
+      await (service as unknown as { creerPaiementPapi: Appel }).creerPaiementPapi(
+        candidature(), 'cand1', 'c1', 75000, {}, undefined, null, 'ORANGE_MONEY',
+      );
+      expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ methodeFournisseur: 'ORANGE_MONEY' }));
+      const appel = (papi.creerPaiement.mock.calls[0] as [Record<string, unknown>])[0];
+      expect(appel.fournisseur).toBe('ORANGE_MONEY');
+    });
   });
 });

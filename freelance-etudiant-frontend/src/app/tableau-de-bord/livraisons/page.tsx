@@ -14,7 +14,6 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  ChevronRight,
   Search,
   FolderGit2,
   Wallet,
@@ -46,10 +45,10 @@ import {
   StatCard,
   Tag,
 } from "@/components/ui/Notice";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { SousNavigation } from "@/components/ui/SousNavigation";
 import { LivraisonEtudiant } from "@/features/livraisons/components/LivraisonEtudiant";
 import { LivraisonClient } from "@/features/livraisons/components/LivraisonClient";
+import { useBreadcrumbTitle } from "@/components/navigation/Breadcrumb";
 
 // ============================================================
 // PAGE PRINCIPALE
@@ -442,6 +441,7 @@ function LivraisonsContent() {
             candidatureSelectionnee.id,
         ) ?? null
       : null;
+  useBreadcrumbTitle(candidatureSelectionnee?.mission?.titre);
 
   // ==========================================================
   // CHARGEMENT DE LA SESSION
@@ -514,30 +514,6 @@ function LivraisonsContent() {
 
     return (
       <div>
-        {/* FIL D'ARIANE + RETOUR */}
-
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <nav
-            aria-label={t("breadcrumb")}
-            className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-ink-soft"
-          >
-            <Link
-              href="/tableau-de-bord/livraisons"
-              className="hover:text-ink hover:underline"
-            >
-              {t("breadcrumbDeliveries")}
-            </Link>
-            <ChevronRight size={13} aria-hidden="true" />
-            <span className="text-ink">{t("detail")}</span>
-          </nav>
-
-          <BoutonRetour
-            label={t("back")}
-            repli="/tableau-de-bord/livraisons"
-            forcer
-          />
-        </div>
-
         <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
           {/* CONTENU PRINCIPAL */}
 

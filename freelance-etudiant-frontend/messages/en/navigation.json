@@ -11,6 +11,14 @@
     "myServices": "My services",
     "myMissions": "My missions",
     "myApplications": "My applications",
+    "receivedApplications": "Received applications",
+    "missionDetail": "Mission details",
+    "serviceDetail": "Service details",
+    "freelanceProfile": "Freelancer profile",
+    "clientProfile": "Client profile",
+    "groupDetail": "Group details",
+    "groupInvitation": "Invitation",
+    "invoice": "Invoice",
     "finances": "Finances",
     "applications": "Applications",
     "groups": "Groups",
@@ -32,6 +40,7 @@
     "reviews": "Reviews",
     "home": "Home",
     "about": "About",
+    "contact": "Contact",
     "allPublications": "All publications",
     "discoverFreelances": "Discover freelancers",
     "helpCenter": "Help center",
@@ -103,5 +112,9 @@
     "profile": "Profile",
     "logout": "Log out",
     "login": "Log in"
+  },
+  "breadcrumb": {
+    "ariaLabel": "Breadcrumb",
+    "showParents": "Show parent pages"
   }
 }

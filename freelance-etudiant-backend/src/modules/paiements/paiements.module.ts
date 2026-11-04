@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Transaction } from './entities/transaction.entity';
+import { EvenementPaiement } from './entities/evenement-paiement.entity';
 import { Livraison } from '../livraisons/entities/livraison.entity';
 import { PaiementsService } from './paiements.service';
 import { PaiementsController } from './paiements.controller';
@@ -20,7 +21,7 @@ import { MoyensPaiementClientModule } from '../moyens-paiement-client/moyens-pai
     // des fonds au moment de la confirmation (modele sequestre). Aucune
     // dependance vers LivraisonsModule : LivraisonsModule importe deja
     // PaiementsModule (liberation des fonds), on evite donc un cycle.
-    TypeOrmModule.forFeature([Transaction, Livraison]),
+    TypeOrmModule.forFeature([Transaction, Livraison, EvenementPaiement]),
     CandidaturesModule,
     NotificationsModule,
     UsersModule,

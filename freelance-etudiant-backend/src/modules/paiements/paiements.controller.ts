@@ -107,6 +107,25 @@ export class PaiementsController {
     return this.paiementsService.traiterWebhook(req.body, 'papi');
   }
 
+  /**
+   * Diagnostic Papi (aucun secret). `?sonde=1` ajoute une relecture d'une
+   * reference aleatoire : 404 = Papi joignable et cle acceptee. Aucun lien
+   * n'est cree, aucun argent n'est engage.
+   */
+  @Roles(Role.ADMIN)
+  @Get('paiements/papi/diagnostic')
+  @ApiOperation({ summary: 'Diagnostic de la configuration Papi (et sonde d\'authentification)' })
+  async diagnosticPapi(@Query('sonde') sonde?: string) {
+    return this.paiementsService.diagnosticPapi(sonde === '1' || sonde === 'true');
+  }
+
+  @Roles(Role.ADMIN)
+  @Post('paiements/papi/reconcilier')
+  @ApiOperation({ summary: 'Relire chez Papi les paiements en attente' })
+  async reconcilierPapi() {
+    return this.paiementsService.reconcilierPapiEnAttente();
+  }
+
   @Roles(Role.CLIENT, Role.ADMIN)
   @Post('paiements/:id/verifier')
   @ApiOperation({

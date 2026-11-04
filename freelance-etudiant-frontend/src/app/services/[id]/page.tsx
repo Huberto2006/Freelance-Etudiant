@@ -19,8 +19,8 @@ import {
   SelecteurPieceJointe,
   type PieceJointeValeur,
 } from "@/components/shared/PieceJointe";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
 import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
+import { useBreadcrumbTitle } from "@/components/navigation/Breadcrumb";
 
 export default function ServiceDetailPage({
   params,
@@ -40,6 +40,7 @@ export default function ServiceDetailPage({
   const service =
     resultatService?.id === id ? resultatService.service : null;
   const chargement = resultatService?.id !== id;
+  useBreadcrumbTitle(service?.titre);
 
   const [afficherFormulaire, setAfficherFormulaire] = useState(false);
   const [cahierDesCharges, setCahierDesCharges] = useState("");
@@ -123,9 +124,6 @@ export default function ServiceDetailPage({
                 ? t("detail.loadError")
                 : t("detail.notFound")}
             </p>
-            <Button variant="secondary" size="sm" href="/services">
-              {t("detail.backToServices")}
-            </Button>
           </div>
         </NoticeCard>
       </div>
@@ -137,9 +135,6 @@ export default function ServiceDetailPage({
 
   return (
     <div className="mx-auto max-w-4xl px-5 pt-7 pb-11">
-      <div className="mb-4">
-        <BoutonRetour repli="/services" />
-      </div>
 
       {service.imagesUrls?.[0] && (
         <div className="mb-6 h-64 overflow-hidden rounded-lg border border-ink/10 sm:h-80">

@@ -24,6 +24,20 @@ export interface PieceJointeLivraison {
   tailleOctets?: number;
 }
 
+export interface VersionLivraison {
+  fichierUrl?: string | null;
+  piecesJointes?: PieceJointeLivraison[] | null;
+  lienLivrable?: string | null;
+  branche?: string | null;
+  commentaireLivraison?: string | null;
+  statut: StatutLivraison;
+  commentaireCorrection?: string | null;
+  dateLivraison: Date;
+  dateDerniereSoumission: Date;
+  dateValidation?: Date | null;
+  dateArchive: Date;
+}
+
 /**
  * Table Livraison : materialise le cas d'utilisation "Livrer le projet" /
  * "Valider le projet livre" (chapitre 5.5 du document d'analyse).
@@ -76,11 +90,31 @@ export class Livraison {
   @Column({ name: 'commentaire_correction', type: 'text', nullable: true })
   commentaireCorrection?: string;
 
+  @Column({ name: 'correction_utilisee', type: 'boolean', default: false })
+  correctionUtilisee!: boolean;
+
+  @Column({
+    name: 'historique',
+    type: 'jsonb',
+    default: () => "'[]'::jsonb",
+  })
+  historique!: VersionLivraison[];
+
   @OneToMany(() => Evaluation, (evaluation) => evaluation.livraison)
   evaluations!: Evaluation[];
 
   @CreateDateColumn({ name: 'date_livraison', type: 'timestamptz' })
   dateLivraison!: Date;
+
+  @Column({
+    name: 'date_derniere_soumission',
+    type: 'timestamptz',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  dateDerniereSoumission!: Date;
+
+  @Column({ name: 'date_validation', type: 'timestamptz', nullable: true })
+  dateValidation?: Date | null;
 
   @UpdateDateColumn({ name: 'date_maj', type: 'timestamptz' })
   dateMaj!: Date;

@@ -12,7 +12,6 @@ import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
 
 import { NoticeCard, PageHeader } from "@/components/ui/Notice";
-import { BoutonRetour } from "@/components/ui/BoutonRetour";
 
 export default function FacturesPage() {
   const { utilisateur } = useAuth();
@@ -58,7 +57,6 @@ export default function FacturesPage() {
   return (
     <div>
       <div className="mb-4">
-        <BoutonRetour repli="/tableau-de-bord" forcer />
       </div>
 
       <PageHeader

@@ -396,10 +396,14 @@ const paiementsService = new PaiementsService(
   candidaturesService,
   notificationsFaux,
   mvolaFaux,
+  null as unknown as any, // papiService
+  null as unknown as any, // configService
   emailFaux,
   usersFaux,
   moyensPaiementFaux,
-  null as unknown as any,
+  null as unknown as any, // moyensPaiementClientService
+  null as unknown as any, // facturesService
+  null as unknown as any, // evenementsRepo
 );
 
 const livraisonsService = new LivraisonsService(
