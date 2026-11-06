@@ -1,5 +1,6 @@
 "use client";
 
+import { ModalTransition } from "@/components/ui/motion/ModalTransition";
 import { useEffect, useId, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
@@ -114,21 +115,21 @@ export function ConfirmDialog({
     };
   }, [ouvert]);
 
-  if (!ouvert) return null;
-
   return (
-    <div
+    <ModalTransition
+      ouvert={ouvert}
       role="alertdialog"
       aria-modal="true"
       aria-labelledby={idTitre}
       aria-describedby={description ? idDescription : undefined}
       aria-busy={enCours || undefined}
-      className="animate-in-fade fixed inset-0 z-[80] flex items-center justify-center bg-ink/45 p-4"
-      onClick={() => {
+      classeFond="fixed inset-0 z-[80] flex items-center justify-center bg-ink/45 p-4"
+      classePanneau="w-full max-w-sm"
+      refPanneau={panneauRef}
+      surClicFond={() => {
         if (!enCours) onAnnuler();
       }}
     >
-      <div ref={panneauRef} className="animate-pop w-full max-w-sm">
         <NoticeCard
           className="shadow-[0_20px_50px_-15px_rgba(15,23,42,0.45)]"
           // Empêche un clic à l'intérieur de la carte de fermer la boîte
@@ -182,7 +183,6 @@ export function ConfirmDialog({
             </Button>
           </div>
         </NoticeCard>
-      </div>
-    </div>
+    </ModalTransition>
   );
 }

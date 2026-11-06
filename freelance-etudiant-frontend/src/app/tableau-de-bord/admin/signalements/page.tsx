@@ -9,6 +9,7 @@ import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
 import { useApiList } from "@/hooks/useApiList";
 import { Button } from "@/components/ui/Button";
+import { DataTable, type ColonneDataTable } from "@/components/ui/data-table";
 import { Textarea } from "@/components/ui/Field";
 import { BadgeStatut, EtatVide, NoticeCard, PageHeader } from "@/components/ui/Notice";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -53,6 +54,69 @@ export default function AdminSignalementsPage() {
 
   const ouverts = signalements.filter((x) => x.statut !== "traite");
   const traites = signalements.filter((x) => x.statut === "traite");
+
+  const colonnesTraites: ColonneDataTable<Signalement>[] = [
+    {
+      id: "motif",
+      entete: t("reports.colReason"),
+      valeurTri: (s) => s.motif,
+      texteRecherche: (s) => `${s.motif} ${s.description}`,
+      classeCellule: "min-w-44",
+      cellule: (s) => (
+        <>
+          <span className="block font-display font-medium text-ink">{s.motif}</span>
+          <span className="block max-w-xl text-xs leading-relaxed text-ink-soft">
+            {s.description}
+          </span>
+          {/* Sur petit écran, les colonnes masquées passent sous le texte. */}
+          {s.resolution && (
+            <span className="mt-1 block text-xs italic text-ink-soft md:hidden">
+              {t("reports.resolution", { text: s.resolution })}
+            </span>
+          )}
+          <span className="mt-1 block text-xs tabular-nums text-ink-soft md:hidden">
+            {s.cibleType} · {dateCourte(s.dateSignalement)}
+          </span>
+        </>
+      ),
+    },
+    {
+      id: "resolution",
+      entete: t("reports.colResolution"),
+      masquerSous: "md",
+      classeCellule: "max-w-xs text-xs italic text-ink-soft",
+      texteRecherche: (s) => s.resolution ?? "",
+      cellule: (s) => s.resolution,
+    },
+    {
+      id: "cible",
+      entete: t("reports.colTarget"),
+      masquerSous: "md",
+      classeCellule: "text-xs text-ink-soft",
+      valeurTri: (s) => s.cibleType,
+      texteRecherche: (s) => s.cibleType,
+      cellule: (s) => s.cibleType,
+    },
+    {
+      id: "date",
+      entete: t("reports.colDate"),
+      masquerSous: "md",
+      classeCellule: "whitespace-nowrap text-xs tabular-nums text-ink-soft",
+      valeurTri: (s) => new Date(s.dateSignalement),
+      cellule: (s) => dateCourte(s.dateSignalement),
+    },
+    {
+      id: "statut",
+      entete: t("reports.colStatus"),
+      classeCellule: "whitespace-nowrap",
+      cellule: (s) => (
+        <BadgeStatut
+          statut={s.statut}
+          labels={{ [s.statut]: statutSignalement(s.statut) }}
+        />
+      ),
+    },
+  ];
 
   return (
     <div>
@@ -156,35 +220,18 @@ export default function AdminSignalementsPage() {
           <h2 className="mb-3 font-display text-lg font-semibold">
             {t("reports.processed")}
           </h2>
-          {traites.length === 0 ? (
-            <EtatVide icon={Flag}>{tc("states.empty")}</EtatVide>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {traites.map((s) => (
-                <li key={s.id}>
-                  <NoticeCard className="flex flex-col gap-1.5">
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="font-display font-medium leading-snug">
-                        {s.motif}
-                      </p>
-                      <BadgeStatut
-                        statut={s.statut}
-                        labels={{ [s.statut]: statutSignalement(s.statut) }}
-                      />
-                    </div>
-                    <p className="text-sm leading-relaxed text-ink-soft">
-                      {s.description}
-                    </p>
-                    {s.resolution && (
-                      <p className="text-xs italic text-ink-soft">
-                        {t("reports.resolution", { text: s.resolution })}
-                      </p>
-                    )}
-                  </NoticeCard>
-                </li>
-              ))}
-            </ul>
-          )}
+          <DataTable
+            lignes={traites}
+            colonnes={colonnesTraites}
+            cleLigne={(s) => s.id}
+            legende={t("reports.processed")}
+            iconeVide={Flag}
+            messageVide={tc("states.empty")}
+            messageAucunResultat={t("reports.noResults")}
+            placeholderRecherche={t("reports.searchPlaceholder")}
+            libelleRecherche={t("reports.searchLabel")}
+            triInitial={{ colonne: "date", direction: "desc" }}
+          />
         </>
       )}
     </div>

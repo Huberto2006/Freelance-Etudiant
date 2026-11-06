@@ -39,9 +39,8 @@ npm run dev
 npm run build                # output: standalone
 npm run lint
 npm run i18n:check           # fr/mg/en message files must have identical keys, with no empty/TODO/RELIRE values
+npm test                     # node --test tests/**/*.test.mjs (pure logic only; no component test runner)
 ```
-
-There is no frontend test runner.
 
 Full stack (repository root, uses root `.env`; see `.env.example`):
 
@@ -100,6 +99,8 @@ No automatic migration rollback happens during deploys.
   - `src/features/<domaine>/` holds what belongs to one domain: `components/`, plus `hooks/`, `services/` (API calls) and `utils/` when needed.
   - `src/components/ui/` holds generic UI with no domain dependency. `components/layout/` composes features into the navigation shell. `components/shared/` holds components used by several features.
   - `src/types/<domaine>.ts` is the REST API contract, split by backend domain. Import from the specific file, for example `@/types/missions`.
+  - Tabular data uses `DataTable` from `@/components/ui/data-table` (rows per page 10/20/30/50/100, search, sort, client-side pagination). No list API returns a total yet, so server pagination has no contract to rely on. Card lists, feeds and work queues with inline forms stay as they are.
+  - Animations go through `@/components/ui/motion/*`, imported file by file (no barrel). CSS handles entrances, staggering and permanent effects, with tokens in `globals.css`. The `motion` library is used only for exit animations (`ModalTransition`, `SidebarTransition`), through `MouvementLocal` rather than the root layout, so public routes do not download it. Animate only `transform` and `opacity`, and check `prefers-reduced-motion`. The backend emits no presence or typing events, so never show those indicators without adding real data.
   - `src/lib/` holds only cross-cutting infrastructure: the API client, auth and socket contexts, formatting and categories.
   - Shared layers (`ui`, `lib`, `hooks`, `i18n`, `types`) must never import from `features/`.
 - **i18n:** uses next-intl **without URL prefixes**.

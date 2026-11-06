@@ -1,5 +1,6 @@
 "use client";
 
+import { HoverCard } from "@/components/ui/motion/HoverCard";
 import Link from "next/link";
 import { Star, Timer } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -37,7 +38,7 @@ export function CarteService({
   const image = getFileUrl(service.imagesUrls?.[0] ?? null);
 
   return (
-    <article className="notice-card card-link group relative flex flex-col overflow-hidden">
+    <HoverCard as="article" className="group relative flex flex-col overflow-hidden">
       {/* ---------------------------------------------- COUVERTURE
           Le lien couvre l'image ; le bouton « favori » est un FRÈRE du
           lien (jamais son enfant) : un contrôle interactif ne doit pas
@@ -145,6 +146,6 @@ export function CarteService({
           </div>
         </div>
       </div>
-    </article>
+    </HoverCard>
   );
 }

@@ -55,5 +55,12 @@
   "back": {
     "ariaLabel": "Hiverina amin'ny pejy teo aloha",
     "label": "Hiverina"
+  },
+  "dataTable": {
+    "rowsPerPage": "Andalana isaky ny pejy",
+    "range": "Mampiseho {debut} ka hatramin'ny {fin} amin'ny valiny {total}",
+    "pagination": "Fizarana pejy",
+    "pageOf": "Pejy {page} amin'ny {totalPages}",
+    "goToPage": "Mandehana any amin'ny pejy {page}"
   }
 }

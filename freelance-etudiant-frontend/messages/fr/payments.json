@@ -97,5 +97,17 @@
     "noMissionAwaiting": "Aucune mission en attente de paiement pour le moment.",
     "loading": "Chargement…",
     "noneInCategory": "Aucun paiement dans cette catégorie."
+  },
+  "table": {
+    "colMission": "Mission",
+    "colMethod": "Moyen",
+    "colReference": "Référence",
+    "colDate": "Date",
+    "colAmount": "Montant",
+    "colStatus": "Statut",
+    "colActions": "Actions",
+    "searchLabel": "Rechercher un paiement",
+    "searchPlaceholder": "Mission, moyen ou référence",
+    "noResults": "Aucun paiement ne correspond à cette recherche."
   }
 }

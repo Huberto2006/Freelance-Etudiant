@@ -8,7 +8,16 @@
     "loadError": "Impossible de charger les factures pour le moment.",
     "empty": "Aucune facture pour le moment. Elle apparaîtra dès qu'un paiement sera confirmé.",
     "paidBy": "Payée par {nom}",
-    "provider": "Prestataire : {nom}"
+    "provider": "Prestataire : {nom}",
+    "colInvoice": "Facture",
+    "colClient": "Client",
+    "colProvider": "Prestataire",
+    "colMethod": "Moyen",
+    "colDate": "Date",
+    "colAmount": "Montant",
+    "searchLabel": "Rechercher une facture",
+    "searchPlaceholder": "Numéro, mission, nom ou moyen",
+    "noResults": "Aucune facture ne correspond à cette recherche."
   },
   "detail": {
     "print": "Imprimer / Enregistrer en PDF",

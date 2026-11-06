@@ -70,9 +70,8 @@ function FormulaireInscription() {
 
   /*
    * Verification d'email : apres une inscription reussie, le compte n'est
-   * PAS utilisable directement. On affiche un ecran dedie indiquant qu'un
-   * email de verification a ete envoye, avec l'adresse concernee et un
-   * bouton "Renvoyer l'email".
+   * PAS utilisable directement. La reponse indique si le serveur SMTP a
+   * accepte le message ; cela ne garantit pas sa livraison en boite.
    */
   const [reponseInscription, setReponseInscription] =
     useState<ReponseInscription | null>(null);
@@ -219,12 +218,12 @@ function FormulaireInscription() {
     setRenvoiEnCours(true);
     setRenvoiFeedback(null);
     try {
-      const reponse = await api.post<{ message: string }>(
+      await api.post<{ message: string }>(
         "/auth/resend-verification",
         { email: reponseInscription.email },
         { auth: false },
       );
-      setRenvoiFeedback({ type: "succes", message: reponse.message });
+      setRenvoiFeedback({ type: "succes", message: t("resendRequestReceived") });
       setSecondesAvantRenvoi(DELAI_RENVOI_SECONDES);
     } catch (err) {
       setRenvoiFeedback({
@@ -259,13 +258,21 @@ function FormulaireInscription() {
         </h1>
 
         <div className="mt-5 flex flex-col gap-4">
-          <p className="text-sm text-ink-soft">
-            {t.rich("verifySent", {
-              email: reponseInscription.email,
-              b: (morceaux) => <strong className="text-ink">{morceaux}</strong>,
-            })}
-          </p>
-          <p className="text-sm text-ink-soft">{t("verifyHelp")}</p>
+          {reponseInscription.emailAccepteParSmtp ? (
+            <>
+              <p className="text-sm text-ink-soft">
+                {t.rich("verifyAccepted", {
+                  email: reponseInscription.email,
+                  b: (morceaux) => (
+                    <strong className="text-ink">{morceaux}</strong>
+                  ),
+                })}
+              </p>
+              <p className="text-sm text-ink-soft">{t("verifyHelp")}</p>
+            </>
+          ) : (
+            <p className="text-sm text-brique">{t("verifyNotAccepted")}</p>
+          )}
 
           {renvoiFeedback && (
             <p

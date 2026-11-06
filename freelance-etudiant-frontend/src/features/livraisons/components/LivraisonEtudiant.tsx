@@ -1,5 +1,6 @@
 "use client";
 
+import { FadeIn } from "@/components/ui/motion/FadeIn";
 import {
   useState,
 } from "react";
@@ -439,7 +440,7 @@ export function LivraisonEtudiant({
           <h3 className="font-mono text-xs uppercase tracking-wider text-ink-soft">
             {t("deliveryHistory")}
           </h3>
-          <ol className="mt-3 space-y-3">
+          <ol className="cascade mt-3 space-y-3">
             {livraison.historique.map((version, index) => (
               <li
                 key={`${version.dateArchive}-${index}`}
@@ -543,6 +544,7 @@ export function LivraisonEtudiant({
           </div>
 
           <form onSubmit={onSubmit} className="mt-6">
+            <FadeIn key={etape}>
             {/* ÉTAPE 1 : MÉTHODE */}
 
             {etape === 1 && (
@@ -720,6 +722,7 @@ export function LivraisonEtudiant({
                 {erreur}
               </p>
             )}
+            </FadeIn>
 
             <div className="mt-5 flex items-center justify-between gap-3">
               <Button

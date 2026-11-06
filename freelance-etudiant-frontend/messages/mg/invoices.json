@@ -8,7 +8,16 @@
     "loadError": "Tsy afaka naka ny faktiora amin'izao fotoana izao.",
     "empty": "Mbola tsy misy faktiora. Hiseho izy rehefa voamarina ny fandoavana.",
     "paidBy": "Nandoa: {nom}",
-    "provider": "Mpanome tolotra: {nom}"
+    "provider": "Mpanome tolotra: {nom}",
+    "colInvoice": "Faktiora",
+    "colClient": "Mpanjifa",
+    "colProvider": "Mpanome tolotra",
+    "colMethod": "Fomba",
+    "colDate": "Daty",
+    "colAmount": "Vola",
+    "searchLabel": "Hitady faktiora",
+    "searchPlaceholder": "Laharana, iraka, anarana na fomba",
+    "noResults": "Tsy misy faktiora mifanaraka amin'ity fikarohana ity."
   },
   "detail": {
     "print": "Avoaka an-taratasy / Tehirizina ho PDF",

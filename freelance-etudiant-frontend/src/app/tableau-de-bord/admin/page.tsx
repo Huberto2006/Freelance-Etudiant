@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Search, ShieldCheck, Users } from "lucide-react";
+import { ShieldCheck, Users } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import type { Utilisateur } from "@/types/utilisateurs";
 import { useFormats } from "@/i18n/use-formats";
@@ -11,9 +11,9 @@ import { useApiList } from "@/hooks/useApiList";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { Input, Select } from "@/components/ui/Field";
-import { EtatVide, NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { DataTable, type ColonneDataTable } from "@/components/ui/data-table";
+import { Select } from "@/components/ui/Field";
+import { PageHeader, Tag } from "@/components/ui/Notice";
 import { useToast } from "@/components/ui/Toast";
 
 type EtatCompte = "actif" | "suspendu" | "inactif";
@@ -27,7 +27,6 @@ function etatCompte(utilisateur: Utilisateur): EtatCompte {
 
 export default function AdminPage() {
   const t = useTranslations("admin");
-  const tc = useTranslations("common");
   const { date } = useFormats();
   const { role } = useLabels();
   const toast = useToast();
@@ -42,7 +41,6 @@ export default function AdminPage() {
   } = useApiList(() => api.get<Utilisateur[]>("/admin/utilisateurs"));
   const utilisateurs = useMemo(() => donnees ?? [], [donnees]);
 
-  const [recherche, setRecherche] = useState("");
   const [filtreRole, setFiltreRole] = useState("");
   const [filtreEtat, setFiltreEtat] = useState<"" | EtatCompte>("");
   // Identifiant de l'utilisateur dont une requête est réellement en cours.
@@ -55,19 +53,23 @@ export default function AdminPage() {
     [utilisateurs],
   );
 
-  const visibles = useMemo(() => {
-    const terme = recherche.trim().toLowerCase();
-    return utilisateurs.filter(
-      (u) =>
-        (!terme ||
-          u.nom.toLowerCase().includes(terme) ||
-          u.email.toLowerCase().includes(terme)) &&
-        (!filtreRole || u.role === filtreRole) &&
-        (!filtreEtat || etatCompte(u) === filtreEtat),
-    );
-  }, [utilisateurs, recherche, filtreRole, filtreEtat]);
+  const visibles = useMemo(
+    () =>
+      utilisateurs.filter(
+        (u) =>
+          (!filtreRole || u.role === filtreRole) &&
+          (!filtreEtat || etatCompte(u) === filtreEtat),
+      ),
+    [utilisateurs, filtreRole, filtreEtat],
+  );
 
-  const filtresActifs = Boolean(recherche || filtreRole || filtreEtat);
+  function libelleEtat(etat: EtatCompte) {
+    return etat === "actif"
+      ? t("users.active")
+      : etat === "suspendu"
+        ? t("users.suspended")
+        : t("users.inactive");
+  }
 
   /**
    * Suspend ou réactive un compte. La notification de succès n'est émise
@@ -98,12 +100,99 @@ export default function AdminPage() {
   }
 
   function reinitialiserFiltres() {
-    setRecherche("");
     setFiltreRole("");
     setFiltreEtat("");
   }
 
-  const premierChargement = chargement && donnees === null;
+  const colonnes: ColonneDataTable<Utilisateur>[] = [
+    {
+      id: "utilisateur",
+      entete: t("users.colUser"),
+      valeurTri: (u) => u.nom,
+      texteRecherche: (u) => `${u.nom} ${u.email}`,
+      cellule: (u) => (
+        <div className="flex items-center gap-3">
+          <Avatar
+            nom={u.nom}
+            photoUrl={u.photoUrl}
+            size={32}
+            className="shrink-0"
+          />
+          <div className="min-w-0">
+            <p className="truncate font-medium text-ink">{u.nom}</p>
+            <p className="truncate text-xs text-ink-soft">{u.email}</p>
+            {/* Sur mobile, le rôle passe sous l'e-mail
+                (sa colonne est masquée). */}
+            <p className="text-xs text-ink-soft sm:hidden">{role(u.role)}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "role",
+      entete: t("users.colRole"),
+      masquerSous: "sm",
+      valeurTri: (u) => role(u.role),
+      cellule: (u) => <Tag tone="ink">{role(u.role)}</Tag>,
+    },
+    {
+      id: "inscription",
+      entete: t("users.colRegistered"),
+      masquerSous: "md",
+      classeCellule: "whitespace-nowrap text-xs tabular-nums text-ink-soft",
+      valeurTri: (u) => new Date(u.dateInscription),
+      cellule: (u) => date(u.dateInscription),
+    },
+    {
+      id: "statut",
+      entete: t("users.colStatus"),
+      valeurTri: (u) => libelleEtat(etatCompte(u)),
+      cellule: (u) => {
+        const etat = etatCompte(u);
+        return (
+          <Tag
+            tone={
+              etat === "actif" ? "rice" : etat === "suspendu" ? "brique" : "ink"
+            }
+          >
+            <span
+              className="h-1.5 w-1.5 shrink-0 rounded-full bg-current"
+              aria-hidden="true"
+            />
+            {libelleEtat(etat)}
+          </Tag>
+        );
+      },
+    },
+    {
+      id: "actions",
+      entete: t("users.colActions"),
+      alignement: "droite",
+      cellule: (u) =>
+        // Un administrateur n'est jamais suspendable ici.
+        u.role !== "admin" &&
+        (etatCompte(u) === "suspendu" ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            loading={enCours === u.id}
+            disabled={enCours !== null}
+            onClick={() => void changerSuspension(u, false)}
+          >
+            {t("users.reactivate")}
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            variant="danger-ghost"
+            disabled={enCours !== null}
+            onClick={() => setASuspendre(u)}
+          >
+            {t("users.suspend")}
+          </Button>
+        )),
+    },
+  ];
 
   return (
     <div>
@@ -116,48 +205,28 @@ export default function AdminPage() {
         title={t("users.title")}
       />
 
-      {/* Échec de chargement : message du backend + nouvelle tentative */}
-      {erreur && (
-        <NoticeCard className="mb-4 flex flex-wrap items-center justify-between gap-3 border-brique/30">
-          <p role="alert" className="text-sm text-brique">
-            {erreur}
-          </p>
-          <Button
-            size="sm"
-            variant="ghost"
-            loading={chargement}
-            onClick={() => void recharger()}
-          >
-            {tc("actions.retry")}
-          </Button>
-        </NoticeCard>
-      )}
-
-      {premierChargement ? (
-        <ChargementTableau />
-      ) : utilisateurs.length === 0 ? (
-        !erreur && <EtatVide icon={Users}>{t("users.empty")}</EtatVide>
-      ) : (
-        <>
-          {/* Barre d'outils : recherche, filtres, compteur */}
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <div className="relative min-w-[14rem] flex-1 sm:max-w-xs">
-              <Search
-                size={16}
-                aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft"
-              />
-              <Input
-                type="search"
-                value={recherche}
-                onChange={(event) => setRecherche(event.target.value)}
-                placeholder={t("users.searchPlaceholder")}
-                aria-label={t("users.searchLabel")}
-                className="pl-9"
-              />
-            </div>
-
-            <div className="w-40">
+      {/* useApiList conserve les données : pendant un rechargement, seul le
+          tout premier chargement affiche le squelette. */}
+      <DataTable
+        lignes={visibles}
+        colonnes={colonnes}
+        cleLigne={(u) => u.id}
+        legende={t("users.title")}
+        chargement={chargement && donnees === null}
+        erreur={erreur}
+        onReessayer={() => void recharger()}
+        reessaiEnCours={chargement}
+        iconeVide={Users}
+        messageVide={t("users.empty")}
+        messageAucunResultat={t("users.noResults")}
+        placeholderRecherche={t("users.searchPlaceholder")}
+        libelleRecherche={t("users.searchLabel")}
+        filtresActifs={Boolean(filtreRole || filtreEtat)}
+        cleFiltres={`${filtreRole}|${filtreEtat}`}
+        onReinitialiserFiltres={reinitialiserFiltres}
+        filtres={
+          <>
+            <div className="w-[calc(50%-0.25rem)] sm:w-36">
               <Select
                 value={filtreRole}
                 onChange={(event) => setFiltreRole(event.target.value)}
@@ -171,8 +240,7 @@ export default function AdminPage() {
                 ))}
               </Select>
             </div>
-
-            <div className="w-40">
+            <div className="w-[calc(50%-0.25rem)] sm:w-36">
               <Select
                 value={filtreEtat}
                 onChange={(event) =>
@@ -186,154 +254,9 @@ export default function AdminPage() {
                 <option value="inactif">{t("users.inactive")}</option>
               </Select>
             </div>
-
-            {filtresActifs && (
-              <Button size="sm" variant="ghost" onClick={reinitialiserFiltres}>
-                {tc("actions.reset")}
-              </Button>
-            )}
-
-            <p
-              aria-live="polite"
-              className="ml-auto text-xs tabular-nums text-ink-soft"
-            >
-              {t("users.count", { count: visibles.length })}
-            </p>
-          </div>
-
-          {visibles.length === 0 ? (
-            <EtatVide icon={Search}>{t("users.noResults")}</EtatVide>
-          ) : (
-            <div className="notice-card overflow-hidden p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[22rem] border-collapse text-sm">
-                  <caption className="sr-only">{t("users.title")}</caption>
-                  <thead>
-                    <tr className="border-b border-ink/10 bg-ink/[0.03] text-left text-xs text-ink-soft">
-                      <th scope="col" className="px-4 py-2.5 font-medium">
-                        {t("users.colUser")}
-                      </th>
-                      <th
-                        scope="col"
-                        className="hidden px-4 py-2.5 font-medium sm:table-cell"
-                      >
-                        {t("users.colRole")}
-                      </th>
-                      <th
-                        scope="col"
-                        className="hidden px-4 py-2.5 font-medium md:table-cell"
-                      >
-                        {t("users.colRegistered")}
-                      </th>
-                      <th scope="col" className="px-4 py-2.5 font-medium">
-                        {t("users.colStatus")}
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-2.5 text-right font-medium"
-                      >
-                        {t("users.colActions")}
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody className="divide-y divide-ink/10">
-                    {visibles.map((u) => {
-                      const etat = etatCompte(u);
-                      const suspendu = etat === "suspendu";
-                      return (
-                        <tr
-                          key={u.id}
-                          className="transition-colors hover:bg-ink/[0.02]"
-                        >
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              <Avatar
-                                nom={u.nom}
-                                photoUrl={u.photoUrl}
-                                size={32}
-                                className="shrink-0"
-                              />
-                              <div className="min-w-0">
-                                <p className="truncate font-medium text-ink">
-                                  {u.nom}
-                                </p>
-                                <p className="truncate text-xs text-ink-soft">
-                                  {u.email}
-                                </p>
-                                {/* Sur mobile, le rôle passe sous l'e-mail
-                                    (sa colonne est masquée). */}
-                                <p className="text-xs text-ink-soft sm:hidden">
-                                  {role(u.role)}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-
-                          <td className="hidden px-4 py-3 sm:table-cell">
-                            <Tag tone="ink">{role(u.role)}</Tag>
-                          </td>
-
-                          <td className="hidden whitespace-nowrap px-4 py-3 text-xs tabular-nums text-ink-soft md:table-cell">
-                            {date(u.dateInscription)}
-                          </td>
-
-                          <td className="px-4 py-3">
-                            <Tag
-                              tone={
-                                etat === "actif"
-                                  ? "rice"
-                                  : etat === "suspendu"
-                                    ? "brique"
-                                    : "ink"
-                              }
-                            >
-                              <span
-                                className="h-1.5 w-1.5 shrink-0 rounded-full bg-current"
-                                aria-hidden="true"
-                              />
-                              {etat === "actif"
-                                ? t("users.active")
-                                : etat === "suspendu"
-                                  ? t("users.suspended")
-                                  : t("users.inactive")}
-                            </Tag>
-                          </td>
-
-                          <td className="px-4 py-3 text-right">
-                            {/* Un administrateur n'est jamais suspendable ici. */}
-                            {u.role !== "admin" &&
-                              (suspendu ? (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  loading={enCours === u.id}
-                                  disabled={enCours !== null}
-                                  onClick={() => void changerSuspension(u, false)}
-                                >
-                                  {t("users.reactivate")}
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  variant="danger-ghost"
-                                  disabled={enCours !== null}
-                                  onClick={() => setASuspendre(u)}
-                                >
-                                  {t("users.suspend")}
-                                </Button>
-                              ))}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </>
-      )}
+          </>
+        }
+      />
 
       {/* Action sensible : suspendre un compte demande une confirmation. */}
       <ConfirmDialog
@@ -347,28 +270,6 @@ export default function AdminPage() {
         }}
         onAnnuler={() => setASuspendre(null)}
       />
-    </div>
-  );
-}
-
-/** Imitation du tableau pendant le tout premier chargement. */
-function ChargementTableau() {
-  return (
-    <div
-      aria-hidden="true"
-      className="notice-card divide-y divide-ink/10 overflow-hidden p-0"
-    >
-      {Array.from({ length: 6 }).map((_, index) => (
-        <div key={index} className="flex items-center gap-3 px-4 py-3">
-          <Skeleton rond className="h-8 w-8 shrink-0" />
-          <div className="flex-1">
-            <Skeleton className="h-3.5 w-40" />
-            <Skeleton className="mt-2 h-3 w-56 max-w-full" />
-          </div>
-          <Skeleton className="hidden h-5 w-16 sm:block" />
-          <Skeleton className="h-7 w-20" />
-        </div>
-      ))}
     </div>
   );
 }

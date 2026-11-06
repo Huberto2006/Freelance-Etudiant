@@ -1,5 +1,6 @@
 "use client";
 
+import { StaggerContainer } from "@/components/ui/motion/StaggerContainer";
 import { useState, type ReactNode } from "react";
 
 const PAS = 12;
@@ -26,9 +27,9 @@ export function GrilleCatalogue({
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <StaggerContainer className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {elements.slice(0, visibles)}
-      </div>
+      </StaggerContainer>
 
       {restants > 0 && (
         <div className="mt-8 flex flex-col items-center gap-2">

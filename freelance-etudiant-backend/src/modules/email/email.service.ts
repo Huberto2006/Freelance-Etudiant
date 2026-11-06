@@ -19,17 +19,20 @@ import {
   templatePaiementLibere,
 } from './templates/paiement.template';
 
+interface ErreurSmtp extends Error {
+  code?: string;
+  responseCode?: number;
+  command?: string;
+}
+
 /**
  * Service d'envoi d'emails reels via SMTP (Nodemailer).
  *
  * Principes :
- * - Les emails sont SECONDAIRES : une erreur d'envoi ne doit jamais
- *   faire echouer l'action metier (inscription, reset, paiement...).
- *   Les erreurs sont journalisees, jamais propagees.
- * - Si le SMTP n'est pas configure (dev sans credentials), le service
- *   bascule sur un mode "console" explicite et journalise le contenu :
- *   il n'y a plus jamais de fausse impression d'envoi, le mode est
- *   annonce clairement dans les logs.
+ * - Le retour true signifie que le serveur SMTP a accepte le message,
+ *   pas qu'il a ete livre dans la boite du destinataire.
+ * - Les erreurs et le mode sans SMTP sont journalises sans contenu,
+ *   destinataire ni jeton.
  * - Aucun secret dans le code : tout vient des variables d'environment.
  */
 @Injectable()
@@ -54,7 +57,7 @@ export class EmailService {
       this.smtpConfigure = Boolean(host && user && pass);
       if (!this.smtpConfigure) {
         this.logger.warn(
-          "SMTP non configure (SMTP_HOST/SMTP_USER/SMTP_PASS absents) : les emails seront journalises en console et non envoyes. Configurez le bloc SMTP dans .env pour l'envoi reel.",
+          "SMTP non configure (SMTP_HOST/SMTP_USER/SMTP_PASS absents) : aucun email ne sera envoye.",
         );
       }
     }
@@ -75,6 +78,10 @@ export class EmailService {
         host: this.configService.get<string>('SMTP_HOST'),
         port,
         secure,
+        requireTLS: port === 587 && !secure,
+        connectionTimeout: 10_000,
+        greetingTimeout: 10_000,
+        socketTimeout: 30_000,
         auth: {
           user: this.configService.get<string>('SMTP_USER'),
           pass: this.configService.get<string>('SMTP_PASS'),
@@ -97,19 +104,11 @@ export class EmailService {
     text: string,
     replyTo?: string,
   ): Promise<boolean> {
-    const transporteur = await this.obtenirTransporteur();
-
-    if (!transporteur) {
-      // Mode degrade explicite (dev sans SMTP) : on journalise le contenu
-      // au lieu de mentir sur un envoi qui n'a pas eu lieu.
-      this.logger.log(
-        `[EMAIL:MODE-CONSOLE] A: ${destinataire} | Sujet: ${subject}\n${text}`,
-      );
-      return true;
-    }
-
     try {
-      await transporteur.sendMail({
+      const transporteur = await this.obtenirTransporteur();
+      if (!transporteur) return false;
+
+      const resultat = await transporteur.sendMail({
         from: this.expediteur,
         to: destinataire,
         subject: nettoyerSujet(subject),
@@ -117,14 +116,31 @@ export class EmailService {
         text,
         ...(replyTo ? { replyTo: nettoyerSujet(replyTo) } : {}),
       });
-      this.logger.log(`Email envoye a ${destinataire} : ${subject}`);
+      const acceptes = resultat.accepted ?? [];
+      const refuses = resultat.rejected ?? [];
+
+      if (acceptes.length === 0 || refuses.length > 0) {
+        this.logger.warn(
+          `SMTP n'a accepte aucun destinataire pour ce message (acceptes=${acceptes.length}, refuses=${refuses.length}).`,
+        );
+        return false;
+      }
+
+      const codeReponse = resultat.response?.match(/^\s*(\d{3})/)?.[1];
+      this.logger.log(
+        `SMTP a accepte le message${codeReponse ? ` (code=${codeReponse})` : ''}.`,
+      );
       return true;
     } catch (error) {
-      this.logger.error(
-        `Echec d'envoi de l'email a ${destinataire} (${subject}) : ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
+      const erreur = error instanceof Error ? (error as ErreurSmtp) : undefined;
+      const details = [
+        erreur?.code && `code=${erreur.code}`,
+        erreur?.responseCode && `responseCode=${erreur.responseCode}`,
+        erreur?.command && `command=${erreur.command}`,
+      ]
+        .filter(Boolean)
+        .join(', ');
+      this.logger.error(`Echec SMTP${details ? ` (${details})` : ''}.`);
       return false;
     }
   }

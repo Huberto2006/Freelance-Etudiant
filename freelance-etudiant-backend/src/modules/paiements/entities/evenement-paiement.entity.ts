@@ -1,9 +1,9 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
- * Journal des notifications fournisseur recues (webhooks), signature
- * verifiee ou non : piece d'audit en ajout seul, jamais modifiee. Ne
- * contient aucun secret (ni signature, ni jeton de notification).
+ * Journal des notifications fournisseur dont la signature est valide (les
+ * signatures refusees ne sont pas stockees : corps non authentifie) : piece
+ * d'audit en ajout seul. Ne contient aucun secret (ni signature, ni jeton).
  */
 @Entity('evenements_paiement')
 @Index('idx_evenements_paiement_reference', ['reference'])

@@ -8,9 +8,9 @@ import { etiquetteIntl, normaliserLocale } from "@/i18n/config";
 const DUREE_MS = 900;
 
 /**
- * Nombre entier qui « compte » de 0 jusqu'à sa valeur la première fois
- * qu'il devient visible. Réservé aux données RÉELLES (jamais de chiffre
- * décoratif).
+ * Nombre entier qui « compte » jusqu'à sa valeur quand il devient visible,
+ * puis de l'ancienne à la nouvelle valeur quand celle-ci change. Réservé aux
+ * données RÉELLES (jamais de chiffre décoratif).
  *
  * - Le DOM est mis à jour directement (requestAnimationFrame + ref) : aucun
  *   re-rendu React pendant l'animation.
@@ -18,21 +18,33 @@ const DUREE_MS = 900;
  *   finale ; la version animée est masquée aux technologies d'assistance.
  * - Avec prefers-reduced-motion, la valeur finale s'affiche directement.
  */
-export function CompteurAnime({ valeur }: { valeur: number }) {
+export function AnimatedCounter({ valeur }: { valeur: number }) {
   const locale = etiquetteIntl(normaliserLocale(useLocale()));
   const ref = useRef<HTMLSpanElement>(null);
-  const formater = new Intl.NumberFormat(locale).format;
-  const finale = formater(valeur);
+  // Dernière valeur affichée : point de départ de l'animation suivante, même
+  // si la précédente a été interrompue.
+  const affichee = useRef(0);
+  const finale = new Intl.NumberFormat(locale).format(valeur);
 
-  // Avant le premier affichage (layout effect) : on pose 0 pour éviter un
-  // flash de la valeur finale suivi d'un retour à zéro.
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el || valeur === 0) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!el) return;
 
     const format = new Intl.NumberFormat(locale).format;
-    el.textContent = format(0);
+    const depart = affichee.current;
+
+    if (
+      depart === valeur ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      affichee.current = valeur;
+      el.textContent = format(valeur);
+      return;
+    }
+
+    // Avant le premier affichage : évite un flash de la valeur finale suivi
+    // d'un retour au point de départ.
+    el.textContent = format(depart);
     let cadre = 0;
 
     const demarrer = () => {
@@ -41,7 +53,9 @@ export function CompteurAnime({ valeur }: { valeur: number }) {
         const t = Math.min(1, (maintenant - debut) / DUREE_MS);
         // easeOutCubic : départ rapide, arrivée douce sur la valeur réelle.
         const progression = 1 - Math.pow(1 - t, 3);
-        el.textContent = format(Math.round(valeur * progression));
+        const courante = Math.round(depart + (valeur - depart) * progression);
+        affichee.current = courante;
+        el.textContent = format(courante);
         if (t < 1) cadre = requestAnimationFrame(pas);
       };
       cadre = requestAnimationFrame(pas);
@@ -61,7 +75,6 @@ export function CompteurAnime({ valeur }: { valeur: number }) {
     return () => {
       observateur.disconnect();
       cancelAnimationFrame(cadre);
-      el.textContent = format(valeur);
     };
   }, [valeur, locale]);
 

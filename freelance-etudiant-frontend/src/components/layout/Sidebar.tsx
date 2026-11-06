@@ -1,5 +1,6 @@
 "use client";
 
+import { SectionSidebar, TiroirSidebar } from "@/components/ui/motion/SidebarTransition";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -185,20 +186,6 @@ export function Sidebar({
     }
   }
 
-  /*
-   * TIROIR MOBILE — monté tant que son animation de fermeture n'est pas
-   * terminée. `mobileMonte` est dérivé pendant le rendu (et non via un
-   * effet) quand la prop `mobileOpen` passe à true ; il retombe à false
-   * à la fin de l'animation de sortie (onAnimationEnd).
-   */
-  const [mobileMonte, setMobileMonte] =
-    useState(mobileOpen);
-  const [mobileOpenPrecedent, setMobileOpenPrecedent] =
-    useState(mobileOpen);
-  if (mobileOpen !== mobileOpenPrecedent) {
-    setMobileOpenPrecedent(mobileOpen);
-    if (mobileOpen) setMobileMonte(true);
-  }
   const tiroirRef = useRef<HTMLDivElement>(null);
 
   /*
@@ -546,11 +533,12 @@ export function Sidebar({
             )}
           </button>
 
-          {!collapsed && ouvert && (
-            <div className="animate-slide-down ml-3 space-y-1 border-l border-white/10 pl-2">
-              {liens.map(renderLien)}
-            </div>
-          )}
+          <SectionSidebar
+            ouvert={!collapsed && ouvert}
+            className="ml-3 space-y-1 border-l border-white/10 pl-2"
+          >
+            {liens.map(renderLien)}
+          </SectionSidebar>
 
           {collapsed && afficheSousMenu && (
             <div
@@ -997,56 +985,16 @@ export function Sidebar({
           MOBILE
           ===================================================== */}
 
-      {mobileMonte && (
-        <div
-          className={`
-            fixed
-            inset-0
-            z-[70]
-            lg:hidden
-            ${mobileOpen ? "" : "pointer-events-none"}
-          `}
-          role="dialog"
-          aria-modal="true"
-          aria-label={t("sidebar.mainNav")}
-        >
-          {/* Voile : simple fondu, sans flou d'arrière-plan */}
-
-          <button
-            type="button"
-            aria-label={t("sidebar.closeMenu")}
-            onClick={closeMobile}
-            tabIndex={-1}
-            className={`
-              absolute
-              inset-0
-              bg-ink/40
-              ${mobileOpen ? "animate-in-fade" : "opacity-0 transition-opacity duration-200"}
-            `}
-          />
-
-          {/* Tiroir : glisse depuis la gauche (transform uniquement) */}
-
-          <div
-            ref={tiroirRef}
-            onAnimationEnd={() => {
-              if (!mobileOpen) {
-                setMobileMonte(false);
-              }
-            }}
-            className={`
-              relative
-              z-[71]
-              h-full
-              w-[16.25rem]
-              max-w-[85vw]
-              ${mobileOpen ? "animate-slide-in-left" : "animate-slide-out-left"}
-            `}
-          >
-            {sidebarMobile}
-          </div>
-        </div>
-      )}
+      <TiroirSidebar
+        ouvert={mobileOpen}
+        libelle={t("sidebar.mainNav")}
+        libelleFermer={t("sidebar.closeMenu")}
+        surFermer={closeMobile}
+        refTiroir={tiroirRef}
+        classeTiroir="relative z-[71] h-full w-[16.25rem] max-w-[85vw]"
+      >
+        {sidebarMobile}
+      </TiroirSidebar>
     </>
   );
 }

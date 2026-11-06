@@ -1,5 +1,6 @@
 "use client";
 
+import { StaggerContainer } from "@/components/ui/motion/StaggerContainer";
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Globe, X } from "lucide-react";
 import { clsx } from "clsx";
@@ -92,11 +93,11 @@ function VisionneuseImage({
       role="dialog"
       aria-modal="true"
       aria-label={t("previewOf", { legende })}
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 p-4 sm:p-8"
+      className="animate-in-fade fixed inset-0 z-[60] flex items-center justify-center bg-black/85 p-4 sm:p-8"
       onClick={onFermer}
     >
       <figure
-        className="flex max-h-full max-w-full flex-col items-center gap-3"
+        className="animate-pop flex max-h-full max-w-full flex-col items-center gap-3"
         onClick={(e) => e.stopPropagation()}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -151,7 +152,7 @@ export function PortfolioGalerie({
   return (
     <div className={clsx("flex flex-col gap-4", className)}>
       {images.length > 0 && (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+        <StaggerContainer as="ul" className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
           {images.map((url, index) => {
             const src = getFileUrl(url);
             if (!src) return null;
@@ -180,7 +181,7 @@ export function PortfolioGalerie({
               </li>
             );
           })}
-        </ul>
+        </StaggerContainer>
       )}
 
       {liens.length > 0 && (

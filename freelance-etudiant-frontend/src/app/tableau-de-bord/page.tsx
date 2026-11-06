@@ -1,5 +1,6 @@
 "use client";
 
+import { StaggerContainer } from "@/components/ui/motion/StaggerContainer";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -301,12 +302,12 @@ function ChargementDashboard() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <StaggerContainer className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SkeletonCarte />
         <SkeletonCarte className="hidden sm:flex" />
         <SkeletonCarte className="hidden sm:flex" />
         <SkeletonCarte className="hidden lg:flex" />
-      </div>
+      </StaggerContainer>
 
       <SkeletonListe nombre={3} className="mt-8" />
     </div>
@@ -507,7 +508,7 @@ function VueEtudiant({
             <SkeletonCarte className="hidden lg:flex" />
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StaggerContainer className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               icon={Send}
               tone="ocre"
@@ -551,7 +552,7 @@ function VueEtudiant({
                   : undefined
               }
             />
-          </div>
+          </StaggerContainer>
         )}
       </section>
 
@@ -870,7 +871,7 @@ function VueClient({
             </div>
           )
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StaggerContainer className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               icon={BriefcaseBusiness}
               tone="ocre"
@@ -917,7 +918,7 @@ function VueClient({
                   : undefined
               }
             />
-          </div>
+          </StaggerContainer>
         )}
       </section>
 
@@ -1218,7 +1219,7 @@ function VueAdmin({
             <SkeletonCarte className="hidden lg:flex" />
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StaggerContainer className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               icon={Users}
               tone="ocre"
@@ -1261,7 +1262,7 @@ function VueAdmin({
                     })
               }
             />
-          </div>
+          </StaggerContainer>
         )}
       </section>
 

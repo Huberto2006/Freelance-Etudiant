@@ -1,5 +1,6 @@
 "use client";
 
+import { FadeIn } from "@/components/ui/motion/FadeIn";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -523,6 +524,8 @@ export default function CompleterProfilPage() {
       <Stepper etapeActuelle={etape} onAllerA={allerA} />
 
       <NoticeCard>
+        {/* key : l'étape affichée entre en fondu à chaque changement. */}
+        <FadeIn key={etape}>
         {etape === 1 && (
           <EtapePersonnelle
             utilisateur={utilisateur}
@@ -595,6 +598,7 @@ export default function CompleterProfilPage() {
             setSiteWeb={setSiteWeb}
           />
         )}
+        </FadeIn>
 
         {erreur && (
           <p className="mt-5 flex items-center gap-2 text-sm text-brique">
@@ -670,8 +674,8 @@ function Stepper({
 
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink/10">
         <div
-          className="h-full rounded-full bg-ocre transition-[width] duration-300 ease-out-soft"
-          style={{ width: `${(etapeActuelle / 5) * 100}%` }}
+          className="h-full origin-left rounded-full bg-ocre transition-transform duration-300 ease-out-soft"
+          style={{ transform: `scaleX(${etapeActuelle / 5})` }}
         />
       </div>
 

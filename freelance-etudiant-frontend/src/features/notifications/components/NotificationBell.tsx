@@ -1,5 +1,6 @@
 "use client";
 
+import { BadgeCompteur, NotificationAnimation } from "@/components/ui/motion/NotificationAnimation";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -80,6 +81,9 @@ export function NotificationBell() {
   const t = useTranslations("notifications");
   const { locale } = useFormats();
   const [total, setTotal] = useState(0);
+  // Compte les notifications reçues en direct : déclenche l'animation de la
+  // cloche, jamais le simple chargement de la page.
+  const [arrivees, setArrivees] = useState(0);
 
   const [ouvert, setOuvert] = useState(false);
 
@@ -160,6 +164,7 @@ export function NotificationBell() {
     if (!socket) return;
 
     function onNouvelle(notification: Notification) {
+      setArrivees((n) => n + 1);
       setNotifications((ancien) =>
         ancien.some((item) => item.id === notification.id)
           ? ancien
@@ -410,6 +415,7 @@ export function NotificationBell() {
         aria-expanded={ouvert}
         aria-haspopup="dialog"
         className={`
+          presse
           relative
           flex
           h-9
@@ -417,7 +423,6 @@ export function NotificationBell() {
           items-center
           justify-center
           rounded-lg
-          transition-colors
 
           ${
             ouvert
@@ -426,17 +431,20 @@ export function NotificationBell() {
           }
         `}
       >
-        <Bell
-          size={18}
-          strokeWidth={
-            total > 0 ? 2.4 : 2
-          }
-        />
+        <NotificationAnimation signal={arrivees}>
+          <Bell
+            size={18}
+            strokeWidth={
+              total > 0 ? 2.4 : 2
+            }
+          />
+        </NotificationAnimation>
 
         {/* Badge */}
 
         {total > 0 && (
-          <span
+          <BadgeCompteur
+            total={total}
             className="
               absolute
               right-0.5
@@ -461,7 +469,7 @@ export function NotificationBell() {
             {total > 9
               ? "9+"
               : total}
-          </span>
+          </BadgeCompteur>
         )}
       </button>
 
@@ -474,6 +482,8 @@ export function NotificationBell() {
           role="dialog"
           aria-label={t("bell.title")}
           className="
+            animate-pop
+            origin-top-right
             absolute
             right-0
             top-full
@@ -698,7 +708,7 @@ export function NotificationBell() {
                 </p>
               </div>
             ) : (
-              <div>
+              <div className="cascade">
                 {notifications.map(
                   (notification) => {
                     const contenu = (

@@ -111,9 +111,13 @@ Pour TLS direct sur le port 465, utiliser `SMTP_SECURE=true`.
 le transport est déjà SMTP dans ce backend. `CONTACT_MAIL_TO` est transmis
 au backend, qui ne lit actuellement pas cette variable.
 
-Le code exige la vérification de l'email avant connexion. Si les accès SMTP
-sont supprimés, les liens sont uniquement journalisés dans les logs du
-backend et aucun email n'est envoyé.
+Le code exige la vérification de l'email avant connexion. En l'absence de
+configuration SMTP, aucun email n'est envoyé et son contenu (notamment les
+liens et jetons) n'est jamais écrit dans les logs. L'inscription retourne
+l'état d'acceptation SMTP ; une acceptation ne prouve pas la livraison dans
+la boîte de réception. Le renvoi conserve une réponse neutre pour éviter
+l'énumération des adresses et journalise séparément tout échec SMTP sans
+identifiants, destinataires ni contenu du message.
 
 Le paiement MVola réel nécessite les quatre variables
 `MVOLA_CONSUMER_KEY`, `MVOLA_CONSUMER_SECRET`, `MVOLA_API_KEY` et

@@ -1,5 +1,6 @@
 "use client";
 
+import { StaggerContainer } from "@/components/ui/motion/StaggerContainer";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -297,7 +298,7 @@ export default function MesPublicationsPage() {
                   </div>
                 </NoticeCard>
               ) : (
-                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                <StaggerContainer className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                   {items.map((item) =>
                     item.type === "mission" ? (
                       <div key={`m-${item.id}`} className="flex flex-col gap-2">
@@ -321,7 +322,7 @@ export default function MesPublicationsPage() {
                       />
                     ),
                   )}
-                </div>
+                </StaggerContainer>
               )}
             </div>
           </div>

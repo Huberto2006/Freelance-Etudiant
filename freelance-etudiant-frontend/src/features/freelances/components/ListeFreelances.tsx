@@ -1,5 +1,6 @@
 "use client";
 
+import { StaggerContainer } from "@/components/ui/motion/StaggerContainer";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Lock, MapPin, Search, Star, Users } from "lucide-react";
@@ -257,13 +258,13 @@ export function ListeFreelances() {
             {t("shown", { count: resultats.length })}
           </p>
 
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <StaggerContainer as="ul" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {resultats.map((etudiant) => (
               <li key={etudiant.utilisateurId}>
                 <CarteFreelance etudiant={etudiant} />
               </li>
             ))}
-          </ul>
+          </StaggerContainer>
 
           {peutCharger && (
             <div className="mt-7 text-center">

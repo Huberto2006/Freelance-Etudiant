@@ -1,5 +1,6 @@
 "use client";
 
+import { StaggerContainer } from "@/components/ui/motion/StaggerContainer";
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -283,7 +284,7 @@ export default function NotificationsPage() {
               : t("emptyRead")}
         </EtatVide>
       ) : (
-        <div className="flex flex-col gap-3">
+        <StaggerContainer className="flex flex-col gap-3">
           {notificationsFiltrees.map(
             (notification) => {
               const contenu = (
@@ -384,7 +385,7 @@ export default function NotificationsPage() {
               );
             },
           )}
-        </div>
+        </StaggerContainer>
       )}
     </div>
   );

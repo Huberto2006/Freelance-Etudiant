@@ -22,7 +22,6 @@
     "colRegistered": "Joined",
     "colStatus": "Status",
     "colActions": "Actions",
-    "count": "{count, plural, one {# user} other {# users}}",
     "noResults": "No users match these filters.",
     "suspendTitle": "Suspend {nom}?",
     "suspendDescription": "This user will not be able to sign in until the account is reactivated.",
@@ -41,6 +40,14 @@
     "processed": "Processed",
     "resolution": "Resolution: {text}",
     "genericError": "Error",
-    "processedToast": "Report marked as processed."
+    "processedToast": "Report marked as processed.",
+    "colReason": "Reason",
+    "colTarget": "Target",
+    "colResolution": "Resolution",
+    "colDate": "Date",
+    "colStatus": "Status",
+    "searchLabel": "Search reports",
+    "searchPlaceholder": "Reason, description or resolution",
+    "noResults": "No report matches this search."
   }
 }

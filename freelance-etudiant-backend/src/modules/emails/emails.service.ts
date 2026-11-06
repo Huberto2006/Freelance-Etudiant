@@ -57,7 +57,7 @@ export interface ParamNouvelleMission {
  * 1. Découplage total : ne dépend d'aucune entité ni service de notification interne.
  * 2. Non-bloquant : l'échec d'envoi n'annule jamais l'action métier (logs d'erreur propres).
  * 3. Configuration sécurisée via variables d'environnement (.env).
- * 4. Mode console automatique si les identifiants SMTP ne sont pas configurés (développement).
+ * 4. Sans SMTP, aucun message n'est envoyé et aucun contenu n'est journalisé.
  * 5. Anti-doublons systématique lors des diffusions groupées.
  */
 @Injectable()
@@ -140,6 +140,10 @@ export class EmailsService {
         host,
         port,
         secure,
+        requireTLS: port === 587 && !secure,
+        connectionTimeout: 10_000,
+        greetingTimeout: 10_000,
+        socketTimeout: 30_000,
         auth: {
           user,
           pass,
@@ -168,26 +172,49 @@ export class EmailsService {
 
     if (!transporter) {
       this.logger.log(
-        `[EMAIL:MODE-CONSOLE] Destinataire: ${to} | Sujet: ${subject}\n${text}\n----------------------------------------`,
+        '[EMAIL:MODE-CONSOLE] SMTP non configuré : aucun email transactionnel ne sera envoyé.',
       );
-      return true;
+      return false;
     }
 
     try {
-      await transporter.sendMail({
+      const resultat = await transporter.sendMail({
         from: this.fromAddress,
         to,
         subject: nettoyerSujet(subject),
         html,
         text,
       });
-      this.logger.log(`[EMAIL] Envoyé avec succès à ${to} — "${subject}"`);
+      const acceptes = resultat.accepted ?? [];
+      const refuses = resultat.rejected ?? [];
+
+      if (acceptes.length === 0 || refuses.length > 0) {
+        this.logger.warn(
+          `[EMAIL:REFUS] Le serveur SMTP n'a accepté aucun destinataire (acceptés=${acceptes.length}, refusés=${refuses.length}).`,
+        );
+        return false;
+      }
+
+      const codeReponse = resultat.response?.match(/^\s*(\d{3})/)?.[1];
+      this.logger.log(
+        `[EMAIL:ACCEPTE] Le serveur SMTP a accepté le message${codeReponse ? ` (code=${codeReponse})` : ''}.`,
+      );
       return true;
     } catch (error) {
+      const erreur = error instanceof Error ? error as Error & {
+        code?: string;
+        responseCode?: number;
+        command?: string;
+      } : undefined;
+      const details = [
+        erreur?.code && `code=${erreur.code}`,
+        erreur?.responseCode && `responseCode=${erreur.responseCode}`,
+        erreur?.command && `command=${erreur.command}`,
+      ]
+        .filter(Boolean)
+        .join(', ');
       this.logger.error(
-        `[EMAIL:ECHEC] Échec d'envoi à ${to} ("${subject}") : ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `[EMAIL:ECHEC] Échec SMTP${details ? ` (${details})` : ''}.`,
       );
       return false;
     }

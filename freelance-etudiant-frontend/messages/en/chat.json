@@ -1,4 +1,6 @@
 {
+  "realtimeOn": "Live updates on",
+  "realtimeConnecting": "Connecting…",
   "loadingConversations": "Loading conversations…",
   "user": "User",
   "group": "Group",

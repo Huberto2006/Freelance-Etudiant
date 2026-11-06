@@ -495,7 +495,7 @@ export function LivraisonClient({
           <h3 className="font-mono text-xs uppercase tracking-wider text-ink-soft">
             {t("deliveryHistory")}
           </h3>
-          <ol className="mt-3 space-y-3">
+          <ol className="cascade mt-3 space-y-3">
             {livraison.historique.map((version, index) => (
               <li
                 key={`${version.dateArchive}-${index}`}

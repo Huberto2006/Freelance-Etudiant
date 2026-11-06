@@ -10,7 +10,9 @@ import { useLabels } from "@/i18n/use-labels";
 import { useApiList } from "@/hooks/useApiList";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { BadgeStatut, EtatVide, NoticeCard, PageHeader } from "@/components/ui/Notice";
+import { DataTable, type ColonneDataTable } from "@/components/ui/data-table";
+import { NoticeCard, PageHeader } from "@/components/ui/Notice";
+import { useColonnesTransaction } from "@/features/paiements/components/colonnes-transaction";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
 
@@ -19,8 +21,9 @@ type Action = "confirmer" | "annuler";
 export default function AdminPaiementsPage() {
   const t = useTranslations("payments");
   const tc = useTranslations("common");
-  const { argent, dateCourte } = useFormats();
-  const { methodePaiement, statutTransaction } = useLabels();
+  const { argent } = useFormats();
+  const { methodePaiement } = useLabels();
+  const colonnesTransaction = useColonnesTransaction();
   const toast = useToast();
 
   // `donnees` est conservé pendant un rechargement : après une action la
@@ -73,11 +76,45 @@ export default function AdminPaiementsPage() {
 
   const premierChargement = chargement && donnees === null;
 
-  const resume = (x: Transaction) =>
-    t("adminList.methodRef", {
-      methode: methodePaiement(x.methode),
-      reference: x.reference,
-    });
+  const colonnesAVerifier: ColonneDataTable<Transaction>[] = [
+    // Statut omis : toutes ces lignes sont en attente, le titre le dit déjà.
+    ...colonnesTransaction.filter((colonne) => colonne.id !== "statut"),
+    {
+      id: "actions",
+      entete: t("table.colActions"),
+      cellule: (x) => {
+        // Un paiement en ligne (Papi / MVola) est vérifié par le fournisseur :
+        // le backend refuse toute action manuelle, l'interface ne propose
+        // donc aucun bouton dans ce cas.
+        const enLigne = x.provider === "papi" || x.provider === "mvola";
+        return enLigne ? (
+          <p className="min-w-48 max-w-64 text-xs leading-relaxed text-ink-soft">
+            {t("adminList.onlineAuto")}
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              loading={enCours === x.id && aConfirmer?.action === "confirmer"}
+              disabled={enCours !== null}
+              onClick={() => setAConfirmer({ transaction: x, action: "confirmer" })}
+            >
+              {t("adminList.confirm")}
+            </Button>
+            <Button
+              size="sm"
+              variant="danger-ghost"
+              disabled={enCours !== null}
+              onClick={() => setAConfirmer({ transaction: x, action: "annuler" })}
+            >
+              {t("adminList.cancel")}
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
     <div>
@@ -115,115 +152,37 @@ export default function AdminPaiementsPage() {
             {t("adminList.toVerify", { count: enAttente.length })}
           </h2>
 
-          {enAttente.length === 0 ? (
-            <EtatVide icon={Wallet} className="mb-8">
-              {t("adminList.noneToVerify")}
-            </EtatVide>
-          ) : (
-            <ul className="mb-8 grid gap-3 sm:grid-cols-2">
-              {enAttente.map((x) => {
-                // Un paiement en ligne (Papi / MVola) est vérifié par le
-                // fournisseur : le backend refuse toute action manuelle,
-                // l'interface ne propose donc aucun bouton dans ce cas.
-                const enLigne = x.provider === "papi" || x.provider === "mvola";
-                return (
-                  <li key={x.id}>
-                    <NoticeCard className="flex h-full flex-col gap-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="font-display font-medium leading-snug">
-                            {x.candidature?.mission?.titre ??
-                              t("adminList.missionFallback")}
-                          </p>
-                          <p className="mt-0.5 text-xs text-ink-soft">
-                            {resume(x)}
-                          </p>
-                        </div>
-                        <BadgeStatut
-                          statut={x.statut}
-                          labels={{ en_attente: statutTransaction(x.statut) }}
-                        />
-                      </div>
-
-                      <p className="font-mono text-lg font-semibold tabular-nums text-ocre-dark">
-                        {argent(x.montant)}
-                      </p>
-
-                      {enLigne ? (
-                        <p className="rounded-md bg-ink/[0.04] px-3 py-2 text-xs leading-relaxed text-ink-soft">
-                          {t("adminList.onlineAuto")}
-                        </p>
-                      ) : (
-                        <div className="mt-auto flex flex-wrap gap-2">
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            loading={
-                              enCours === x.id &&
-                              aConfirmer?.action === "confirmer"
-                            }
-                            disabled={enCours !== null}
-                            onClick={() =>
-                              setAConfirmer({ transaction: x, action: "confirmer" })
-                            }
-                          >
-                            {t("adminList.confirm")}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="danger-ghost"
-                            disabled={enCours !== null}
-                            onClick={() =>
-                              setAConfirmer({ transaction: x, action: "annuler" })
-                            }
-                          >
-                            {t("adminList.cancel")}
-                          </Button>
-                        </div>
-                      )}
-                    </NoticeCard>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <div className="mb-8">
+            <DataTable
+              lignes={enAttente}
+              colonnes={colonnesAVerifier}
+              cleLigne={(x) => x.id}
+              legende={t("adminList.toVerify", { count: enAttente.length })}
+              iconeVide={Wallet}
+              messageVide={t("adminList.noneToVerify")}
+              messageAucunResultat={t("table.noResults")}
+              placeholderRecherche={t("table.searchPlaceholder")}
+              libelleRecherche={t("table.searchLabel")}
+            />
+          </div>
 
           {/* ------------------------------------------- HISTORIQUE */}
           <h2 className="mb-3 font-display text-lg font-semibold">
             {t("adminList.history")}
           </h2>
 
-          {traitees.length === 0 ? (
-            <EtatVide icon={Wallet}>{tc("states.empty")}</EtatVide>
-          ) : (
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {traitees.map((x) => (
-                <li key={x.id}>
-                  <NoticeCard className="flex h-full flex-col gap-2">
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="font-display font-medium leading-snug">
-                        {x.candidature?.mission?.titre ??
-                          t("adminList.missionFallback")}
-                      </p>
-                      <BadgeStatut
-                        statut={x.statut}
-                        labels={{ [x.statut]: statutTransaction(x.statut) }}
-                      />
-                    </div>
-                    <p className="text-xs text-ink-soft">{resume(x)}</p>
-                    <div className="mt-auto flex items-baseline justify-between gap-3 pt-1">
-                      <p className="font-mono text-sm font-semibold tabular-nums text-ocre-dark">
-                        {argent(x.montant)}
-                      </p>
-                      <p className="text-xs tabular-nums text-ink-soft">
-                        {dateCourte(x.dateCreation)}
-                      </p>
-                    </div>
-                  </NoticeCard>
-                </li>
-              ))}
-            </ul>
-          )}
+          <DataTable
+            lignes={traitees}
+            colonnes={colonnesTransaction}
+            cleLigne={(x) => x.id}
+            legende={t("adminList.history")}
+            iconeVide={Wallet}
+            messageVide={tc("states.empty")}
+            messageAucunResultat={t("table.noResults")}
+            placeholderRecherche={t("table.searchPlaceholder")}
+            libelleRecherche={t("table.searchLabel")}
+            triInitial={{ colonne: "date", direction: "desc" }}
+          />
         </>
       )}
 

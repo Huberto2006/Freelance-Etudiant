@@ -109,7 +109,7 @@ export function NavbarPublique() {
 
   const classeLien = (actif: boolean) =>
     clsx(
-      "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+      "lien-nav rounded-lg px-3 py-2 text-sm font-medium transition-colors",
       actif
         ? "text-ink font-semibold bg-ink/5"
         : "text-ink-soft hover:bg-ink/5 hover:text-ink",

@@ -248,7 +248,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
        * Verification d'email : le backend cree le compte mais ne delivre
        * AUCUN jeton tant que l'adresse n'est pas confirmee. On retourne la
        * reponse (email concerne) pour que la page d'inscription affiche
-       * l'ecran "Un email de verification a ete envoye".
+       * l'etat d'acceptation SMTP du message de verification.
        */
       return api.post<ReponseInscription>("/auth/register", payload, {
         auth: false,

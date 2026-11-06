@@ -22,7 +22,6 @@
     "colRegistered": "Inscription",
     "colStatus": "Statut",
     "colActions": "Actions",
-    "count": "{count, plural, one {# utilisateur} other {# utilisateurs}}",
     "noResults": "Aucun utilisateur ne correspond à ces critères.",
     "suspendTitle": "Suspendre {nom} ?",
     "suspendDescription": "Cet utilisateur ne pourra plus se connecter tant que son compte n'est pas réactivé.",
@@ -41,6 +40,14 @@
     "processed": "Traités",
     "resolution": "Résolution : {text}",
     "genericError": "Erreur",
-    "processedToast": "Signalement marqué comme traité."
+    "processedToast": "Signalement marqué comme traité.",
+    "colReason": "Motif",
+    "colTarget": "Cible",
+    "colResolution": "Résolution",
+    "colDate": "Date",
+    "colStatus": "Statut",
+    "searchLabel": "Rechercher un signalement",
+    "searchPlaceholder": "Motif, description ou résolution",
+    "noResults": "Aucun signalement ne correspond à cette recherche."
   }
 }

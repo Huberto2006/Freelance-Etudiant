@@ -43,8 +43,8 @@ export function ModalPrincipal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4">
-      <NoticeCard className="w-full max-w-md">
+    <div className="animate-in-fade fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4">
+      <NoticeCard className="animate-pop w-full max-w-md">
         <div className="flex items-start gap-4">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ocre/10 text-ocre-dark">
             <Star size={20} />

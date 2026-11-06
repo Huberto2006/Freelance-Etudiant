@@ -2,6 +2,8 @@
 
 import { clsx } from "clsx";
 
+import { SkeletonShimmer } from "./motion/SkeletonShimmer";
+
 /**
  * Squelettes de chargement — placeholder visuels pendant la récupération
  * des données, en cohérence avec la palette papier/encre de Kianja.
@@ -17,7 +19,7 @@ export function Skeleton({
     <span
       aria-hidden="true"
       className={clsx(
-        "block animate-pulse bg-ink/10",
+        "skeleton block bg-ink/10",
         rond ? "rounded-full" : "rounded-md",
         className,
       )}
@@ -28,8 +30,7 @@ export function Skeleton({
 /** Imitation d'une carte de statistique (StatCard). */
 export function SkeletonCarte({ className }: { className?: string }) {
   return (
-    <div
-      aria-hidden="true"
+    <SkeletonShimmer
       className={clsx("notice-card flex flex-col gap-3 p-5", className)}
     >
       <div className="flex items-center gap-2.5">
@@ -38,7 +39,7 @@ export function SkeletonCarte({ className }: { className?: string }) {
       </div>
       <Skeleton className="mt-1 h-8 w-24" />
       <Skeleton className="h-2.5 w-32" />
-    </div>
+    </SkeletonShimmer>
   );
 }
 
@@ -53,14 +54,14 @@ export function SkeletonListe({
   return (
     <div aria-hidden="true" className={clsx("flex flex-col gap-3", className)}>
       {Array.from({ length: nombre }).map((_, index) => (
-        <div key={index} className="notice-card flex items-start gap-3 p-5">
+        <SkeletonShimmer key={index} className="notice-card flex items-start gap-3 p-5">
           <Skeleton rond className="h-9 w-9 shrink-0" />
           <div className="w-full">
             <Skeleton className="h-4 w-40" />
             <Skeleton className="mt-2 h-3 w-full" />
             <Skeleton className="mt-1.5 h-3 w-2/3" />
           </div>
-        </div>
+        </SkeletonShimmer>
       ))}
     </div>
   );
@@ -69,8 +70,7 @@ export function SkeletonListe({
 /** Imitation d'une carte de mission recommandée. */
 export function SkeletonMission({ className }: { className?: string }) {
   return (
-    <div
-      aria-hidden="true"
+    <SkeletonShimmer
       className={clsx("notice-card flex flex-col gap-3 p-5", className)}
     >
       <div className="flex items-center justify-between">
@@ -84,6 +84,6 @@ export function SkeletonMission({ className }: { className?: string }) {
         <Skeleton className="h-4 w-20" />
         <Skeleton className="h-3 w-24" />
       </div>
-    </div>
+    </SkeletonShimmer>
   );
 }

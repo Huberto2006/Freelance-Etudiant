@@ -55,5 +55,12 @@
   "back": {
     "ariaLabel": "Go back to the previous page",
     "label": "Back"
+  },
+  "dataTable": {
+    "rowsPerPage": "Rows per page",
+    "range": "Showing {debut} to {fin} of {total, plural, one {# result} other {# results}}",
+    "pagination": "Pagination",
+    "pageOf": "Page {page} of {totalPages}",
+    "goToPage": "Go to page {page}"
   }
 }

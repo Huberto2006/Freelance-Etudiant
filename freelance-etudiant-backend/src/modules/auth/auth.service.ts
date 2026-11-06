@@ -211,12 +211,15 @@ export class AuthService {
      * session ne sera ouverte qu'apres confirmation de l'adresse (lien
      * recu par email) puis connexion classique.
      */
-    await this.genererEtEnvoyerVerificationEmail(saved);
+    const emailAccepteParSmtp =
+      await this.genererEtEnvoyerVerificationEmail(saved);
 
     return {
-      message:
-        "Inscription reussie. Un email de verification a ete envoye a votre adresse pour activer votre compte.",
+      message: emailAccepteParSmtp
+        ? "Inscription reussie. Le serveur de messagerie a accepte l'email de verification."
+        : "Inscription reussie, mais le serveur de messagerie n'a pas accepte l'email de verification.",
       email: saved.email,
+      emailAccepteParSmtp,
     };
   }
 
@@ -684,13 +687,13 @@ export class AuthService {
     // trahit plus l'existence du compte.
     void this.traiterRenvoiVerification(dto.email).catch((error) =>
       this.logger.error(
-        `resend-verification : ${error instanceof Error ? error.message : String(error)}`,
+        `Echec interne du renvoi de verification (type=${error instanceof Error ? error.name : 'inconnu'}).`,
       ),
     );
 
     return {
       message:
-        "Si un compte non verifie existe avec cette adresse, un nouvel email de verification vient d'etre envoye.",
+        "Demande prise en compte. Si cette adresse correspond a un compte non verifie, consultez votre boite de reception ; la livraison depend du fournisseur de messagerie.",
     };
   }
 
@@ -713,13 +716,13 @@ export class AuthService {
    * Genere un jeton de verification aleatoire et temporaire (256 bits
    * d'entropie), ne stocke en base que son empreinte SHA-256 (jamais le
    * jeton en clair), puis envoie l'email de verification. Le lien est
-   * construit a partir de FRONTEND_URL (aucune URL frontend en dur).
-   * L'echec d'envoi ne bloque jamais l'inscription : l'email est
-   * secondaire (convention EmailService).
+   * construit a partir de FRONTEND_URL (aucune URL frontend en dur). Le
+   * resultat indique uniquement l'acceptation du message par le serveur SMTP,
+   * pas sa livraison dans la boite du destinataire.
    */
   private async genererEtEnvoyerVerificationEmail(
     utilisateur: Utilisateur,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const jeton = crypto.randomBytes(32).toString("hex");
     const jetonHache = crypto
       .createHash("sha256")
@@ -735,15 +738,17 @@ export class AuthService {
     const frontendUrl =
       this.configService.get<string>("app.frontendUrl") ??
       "http://localhost:3001";
-    const lien = `${frontendUrl}/verification-email?token=${jeton}`;
+    const urlVerification = new URL(
+      "/verification-email",
+      `${frontendUrl.replace(/\/+$/, "")}/`,
+    );
+    urlVerification.searchParams.set("token", jeton);
 
-    // Envoi du VRAI email via le transport SMTP/Nodemailer existant
-    // (EmailService). En dev sans SMTP configure, le contenu est
-    // journalise en console de facon explicite.
-    await this.emailService.envoyerVerificationEmail(utilisateur.email, {
+    return this.emailService.envoyerVerificationEmail(utilisateur.email, {
       nom: utilisateur.nom,
-      lien,
+      lien: urlVerification.toString(),
       dureeHeures: VERIFICATION_EMAIL_EXPIRE_HEURES,
+      langue: utilisateur.langue,
     });
   }
 

@@ -41,8 +41,8 @@ export function ProfilCompletion({
         aria-label={t("progressLabel")}
       >
         <div
-          className="h-full rounded-full bg-ocre"
-          style={{ width: `${completion.pourcentage}%` }}
+          className="h-full origin-left rounded-full bg-ocre transition-transform duration-500 ease-out-soft"
+          style={{ transform: `scaleX(${completion.pourcentage / 100})` }}
         />
       </div>
 

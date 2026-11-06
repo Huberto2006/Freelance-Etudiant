@@ -1,5 +1,6 @@
 "use client";
 
+import { BadgeCompteur } from "@/components/ui/motion/NotificationAnimation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -70,6 +71,7 @@ export function MessagesLink() {
       aria-label={total > 0 ? t("messagesUnread", { count: total }) : t("messages")}
       title={t("messages")}
       className={`
+        presse
         relative
         flex
         h-9
@@ -77,7 +79,6 @@ export function MessagesLink() {
         items-center
         justify-center
         rounded-lg
-        transition-colors
         ${
           estActif
             ? "bg-ink/5 text-ink"
@@ -91,7 +92,8 @@ export function MessagesLink() {
       />
 
       {total > 0 && (
-        <span
+        <BadgeCompteur
+          total={total}
           className="
             absolute
             right-0.5
@@ -114,7 +116,7 @@ export function MessagesLink() {
           "
         >
           {total > 9 ? "9+" : total}
-        </span>
+        </BadgeCompteur>
       )}
     </Link>
   );

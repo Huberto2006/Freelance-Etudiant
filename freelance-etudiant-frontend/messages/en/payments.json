@@ -97,5 +97,17 @@
     "noMissionAwaiting": "No mission awaiting payment for now.",
     "loading": "Loading…",
     "noneInCategory": "No payment in this category."
+  },
+  "table": {
+    "colMission": "Mission",
+    "colMethod": "Method",
+    "colReference": "Reference",
+    "colDate": "Date",
+    "colAmount": "Amount",
+    "colStatus": "Status",
+    "colActions": "Actions",
+    "searchLabel": "Search payments",
+    "searchPlaceholder": "Mission, method or reference",
+    "noResults": "No payment matches this search."
   }
 }

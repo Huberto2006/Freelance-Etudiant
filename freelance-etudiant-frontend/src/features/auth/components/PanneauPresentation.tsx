@@ -1,3 +1,5 @@
+import { AnimatedGradient } from "@/components/ui/motion/AnimatedGradient";
+import { FloatingElement } from "@/components/ui/motion/FloatingElement";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Briefcase, GraduationCap, UsersRound } from "lucide-react";
@@ -26,6 +28,8 @@ export function PanneauPresentation({
 
   return (
     <aside className="relative hidden overflow-hidden border-r border-ink/10 bg-ink/[0.03] lg:flex lg:items-center">
+      <AnimatedGradient />
+
       {/* Formes douces décoratives */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-ocre/[0.07]" />
@@ -63,14 +67,16 @@ export function PanneauPresentation({
         {/* Illustration détourée : sa forme bleue et ses badges sont incrustés
             dans l'image (aucune pastille HTML en doublon). Sa hauteur suit
             celle de l'écran pour que la colonne ne déborde jamais. */}
+        <FloatingElement amplitude={6} className="animate-in mt-8 flex justify-center [animation-delay:200ms]">
         <Image
           src="/images/heros-kianja.webp"
           alt={th("imageAlt")}
           width={1536}
           height={1024}
           sizes="(min-width: 1280px) 520px, 440px"
-          className="animate-in mx-auto mt-8 h-auto max-h-[32dvh] w-auto max-w-full select-none object-contain [animation-delay:200ms]"
+          className="h-auto max-h-[32dvh] w-auto max-w-full select-none object-contain"
         />
+        </FloatingElement>
       </div>
     </aside>
   );

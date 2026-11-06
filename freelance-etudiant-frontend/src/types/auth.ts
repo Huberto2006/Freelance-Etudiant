@@ -21,4 +21,7 @@ export interface ReponseInscription {
   message: string;
 
   email: string;
+
+  /** true uniquement si le serveur SMTP a accepté le message. */
+  emailAccepteParSmtp: boolean;
 }

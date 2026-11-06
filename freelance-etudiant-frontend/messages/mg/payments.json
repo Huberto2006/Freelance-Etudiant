@@ -97,5 +97,17 @@
     "noMissionAwaiting": "Tsy misy asa miandry fandoavana amin'izao fotoana izao.",
     "loading": "Mampiditra…",
     "noneInCategory": "Tsy misy fandoavana amin'ity sokajy ity."
+  },
+  "table": {
+    "colMission": "Asa",
+    "colMethod": "Fomba",
+    "colReference": "Laharana",
+    "colDate": "Daty",
+    "colAmount": "Vola",
+    "colStatus": "Toe-javatra",
+    "colActions": "Hetsika",
+    "searchLabel": "Hitady fandoavam-bola",
+    "searchPlaceholder": "Asa, fomba na laharana",
+    "noResults": "Tsy misy fandoavam-bola mifanaraka amin'ity fikarohana ity."
   }
 }

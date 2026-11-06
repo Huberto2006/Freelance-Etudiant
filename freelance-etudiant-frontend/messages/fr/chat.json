@@ -1,4 +1,6 @@
 {
+  "realtimeOn": "Temps réel actif",
+  "realtimeConnecting": "Connexion…",
   "loadingConversations": "Chargement des conversations…",
   "user": "Utilisateur",
   "group": "Groupe",

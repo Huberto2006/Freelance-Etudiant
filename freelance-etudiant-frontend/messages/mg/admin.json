@@ -22,7 +22,6 @@
     "colRegistered": "Fisoratana anarana",
     "colStatus": "Toe-javatra",
     "colActions": "Hetsika",
-    "count": "{count} mpampiasa",
     "noResults": "Tsy misy mpampiasa mifanaraka amin'ireo fepetra ireo.",
     "suspendTitle": "Hatsahatra i {nom} ve?",
     "suspendDescription": "Tsy ho afaka hiditra intsony ity mpampiasa ity raha tsy averina alefa ny kaontiny.",
@@ -41,6 +40,14 @@
     "processed": "Voatanisa",
     "resolution": "Famahana : {text}",
     "genericError": "Hadisoana",
-    "processedToast": "Voatanisa ny tatitra."
+    "processedToast": "Voatanisa ny tatitra.",
+    "colReason": "Antony",
+    "colTarget": "Lasibatra",
+    "colResolution": "Famahana",
+    "colDate": "Daty",
+    "colStatus": "Toe-javatra",
+    "searchLabel": "Hitady tatitra",
+    "searchPlaceholder": "Antony, famaritana na famahana",
+    "noResults": "Tsy misy tatitra mifanaraka amin'ity fikarohana ity."
   }
 }

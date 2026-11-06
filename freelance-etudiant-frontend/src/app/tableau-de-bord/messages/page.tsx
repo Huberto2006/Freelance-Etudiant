@@ -1,5 +1,7 @@
 "use client";
 
+import { PastilleActivite, PointsAttente } from "@/components/ui/motion/IndicateursActivite";
+import { ModalTransition } from "@/components/ui/motion/ModalTransition";
 import {
   Suspense,
   useCallback,
@@ -105,7 +107,7 @@ function MessagesContent() {
     afficherRole,
   } = useChatHelpers();
   const { utilisateur } = useAuth();
-  const { socket } = useSocket();
+  const { socket, connecte } = useSocket();
   const searchParams = useSearchParams();
 
   /* =========================================================
@@ -1891,6 +1893,11 @@ function MessagesContent() {
                 {t("title")}
               </h1>
 
+              <p role="status" className="mt-0.5 flex items-center gap-1.5 text-[0.65rem] text-ink-soft">
+                <PastilleActivite actif={connecte} />
+                {connecte ? t("realtimeOn") : t("realtimeConnecting")}
+              </p>
+
               <p className="text-xs text-ink-soft">
                 {compteNonLus >
                 0
@@ -2460,6 +2467,9 @@ function MessagesContent() {
                           <div
                             className={clsx(
                               "group flex w-full items-end gap-2",
+                              // Seul le dernier message s'anime : un nouveau
+                              // message entre, le fil existant ne bouge pas.
+                              index === fil.length - 1 && "entree-remonte",
                               estMoi
                                 ? "justify-end"
                                 : "justify-start",
@@ -2675,10 +2685,7 @@ function MessagesContent() {
                     className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-paper-light shadow-sm transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {envoi ? (
-                      <Loader2
-                        size={17}
-                        className="animate-spin"
-                      />
+                      <PointsAttente />
                     ) : (
                       <Send
                         size={16}
@@ -2744,25 +2751,18 @@ function MessagesContent() {
           PANNEAU MOBILE
           ================================================= */}
 
-      {conversationActive &&
-        detailsOuverts && (
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label={t("details")}
-            className="fixed inset-0 z-50 flex justify-end bg-ink/50 xl:hidden"
-            onClick={() =>
-              setDetailsOuverts(
-                false,
-              )
-            }
-          >
-            <div
-              className="flex h-full w-full max-w-sm flex-col border-l border-ink/10 bg-paper shadow-xl"
-              onClick={(e) =>
-                e.stopPropagation()
-              }
-            >
+      <ModalTransition
+        ouvert={Boolean(conversationActive && detailsOuverts)}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("details")}
+        variante="droite"
+        classeFond="fixed inset-0 z-50 flex justify-end bg-ink/50 xl:hidden"
+        classePanneau="flex h-full w-full max-w-sm flex-col border-l border-ink/10 bg-paper shadow-xl"
+        surClicFond={() => setDetailsOuverts(false)}
+      >
+        {conversationActive && (
+          <>
               <div className="flex items-center justify-between border-b border-ink/10 px-4 py-3">
                 <h2 className="font-display text-base font-semibold text-ink">
                   {t("details")}
@@ -2809,9 +2809,9 @@ function MessagesContent() {
                   }
                 />
               </div>
-            </div>
-          </div>
+          </>
         )}
+      </ModalTransition>
     </div>
   );
 }

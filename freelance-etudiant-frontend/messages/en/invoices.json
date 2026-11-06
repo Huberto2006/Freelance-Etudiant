@@ -8,7 +8,16 @@
     "loadError": "Unable to load invoices right now.",
     "empty": "No invoices yet. One will appear as soon as a payment is confirmed.",
     "paidBy": "Paid by {nom}",
-    "provider": "Provider: {nom}"
+    "provider": "Provider: {nom}",
+    "colInvoice": "Invoice",
+    "colClient": "Client",
+    "colProvider": "Provider",
+    "colMethod": "Method",
+    "colDate": "Date",
+    "colAmount": "Amount",
+    "searchLabel": "Search invoices",
+    "searchPlaceholder": "Number, project, name or method",
+    "noResults": "No invoice matches this search."
   },
   "detail": {
     "print": "Print / Save as PDF",

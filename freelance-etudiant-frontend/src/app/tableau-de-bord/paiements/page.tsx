@@ -1,5 +1,6 @@
 "use client";
 
+import { StaggerContainer } from "@/components/ui/motion/StaggerContainer";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Wallet,
@@ -15,21 +16,29 @@ import { useTranslations } from "next-intl";
 import { useFormats } from "@/i18n/use-formats";
 
 import { Button } from "@/components/ui/Button";
+import { DataTable } from "@/components/ui/data-table";
 import {
   NoticeCard,
   PageHeader,
 } from "@/components/ui/Notice";
 import { SousNavigation } from "@/components/ui/SousNavigation";
-import { CarteTransaction } from "@/features/paiements/components/CarteTransaction";
+import { ActionsTransaction } from "@/features/paiements/components/ActionsTransaction";
+import { useColonnesTransaction } from "@/features/paiements/components/colonnes-transaction";
 import { FormulairePaiement } from "@/features/paiements/components/FormulairePaiement";
 
 // ============================================================
 // PAGE PRINCIPALE DES PAIEMENTS
 // ============================================================
 
+/** Relecture après retour de Papi : toutes les 5 s pendant 2 minutes. */
+const RETOUR_INTERVALLE_MS = 5_000;
+const RETOUR_ESSAIS_MAX = 24;
+
 export default function PaiementsPage() {
   const { utilisateur } = useAuth();
   const t = useTranslations("payments.page");
+  const tTableau = useTranslations("payments.table");
+  const colonnesTransaction = useColonnesTransaction();
   const { argent: formatArgent } = useFormats();
 
   const [transactions, setTransactions] = useState<
@@ -156,6 +165,7 @@ export default function PaiementsPage() {
   // ==========================================================
 
   const retourTraite = useRef(false);
+  const minuteurRetour = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [messageRetour, setMessageRetour] = useState<string | null>(
     null,
   );
@@ -175,17 +185,27 @@ export default function PaiementsPage() {
     );
     if (!transaction) return;
 
-    async function verifierRetour(id: string) {
+    // MVola et Airtel attendent la validation du payeur sur son téléphone :
+    // tant que le paiement est en attente, le backend est réinterrogé.
+    async function verifierRetour(id: string, essai: number) {
       try {
         const maj = await api.post<Transaction>(
           `/paiements/${id}/verifier`,
         );
+        if (maj.statut === "en_attente") {
+          setMessageRetour(t("returnPending"));
+          if (essai < RETOUR_ESSAIS_MAX) {
+            minuteurRetour.current = setTimeout(
+              () => void verifierRetour(id, essai + 1),
+              RETOUR_INTERVALLE_MS,
+            );
+          }
+          return;
+        }
         setMessageRetour(
-          maj.statut === "confirmee" || maj.statut === "liberee"
-            ? t("returnConfirmed")
-            : maj.statut === "annulee"
-              ? t("returnRefused")
-              : t("returnPending"),
+          maj.statut === "annulee"
+            ? t("returnRefused")
+            : t("returnConfirmed"),
         );
         void recharger();
       } catch {
@@ -195,9 +215,16 @@ export default function PaiementsPage() {
       }
     }
 
-    void verifierRetour(transaction.id);
+    void verifierRetour(transaction.id, 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chargement, transactions]);
+
+  useEffect(
+    () => () => {
+      if (minuteurRetour.current) clearTimeout(minuteurRetour.current);
+    },
+    [],
+  );
 
   // ==========================================================
   // PROTECTION
@@ -342,7 +369,7 @@ export default function PaiementsPage() {
                 }}
               />
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <StaggerContainer className="grid gap-3 sm:grid-cols-2">
                 {candidaturesAPayer.map(
                   (candidature) => (
                     <NoticeCard
@@ -374,7 +401,7 @@ export default function PaiementsPage() {
                     </NoticeCard>
                   ),
                 )}
-              </div>
+              </StaggerContainer>
             )}
           </div>
         )}
@@ -407,48 +434,38 @@ export default function PaiementsPage() {
                 : t("history")}
           </h2>
 
-          {(() => {
-            const transactionsAffichees =
+          <DataTable
+            lignes={
               ongletPaiements === "en_attente"
                 ? transactionsEnAttente
                 : ongletPaiements === "confirmes"
                   ? transactionsConfirmees
-                  : transactions;
-
-            if (chargement) {
-              return (
-                <p className="text-sm text-ink-soft">
-                  {t("loading")}
-                </p>
-              );
+                  : transactions
             }
-
-            if (
-              transactionsAffichees.length === 0
-            ) {
-              return (
-                <NoticeCard>
-                  <p className="text-sm text-ink-soft/70">
-                    {t("noneInCategory")}
-                  </p>
-                </NoticeCard>
-              );
-            }
-
-            return (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {transactionsAffichees.map(
-                  (transaction) => (
-                    <CarteTransaction
-                      key={transaction.id}
-                      transaction={transaction}
-                      onVerifie={recharger}
-                    />
-                  ),
-                )}
-              </div>
-            );
-          })()}
+            colonnes={[
+              ...colonnesTransaction,
+              {
+                id: "actions",
+                entete: tTableau("colActions"),
+                cellule: (transaction) => (
+                  <ActionsTransaction
+                    transaction={transaction}
+                    onVerifie={recharger}
+                  />
+                ),
+              },
+            ]}
+            cleLigne={(transaction) => transaction.id}
+            legende={t("title")}
+            chargement={chargement}
+            iconeVide={Wallet}
+            messageVide={t("noneInCategory")}
+            messageAucunResultat={tTableau("noResults")}
+            placeholderRecherche={tTableau("searchPlaceholder")}
+            libelleRecherche={tTableau("searchLabel")}
+            cleFiltres={ongletPaiements}
+            triInitial={{ colonne: "date", direction: "desc" }}
+          />
         </>
       )}
     </div>

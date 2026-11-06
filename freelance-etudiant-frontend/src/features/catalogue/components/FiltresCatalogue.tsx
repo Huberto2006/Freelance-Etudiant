@@ -254,7 +254,7 @@ export function FeuilleFiltres<T extends string = string>({
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
       <div
-        className="absolute inset-0 bg-ink/50"
+        className="animate-in-fade absolute inset-0 bg-ink/50"
         onClick={onFermer}
         aria-hidden="true"
       />
@@ -263,7 +263,7 @@ export function FeuilleFiltres<T extends string = string>({
         role="dialog"
         aria-modal="true"
         aria-label="Filtres"
-        className="absolute inset-x-0 bottom-0 top-16 flex flex-col rounded-t-[20px] bg-paper-light"
+        className="animate-feuille-monte absolute inset-x-0 bottom-0 top-16 flex flex-col rounded-t-[20px] bg-paper-light"
       >
         <div className="flex justify-center pt-2.5" aria-hidden="true">
           <span className="h-1 w-10 rounded bg-ink/20" />
