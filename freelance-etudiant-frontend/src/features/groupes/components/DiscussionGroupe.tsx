@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, MessageCircle, Send } from "lucide-react";
+import { LoaderCircle, MessageCircle, Send } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -128,11 +128,11 @@ export function DiscussionGroupe({
       <div ref={zoneRef} className="my-4 max-h-80 min-h-32 space-y-3 overflow-y-auto pr-1">
         {chargement ? (
           <p className="flex items-center gap-2 text-sm text-ink-soft">
-            <Loader2 size={15} className="animate-spin" aria-hidden="true" />
+            <LoaderCircle size={16} className="motion-safe:animate-spin" aria-hidden="true" />
             Chargement de la discussion…
           </p>
         ) : messages.length === 0 ? (
-          <p className="py-7 text-center text-sm text-ink-soft/70">Aucun message dans cette discussion.</p>
+          <p className="py-7 text-center text-sm text-ink-soft/85">Aucun message dans cette discussion.</p>
         ) : (
           messages.map((message) => {
             const estMoi = message.expediteurId === utilisateur?.id;
@@ -164,7 +164,7 @@ export function DiscussionGroupe({
           className="kianja-field-control min-w-0 flex-1 resize-none rounded-lg border-0 bg-paper-light px-3 py-2 text-sm outline-none focus:outline-none"
         />
         <Button type="submit" size="sm" disabled={envoi || !texte.trim()} aria-label="Envoyer le message" className="flex items-center gap-1.5">
-          {envoi ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+          {envoi ? <LoaderCircle size={16} className="motion-safe:animate-spin" /> : <Send size={16} />}
           <span className="hidden sm:inline">Envoyer</span>
         </Button>
       </form>

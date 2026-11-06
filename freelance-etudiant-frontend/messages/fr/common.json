@@ -13,6 +13,7 @@
     "close": "Fermer",
     "back": "Retour",
     "search": "Rechercher",
+    "clearSearch": "Effacer la recherche",
     "edit": "Modifier",
     "send": "Envoyer",
     "next": "Suivant",
@@ -33,12 +34,12 @@
     "loading": "Chargement…",
     "saving": "Enregistrement…",
     "sending": "Envoi…",
-    "empty": "Rien à afficher pour le moment.",
-    "error": "Une erreur est survenue.",
+    "empty": "Il n'y a rien ici pour l'instant.",
+    "error": "Quelque chose n'a pas fonctionné de notre côté.",
     "none": "Aucun",
     "optional": "facultatif",
     "required": "obligatoire",
-    "errLoadData": "Impossible de charger les données. Réessayez."
+    "errLoadData": "Nous n'arrivons pas à charger ces informations pour l'instant. Réessayez dans un instant."
   },
   "currency": {
     "ariary": "Ar"
@@ -58,6 +59,8 @@
   },
   "dataTable": {
     "rowsPerPage": "Lignes par page",
+    "dateFrom": "Date de début",
+    "dateTo": "Date de fin",
     "range": "Affichage de {debut} à {fin} sur {total, plural, one {# résultat} other {# résultats}}",
     "pagination": "Pagination",
     "pageOf": "Page {page} sur {totalPages}",

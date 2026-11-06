@@ -12,6 +12,11 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DataTable, type ColonneDataTable } from "@/components/ui/data-table";
+import {
+  FiltrePeriode,
+  type PeriodeFiltre,
+} from "@/components/ui/data-table/FiltrePeriode";
+import { dateDansPeriode } from "@/components/ui/data-table/utils";
 import { Select } from "@/components/ui/Field";
 import { PageHeader, Tag } from "@/components/ui/Notice";
 import { useToast } from "@/components/ui/Toast";
@@ -43,6 +48,10 @@ export default function AdminPage() {
 
   const [filtreRole, setFiltreRole] = useState("");
   const [filtreEtat, setFiltreEtat] = useState<"" | EtatCompte>("");
+  const [periodeInscription, setPeriodeInscription] = useState<PeriodeFiltre>({
+    depuis: "",
+    jusqua: "",
+  });
   // Identifiant de l'utilisateur dont une requête est réellement en cours.
   const [enCours, setEnCours] = useState<string | null>(null);
   const [aSuspendre, setASuspendre] = useState<Utilisateur | null>(null);
@@ -58,9 +67,15 @@ export default function AdminPage() {
       utilisateurs.filter(
         (u) =>
           (!filtreRole || u.role === filtreRole) &&
-          (!filtreEtat || etatCompte(u) === filtreEtat),
+          (!filtreEtat || etatCompte(u) === filtreEtat) &&
+          ((!periodeInscription.depuis && !periodeInscription.jusqua) ||
+            dateDansPeriode(
+              u.dateInscription,
+              periodeInscription.depuis,
+              periodeInscription.jusqua,
+            )),
       ),
-    [utilisateurs, filtreRole, filtreEtat],
+    [utilisateurs, filtreRole, filtreEtat, periodeInscription],
   );
 
   function libelleEtat(etat: EtatCompte) {
@@ -102,6 +117,7 @@ export default function AdminPage() {
   function reinitialiserFiltres() {
     setFiltreRole("");
     setFiltreEtat("");
+    setPeriodeInscription({ depuis: "", jusqua: "" });
   }
 
   const colonnes: ColonneDataTable<Utilisateur>[] = [
@@ -124,6 +140,29 @@ export default function AdminPage() {
             {/* Sur mobile, le rôle passe sous l'e-mail
                 (sa colonne est masquée). */}
             <p className="text-xs text-ink-soft sm:hidden">{role(u.role)}</p>
+            <details className="mt-1 text-xs">
+              <summary className="w-fit cursor-pointer text-ink-soft underline underline-offset-2 hover:text-ink">
+                {t("users.viewDetails")}
+              </summary>
+              <dl className="mt-2 grid gap-x-3 gap-y-1 text-ink-soft sm:grid-cols-2">
+                <div>
+                  <dt className="inline font-medium">{t("users.detailId")}: </dt>
+                  <dd className="inline break-all font-mono">{u.id}</dd>
+                </div>
+                <div>
+                  <dt className="inline font-medium">{t("users.detailRole")}: </dt>
+                  <dd className="inline">{role(u.role)}</dd>
+                </div>
+                <div>
+                  <dt className="inline font-medium">{t("users.detailStatus")}: </dt>
+                  <dd className="inline">{libelleEtat(etatCompte(u))}</dd>
+                </div>
+                <div>
+                  <dt className="inline font-medium">{t("users.detailRegistered")}: </dt>
+                  <dd className="inline">{date(u.dateInscription)}</dd>
+                </div>
+              </dl>
+            </details>
           </div>
         </div>
       ),
@@ -221,11 +260,20 @@ export default function AdminPage() {
         messageAucunResultat={t("users.noResults")}
         placeholderRecherche={t("users.searchPlaceholder")}
         libelleRecherche={t("users.searchLabel")}
-        filtresActifs={Boolean(filtreRole || filtreEtat)}
-        cleFiltres={`${filtreRole}|${filtreEtat}`}
+        filtresActifs={Boolean(
+          filtreRole ||
+            filtreEtat ||
+            periodeInscription.depuis ||
+            periodeInscription.jusqua,
+        )}
+        cleFiltres={`${filtreRole}|${filtreEtat}|${periodeInscription.depuis}|${periodeInscription.jusqua}`}
         onReinitialiserFiltres={reinitialiserFiltres}
         filtres={
           <>
+            <FiltrePeriode
+              valeur={periodeInscription}
+              onChange={setPeriodeInscription}
+            />
             <div className="w-[calc(50%-0.25rem)] sm:w-36">
               <Select
                 value={filtreRole}

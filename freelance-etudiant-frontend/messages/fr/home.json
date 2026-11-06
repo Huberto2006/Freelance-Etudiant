@@ -25,7 +25,7 @@
     "imageAlt": "Étudiant souriant tenant un ordinateur portable devant une grande baie vitrée"
   },
   "audiences": {
-    "eyebrow": "Une marketplace bilatérale",
+    "eyebrow": "Pour qui ?",
     "title": "Deux parcours connectés pour réussir ensemble",
     "subtitle": "Que vous ayez un besoin ponctuel ou des compétences à offrir, Kianja offre à chacun un cadre transparent et sécurisé.",
     "client": {
@@ -93,7 +93,7 @@
   },
   "process": {
     "eyebrow": "Processus simplifié",
-    "title": "Comment fonctionne la marketplace Kianja",
+    "title": "Comment fonctionne Kianja",
     "subtitle": "Du premier contact à la validation finale, chaque étape est pensée pour garantir la réussite du projet.",
     "clientTrack": "Parcours Client",
     "clientTrackTitle": "De votre besoin à la livraison finale",
@@ -154,7 +154,7 @@
   },
   "benefits": {
     "eyebrow": "Garanties & Valeurs",
-    "title": "Pourquoi choisir la marketplace Kianja ?",
+    "title": "Pourquoi choisir Kianja ?",
     "subtitle": "Étudiants en quête d'expérience, clients en quête d'expertise : une plateforme pensée pour la réussite mutuelle.",
     "talents": {
       "title": "Des talents étudiants qualifiés",

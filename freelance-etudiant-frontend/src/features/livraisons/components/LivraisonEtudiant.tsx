@@ -4,7 +4,6 @@ import { FadeIn } from "@/components/ui/motion/FadeIn";
 import {
   useState,
 } from "react";
-import Link from "next/link";
 import {
   MessageCircle,
   ExternalLink,
@@ -312,7 +311,7 @@ export function LivraisonEtudiant({
     <NoticeCard>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+          <p className=" text-xs text-ink-soft font-medium">
             {t("delivery")}
           </p>
 
@@ -327,24 +326,19 @@ export function LivraisonEtudiant({
         </div>
 
         {clientId && (
-          <Link
+          <Button
             href={`/tableau-de-bord/messages?contact=${encodeURIComponent(
               clientId,
             )}&nom=${encodeURIComponent(
               clientNom,
-            )}`}
-          >
-            <Button
-              size="sm"
+            )}`} size="sm"
               variant="ghost"
-              className="inline-flex items-center gap-2"
-            >
+              className="inline-flex items-center gap-2">
               <MessageCircle
                 size={16}
               />
               {t("chatWithClient")}
             </Button>
-          </Link>
         )}
       </div>
 
@@ -387,7 +381,7 @@ export function LivraisonEtudiant({
         "correction_demandee" &&
         livraison.commentaireCorrection && (
           <div className="mt-5 rounded-lg border border-brique/20 bg-brique/5 p-4">
-            <p className="font-mono text-xs uppercase tracking-wider text-brique">
+            <p className=" text-xs text-brique font-medium">
               {t("correctionRequested")}
             </p>
 
@@ -429,7 +423,7 @@ export function LivraisonEtudiant({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 break-all text-sm text-ocre-dark hover:underline"
           >
-            <ExternalLink size={15} />
+            <ExternalLink size={16} />
             {t("openDeliverable")}
           </a>
         </div>
@@ -437,7 +431,7 @@ export function LivraisonEtudiant({
 
       {livraison?.historique && livraison.historique.length > 0 && (
         <section className="mt-5 border-t border-ink/15 pt-5">
-          <h3 className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+          <h3 className=" text-xs text-ink-soft font-medium">
             {t("deliveryHistory")}
           </h3>
           <ol className="cascade mt-3 space-y-3">
@@ -492,7 +486,7 @@ export function LivraisonEtudiant({
         (livraison.statut === "correction_demandee" &&
           !livraison.correctionUtilisee)) && (
         <div className="mt-6 max-w-xl border-t border-ink/15 pt-6">
-          <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+          <p className=" text-xs text-ink-soft font-medium">
             {livraison
               ? t("correctMyDelivery")
               : t("sendDelivery")}
@@ -520,7 +514,7 @@ export function LivraisonEtudiant({
               >
                 <div className="flex shrink-0 items-center gap-1 sm:gap-2">
                   <span
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-mono ${
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs tabular-nums ${
                       etape === item.numero
                         ? "bg-ocre-dark text-paper-light"
                         : etape > item.numero
@@ -528,7 +522,7 @@ export function LivraisonEtudiant({
                           : "border border-ink/25 text-ink-soft"
                     }`}
                   >
-                    {etape > item.numero ? <Check size={13} aria-hidden="true" /> : item.numero}
+                    {etape > item.numero ? <Check size={14} aria-hidden="true" /> : item.numero}
                   </span>
                   <span
                     className={`text-[10px] leading-tight sm:text-xs ${etape === item.numero ? "font-medium text-ink" : "text-ink-soft"}`}
@@ -856,7 +850,7 @@ export function LivraisonEtudiant({
                   onSubmit={envoyerEvalClient}
                   className="mt-5 border-t border-ink/15 pt-5"
                 >
-                  <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+                  <p className=" text-xs text-ink-soft font-medium">
                     {t("reviewClient")}
                   </p>
 

@@ -56,7 +56,7 @@ export function ModalSuppression({
               {libelleType(moyen.type)}
             </p>
 
-            <p className="mt-1 font-mono text-sm text-ink-soft">
+            <p className="mt-1 tabular-nums text-sm text-ink-soft">
               {moyen.numero}
             </p>
 

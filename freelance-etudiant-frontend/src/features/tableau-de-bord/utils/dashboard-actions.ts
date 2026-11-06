@@ -1,5 +1,5 @@
 import {
-  AlertTriangle,
+  TriangleAlert,
   ClipboardList,
   MessageCircle,
   Package,
@@ -54,7 +54,7 @@ export function construireActionsEtudiant(params: {
       actions.push({
         id: `correction-${livraison.id}`,
         priorite: 10,
-        icone: AlertTriangle,
+        icone: TriangleAlert,
         ton: "brique",
         titre: t("actions.correctionTitle"),
         description: t("actions.correctionDescription", { titre }),

@@ -1,5 +1,6 @@
 "use client";
 
+import { ChargementPage } from "@/components/ui/Notice";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -102,9 +103,7 @@ export default function TableauDeBordLayout({
   if (chargement || !utilisateur || utilisateur.role === "a_definir") {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-paper px-5">
-        <p className="text-sm text-ink-soft">
-          {tc("states.loading")}
-        </p>
+        <ChargementPage libelle={tc("states.loading")} />
       </div>
     );
   }

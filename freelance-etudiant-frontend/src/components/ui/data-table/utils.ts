@@ -28,6 +28,23 @@ export function filtrerLignes<T>(
   );
 }
 
+export function dateDansPeriode(
+  dateIso: string,
+  depuis: string,
+  jusqua: string,
+): boolean {
+  const horodatage = new Date(dateIso).getTime();
+  if (!Number.isFinite(horodatage)) return false;
+
+  const debut = depuis
+    ? new Date(`${depuis}T00:00:00`).getTime()
+    : Number.NEGATIVE_INFINITY;
+  const fin = jusqua
+    ? new Date(`${jusqua}T23:59:59.999`).getTime()
+    : Number.POSITIVE_INFINITY;
+  return horodatage >= debut && horodatage <= fin;
+}
+
 type ValeurComparable = string | number | Date | null | undefined;
 
 function estAbsente(valeur: ValeurComparable): boolean {

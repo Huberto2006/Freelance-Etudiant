@@ -63,7 +63,7 @@
     "intro": "Manage the details on which your clients can make their payments.",
     "privacy": "Your details are not shown on your public profile.",
     "addMethod": "Add a method",
-    "emptyTitle": "No payment method",
+    "emptyTitle": "Where would you like to receive your payments?",
     "emptyDescription": "Add a Mobile Money number or a bank account so you can receive your payments.",
     "addFirst": "Add my first method",
     "loading": "Loading your payment methods…",

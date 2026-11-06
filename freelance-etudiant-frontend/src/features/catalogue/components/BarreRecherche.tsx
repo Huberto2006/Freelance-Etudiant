@@ -42,19 +42,19 @@ export function BarreRecherche({
           onChange={(e) => setSaisie(e.target.value)}
           placeholder={placeholder}
           autoComplete="off"
-          className="kianja-field-control h-12 w-full rounded-[10px] border-0 bg-paper-light pl-11 pr-3 text-base text-ink outline-none focus:outline-none transition placeholder:text-ink-soft/60"
+          className="kianja-field-control h-12 w-full rounded-lg border-0 bg-paper-light pl-11 pr-3 text-base text-ink outline-none focus:outline-none transition placeholder:text-ink-soft/85"
         />
       </div>
 
       <button
         type="button"
         onClick={onOuvrirFiltres}
-        className="inline-flex h-12 shrink-0 items-center gap-2 rounded-[10px] border border-ink/20 bg-paper-light px-4 text-sm font-medium text-ink transition-colors hover:border-ink/40 lg:hidden"
+        className="inline-flex h-12 shrink-0 items-center gap-2 rounded-lg border border-ink/20 bg-paper-light px-4 text-sm font-medium text-ink transition-colors hover:border-ink/40 lg:hidden"
       >
         <SlidersHorizontal size={16} aria-hidden="true" />
         Filtres
         {nbFiltresActifs > 0 && (
-          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-ink px-1.5 font-mono text-[0.6875rem] text-paper-light">
+          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-ink px-1.5 tabular-nums text-[0.6875rem] text-paper-light">
             {nbFiltresActifs}
           </span>
         )}

@@ -16,7 +16,7 @@
     "colDate": "Date",
     "colAmount": "Amount",
     "searchLabel": "Search invoices",
-    "searchPlaceholder": "Number, project, name or method",
+    "searchPlaceholder": "Number, payment reference, project or name",
     "noResults": "No invoice matches this search."
   },
   "detail": {

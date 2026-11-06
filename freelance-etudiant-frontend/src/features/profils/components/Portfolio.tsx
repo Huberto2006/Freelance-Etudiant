@@ -202,7 +202,7 @@ export function PortfolioGalerie({
                       <p className="truncate font-display font-medium">
                         {libelle}
                       </p>
-                      <p className="truncate font-mono text-xs text-ink-soft/70">
+                      <p className="truncate tabular-nums text-xs text-ink-soft/85">
                         {url}
                       </p>
                     </div>

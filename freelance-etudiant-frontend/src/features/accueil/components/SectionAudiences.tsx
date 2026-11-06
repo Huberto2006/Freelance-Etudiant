@@ -47,7 +47,7 @@ function Volet({
           <Icone size={16} />
         </span>
         <span
-          className={`text-xs font-semibold uppercase tracking-[0.08em] ${couleur}`}
+          className={`text-xs font-semibold ${couleur}`}
         >
           {etiquette}
         </span>

@@ -456,7 +456,7 @@ export function SectionCommentaires({
           {t("loading")}
         </p>
       ) : commentaires.length === 0 ? (
-        <p className="text-sm text-ink-soft/70">
+        <p className="text-sm text-ink-soft/85">
           {utilisateur ? t("emptyLoggedIn") : t("emptyAnonymous")}
         </p>
       ) : (
@@ -495,7 +495,7 @@ export function SectionCommentaires({
                         t("defaultUser")}
                     </p>
 
-                    <p className="text-xs text-ink-soft/60">
+                    <p className="text-xs text-ink-soft/85">
                       {modifie
                         ? t("editedDate", {
                             date: dateCourte(commentaire.dateCreation),
@@ -563,9 +563,9 @@ export function SectionCommentaires({
                                   commentaire,
                                 )
                               }
-                              className="inline-flex items-center gap-1 text-xs text-ink-soft/60 hover:text-ocre-dark"
+                              className="inline-flex items-center gap-1 text-xs text-ink-soft/85 hover:text-ocre-dark"
                             >
-                              <Pencil size={11} />
+                              <Pencil size={12} />
                               {t("edit")}
                             </button>
                           )}
@@ -577,9 +577,9 @@ export function SectionCommentaires({
                                 commentaire.id,
                               )
                             }
-                            className="inline-flex items-center gap-1 text-xs text-ink-soft/60 hover:text-brique"
+                            className="inline-flex items-center gap-1 text-xs text-ink-soft/85 hover:text-brique"
                           >
-                            <Trash2 size={11} />
+                            <Trash2 size={12} />
                             {t("delete")}
                           </button>
                         </div>

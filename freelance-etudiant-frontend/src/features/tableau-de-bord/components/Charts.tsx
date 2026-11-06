@@ -37,7 +37,7 @@ function InfoBulle({
   return (
     <div className="rounded-lg border border-ink/20 bg-paper-light px-3 py-2 text-xs shadow-lg">
       {label && (
-        <p className="mb-1 font-mono uppercase tracking-wider text-ink-soft">
+        <p className="mb-1 text-ink-soft font-medium">
           {label}
         </p>
       )}
@@ -74,14 +74,14 @@ export function BarreMensuelle({
 
   return (
     <NoticeCard className="sm:col-span-3">
-      <p className="text-xs font-mono uppercase tracking-wider text-ink-soft mb-1">
+      <p className="text-xs text-ink-soft mb-1 font-medium">
         {titre}
       </p>
       {sous_titre && (
-        <p className="text-xs text-ink-soft/70 mb-3">{sous_titre}</p>
+        <p className="text-xs text-ink-soft/85 mb-3">{sous_titre}</p>
       )}
       {vide ? (
-        <p className="py-8 text-center text-sm text-ink-soft/70">
+        <p className="py-8 text-center text-sm text-ink-soft/85">
           Pas encore de données à afficher.
         </p>
       ) : (
@@ -95,12 +95,12 @@ export function BarreMensuelle({
               />
               <XAxis
                 dataKey={cleLabel}
-                tick={{ fill: "var(--color-ink-soft)", fontSize: 11, fontFamily: "var(--font-mono)" }}
+                tick={{ fill: "var(--color-ink-soft)", fontSize: 11, fontFamily: "var(--tabular-nums)" }}
                 axisLine={{ stroke: "var(--color-ink)", strokeOpacity: 0.15 }}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fill: "var(--color-ink-soft)", fontSize: 11, fontFamily: "var(--font-mono)" }}
+                tick={{ fill: "var(--color-ink-soft)", fontSize: 11, fontFamily: "var(--tabular-nums)" }}
                 axisLine={false}
                 tickLine={false}
                 width={48}
@@ -139,14 +139,14 @@ export function AnneauRepartition({
 
   return (
     <NoticeCard className="sm:col-span-3">
-      <p className="text-xs font-mono uppercase tracking-wider text-ink-soft mb-1">
+      <p className="text-xs text-ink-soft mb-1 font-medium">
         {titre}
       </p>
       {sous_titre && (
-        <p className="text-xs text-ink-soft/70 mb-3">{sous_titre}</p>
+        <p className="text-xs text-ink-soft/85 mb-3">{sous_titre}</p>
       )}
       {total === 0 ? (
-        <p className="py-8 text-center text-sm text-ink-soft/70">
+        <p className="py-8 text-center text-sm text-ink-soft/85">
           Pas encore de données à afficher.
         </p>
       ) : (
@@ -185,9 +185,9 @@ export function AnneauRepartition({
                   />
                   {d[cleLabel]}
                 </span>
-                <span className="font-mono text-ink">
+                <span className="tabular-nums text-ink">
                   {d[cleValeur]}
-                  <span className="text-ink-soft/60">
+                  <span className="text-ink-soft/85">
                     {" "}
                     · {Math.round((Number(d[cleValeur]) / total) * 100)}%
                   </span>
@@ -247,7 +247,7 @@ export function JaugeCirculaire({
           </span>
         </div>
       </div>
-      <p className="text-xs font-mono uppercase tracking-wider text-ink-soft">
+      <p className="text-xs text-ink-soft font-medium">
         {label}
       </p>
     </div>

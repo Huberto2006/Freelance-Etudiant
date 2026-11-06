@@ -196,29 +196,29 @@ export const THEMES: ThemeConfig[] = [
     id: "amber",
     nom: "Ocre Malagasy",
     description: "Chaleureux, terre cuite et accueillant — Esprit terroir et proximité",
-    pastilleCouleur: "#d97706",
-    pastilleAccent: "#b45309",
+    pastilleCouleur: "#a8501f",
+    pastilleAccent: "#8a3f15",
     clair: {
-      primary: "#d97706",
-      primaryDark: "#b45309",
-      primarySoft: "rgba(217, 119, 6, 0.12)",
-      secondary: "#f59e0b",
-      accent: "#d97706",
-      paper: "#fffdfa",
-      paperLight: "#ffffff",
-      ink: "#291804",
-      inkSoft: "#5c4018",
+      primary: "#a8501f",
+      primaryDark: "#8a3f15",
+      primarySoft: "rgba(168, 80, 31, 0.12)",
+      secondary: "#c2703a",
+      accent: "#a8501f",
+      paper: "#fbf7f1",
+      paperLight: "#fffdf9",
+      ink: "#2c2119",
+      inkSoft: "#5a4a3e",
     },
     sombre: {
-      primary: "#fbbf24",
-      primaryDark: "#fde68a",
-      primarySoft: "rgba(251, 191, 36, 0.15)",
-      secondary: "#f59e0b",
-      accent: "#fbbf24",
-      paper: "#201608",
-      paperLight: "#32230e",
-      ink: "#fef3c7",
-      inkSoft: "#fcd34d",
+      primary: "#e39a5b",
+      primaryDark: "#f2c48d",
+      primarySoft: "rgba(227, 154, 91, 0.16)",
+      secondary: "#c98a55",
+      accent: "#e39a5b",
+      paper: "#1f1711",
+      paperLight: "#2b2119",
+      ink: "#f6eee5",
+      inkSoft: "#cdbcab",
     },
     typographie: {
       nomDisplay: "Zilla Slab (Sérif chaleureux)",
@@ -231,7 +231,7 @@ export const THEMES: ThemeConfig[] = [
   },
 ];
 
-export const DEFAULT_THEME_ID: ThemeId = "slate";
+export const DEFAULT_THEME_ID: ThemeId = "amber";
 export const DEFAULT_MODE: ModeTheme = "clair";
 
 export function getTheme(id: string | null | undefined): ThemeConfig {

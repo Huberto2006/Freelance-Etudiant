@@ -6,13 +6,12 @@ import {
   useRef,
   useState,
 } from "react";
-import Link from "next/link";
 import {
   Package,
   FileUp,
   Users,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Clock,
   Search,
   FolderGit2,
@@ -44,6 +43,8 @@ import {
   PageHeader,
   StatCard,
   Tag,
+  EtatVide,
+  ChargementPage,
 } from "@/components/ui/Notice";
 import { SousNavigation } from "@/components/ui/SousNavigation";
 import { LivraisonEtudiant } from "@/features/livraisons/components/LivraisonEtudiant";
@@ -60,9 +61,7 @@ export default function LivraisonsPage() {
     <Suspense
       fallback={
         <div>
-          <p className="text-sm text-ink-soft">
-            {t("loading")}
-          </p>
+          <ChargementPage libelle={t("loading")} />
         </div>
       }
     >
@@ -469,17 +468,12 @@ function LivraisonsContent() {
             {t("mustLogin")}
           </p>
 
-          <Link
-            href="/connexion"
-            className="mt-4 inline-block"
-          >
-            <Button
-              size="sm"
+          <Button
+            href="/connexion" size="sm"
               variant="secondary"
-            >
+             className="mt-4">
               {t("login")}
             </Button>
-          </Link>
         </NoticeCard>
       </div>
     );
@@ -549,27 +543,23 @@ function LivraisonsContent() {
 
           <div className="flex flex-col gap-5">
             <NoticeCard>
-              <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+              <p className=" text-xs text-ink-soft font-medium">
                 {t("missionDetails")}
               </p>
 
-              <Link
-                href={`/missions/${candidatureSelectionnee.missionId}`}
-                className="mt-3 block"
-              >
-                <Button size="sm" variant="ghost" className="w-full">
+              <Button
+                href={`/missions/${candidatureSelectionnee.missionId}`} size="sm" variant="ghost" className="mt-3 w-full">
                   {t("viewMission")}
                 </Button>
-              </Link>
 
               <div className="mt-4 space-y-3 border-t border-ink/15 pt-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <Wallet size={15} className="shrink-0 text-ink-soft" aria-hidden="true" />
+                  <Wallet size={16} className="shrink-0 text-ink-soft" aria-hidden="true" />
                   <span>{formatArgent(candidatureSelectionnee.prixPropose)}</span>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Timer size={15} className="shrink-0 text-ink-soft" aria-hidden="true" />
+                  <Timer size={16} className="shrink-0 text-ink-soft" aria-hidden="true" />
                   <span>
                     {t("deliveryIn", {
                       count: candidatureSelectionnee.delaiPropose,
@@ -677,7 +667,7 @@ function LivraisonsContent() {
             className="text-left"
           >
             <StatCard
-              icon={XCircle}
+              icon={CircleX}
               tone="brique"
               label={t("correctionsRequested")}
               value={compteLivraisons.corrections}
@@ -705,7 +695,7 @@ function LivraisonsContent() {
             className="text-left"
           >
             <StatCard
-              icon={CheckCircle}
+              icon={CircleCheck}
               tone="rice"
               label={t("validatedDeliveries")}
               value={compteLivraisons.validees}
@@ -723,8 +713,8 @@ function LivraisonsContent() {
         <div className="mb-6 grid gap-3 rounded-xl border border-ink/15 bg-paper p-4 sm:grid-cols-2 lg:grid-cols-5">
           <div className="relative">
             <Search
-              size={15}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+              size={16}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/85"
               aria-hidden="true"
             />
             <Input
@@ -761,36 +751,26 @@ function LivraisonsContent() {
           ======================================================== */}
 
       {chargement ? (
-        <p className="text-sm text-ink-soft">
-          {t("loadingDeliveries")}
-        </p>
-      ) : candidaturesFiltrees.length ===
-        0 ? (
-        <NoticeCard>
-          <p className="text-sm text-ink-soft">
-            {role === "client"
-              ? t("emptyClient")
-              : t("emptyStudent")}
-          </p>
-
-          <Link
-            href={
-              role === "client"
-                ? "/tableau-de-bord/mes-missions"
-                : "/tableau-de-bord/candidatures"
-            }
-            className="mt-4 inline-block"
-          >
+        <ChargementPage libelle={t("loadingDeliveries")} />
+      ) : erreur && candidaturesFiltrees.length === 0 ? null : candidaturesFiltrees.length === 0 ? (
+        <EtatVide
+          icon={Package}
+          action={
             <Button
+              href={
+                role === "client"
+                  ? "/tableau-de-bord/mes-missions"
+                  : "/tableau-de-bord/candidatures"
+              }
+              variant="secondary"
               size="sm"
-              variant="ghost"
             >
-              {role === "client"
-                ? t("viewMyMissions")
-                : t("viewMyApplications")}
+              {role === "client" ? t("viewMyMissions") : t("viewMyApplications")}
             </Button>
-          </Link>
-        </NoticeCard>
+          }
+        >
+          {role === "client" ? t("emptyClient") : t("emptyStudent")}
+        </EtatVide>
       ) : (
         <>
           <SousNavigation
@@ -910,14 +890,10 @@ function LivraisonsContent() {
                     </div>
                   </div>
 
-                  <Link
-                    href={`/tableau-de-bord/livraisons?candidature=${encodeURIComponent(candidature.id)}`}
-                    className="shrink-0"
-                  >
-                    <Button size="sm" variant="ghost">
+                  <Button
+                    href={`/tableau-de-bord/livraisons?candidature=${encodeURIComponent(candidature.id)}`} size="sm" variant="ghost" className="shrink-0">
                       {t("see")}
                     </Button>
-                  </Link>
                 </NoticeCard>
               );
             })}

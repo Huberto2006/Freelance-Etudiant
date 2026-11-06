@@ -8,7 +8,7 @@
     "count": "{count, plural, one {# mission ouverte aux candidatures} other {# missions ouvertes aux candidatures}}",
     "filterPlaceholder": "Site vitrine, gestion scolaire…",
     "filterBudget": "Budget (Ar)",
-    "emptyTitle": "Aucune mission ne correspond à ces critères pour le moment.",
+    "emptyTitle": "Aucune mission ne correspond pour l'instant.",
     "emptyHint": "Essayez d'élargir vos filtres ou revenez plus tard : de nouvelles missions sont publiées régulièrement.",
     "seeAll": "Voir toutes les missions"
   },

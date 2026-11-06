@@ -321,7 +321,7 @@ export function FormulairePaiement({
                 {t("noActiveMethod")}
               </p>
 
-              <p className="mt-1 text-xs text-ink-soft/70">
+              <p className="mt-1 text-xs text-ink-soft/85">
                 {t("cannotStart")}
               </p>
             </div>
@@ -483,7 +483,7 @@ export function FormulairePaiement({
                         {t("enterOther")}
                       </option>
                     </Select>
-                    <p className="mt-1 text-xs text-ink-soft/70">
+                    <p className="mt-1 text-xs text-ink-soft/85">
                       <a
                         href="/tableau-de-bord/parametres/moyens-paiement-client"
                         className="underline hover:text-ink"
@@ -542,7 +542,7 @@ export function FormulairePaiement({
 
         {moyenSelectionne && (
           <div className="rounded-xl border border-ink/10 bg-ink/[0.025] p-4">
-            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-ink-soft/70">
+            <p className=" text-xs text-ink-soft/85 font-medium">
               {t("recipient")}
             </p>
 
@@ -561,7 +561,7 @@ export function FormulairePaiement({
                       : ""}
                 </p>
 
-                <p className="font-mono text-sm text-ink">
+                <p className="tabular-nums text-sm text-ink">
                   {moyenSelectionne.numero}
                 </p>
 
@@ -570,7 +570,7 @@ export function FormulairePaiement({
                 </p>
               </div>
 
-              <p className="font-mono text-sm font-medium text-ocre-dark">
+              <p className="tabular-nums text-sm font-medium text-ocre-dark">
                 {formatArgent(montant)}
               </p>
             </div>

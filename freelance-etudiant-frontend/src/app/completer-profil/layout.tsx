@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
 
 /**
@@ -16,6 +17,7 @@ export default function CompleterProfilLayout({
   children: React.ReactNode;
 }>) {
   const { deconnecter } = useAuth();
+  const t = useTranslations("navigation.sidebar");
 
   return (
     <div className="min-h-screen bg-paper">
@@ -26,9 +28,9 @@ export default function CompleterProfilLayout({
         <button
           type="button"
           onClick={deconnecter}
-          className="text-xs font-mono uppercase tracking-wider text-ink-soft transition-colors hover:text-brique"
+          className="text-xs text-ink-soft transition-colors hover:text-brique font-medium"
         >
-          Se déconnecter
+          {t("logout")}
         </button>
       </div>
       <div className="mx-auto w-full max-w-3xl px-5 py-6 md:px-8 md:py-7">

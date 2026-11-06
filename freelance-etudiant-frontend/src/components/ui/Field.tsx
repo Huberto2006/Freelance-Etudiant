@@ -154,7 +154,7 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={clsx(
-        "kianja-field-control w-full rounded-md border border-ink/15 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 transition-colors hover:border-ink/25 focus:outline-none aria-invalid:border-brique/50 disabled:cursor-not-allowed disabled:opacity-60",
+        "kianja-field-control w-full rounded-md border border-ink/15 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/85 transition-colors hover:border-ink/25 focus:outline-none aria-invalid:border-brique/50 disabled:cursor-not-allowed disabled:opacity-60",
         props.className,
       )}
     />
@@ -173,7 +173,7 @@ export function PasswordInput(
         {...props}
         type={visible ? "text" : "password"}
         className={clsx(
-          "kianja-field-control w-full rounded-md border border-ink/15 bg-paper-light px-3 py-2.5 pr-11 text-sm text-ink placeholder:text-ink-soft/50 transition-colors hover:border-ink/25 focus:outline-none aria-invalid:border-brique/50 disabled:cursor-not-allowed disabled:opacity-60",
+          "kianja-field-control w-full rounded-md border border-ink/15 bg-paper-light px-3 py-2.5 pr-11 text-sm text-ink placeholder:text-ink-soft/85 transition-colors hover:border-ink/25 focus:outline-none aria-invalid:border-brique/50 disabled:cursor-not-allowed disabled:opacity-60",
           props.className,
         )}
       />
@@ -184,7 +184,7 @@ export function PasswordInput(
         title={visible ? t("password.hide") : t("password.show")}
         className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink"
       >
-        {visible ? <EyeOff size={17} /> : <Eye size={17} />}
+        {visible ? <EyeOff size={18} /> : <Eye size={18} />}
       </button>
     </div>
   );
@@ -206,7 +206,7 @@ export function Textarea({
       ref={ref}
       {...props}
       className={clsx(
-        "kianja-field-control w-full rounded-md border border-ink/15 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 transition-colors hover:border-ink/25 focus:outline-none aria-invalid:border-brique/50 disabled:cursor-not-allowed disabled:opacity-60",
+        "kianja-field-control w-full rounded-md border border-ink/15 bg-paper-light px-3 py-2.5 text-sm text-ink placeholder:text-ink-soft/85 transition-colors hover:border-ink/25 focus:outline-none aria-invalid:border-brique/50 disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
     />

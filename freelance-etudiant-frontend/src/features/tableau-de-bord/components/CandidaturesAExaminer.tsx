@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Star } from "lucide-react";
 
 import type { Candidature } from "@/types/candidatures";
@@ -72,11 +71,9 @@ export function CandidaturesAExaminer({
           {t("emptyDescription")}
         </p>
 
-        <Link href="/tableau-de-bord/mes-missions" aria-label={t("viewMissions")}>
-          <Button size="sm" variant="ghost">
+        <Button href="/tableau-de-bord/mes-missions" aria-label={t("viewMissions")} size="sm" variant="ghost">
             {t("viewMissions")}
           </Button>
-        </Link>
       </NoticeCard>
     );
   }
@@ -152,15 +149,11 @@ export function CandidaturesAExaminer({
               </ul>
             )}
 
-            <Link
+            <Button
               href="/tableau-de-bord/mes-missions"
-              className="mt-auto self-start"
-              aria-label={t("reviewApplicationOf", { nom })}
-            >
-              <Button size="sm" variant="secondary">
+              aria-label={t("reviewApplicationOf", { nom })} size="sm" variant="secondary" className="mt-auto self-start">
                 {t("review")}
               </Button>
-            </Link>
           </NoticeCard>
         );
       })}

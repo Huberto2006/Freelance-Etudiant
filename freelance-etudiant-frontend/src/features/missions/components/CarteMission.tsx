@@ -111,11 +111,11 @@ export function CarteMission({
         {/* ---------------------------------------------- PIED */}
         <div className="mt-auto border-t border-ink/10 pt-3">
           <div className="flex items-center justify-between gap-2 pt-2">
-            <p className="font-mono text-sm font-semibold tabular-nums text-ocre-dark">
+            <p className="text-sm font-semibold tabular-nums text-ocre-dark">
               {argent(mission.budget)}
             </p>
 
-            <p className="inline-flex items-center gap-1 text-xs text-ink-soft/70">
+            <p className="inline-flex items-center gap-1 text-xs text-ink-soft/85">
               <CalendarClock size={12} aria-hidden="true" />
               {t("card.before", { date: dateCourte(mission.dateLimite) })}
             </p>

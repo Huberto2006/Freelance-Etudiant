@@ -14,7 +14,7 @@ export function LienRetourSite({ className = "" }: { className?: string }) {
       href="/"
       className={`inline-flex w-fit items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink ${className}`}
     >
-      <ArrowLeft size={15} aria-hidden="true" />
+      <ArrowLeft size={16} aria-hidden="true" />
       {t("backToSite")}
     </Link>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirmation } from "@/components/ui/ConfirmDialog";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -7,7 +8,7 @@ import {
   Archive,
   ArchiveRestore,
   Check,
-  Loader2,
+  LoaderCircle,
   MoreVertical,
   Pencil,
   Plus,
@@ -30,6 +31,8 @@ import {
   PageHeader,
   StatCard,
   Tag,
+  EtatVide,
+  ChargementPage,
 } from "@/components/ui/Notice";
 import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
 import { SousNavigation } from "@/components/ui/SousNavigation";
@@ -40,7 +43,7 @@ type OngletServices = "actifs" | "archives";
 export default function MesServicesPage() {
   const t = useTranslations("dashboardPages.myServices");
   return (
-    <Suspense fallback={<p className="text-sm text-ink-soft">{t("loading")}</p>}>
+    <Suspense fallback={<ChargementPage libelle={t("loading")} />}>
       <MesServicesContent />
     </Suspense>
   );
@@ -48,6 +51,8 @@ export default function MesServicesPage() {
 
 function MesServicesContent() {
   const t = useTranslations("dashboardPages.myServices");
+  const { confirmer, dialogueConfirmation } = useConfirmation();
+  const tCommun = useTranslations("common");
   const { argent: formatArgent } = useFormats();
   const { categorie: libelleCategorie } = useOptionLabels();
   const searchParams = useSearchParams();
@@ -291,9 +296,10 @@ function MesServicesContent() {
   const supprimer = async (
     service: ServiceOffert,
   ) => {
-    const confirmation = window.confirm(
-      t("confirmDelete", { titre: service.titre }),
-    );
+    const confirmation = await confirmer({
+      titre: t("confirmDelete", { titre: service.titre }),
+      libelleConfirmer: tCommun("actions.delete"),
+    });
 
     if (!confirmation) return;
 
@@ -349,25 +355,29 @@ function MesServicesContent() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
-        <PageHeader
+      <PageHeader
           icon={Wrench}
           eyebrow={t("eyebrow")}
           title={t("title")}
-          className="mb-0"
-        />
+        actions={
+          <>
 
-        <Button
+        {(chargement || services.length > 0 || afficherCreation || erreur) && (
+<Button
+          variant="secondary"
           onClick={() => {
             fermerEdition();
             setAfficherCreation(true);
           }}
           className="flex items-center justify-center gap-2"
         >
-          <Plus size={17} />
+          <Plus size={18} />
           {t("newService")}
         </Button>
-      </div>
+        )}
+          </>
+        }
+      />
 
       {erreur && (
         <NoticeCard>
@@ -474,8 +484,8 @@ function MesServicesContent() {
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div className="relative">
           <Search
-            size={15}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/85"
             aria-hidden="true"
           />
 
@@ -520,51 +530,44 @@ function MesServicesContent() {
 
       {chargement ? (
         <div className="flex min-h-48 items-center justify-center">
-          <Loader2
+          <LoaderCircle
             size={24}
-            className="animate-spin text-ink-soft"
+            className="motion-safe:animate-spin text-ink-soft"
           />
         </div>
-      ) : servicesAffiches.length === 0 ? (
-        <NoticeCard>
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-ink/5">
-              <Wrench
-                size={20}
-                className="text-ink-soft"
-              />
-            </div>
-
-            <h3 className="font-semibold text-ink">
-              {ongletServicesAffiche === "archives"
-                ? t("empty.archivedTitle")
-                : t("empty.activeTitle")}
-            </h3>
-
-            <p className="mt-1 max-w-md text-sm text-ink-soft">
-              {recherche || filtreCategorie
-                ? t("empty.noMatch")
-                : ongletServicesAffiche === "archives"
-                  ? t("empty.archivedHint")
-                  : t("empty.activeHint")}
-            </p>
-
-            {ongletServicesAffiche === "actifs" &&
-              !recherche &&
-              !filtreCategorie && (
-                <Button
-                  className="mt-5"
-                  onClick={() => {
-                    fermerEdition();
-                    setAfficherCreation(true);
-                  }}
-                >
-                  <Plus size={16} />
-                  {t("createService")}
-                </Button>
-              )}
-          </div>
-        </NoticeCard>
+      ) : erreur && servicesAffiches.length === 0 ? null : servicesAffiches.length === 0 ? (
+        <EtatVide
+          icon={Wrench}
+          titre={
+            ongletServicesAffiche === "archives"
+              ? t("empty.archivedTitle")
+              : t("empty.activeTitle")
+          }
+          action={
+            ongletServicesAffiche === "actifs" &&
+            !recherche &&
+            !filtreCategorie && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => {
+                  fermerEdition();
+                  setAfficherCreation(true);
+                }}
+              >
+                <Plus size={14} aria-hidden="true" />
+                {t("createService")}
+              </Button>
+            )
+          }
+        >
+          {recherche || filtreCategorie
+            ? t("empty.noMatch")
+            : ongletServicesAffiche === "archives"
+              ? t("empty.archivedHint")
+              : t("empty.activeHint")}
+        </EtatVide>
       ) : (
         <div className="grid gap-5 lg:grid-cols-2">
           {servicesAffiches.map((service) => {
@@ -590,7 +593,7 @@ function MesServicesContent() {
               >
                 <div className="flex items-start gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-ink/5 text-ink-soft">
-                    <IconeCategorie size={21} />
+                    <IconeCategorie size={20} />
                   </div>
 
                   <div className="min-w-0 flex-1">
@@ -610,7 +613,7 @@ function MesServicesContent() {
                           className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg text-ink-soft transition hover:bg-ink/5 hover:text-ink [&::-webkit-details-marker]:hidden"
                           aria-label={t("actionsFor", { titre: service.titre })}
                         >
-                          <MoreVertical size={19} />
+                          <MoreVertical size={20} />
                         </summary>
 
                         <div className="absolute right-0 top-11 z-30 w-44 overflow-hidden rounded-xl border border-ink/10 bg-paper p-1.5 shadow-lg">
@@ -618,7 +621,7 @@ function MesServicesContent() {
                             href={`/services/${service.id}`}
                             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink transition hover:bg-ink/5"
                           >
-                            <Search size={15} />
+                            <Search size={16} />
                             {t("view")}
                           </Link>
 
@@ -633,7 +636,7 @@ function MesServicesContent() {
                               }
                               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink transition hover:bg-ink/5"
                             >
-                              <Pencil size={15} />
+                              <Pencil size={16} />
                               {t("edit")}
                             </button>
                           )}
@@ -646,7 +649,7 @@ function MesServicesContent() {
                               }
                               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-brique transition hover:bg-brique/5"
                             >
-                              <X size={15} />
+                              <X size={16} />
                               {t("delete")}
                             </button>
                           )}
@@ -710,12 +713,12 @@ function MesServicesContent() {
                     >
                       {service.disponible ? (
                         <>
-                          <X size={15} />
+                          <X size={16} />
                           {t("hide")}
                         </>
                       ) : (
                         <>
-                          <Check size={15} />
+                          <Check size={16} />
                           {t("republish")}
                         </>
                       )}
@@ -731,7 +734,7 @@ function MesServicesContent() {
                         restaurer(service)
                       }
                     >
-                      <ArchiveRestore size={15} />
+                      <ArchiveRestore size={16} />
                       {t("restore")}
                     </Button>
                   ) : (
@@ -743,7 +746,7 @@ function MesServicesContent() {
                         archiver(service)
                       }
                     >
-                      <Archive size={15} />
+                      <Archive size={16} />
                       {t("archive")}
                     </Button>
                   )}
@@ -811,6 +814,7 @@ function MesServicesContent() {
           />
         </NoticeCard>
       )}
+      {dialogueConfirmation}
     </div>
   );
 }

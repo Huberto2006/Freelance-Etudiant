@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { CheckCircle2 } from "lucide-react";
+import { CircleCheck } from "lucide-react";
 import { clsx } from "clsx";
 
 import type { ActionUrgente, Ton } from "@/features/tableau-de-bord/utils/dashboard";
@@ -59,7 +58,7 @@ export function DashboardActions({
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-ink"
           aria-hidden="true"
         >
-          <CheckCircle2 size={18} />
+          <CircleCheck size={18} />
         </span>
 
         <div>
@@ -84,15 +83,11 @@ export function DashboardActions({
             <p className="font-display font-semibold">{action.titre}</p>
             <p className="text-sm text-ink-soft">{action.description}</p>
 
-            <Link
+            <Button
               href={action.href}
-              className="mt-auto self-start"
-              aria-label={`${action.libelleAction} — ${action.titre}`}
-            >
-              <Button size="sm" variant="ghost">
+              aria-label={`${action.libelleAction} — ${action.titre}`} size="sm" variant="ghost" className="mt-auto self-start">
                 {action.libelleAction}
               </Button>
-            </Link>
           </NoticeCard>
         ))}
       </div>
@@ -115,13 +110,9 @@ export function DashboardActions({
               </div>
             </div>
 
-            <Link
+            <Button
               href={action.href}
-              className="shrink-0 self-start sm:self-center"
-              aria-label={`${action.libelleAction} — ${action.titre}`}
-            >
-              <Button size="sm">{action.libelleAction}</Button>
-            </Link>
+              aria-label={`${action.libelleAction} — ${action.titre}`} size="sm" className="shrink-0 self-start sm:self-center">{action.libelleAction}</Button>
           </NoticeCard>
         </li>
       ))}

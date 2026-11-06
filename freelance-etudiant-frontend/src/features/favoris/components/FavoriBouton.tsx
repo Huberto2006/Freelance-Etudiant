@@ -71,7 +71,7 @@ export function FavoriBouton({
         className,
       )}
     >
-      <Heart size={15} fill={enFavori ? "currentColor" : "none"} />
+      <Heart size={16} fill={enFavori ? "currentColor" : "none"} />
     </button>
   );
 }

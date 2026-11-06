@@ -7,7 +7,10 @@ import { useTranslations } from "next-intl";
 import { api, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Field, PasswordInput } from "@/components/ui/Field";
-import { NoticeCard } from "@/components/ui/Notice";
+import {
+  NoticeCard,
+  ChargementPage,
+} from "@/components/ui/Notice";
 
 function FormulaireReinitialisation() {
   const t = useTranslations("auth.reset");
@@ -102,14 +105,14 @@ export default function ReinitialiserMotDePassePage() {
   const t = useTranslations("auth.reset");
   return (
     <div className="mx-auto max-w-md px-5 pb-12">
-      <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
+      <p className="mb-3 text-xs font-semibold text-ocre-dark">
         {t("eyebrow")}
       </p>
-      <h1 className="mb-7 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+      <h1 className="mb-7 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
         {t("title")}
       </h1>
 
-      <Suspense fallback={<p className="text-sm text-ink-soft">{t("loading")}</p>}>
+      <Suspense fallback={<ChargementPage libelle={t("loading")} />}>
         <FormulaireReinitialisation />
       </Suspense>
 

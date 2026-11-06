@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, Users, X } from "lucide-react";
+import { Check, LoaderCircle, Users, X } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
 import type { Groupe, InvitationGroupe } from "@/types/groupes";
@@ -12,7 +12,12 @@ import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
 
 import { Button } from "@/components/ui/Button";
-import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
+import {
+  NoticeCard,
+  PageHeader,
+  Tag,
+  ChargementPage,
+} from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
 import { useBreadcrumbTitle } from "@/components/navigation/Breadcrumb";
 
@@ -116,16 +121,13 @@ export default function InvitationGroupePage({
 
   if (chargement) {
     return (
-      <p className="flex items-center gap-2 text-sm text-ink-soft">
-        <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-        {t("loading")}
-      </p>
+      <ChargementPage libelle={t("loading")} />
     );
   }
 
   if (!invitation) {
     return (
-      <div className="mx-auto max-w-2xl">
+      <div className="max-w-2xl">
         <NoticeCard>
           <p className="text-sm text-brique">
             {erreur ?? t("notFound")}
@@ -143,7 +145,7 @@ export default function InvitationGroupePage({
       : "brique";
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="max-w-2xl">
       <PageHeader
         icon={Users}
         eyebrow={t("eyebrow")}
@@ -177,13 +179,13 @@ export default function InvitationGroupePage({
           <Tag tone={tonStatut}>{statutInvitationGroupe(invitation.statut)}</Tag>
         </div>
 
-        <p className="mt-4 text-xs text-ink-soft/70">
+        <p className="mt-4 text-xs text-ink-soft/85">
           {t("receivedOn", { date: formatDate(invitation.dateCreation) })}
         </p>
 
         <div className="mt-5 grid gap-3 border-t border-ink/10 pt-5 text-sm sm:grid-cols-2">
           <div>
-            <p className="text-xs uppercase tracking-wide text-ink-soft/70">{t("sentBy")}</p>
+            <p className="text-xs text-ink-soft/85 font-medium">{t("sentBy")}</p>
             <div className="mt-2 flex items-center gap-2">
               <Avatar
                 nom={inviteur?.utilisateur?.nom ?? t("studentFallback")}
@@ -207,9 +209,9 @@ export default function InvitationGroupePage({
               disabled={traitement !== null}
             >
               {traitement === "accepter" ? (
-                <Loader2 size={15} className="animate-spin" />
+                <LoaderCircle size={16} className="motion-safe:animate-spin" />
               ) : (
-                <Check size={15} />
+                <Check size={16} />
               )}
               {t("accept")}
             </Button>
@@ -220,9 +222,9 @@ export default function InvitationGroupePage({
               disabled={traitement !== null}
             >
               {traitement === "refuser" ? (
-                <Loader2 size={15} className="animate-spin" />
+                <LoaderCircle size={16} className="motion-safe:animate-spin" />
               ) : (
-                <X size={15} />
+                <X size={16} />
               )}
               {t("refuse")}
             </Button>

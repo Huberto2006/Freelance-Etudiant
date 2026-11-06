@@ -180,7 +180,7 @@ export function MultiSelectCreatable({
               ? t("multiSelect.searchShort")
               : (placeholder ?? t("multiSelect.placeholder"))
           }
-          className="kianja-field-control min-w-[140px] flex-1 border-0 bg-transparent px-1 py-1.5 text-sm text-ink placeholder:text-ink-soft/60 focus:outline-none disabled:cursor-not-allowed"
+          className="kianja-field-control min-w-[140px] flex-1 border-0 bg-transparent px-1 py-1.5 text-sm text-ink placeholder:text-ink-soft/85 focus:outline-none disabled:cursor-not-allowed"
         />
       </div>
 

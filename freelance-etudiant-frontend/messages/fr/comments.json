@@ -5,7 +5,7 @@
     "publish": "Publier",
     "sending": "Envoi…",
     "loading": "Chargement…",
-    "emptyLoggedIn": "Aucun commentaire pour le moment.",
+    "emptyLoggedIn": "Aucun commentaire pour l'instant. Lancez la discussion !",
     "emptyAnonymous": "Aucun commentaire pour le moment. Connectez-vous pour en laisser un.",
     "defaultUser": "Utilisateur",
     "editedDate": "{date} · modifié",

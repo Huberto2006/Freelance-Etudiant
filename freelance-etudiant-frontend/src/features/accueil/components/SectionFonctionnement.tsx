@@ -38,7 +38,7 @@ function Parcours({
           <div key={etape.cle} className="relative flex items-start gap-3.5">
             {/* Numérotation */}
             <span
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-mono text-xs font-bold ${
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full tabular-nums text-xs font-bold ${
                 isBleu
                   ? "bg-bleu/10 text-bleu-dark"
                   : "bg-ocre/10 text-ocre-dark"
@@ -76,9 +76,9 @@ export function SectionFonctionnement() {
         <div className="flex flex-col">
           <div className="mb-4 flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-bleu/10 text-bleu-dark">
-              <BriefcaseBusiness size={15} aria-hidden="true" />
+              <BriefcaseBusiness size={16} aria-hidden="true" />
             </span>
-            <span className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-bleu-dark">
+            <span className=" text-xs font-semibold text-bleu-dark">
               {t("clientTrack")}
             </span>
           </div>
@@ -95,9 +95,9 @@ export function SectionFonctionnement() {
         <div className="flex flex-col border-t border-ink/10 pt-7 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
           <div className="mb-4 flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-ocre/10 text-ocre-dark">
-              <GraduationCap size={15} aria-hidden="true" />
+              <GraduationCap size={16} aria-hidden="true" />
             </span>
-            <span className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-ocre-dark">
+            <span className=" text-xs font-semibold text-ocre-dark">
               {t("studentTrack")}
             </span>
           </div>

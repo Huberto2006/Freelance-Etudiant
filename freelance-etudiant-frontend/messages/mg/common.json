@@ -13,6 +13,7 @@
     "close": "Hidina",
     "back": "Hiverina",
     "search": "Hitady",
+    "clearSearch": "Fafao ny fikarohana",
     "edit": "Hanitsy",
     "send": "Alefa",
     "next": "Manaraka",
@@ -58,6 +59,8 @@
   },
   "dataTable": {
     "rowsPerPage": "Andalana isaky ny pejy",
+    "dateFrom": "Daty fanombohana",
+    "dateTo": "Daty famaranana",
     "range": "Mampiseho {debut} ka hatramin'ny {fin} amin'ny valiny {total}",
     "pagination": "Fizarana pejy",
     "pageOf": "Pejy {page} amin'ny {totalPages}",

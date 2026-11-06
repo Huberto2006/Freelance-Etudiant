@@ -12,7 +12,10 @@ import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
 
 import { Button } from "@/components/ui/Button";
-import { NoticeCard } from "@/components/ui/Notice";
+import {
+  NoticeCard,
+  ChargementPage,
+} from "@/components/ui/Notice";
 import { useBreadcrumbTitle } from "@/components/navigation/Breadcrumb";
 
 /**
@@ -81,7 +84,7 @@ export default function FacturePaiementPage() {
       </div>
 
       {chargement ? (
-        <p className="text-sm text-ink-soft">{t("detail.loading")}</p>
+        <ChargementPage libelle={t("detail.loading")} />
       ) : erreur || !facture ? (
         <NoticeCard>
           <p role="alert" className="text-sm text-brique">

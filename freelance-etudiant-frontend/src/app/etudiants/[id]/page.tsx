@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import {
   BriefcaseBusiness,
   CalendarDays,
-  CheckCircle2,
+  CircleCheck,
   Clock,
   Globe,
   Globe2,
@@ -191,7 +191,7 @@ export default function ProfilEtudiantPage({
               </div>
 
               <div className="min-w-0">
-                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-ink-soft/60">
+                <p className="mb-1 text-xs font-semibold text-ink-soft/85">
                   {t("public.student.professionalProfile")}
                 </p>
 
@@ -219,7 +219,7 @@ export default function ProfilEtudiantPage({
                   {etudiant.ville && (
                     <span className="inline-flex items-center gap-1">
                       <span aria-hidden="true">·</span>
-                      <MapPin size={13} />
+                      <MapPin size={14} />
                       {etudiant.ville}
                     </span>
                   )}
@@ -228,7 +228,7 @@ export default function ProfilEtudiantPage({
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Tag>
                     <GraduationCap
-                      size={13}
+                      size={14}
                       className="mr-1.5 inline"
                     />
                     {t("public.student.studentTag")}
@@ -242,7 +242,7 @@ export default function ProfilEtudiantPage({
                         ] ?? "ink"
                       }
                     >
-                      <Clock size={13} className="mr-1.5 inline" />
+                      <Clock size={14} className="mr-1.5 inline" />
                       {t.has(
                         `public.student.availabilityStatus.${etudiant.statutDisponibilite}` as never,
                       )
@@ -253,8 +253,8 @@ export default function ProfilEtudiantPage({
                     </Tag>
                   ) : etudiant.disponibilite ? (
                     <Tag tone="rice">
-                      <CheckCircle2
-                        size={13}
+                      <CircleCheck
+                        size={14}
                         className="mr-1.5 inline"
                       />
                       {t("public.student.availabilityStatus.disponible")}
@@ -271,7 +271,7 @@ export default function ProfilEtudiantPage({
                 </div>
 
                 {/* Informations CV */}
-                <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-ink-soft/75">
+                <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-ink-soft/85">
                   <span className="inline-flex items-center gap-1.5">
                     <BriefcaseBusiness size={14} />
                     {t("public.student.projectsDelivered", { count: missionsTerminees })}
@@ -359,7 +359,7 @@ export default function ProfilEtudiantPage({
               <div className="h-8 w-1 rounded-full bg-ink" />
 
               <div>
-                <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                <p className="text-xs font-semibold text-ink-soft/85">
                   {t("public.student.presentation")}
                 </p>
 
@@ -389,7 +389,7 @@ export default function ProfilEtudiantPage({
                 <div className="h-8 w-1 rounded-full bg-ink" />
 
                 <div>
-                  <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                  <p className="text-xs font-semibold text-ink-soft/85">
                     {t("public.student.expertise")}
                   </p>
 
@@ -470,7 +470,7 @@ export default function ProfilEtudiantPage({
                 <div className="h-8 w-1 rounded-full bg-ink" />
 
                 <div>
-                  <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                  <p className="text-xs font-semibold text-ink-soft/85">
                     {t("public.student.achievements")}
                   </p>
 
@@ -494,7 +494,7 @@ export default function ProfilEtudiantPage({
                 <div className="h-8 w-1 rounded-full bg-ink" />
 
                 <div>
-                  <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                  <p className="text-xs font-semibold text-ink-soft/85">
                     {t("public.extra.onlinePresence")}
                   </p>
 
@@ -512,7 +512,7 @@ export default function ProfilEtudiantPage({
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
                   >
-                    <Link2 size={13} />
+                    <Link2 size={14} />
                     GitHub
                   </a>
                 )}
@@ -523,7 +523,7 @@ export default function ProfilEtudiantPage({
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
                   >
-                    <Link2 size={13} />
+                    <Link2 size={14} />
                     GitLab
                   </a>
                 )}
@@ -534,7 +534,7 @@ export default function ProfilEtudiantPage({
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
                   >
-                    <Link2 size={13} />
+                    <Link2 size={14} />
                     LinkedIn
                   </a>
                 )}
@@ -545,7 +545,7 @@ export default function ProfilEtudiantPage({
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
                   >
-                    <Globe size={13} />
+                    <Globe size={14} />
                     {t("public.extra.website")}
                   </a>
                 )}
@@ -560,7 +560,7 @@ export default function ProfilEtudiantPage({
                 <div className="h-8 w-1 rounded-full bg-ink" />
 
                 <div>
-                  <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                  <p className="text-xs font-semibold text-ink-soft/85">
                     {t("public.extra.offers")}
                   </p>
 
@@ -584,11 +584,11 @@ export default function ProfilEtudiantPage({
                         </p>
 
                         <div className="mt-auto pt-5">
-                          <p className="font-mono text-sm font-semibold text-ocre-dark">
+                          <p className="tabular-nums text-sm font-semibold text-ocre-dark">
                             {formatArgent(service.prix)}
                           </p>
 
-                          <p className="mt-1 text-xs text-ink-soft/60">
+                          <p className="mt-1 text-xs text-ink-soft/85">
                             {t("public.extra.viewService")}
                           </p>
                         </div>
@@ -607,7 +607,7 @@ export default function ProfilEtudiantPage({
                 <div className="h-8 w-1 rounded-full bg-ink" />
 
                 <div>
-                  <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                  <p className="text-xs font-semibold text-ink-soft/85">
                     Réputation
                   </p>
 
@@ -617,7 +617,7 @@ export default function ProfilEtudiantPage({
                 </div>
               </div>
 
-              <span className="text-xs text-ink-soft/60">
+              <span className="text-xs text-ink-soft/85">
                 {evaluations.length} avis
                 {evaluations.length > 1 ? "s" : ""}
               </span>
@@ -652,8 +652,8 @@ export default function ProfilEtudiantPage({
                         ))}
                       </div>
 
-                      <p className="flex items-center gap-1.5 text-xs font-mono text-ink-soft/70">
-                        <CalendarDays size={13} />
+                      <p className="flex items-center gap-1.5 text-xs tabular-nums text-ink-soft/85">
+                        <CalendarDays size={14} />
                         {formatDateCourte(
                           evaluation.dateEvaluation,
                         )}
@@ -678,7 +678,7 @@ export default function ProfilEtudiantPage({
         <aside className="space-y-6">
           {/* DISPONIBILITÉ */}
           <section className="animate-in delay-1 rounded-lg border border-ink/10 bg-paper-light p-5">
-            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+            <p className="text-xs font-semibold text-ink-soft/85">
               Disponibilité
             </p>
 
@@ -707,18 +707,18 @@ export default function ProfilEtudiantPage({
             </div>
 
             {etudiant.typeFreelance && (
-              <p className="mt-2 text-xs text-ink-soft/70">
+              <p className="mt-2 text-xs text-ink-soft/85">
                 Recherche : {etudiant.typeFreelance}
               </p>
             )}
 
             {etudiant.tarifHoraire != null ? (
               <div className="mt-4 border-t border-ink/10 pt-4">
-                <p className="text-xs text-ink-soft/60">
+                <p className="text-xs text-ink-soft/85">
                   {t("public.extra.hourlyRate")}
                 </p>
 
-                <p className="mt-1 font-mono text-lg font-semibold text-ocre-dark">
+                <p className="mt-1 tabular-nums text-lg font-semibold text-ocre-dark">
                   {formatArgent(etudiant.tarifHoraire)}
                   <span className="text-xs text-ink-soft">
                     {" "}
@@ -730,11 +730,11 @@ export default function ProfilEtudiantPage({
               (etudiant.tarifMinimum != null ||
                 etudiant.tarifMaximum != null) && (
                 <div className="mt-4 border-t border-ink/10 pt-4">
-                  <p className="text-xs text-ink-soft/60">
+                  <p className="text-xs text-ink-soft/85">
                     {t("public.extra.priceRange")}
                   </p>
 
-                  <p className="mt-1 font-mono text-lg font-semibold text-ocre-dark">
+                  <p className="mt-1 tabular-nums text-lg font-semibold text-ocre-dark">
                     {etudiant.tarifMinimum != null &&
                       formatArgent(etudiant.tarifMinimum)}
                     {etudiant.tarifMinimum != null &&
@@ -750,13 +750,13 @@ export default function ProfilEtudiantPage({
 
           {/* FORMATION */}
           <section className="animate-in delay-2 rounded-lg border border-ink/10 bg-paper-light p-5">
-            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+            <p className="text-xs font-semibold text-ink-soft/85">
               Formation
             </p>
 
             <div className="mt-4 flex gap-3">
               <div className="mt-0.5 shrink-0">
-                <GraduationCap size={19} />
+                <GraduationCap size={20} />
               </div>
 
               <div>
@@ -787,7 +787,7 @@ export default function ProfilEtudiantPage({
 
           {/* STATISTIQUES */}
           <section className="animate-in delay-3 rounded-lg border border-ink/10 bg-paper-light p-5">
-            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+            <p className="text-xs font-semibold text-ink-soft/85">
               Statistiques
             </p>
 
@@ -797,7 +797,7 @@ export default function ProfilEtudiantPage({
                   Projets livrés
                 </span>
 
-                <span className="font-mono text-sm font-semibold">
+                <span className="tabular-nums text-sm font-semibold">
                   {missionsTerminees}
                 </span>
               </div>
@@ -807,9 +807,9 @@ export default function ProfilEtudiantPage({
                   Note moyenne
                 </span>
 
-                <span className="inline-flex items-center gap-1 font-mono text-sm font-semibold">
+                <span className="inline-flex items-center gap-1 tabular-nums text-sm font-semibold">
                   <Star
-                    size={13}
+                    size={14}
                     className="fill-ocre-dark text-ocre-dark"
                   />
                   {noteMoyenne.toFixed(1)}
@@ -822,7 +822,7 @@ export default function ProfilEtudiantPage({
                     Expérience
                   </span>
 
-                  <span className="font-mono text-sm font-semibold">
+                  <span className="tabular-nums text-sm font-semibold">
                     {etudiant.experience} an
                     {etudiant.experience > 1 ? "s" : ""}
                   </span>
@@ -833,7 +833,7 @@ export default function ProfilEtudiantPage({
 
           {/* LANGUES / INFOS */}
           <section className="animate-in delay-4 rounded-lg border border-ink/10 bg-paper-light p-5">
-            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+            <p className="text-xs font-semibold text-ink-soft/85">
               Profil
             </p>
 
@@ -841,7 +841,7 @@ export default function ProfilEtudiantPage({
               {etudiant.langues.length > 0 && (
                 <div className="flex gap-2">
                   <Languages
-                    size={15}
+                    size={16}
                     className="shrink-0"
                   />
 
@@ -854,7 +854,7 @@ export default function ProfilEtudiantPage({
               {etudiant.ville && (
                 <div className="flex gap-2">
                   <MapPin
-                    size={15}
+                    size={16}
                     className="shrink-0"
                   />
 
@@ -864,7 +864,7 @@ export default function ProfilEtudiantPage({
 
               <div className="flex gap-2">
                 <Globe2
-                  size={15}
+                  size={16}
                   className="shrink-0"
                 />
 

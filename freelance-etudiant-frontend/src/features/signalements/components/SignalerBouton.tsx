@@ -50,9 +50,9 @@ export function SignalerBouton({
       <button
         type="button"
         onClick={() => setOuvert(true)}
-        className="inline-flex items-center gap-1.5 text-xs text-ink-soft/60 hover:text-brique transition-colors"
+        className="inline-flex items-center gap-1.5 text-xs text-ink-soft/85 hover:text-brique transition-colors"
       >
-        <Flag size={13} />
+        <Flag size={14} />
         {t("button")}
       </button>
     );

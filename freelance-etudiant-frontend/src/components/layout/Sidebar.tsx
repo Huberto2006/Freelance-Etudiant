@@ -526,7 +526,7 @@ export function Sidebar({
                   {tn(item.label)}
                 </span>
                 <ChevronDown
-                  size={15}
+                  size={16}
                   className={`shrink-0 transition-transform ${ouvert ? "rotate-180" : ""}`}
                 />
               </>
@@ -550,7 +550,7 @@ export function Sidebar({
                 left: positionFlottante.left,
               }}
             >
-              <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white/55">
+              <p className="px-3 py-2 text-xs font-semibold text-white/55">
                 {tn(item.label)}
               </p>
               <div className="space-y-1">{liens.map(renderLien)}</div>
@@ -740,7 +740,7 @@ export function Sidebar({
             "
           >
             <ChevronLeft
-              size={17}
+              size={18}
             />
           </button>
         )}

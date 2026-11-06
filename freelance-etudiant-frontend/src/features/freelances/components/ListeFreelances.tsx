@@ -167,7 +167,7 @@ export function ListeFreelances() {
           aria-hidden="true"
           className="flex h-11 w-11 items-center justify-center rounded-full bg-bleu-soft text-bleu-dark"
         >
-          <Lock size={19} />
+          <Lock size={20} />
         </span>
         <h2 className="font-display text-xl font-semibold text-ink">
           {t("membersOnlyTitle")}
@@ -207,9 +207,9 @@ export function ListeFreelances() {
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search
-            size={15}
+            size={16}
             aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/85"
           />
           <input
             type="search"
@@ -217,7 +217,7 @@ export function ListeFreelances() {
             onChange={(e) => setRecherche(e.target.value)}
             placeholder={t("searchPlaceholder")}
             aria-label={t("searchAria")}
-            className="kianja-field-control h-11 w-full rounded-full border-0 bg-paper-light pl-9 pr-3 text-sm text-ink outline-none focus:outline-none transition placeholder:text-ink-soft/50"
+            className="kianja-field-control h-11 w-full rounded-full border-0 bg-paper-light pl-9 pr-3 text-sm text-ink outline-none focus:outline-none transition placeholder:text-ink-soft/85"
           />
         </div>
 
@@ -245,7 +245,7 @@ export function ListeFreelances() {
         <SqueletteListe />
       ) : resultats.length === 0 ? (
         <NoticeCard className="flex flex-col items-center gap-2 py-8 text-center">
-          <Users size={22} aria-hidden="true" className="text-ink-soft/60" />
+          <Users size={20} aria-hidden="true" className="text-ink-soft/85" />
           <p className="text-sm text-ink-soft">
             {etudiants.length === 0
               ? t("emptyAll")
@@ -254,7 +254,7 @@ export function ListeFreelances() {
         </NoticeCard>
       ) : (
         <>
-          <p className="mb-4 text-xs text-ink-soft/70" aria-live="polite">
+          <p className="mb-4 text-xs text-ink-soft/85" aria-live="polite">
             {t("shown", { count: resultats.length })}
           </p>
 
@@ -311,8 +311,8 @@ function CarteFreelance({ etudiant }: { etudiant: EtudiantProfile }) {
             <p className="truncate text-xs text-ink-soft">{formation}</p>
           )}
           {etudiant.ville && (
-            <p className="mt-0.5 flex items-center gap-1 text-xs text-ink-soft/70">
-              <MapPin size={11} aria-hidden="true" />
+            <p className="mt-0.5 flex items-center gap-1 text-xs text-ink-soft/85">
+              <MapPin size={12} aria-hidden="true" />
               {etudiant.ville}
             </p>
           )}
@@ -356,7 +356,7 @@ function CarteFreelance({ etudiant }: { etudiant: EtudiantProfile }) {
               </span>
             </>
           ) : (
-            <span className="text-ink-soft/60">{t("newOnKianja")}</span>
+            <span className="text-ink-soft/85">{t("newOnKianja")}</span>
           )}
         </p>
 

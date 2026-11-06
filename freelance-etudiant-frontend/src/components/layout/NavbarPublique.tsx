@@ -157,7 +157,7 @@ export function NavbarPublique() {
             {/* La signature n'apparaît que lorsqu'il y a la place : hors
                 plage lg (où la navigation desktop prend l'espace) puis
                 de nouveau à partir de xl. */}
-            <span className="hidden whitespace-nowrap text-[0.65rem] uppercase tracking-wider text-ink-soft/70 sm:block lg:hidden xl:block">
+            <span className="hidden whitespace-nowrap text-xs text-ink-soft/85 sm:block lg:hidden xl:block font-medium">
               {t("sidebar.signature")}
             </span>
           </span>
@@ -190,8 +190,8 @@ export function NavbarPublique() {
           <form action="/services" role="search" className="hidden 2xl:block">
             <div className="relative w-56">
               <Search
-                size={15}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+                size={16}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/85"
                 aria-hidden="true"
               />
               <input
@@ -199,7 +199,7 @@ export function NavbarPublique() {
                 name="q"
                 placeholder={t("publicNav.searchPlaceholder")}
                 aria-label={t("publicNav.search")}
-                className="kianja-field-control h-9 w-full rounded-full border border-ink/15 bg-paper-light pl-9 pr-3 text-xs text-ink transition-colors hover:border-ink/25 focus:border-ink/40 placeholder:text-ink-soft/50"
+                className="kianja-field-control h-9 w-full rounded-full border border-ink/15 bg-paper-light pl-9 pr-3 text-xs text-ink transition-colors hover:border-ink/25 focus:border-ink/40 placeholder:text-ink-soft/85"
               />
             </div>
           </form>
@@ -226,7 +226,7 @@ export function NavbarPublique() {
                 title={tn("Tableau de bord")}
                 className="flex h-9 items-center gap-2 rounded-lg px-2 text-sm font-medium text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink"
               >
-                <LayoutDashboard size={17} />
+                <LayoutDashboard size={18} />
                 <span className="hidden xl:inline">{tn("Tableau de bord")}</span>
               </Link>
             </>
@@ -299,7 +299,7 @@ function GroupeMobile({
     <div role="group" aria-labelledby={titreId} className="py-1">
       <p
         id={titreId}
-        className="px-3 pb-1 pt-2 font-mono text-[0.65rem] uppercase tracking-[0.2em] text-ink-soft/70"
+        className="px-3 pb-1 pt-2 text-xs text-ink-soft/85 font-medium"
       >
         {tn.label(menu.label)}
       </p>
@@ -321,7 +321,7 @@ function GroupeMobile({
                 )}
               >
                 <Icone
-                  size={17}
+                  size={18}
                   aria-hidden="true"
                   className="mt-0.5 shrink-0"
                 />
@@ -329,7 +329,7 @@ function GroupeMobile({
                   <span className="block text-sm font-medium">
                     {tn.label(element.label)}
                   </span>
-                  <span className="block text-xs font-normal text-ink-soft/70">
+                  <span className="block text-xs font-normal text-ink-soft/85">
                     {tn.description(element.description)}
                   </span>
                 </span>

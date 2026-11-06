@@ -48,6 +48,7 @@ export function DataTable<T>({
   cleLigne,
   legende,
   chargement = false,
+  masquerVide = false,
   erreur,
   onReessayer,
   reessaiEnCours = false,
@@ -138,6 +139,8 @@ export function DataTable<T>({
     return <DataTableSquelette colonnes={colonnes} />;
   }
 
+  if (masquerVide && lignes.length === 0 && !criteresActifs) return null;
+
   if (lignes.length === 0 && !criteresActifs) {
     return (
       blocErreur ?? <EtatVide icon={iconeVide}>{messageVide}</EtatVide>
@@ -211,7 +214,7 @@ export function DataTable<T>({
                             >
                               {colonne.entete}
                               <IconeTri
-                                size={13}
+                                size={14}
                                 aria-hidden="true"
                                 className={direction ? undefined : "opacity-50"}
                               />

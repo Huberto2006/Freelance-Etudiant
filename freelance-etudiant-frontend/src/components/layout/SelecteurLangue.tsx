@@ -100,7 +100,7 @@ export function SelecteurLangue({
           className="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink disabled:opacity-60"
         >
           {afficherIcone && (
-            <Globe size={17} strokeWidth={1.85} aria-hidden="true" className="shrink-0" />
+            <Globe size={18} strokeWidth={1.85} aria-hidden="true" className="shrink-0" />
           )}
           {libelle && <span className="flex-1">{libelle}</span>}
           <span
@@ -139,7 +139,7 @@ export function SelecteurLangue({
                   >
                     <span aria-hidden="true">{LANGUES[code].drapeau}</span>
                     <span className="flex-1">{LANGUES[code].nom}</span>
-                    {actif && <Check size={15} aria-hidden="true" />}
+                    {actif && <Check size={16} aria-hidden="true" />}
                   </button>
                 </li>
               );

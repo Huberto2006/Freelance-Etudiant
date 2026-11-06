@@ -63,7 +63,7 @@
     "intro": "Gérez les coordonnées sur lesquelles vos clients pourront effectuer leurs paiements.",
     "privacy": "Vos coordonnées ne sont pas affichées sur votre profil public.",
     "addMethod": "Ajouter un moyen",
-    "emptyTitle": "Aucun moyen de paiement",
+    "emptyTitle": "Où souhaitez-vous recevoir vos paiements ?",
     "emptyDescription": "Ajoutez un numéro Mobile Money ou un compte bancaire afin de pouvoir recevoir vos paiements.",
     "addFirst": "Ajouter mon premier moyen",
     "loading": "Chargement de vos moyens de paiement…",

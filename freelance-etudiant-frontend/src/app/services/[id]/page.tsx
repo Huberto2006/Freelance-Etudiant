@@ -1,15 +1,20 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { FileText, Loader2, SendHorizonal, Wrench } from "lucide-react";
+import { FileText, SendHorizontal, Wrench } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError, getFileUrl } from "@/lib/api";
 import type { ServiceOffert } from "@/types/services";
 import { useFormats } from "@/i18n/use-formats";
 import { useOptionLabels } from "@/i18n/use-option-labels";
-import { NoticeCard, StampBadge, Tag } from "@/components/ui/Notice";
+import {
+  NoticeCard,
+  StampBadge,
+  Tag,
+  EtatVide,
+  ChargementPage,
+} from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
@@ -101,31 +106,16 @@ export default function ServiceDetailPage({
 
   if (chargement) {
     return (
-      <p className="mx-auto flex max-w-3xl items-center justify-center gap-2 px-5 py-12 text-sm text-ink-soft">
-        <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-        {t("detail.loading")}
-      </p>
+      <ChargementPage libelle={t("detail.loading")} className="mx-auto max-w-3xl justify-center px-5 py-12" />
     );
   }
 
   if (!service) {
     return (
       <div className="mx-auto max-w-3xl px-5 py-12">
-        <NoticeCard>
-          <div className="flex flex-col items-center gap-3 py-4 text-center">
-            <span
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-brique/10 text-brique"
-              aria-hidden="true"
-            >
-              <Wrench size={22} />
-            </span>
-            <p className="text-sm text-brique">
-              {erreurChargement
-                ? t("detail.loadError")
-                : t("detail.notFound")}
-            </p>
-          </div>
-        </NoticeCard>
+        <EtatVide icon={Wrench} tone="danger">
+          {erreurChargement ? t("detail.loadError") : t("detail.notFound")}
+        </EtatVide>
       </div>
     );
   }
@@ -173,7 +163,7 @@ export default function ServiceDetailPage({
           {service.disponible ? t("detail.available") : t("detail.unavailable")}
         </Tag>
       </div>
-      <h1 className="mb-3 font-display text-3xl font-semibold sm:text-4xl">
+      <h1 className="mb-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
         {service.titre}
       </h1>
       <p className="mb-7 text-sm text-ink-soft">
@@ -221,14 +211,14 @@ export default function ServiceDetailPage({
         <aside className="flex w-full shrink-0 flex-col gap-5 lg:sticky lg:top-6 lg:w-72">
           {/* Carte annonce */}
           <NoticeCard>
-            <p className="mb-1 text-xs font-mono uppercase tracking-wider text-ink-soft">
+            <p className="mb-1 text-xs text-ink-soft font-medium">
               {t("detail.price")}
             </p>
             <p className="font-display text-2xl text-ocre-dark">
               {formatArgent(service.prix)}
             </p>
             <div className="mt-4 border-t border-ink/10 pt-4">
-              <p className="mb-1 text-xs font-mono uppercase tracking-wider text-ink-soft">
+              <p className="mb-1 text-xs text-ink-soft font-medium">
                 {t("detail.deliveryTime")}
               </p>
               <p className="font-display text-2xl">{t("detail.days", { count: service.delai })}</p>
@@ -252,7 +242,7 @@ export default function ServiceDetailPage({
                     {etudiant.universite ?? t("detail.freelanceStudent")}
                     {etudiant.niveauEtude ? ` · ${etudiant.niveauEtude}` : ""}
                   </p>
-                  <p className="mt-1 text-xs text-ink-soft/70">
+                  <p className="mt-1 text-xs text-ink-soft/85">
                     {t("detail.studentStats", {
                       count: etudiant.nombreMissionsTerminees,
                       note: nombre(Number(etudiant.noteMoyenne), {
@@ -270,7 +260,7 @@ export default function ServiceDetailPage({
                       {t.rich("detail.reputation", {
                         score: Number(etudiant.scoreReputation) || 0,
                         valeur: (chunks) => (
-                          <span className="font-mono font-semibold text-ink">
+                          <span className="tabular-nums font-semibold text-ink">
                             {chunks}
                           </span>
                         ),
@@ -279,11 +269,9 @@ export default function ServiceDetailPage({
                   </div>
                 </div>
               </div>
-              <Link href={`/etudiants/${etudiant.utilisateurId}`}>
-                <Button variant="ghost" size="sm" className="mt-4 w-full">
+              <Button href={`/etudiants/${etudiant.utilisateurId}`} variant="ghost" size="sm" className="mt-4 w-full">
                   {t("detail.viewFullProfile")}
                 </Button>
-              </Link>
             </NoticeCard>
           )}
 
@@ -339,7 +327,7 @@ export default function ServiceDetailPage({
                     </Field>
                   </div>
                   <div>
-                    <p className="mb-1.5 text-xs font-mono uppercase tracking-wider text-ink-soft">
+                    <p className="mb-1.5 text-xs text-ink-soft font-medium">
                       {t("detail.attachment")}
                     </p>
                     <SelecteurPieceJointe
@@ -355,7 +343,7 @@ export default function ServiceDetailPage({
                       disabled={envoi}
                       className="flex-1 gap-2"
                     >
-                      <SendHorizonal size={15} />
+                      <SendHorizontal size={16} />
                       {envoi ? t("detail.sending") : t("detail.submitOrder")}
                     </Button>
                     <Button

@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { api, ApiError } from "@/lib/api";
-import type { Transaction } from "@/types/paiements";
+import type { Transaction, StatutTransaction } from "@/types/paiements";
 import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
 import { useApiList } from "@/hooks/useApiList";
@@ -13,6 +14,15 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DataTable, type ColonneDataTable } from "@/components/ui/data-table";
 import { NoticeCard, PageHeader } from "@/components/ui/Notice";
 import { useColonnesTransaction } from "@/features/paiements/components/colonnes-transaction";
+import {
+  FILTRES_FINANCIERS_VIDES,
+  FiltresFinanciers,
+  type ValeursFiltresFinanciers,
+} from "@/features/paiements/components/FiltresFinanciers";
+import {
+  filtrerFinancier,
+  filtresFinanciersActifs,
+} from "@/features/paiements/utils/filtrer-financier";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
 
@@ -40,14 +50,36 @@ export default function AdminPaiementsPage() {
     transaction: Transaction;
     action: Action;
   } | null>(null);
+  const [filtresAttente, setFiltresAttente] =
+    useState<ValeursFiltresFinanciers>({ ...FILTRES_FINANCIERS_VIDES });
+  const [filtresHistorique, setFiltresHistorique] =
+    useState<ValeursFiltresFinanciers>({ ...FILTRES_FINANCIERS_VIDES });
 
   const enAttente = useMemo(
-    () => transactions.filter((x) => x.statut === "en_attente"),
-    [transactions],
+    () =>
+      filtrerFinancier(
+        transactions.filter((x) => x.statut === "en_attente"),
+        filtresAttente,
+        {
+          statut: (x) => x.statut,
+          methode: (x) => x.methode,
+          date: (x) => x.dateCreation,
+        },
+      ),
+    [transactions, filtresAttente],
   );
   const traitees = useMemo(
-    () => transactions.filter((x) => x.statut !== "en_attente"),
-    [transactions],
+    () =>
+      filtrerFinancier(
+        transactions.filter((x) => x.statut !== "en_attente"),
+        filtresHistorique,
+        {
+          statut: (x) => x.statut,
+          methode: (x) => x.methode,
+          date: (x) => x.dateCreation,
+        },
+      ),
+    [transactions, filtresHistorique],
   );
 
   /**
@@ -115,6 +147,22 @@ export default function AdminPaiementsPage() {
       },
     },
   ];
+  const colonnesHistorique: ColonneDataTable<Transaction>[] = [
+    ...colonnesTransaction,
+    {
+      id: "actions",
+      entete: t("table.colActions"),
+      cellule: (x) =>
+        x.statut === "confirmee" || x.statut === "liberee" ? (
+          <Link
+            href={`/tableau-de-bord/paiements/${x.id}/facture`}
+            className="text-sm text-ink-soft underline underline-offset-4 hover:text-ink"
+          >
+            {t("page.viewInvoice")}
+          </Link>
+        ) : null,
+    },
+  ];
 
   return (
     <div>
@@ -154,6 +202,7 @@ export default function AdminPaiementsPage() {
 
           <div className="mb-8">
             <DataTable
+          masquerVide={Boolean(erreur)}
               lignes={enAttente}
               colonnes={colonnesAVerifier}
               cleLigne={(x) => x.id}
@@ -163,6 +212,17 @@ export default function AdminPaiementsPage() {
               messageAucunResultat={t("table.noResults")}
               placeholderRecherche={t("table.searchPlaceholder")}
               libelleRecherche={t("table.searchLabel")}
+              filtres={
+                <FiltresFinanciers
+                  valeur={filtresAttente}
+                  onChange={setFiltresAttente}
+                />
+              }
+              filtresActifs={filtresFinanciersActifs(filtresAttente)}
+              onReinitialiserFiltres={() =>
+                setFiltresAttente({ ...FILTRES_FINANCIERS_VIDES })
+              }
+              cleFiltres={JSON.stringify(filtresAttente)}
             />
           </div>
 
@@ -172,8 +232,9 @@ export default function AdminPaiementsPage() {
           </h2>
 
           <DataTable
+          masquerVide={Boolean(erreur)}
             lignes={traitees}
-            colonnes={colonnesTransaction}
+            colonnes={colonnesHistorique}
             cleLigne={(x) => x.id}
             legende={t("adminList.history")}
             iconeVide={Wallet}
@@ -181,6 +242,20 @@ export default function AdminPaiementsPage() {
             messageAucunResultat={t("table.noResults")}
             placeholderRecherche={t("table.searchPlaceholder")}
             libelleRecherche={t("table.searchLabel")}
+            filtres={
+              <FiltresFinanciers
+                valeur={filtresHistorique}
+                statuts={
+                  ["confirmee", "liberee", "annulee"] satisfies readonly StatutTransaction[]
+                }
+                onChange={setFiltresHistorique}
+              />
+            }
+            filtresActifs={filtresFinanciersActifs(filtresHistorique)}
+            onReinitialiserFiltres={() =>
+              setFiltresHistorique({ ...FILTRES_FINANCIERS_VIDES })
+            }
+            cleFiltres={JSON.stringify(filtresHistorique)}
             triInitial={{ colonne: "date", direction: "desc" }}
           />
         </>

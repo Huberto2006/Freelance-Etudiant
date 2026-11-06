@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirmation } from "@/components/ui/ConfirmDialog";
 import { StaggerContainer } from "@/components/ui/motion/StaggerContainer";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -46,7 +47,13 @@ import {
 } from "@/features/tableau-de-bord/utils/dashboard-actions";
 
 import { Button } from "@/components/ui/Button";
-import { NoticeCard, StampBadge, StatCard, Tag } from "@/components/ui/Notice";
+import {
+  NoticeCard,
+  StampBadge,
+  StatCard,
+  Tag,
+  ChargementPage,
+} from "@/components/ui/Notice";
 import {
   AnneauRepartition,
   BarreMensuelle,
@@ -238,7 +245,7 @@ export default function TableauDeBordVueEnsemble() {
   if (chargementAuth) {
     return (
       <div className="flex min-h-[300px] items-center justify-center">
-        <p className="text-sm text-ink-soft">{t("loadingAccount")}</p>
+        <ChargementPage libelle={t("loadingAccount")} />
       </div>
     );
   }
@@ -328,6 +335,7 @@ function VueEtudiant({
   onReessayer: () => void;
 }) {
   const t = useTranslations("dashboardPages.overview");
+  const { confirmer, dialogueConfirmation } = useConfirmation();
   const tl = useTranslations(
     "dashboardPages.dashboardLib",
   ) as unknown as Traducteur;
@@ -453,7 +461,7 @@ function VueEtudiant({
   async function toutEffacerActivite() {
     if (activiteFiltree.length === 0) return;
 
-    if (!window.confirm(t("confirmClear"))) {
+    if (!await confirmer({ titre: t("confirmClear") })) {
       return;
     }
 
@@ -688,6 +696,7 @@ function VueEtudiant({
           </DashboardSection>
         </div>
       </div>
+      {dialogueConfirmation}
     </div>
   );
 }
@@ -706,6 +715,7 @@ function VueClient({
   onReessayer: () => void;
 }) {
   const t = useTranslations("dashboardPages.overview");
+  const { confirmer, dialogueConfirmation } = useConfirmation();
   const tl = useTranslations(
     "dashboardPages.dashboardLib",
   ) as unknown as Traducteur;
@@ -815,7 +825,7 @@ function VueClient({
   async function toutEffacerActivite() {
     if (activiteFiltree.length === 0) return;
 
-    if (!window.confirm(t("confirmClear"))) {
+    if (!await confirmer({ titre: t("confirmClear") })) {
       return;
     }
 
@@ -1020,12 +1030,9 @@ function VueClient({
               {t("noPaymentHint")}
             </p>
 
-            <Link
+            <Button
               href="/tableau-de-bord/paiements"
-              aria-label={t("declarePayment")}
-            >
-              <Button size="sm">{t("declarePayment")}</Button>
-            </Link>
+              aria-label={t("declarePayment")} size="sm">{t("declarePayment")}</Button>
           </NoticeCard>
         ) : (
           <div className="grid gap-3 sm:grid-cols-3">
@@ -1045,11 +1052,11 @@ function VueClient({
                   </Tag>
                 </div>
 
-                <p className="font-mono text-sm text-ocre-dark">
+                <p className="tabular-nums text-sm text-ocre-dark">
                   {formatArgent(paiement.montant)}
                 </p>
 
-                <p className="text-xs text-ink-soft/60">
+                <p className="text-xs text-ink-soft/85">
                   {paiement.etudiant?.nom ?? t("studentLabel")} ·{" "}
                   {formatDateCourte(paiement.dateCreation)}
                 </p>
@@ -1086,6 +1093,7 @@ function VueClient({
           </div>
         )}
       </DashboardSection>
+      {dialogueConfirmation}
     </div>
   );
 }

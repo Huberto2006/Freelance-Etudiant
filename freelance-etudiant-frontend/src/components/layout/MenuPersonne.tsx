@@ -33,7 +33,7 @@ const classeItem =
   "flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink focus-visible:bg-ink/5";
 
 const classeTitre =
-  "px-3 pb-1 pt-2 text-[0.65rem] font-semibold uppercase tracking-wider text-ink-soft/70";
+  "px-3 pb-1 pt-2 text-xs font-semibold text-ink-soft/85";
 
 function Separateur() {
   return <div role="separator" className="my-1.5 h-px bg-ink/10" />;
@@ -52,7 +52,7 @@ function ItemLien({
 }) {
   return (
     <Link href={href} onClick={onNavigate} role="menuitem" className={classeItem}>
-      <Icone size={17} strokeWidth={1.85} aria-hidden="true" className="shrink-0" />
+      <Icone size={18} strokeWidth={1.85} aria-hidden="true" className="shrink-0" />
       <span>{libelle}</span>
     </Link>
   );
@@ -115,22 +115,22 @@ export function MenuPersonne({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <UserRound size={15} strokeWidth={1.85} />
+              <UserRound size={16} strokeWidth={1.85} />
             )}
           </span>
           <span className="hidden max-w-28 text-left leading-tight sm:block">
             <span className="block truncate text-xs font-medium text-ink">
               {utilisateur.nom}
             </span>
-            <span className="block truncate text-[0.625rem] uppercase tracking-wider text-ink-soft/60">
+            <span className="block truncate text-xs text-ink-soft/85 font-medium">
               {libelleRole(utilisateur.role)}
             </span>
           </span>
           <ChevronDown
-            size={13}
+            size={14}
             strokeWidth={1.85}
             className={clsx(
-              "hidden text-ink-soft/70 transition-transform duration-150 sm:block",
+              "hidden text-ink-soft/85 transition-transform duration-150 sm:block",
               ouvert && "rotate-180 text-ink",
             )}
           />
@@ -215,7 +215,7 @@ export function MenuPersonne({
                 role="menuitem"
                 className="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-brique transition-colors hover:bg-brique/5 focus-visible:bg-brique/5"
               >
-                <LogOut size={17} strokeWidth={1.85} aria-hidden="true" className="shrink-0" />
+                <LogOut size={18} strokeWidth={1.85} aria-hidden="true" className="shrink-0" />
                 <span>{t("personMenu.logout")}</span>
               </button>
             </>

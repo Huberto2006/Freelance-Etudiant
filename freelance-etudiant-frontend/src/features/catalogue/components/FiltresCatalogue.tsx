@@ -9,10 +9,10 @@ import { CATEGORIES_REPERENTIEL } from "@/lib/categories";
 import { useSaisieDifferee } from "../hooks/useSaisieDifferee";
 
 const classeChamp =
-  "kianja-field-control h-11 w-full rounded-[10px] border-0 bg-paper-light px-3 text-base text-ink outline-none focus:outline-none transition placeholder:text-ink-soft/60 disabled:cursor-not-allowed disabled:opacity-60";
+  "kianja-field-control h-11 w-full rounded-lg border-0 bg-paper-light px-3 text-base text-ink outline-none focus:outline-none transition placeholder:text-ink-soft/85 disabled:cursor-not-allowed disabled:opacity-60";
 
 const classeTitre =
-  "mb-3 font-mono text-[0.6875rem] font-medium uppercase tracking-[0.14em] text-ink-soft";
+  "mb-3 text-xs font-medium text-ink-soft";
 
 export interface OptionType<T extends string> {
   valeur: T;
@@ -99,7 +99,7 @@ export function ChampsFiltres<T extends string = string>({
                 />
                 <span className="flex-1">{option.libelle}</span>
                 {option.compte !== undefined && (
-                  <span className="font-mono text-xs text-ink-soft">
+                  <span className="tabular-nums text-xs text-ink-soft">
                     {option.compte}
                   </span>
                 )}
@@ -299,7 +299,7 @@ export function FeuilleFiltres<T extends string = string>({
           <button
             type="button"
             onClick={onFermer}
-            className="min-h-12 flex-1 rounded-[10px] bg-ink px-4 text-[0.9375rem] font-medium text-paper-light"
+            className="min-h-12 flex-1 rounded-lg bg-ink px-4 text-[0.9375rem] font-medium text-paper-light"
           >
             Voir {nbResultats} {libelleResultats}
           </button>

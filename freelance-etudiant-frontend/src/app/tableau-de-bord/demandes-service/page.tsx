@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { FileText, MessageCircle } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
@@ -63,7 +62,7 @@ function VueClient() {
 
       {demandesAffichees.length === 0 ? (
         <NoticeCard>
-          <p className="text-sm text-ink-soft/70">
+          <p className="text-sm text-ink-soft/85">
             {t("emptyCategory")}
           </p>
         </NoticeCard>
@@ -74,7 +73,7 @@ function VueClient() {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="font-display font-medium">{d.service?.titre}</p>
-              <p className="text-xs text-ink-soft/70">
+              <p className="text-xs text-ink-soft/85">
                 {t("client.by", {
                   nom: d.service?.etudiant?.utilisateur?.nom ?? t("client.studentFallback"),
                 })}
@@ -95,21 +94,19 @@ function VueClient() {
           )}
 
           <div className="flex items-center justify-between border-t border-ink/10 pt-3 text-sm">
-            <span className="font-mono text-ocre-dark">
+            <span className="tabular-nums text-ocre-dark">
               {formatArgent(d.budgetPropose)} · {t("daysShort", { count: d.delaiSouhaite })}
             </span>
-            <span className="text-xs text-ink-soft/60">
+            <span className="text-xs text-ink-soft/85">
               {formatDateCourte(d.dateCreation)}
             </span>
           </div>
 
           {d.statut === "acceptee" && d.missionId && (
-            <Link href="/tableau-de-bord/mes-missions">
-              <Button size="sm" variant="secondary" className="self-start gap-2">
+            <Button href="/tableau-de-bord/mes-missions" size="sm" variant="secondary" className="self-start gap-2">
                 <MessageCircle size={14} />
                 {t("client.followProject")}
               </Button>
-            </Link>
           )}
         </NoticeCard>
       ))}
@@ -222,7 +219,7 @@ function VueEtudiant() {
 
       {demandesAffichees.length === 0 ? (
         <NoticeCard>
-          <p className="text-sm text-ink-soft/70">
+          <p className="text-sm text-ink-soft/85">
             {t("emptyCategory")}
           </p>
         </NoticeCard>
@@ -233,7 +230,7 @@ function VueEtudiant() {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="font-display font-medium">{d.service?.titre}</p>
-              <p className="text-xs text-ink-soft/70">
+              <p className="text-xs text-ink-soft/85">
                 {t("student.requestFrom", { nom: d.client?.nom ?? t("student.clientFallback") })}
               </p>
             </div>
@@ -244,7 +241,7 @@ function VueEtudiant() {
           </div>
 
           <div className="rounded-lg border border-ink/10 bg-ink/[0.02] p-3">
-            <p className="mb-1 flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-ink-soft">
+            <p className="mb-1 flex items-center gap-1.5 text-xs text-ink-soft font-medium">
               <FileText size={12} />
               {t("student.specifications")}
             </p>
@@ -259,10 +256,10 @@ function VueEtudiant() {
           </div>
 
           <div className="flex items-center justify-between border-t border-ink/10 pt-3 text-sm">
-            <span className="font-mono text-ocre-dark">
+            <span className="tabular-nums text-ocre-dark">
               {formatArgent(d.budgetPropose)} · {t("daysShort", { count: d.delaiSouhaite })}
             </span>
-            <span className="text-xs text-ink-soft/60">
+            <span className="text-xs text-ink-soft/85">
               {formatDateCourte(d.dateCreation)}
             </span>
           </div>
@@ -290,12 +287,10 @@ function VueEtudiant() {
           )}
 
           {d.statut === "acceptee" && d.missionId && (
-            <Link href="/tableau-de-bord/candidatures">
-              <Button size="sm" variant="secondary" className="self-start gap-2">
+            <Button href="/tableau-de-bord/candidatures" size="sm" variant="secondary" className="self-start gap-2">
                 <MessageCircle size={14} />
                 {t("student.followProject")}
               </Button>
-            </Link>
           )}
         </NoticeCard>
       ))}

@@ -48,10 +48,10 @@ export default function MotDePasseOubliePage() {
 
   return (
     <div className="mx-auto max-w-md px-5 pb-12">
-      <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
+      <p className="mb-3 text-xs font-semibold text-ocre-dark">
         {t("eyebrow")}
       </p>
-      <h1 className="mb-7 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+      <h1 className="mb-7 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
         {t("title")}
       </h1>
 

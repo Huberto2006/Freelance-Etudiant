@@ -1,10 +1,11 @@
 "use client";
 
+import { useConfirmation } from "@/components/ui/ConfirmDialog";
 import { use, useEffect, useMemo, useState } from "react";
 import {
   Check,
   Crown,
-  Loader2,
+  LoaderCircle,
   MessageCircle,
   Search,
   UserPlus,
@@ -23,7 +24,13 @@ import { useLabels } from "@/i18n/use-labels";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
-import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
+import {
+  NoticeCard,
+  PageHeader,
+  Tag,
+  EtatVide,
+  ChargementPage,
+} from "@/components/ui/Notice";
 import { useBreadcrumbTitle } from "@/components/navigation/Breadcrumb";
 
 export default function GroupeDetailPage({
@@ -34,6 +41,7 @@ export default function GroupeDetailPage({
   const { id } = use(params);
   const { utilisateur } = useAuth();
   const t = useTranslations("dashboardPages.groupDetail");
+  const { confirmer, dialogueConfirmation } = useConfirmation();
   const { date: formatDate } = useFormats();
   const { roleMembreGroupe, statutInvitationGroupe } = useLabels();
 
@@ -188,10 +196,6 @@ export default function GroupeDetailPage({
     }
   }
 
-  function confirmer(message: string): boolean {
-    return window.confirm(message);
-  }
-
   /*
    * ==========================================================
    * CHARGEMENT / ERREURS
@@ -200,42 +204,24 @@ export default function GroupeDetailPage({
 
   if (chargement) {
     return (
-      <p className="flex items-center gap-2 text-sm text-ink-soft">
-        <Loader2
-          size={16}
-          className="animate-spin"
-          aria-hidden="true"
-        />
-        {t("loading")}
-      </p>
+      <ChargementPage libelle={t("loading")} />
     );
   }
 
   if (!groupe) {
     return (
       <div>
-        <NoticeCard>
-          <div className="flex flex-col items-center gap-3 py-6 text-center">
-            <span
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-brique/10 text-brique"
-              aria-hidden="true"
-            >
-              <Users size={22} />
-            </span>
-
-            <p className="text-sm text-brique">
-              {erreur ?? t("notFound")}
-            </p>
-
-            <Button
-              variant="secondary"
-              size="sm"
-              href="/tableau-de-bord/groupes"
-            >
+        <EtatVide
+          icon={Users}
+          tone="danger"
+          action={
+            <Button variant="secondary" size="sm" href="/tableau-de-bord/groupes">
               {t("backToGroups")}
             </Button>
-          </div>
-        </NoticeCard>
+          }
+        >
+          {erreur ?? t("notFound")}
+        </EtatVide>
       </div>
     );
   }
@@ -266,7 +252,7 @@ export default function GroupeDetailPage({
           </p>
         )}
 
-        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-xs text-ink-soft/70">
+        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-xs text-ink-soft/85">
           <p>
             {t("mission", { titre: groupe.mission?.titre ?? t("noMission") })}
           </p>
@@ -312,7 +298,7 @@ export default function GroupeDetailPage({
               size="sm"
               className="gap-2"
             >
-              <MessageCircle size={15} aria-hidden="true" />
+              <MessageCircle size={16} aria-hidden="true" />
               {t("openDiscussion")}
             </Button>
           </div>
@@ -336,12 +322,12 @@ export default function GroupeDetailPage({
           >
             {afficherInvitation ? (
               <>
-                <X size={15} />
+                <X size={16} />
                 {t("close")}
               </>
             ) : (
               <>
-                <UserPlus size={15} />
+                <UserPlus size={16} />
                 {t("inviteStudent")}
               </>
             )}
@@ -366,7 +352,7 @@ export default function GroupeDetailPage({
                 {nomEtudiant(membre.etudiantId)}
 
                 {membre.etudiantId === utilisateur?.id && (
-                  <span className="ml-1 text-ink-soft/60">
+                  <span className="ml-1 text-ink-soft/85">
                     {t("you")}
                   </span>
                 )}
@@ -381,7 +367,7 @@ export default function GroupeDetailPage({
               >
                 {membre.role === "chef" && (
                   <Crown
-                    size={11}
+                    size={12}
                     className="mr-1 inline"
                     aria-hidden="true"
                   />
@@ -397,11 +383,9 @@ export default function GroupeDetailPage({
                       size="sm"
                       variant="ghost"
                       disabled={actionEnCours !== null}
-                      onClick={() => {
+                      onClick={async () => {
                         if (
-                          !confirmer(
-                            t("confirmTransfer"),
-                          )
+                          !(await confirmer({ titre: t("confirmTransfer") }))
                         ) {
                           return;
                         }
@@ -427,11 +411,9 @@ export default function GroupeDetailPage({
                       size="sm"
                       variant="ghost"
                       disabled={actionEnCours !== null}
-                      onClick={() => {
+                      onClick={async () => {
                         if (
-                          !confirmer(
-                            t("confirmRemove"),
-                          )
+                          !(await confirmer({ titre: t("confirmRemove") }))
                         ) {
                           return;
                         }
@@ -465,7 +447,7 @@ export default function GroupeDetailPage({
           </h2>
 
           {invitations.length === 0 ? (
-            <p className="mt-2 text-sm text-ink-soft/70">
+            <p className="mt-2 text-sm text-ink-soft/85">
               {t("noInvitations")}
             </p>
           ) : (
@@ -478,7 +460,7 @@ export default function GroupeDetailPage({
                   <p className="flex-1 text-sm">
                     {nomEtudiant(invitation.inviteId)}
 
-                    <span className="ml-2 text-xs text-ink-soft/70">
+                    <span className="ml-2 text-xs text-ink-soft/85">
                       {statutInvitationGroupe(invitation.statut)}{" "}
                       · {formatDate(invitation.dateCreation)}
                     </span>
@@ -489,11 +471,9 @@ export default function GroupeDetailPage({
                       size="sm"
                       variant="ghost"
                       disabled={actionEnCours !== null}
-                      onClick={() => {
+                      onClick={async () => {
                         if (
-                          !confirmer(
-                            t("confirmCancelInvitation"),
-                          )
+                          !(await confirmer({ titre: t("confirmCancelInvitation") }))
                         ) {
                           return;
                         }
@@ -543,8 +523,8 @@ export default function GroupeDetailPage({
         <Button
           variant="ghost"
           disabled={actionEnCours !== null}
-          onClick={() => {
-            if (!confirmer(t("confirmLeave"))) {
+          onClick={async () => {
+            if (!(await confirmer({ titre: t("confirmLeave") }))) {
               return;
             }
 
@@ -573,6 +553,7 @@ export default function GroupeDetailPage({
           moiId={utilisateur?.id}
         />
       )}
+      {dialogueConfirmation}
     </div>
   );
 }
@@ -671,8 +652,8 @@ function PanneauInvitation({
 
       <div className="relative mt-4">
         <Search
-          size={15}
-          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+          size={16}
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/85"
           aria-hidden="true"
         />
 
@@ -689,7 +670,7 @@ function PanneauInvitation({
 
       <ul className="mt-4 flex max-h-80 flex-col divide-y divide-ink/10 overflow-y-auto">
         {candidats.length === 0 ? (
-          <p className="py-4 text-sm text-ink-soft/70">
+          <p className="py-4 text-sm text-ink-soft/85">
             {t("noCandidates")}
           </p>
         ) : (
@@ -730,9 +711,9 @@ function PanneauInvitation({
                   className="gap-1.5"
                 >
                   {enCours ? (
-                    <Loader2
+                    <LoaderCircle
                       size={14}
-                      className="animate-spin"
+                      className="motion-safe:animate-spin"
                       aria-hidden="true"
                     />
                   ) : (
@@ -752,7 +733,7 @@ function PanneauInvitation({
         {invitesEnvoyes.size > 0 && (
           <li className="flex items-center gap-2 pt-3 text-xs text-rice">
             <Check
-              size={13}
+              size={14}
               aria-hidden="true"
             />
 

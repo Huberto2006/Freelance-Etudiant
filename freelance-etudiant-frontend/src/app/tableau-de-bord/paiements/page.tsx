@@ -1,7 +1,7 @@
 "use client";
 
 import { StaggerContainer } from "@/components/ui/motion/StaggerContainer";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Wallet,
 } from "lucide-react";
@@ -23,8 +23,17 @@ import {
 } from "@/components/ui/Notice";
 import { SousNavigation } from "@/components/ui/SousNavigation";
 import { ActionsTransaction } from "@/features/paiements/components/ActionsTransaction";
+import {
+  FILTRES_FINANCIERS_VIDES,
+  FiltresFinanciers,
+  type ValeursFiltresFinanciers,
+} from "@/features/paiements/components/FiltresFinanciers";
 import { useColonnesTransaction } from "@/features/paiements/components/colonnes-transaction";
 import { FormulairePaiement } from "@/features/paiements/components/FormulairePaiement";
+import {
+  filtrerFinancier,
+  filtresFinanciersActifs,
+} from "@/features/paiements/utils/filtrer-financier";
 
 // ============================================================
 // PAGE PRINCIPALE DES PAIEMENTS
@@ -38,6 +47,7 @@ export default function PaiementsPage() {
   const { utilisateur } = useAuth();
   const t = useTranslations("payments.page");
   const tTableau = useTranslations("payments.table");
+  const tc = useTranslations("common");
   const colonnesTransaction = useColonnesTransaction();
   const { argent: formatArgent } = useFormats();
 
@@ -56,10 +66,14 @@ export default function PaiementsPage() {
   ] = useState<Candidature | null>(null);
 
   const [chargement, setChargement] = useState(true);
+  const [erreurChargement, setErreurChargement] = useState<string | null>(null);
 
   // À payer / En attente / Confirmés / Historique
   const [ongletPaiements, setOngletPaiements] =
     useState("historique");
+  const [filtres, setFiltres] = useState<ValeursFiltresFinanciers>({
+    ...FILTRES_FINANCIERS_VIDES,
+  });
 
   // ==========================================================
   // CHARGER LES DONNÉES
@@ -70,6 +84,7 @@ export default function PaiementsPage() {
       return;
     }
 
+    setErreurChargement(null);
     try {
       if (utilisateur.role === "client") {
         const [
@@ -82,7 +97,12 @@ export default function PaiementsPage() {
             .get<Candidature[]>(
               "/candidatures/client",
             )
-            .catch(() => [] as Candidature[]),
+            // Les transactions restent affichées, mais sans cet avertissement
+            // un échec laisserait croire qu'il n'y a rien à payer.
+            .catch(() => {
+              setErreurChargement(tc("states.errLoadData"));
+              return [] as Candidature[];
+            }),
         ]);
 
         // Une candidature ayant un paiement non annulé
@@ -129,10 +149,11 @@ export default function PaiementsPage() {
         "Erreur lors du chargement des paiements :",
         err,
       );
+      setErreurChargement(tc("states.errLoadData"));
     } finally {
       setChargement(false);
     }
-  }, [utilisateur]);
+  }, [utilisateur, tc]);
 
   // ==========================================================
   // CHARGEMENT INITIAL
@@ -227,14 +248,6 @@ export default function PaiementsPage() {
   );
 
   // ==========================================================
-  // PROTECTION
-  // ==========================================================
-
-  if (!utilisateur) {
-    return null;
-  }
-
-  // ==========================================================
   // TOTAL REÇU PAR L'ÉTUDIANT
   // ==========================================================
 
@@ -265,20 +278,49 @@ export default function PaiementsPage() {
         t.statut === "liberee",
     );
 
+  const transactionsDeLOnglet =
+    ongletPaiements === "en_attente"
+      ? transactionsEnAttente
+      : ongletPaiements === "confirmes"
+        ? transactionsConfirmees
+        : transactions;
+  const transactionsFiltrees = useMemo(
+    () =>
+      filtrerFinancier(transactionsDeLOnglet, filtres, {
+        statut: (transaction) => transaction.statut,
+        methode: (transaction) => transaction.methode,
+        date: (transaction) => transaction.dateCreation,
+      }),
+    [transactionsDeLOnglet, filtres],
+  );
+
   // ==========================================================
   // AFFICHAGE
   // ==========================================================
 
+  // Après tous les hooks : leur ordre ne doit jamais dépendre de la session.
+  if (!utilisateur) {
+    return null;
+  }
+
   return (
     <div>
-      <div className="mb-4">
-      </div>
-
       <PageHeader
         icon={Wallet}
         eyebrow={t("eyebrow")}
         title={t("title")}
       />
+
+      {erreurChargement && (
+        <NoticeCard className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <p role="alert" className="text-sm text-brique">
+            {erreurChargement}
+          </p>
+          <Button variant="ghost" size="sm" onClick={() => void recharger()}>
+            {tc("actions.retry")}
+          </Button>
+        </NoticeCard>
+      )}
 
       {messageRetour && (
         <NoticeCard className="mb-4">
@@ -294,7 +336,7 @@ export default function PaiementsPage() {
 
       {utilisateur.role === "etudiant" && (
         <NoticeCard className="mb-6">
-          <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+          <p className=" text-xs text-ink-soft font-medium">
             {t("totalReceived")}
           </p>
 
@@ -381,7 +423,7 @@ export default function PaiementsPage() {
                           t("mission")}
                       </p>
 
-                      <p className="font-mono text-sm text-ocre-dark">
+                      <p className="tabular-nums text-sm text-ocre-dark">
                         {formatArgent(
                           candidature.prixPropose,
                         )}
@@ -412,9 +454,10 @@ export default function PaiementsPage() {
 
       {utilisateur.role === "client" &&
         ongletPaiements === "a_payer" &&
+        !erreurChargement &&
         candidaturesAPayer.length === 0 && (
           <NoticeCard className="mb-6">
-            <p className="text-sm text-ink-soft/70">
+            <p className="text-sm text-ink-soft/85">
               {t("noMissionAwaiting")}
             </p>
           </NoticeCard>
@@ -424,7 +467,8 @@ export default function PaiementsPage() {
           TRANSACTIONS
          ====================================================== */}
 
-      {ongletPaiements !== "a_payer" && (
+      {ongletPaiements !== "a_payer" &&
+        !(erreurChargement && transactions.length === 0) && (
         <>
           <h2 className="mb-3 font-display text-lg font-semibold">
             {ongletPaiements === "en_attente"
@@ -435,13 +479,7 @@ export default function PaiementsPage() {
           </h2>
 
           <DataTable
-            lignes={
-              ongletPaiements === "en_attente"
-                ? transactionsEnAttente
-                : ongletPaiements === "confirmes"
-                  ? transactionsConfirmees
-                  : transactions
-            }
+            lignes={transactionsFiltrees}
             colonnes={[
               ...colonnesTransaction,
               {
@@ -463,7 +501,14 @@ export default function PaiementsPage() {
             messageAucunResultat={tTableau("noResults")}
             placeholderRecherche={tTableau("searchPlaceholder")}
             libelleRecherche={tTableau("searchLabel")}
-            cleFiltres={ongletPaiements}
+            filtres={
+              <FiltresFinanciers valeur={filtres} onChange={setFiltres} />
+            }
+            filtresActifs={filtresFinanciersActifs(filtres)}
+            onReinitialiserFiltres={() =>
+              setFiltres({ ...FILTRES_FINANCIERS_VIDES })
+            }
+            cleFiltres={`${ongletPaiements}:${JSON.stringify(filtres)}`}
             triInitial={{ colonne: "date", direction: "desc" }}
           />
         </>

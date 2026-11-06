@@ -94,7 +94,7 @@
     "confirmed": "Confirmés",
     "history": "Historique",
     "missionsAwaitingPayment": "Missions en attente de paiement",
-    "noMissionAwaiting": "Aucune mission en attente de paiement pour le moment.",
+    "noMissionAwaiting": "Rien à payer pour l'instant.",
     "loading": "Chargement…",
     "noneInCategory": "Aucun paiement dans cette catégorie."
   },
@@ -106,8 +106,22 @@
     "colAmount": "Montant",
     "colStatus": "Statut",
     "colActions": "Actions",
+    "details": "Détails",
+    "transactionDetails": "Détail du paiement",
+    "detailClient": "Client",
+    "detailStudent": "Étudiant",
+    "detailMission": "Mission",
+    "detailReference": "Référence",
+    "detailMethod": "Moyen de paiement",
+    "detailStatus": "Statut",
+    "detailDate": "Date",
+    "detailAmount": "Montant",
+    "filterStatus": "Filtrer par statut",
+    "allStatuses": "Tous les statuts",
+    "filterMethod": "Filtrer par moyen",
+    "allMethods": "Tous les moyens",
     "searchLabel": "Rechercher un paiement",
-    "searchPlaceholder": "Mission, moyen ou référence",
+    "searchPlaceholder": "Référence, mission ou utilisateur",
     "noResults": "Aucun paiement ne correspond à cette recherche."
   }
 }

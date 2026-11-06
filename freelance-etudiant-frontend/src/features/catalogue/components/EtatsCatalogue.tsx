@@ -31,7 +31,7 @@ export function EtatVideCatalogue({
             <button
               type="button"
               onClick={onReinitialiser}
-              className="min-h-11 rounded-[10px] bg-ink px-5 text-sm font-medium text-paper-light"
+              className="min-h-11 rounded-lg bg-ink px-5 text-sm font-medium text-paper-light"
             >
               Réinitialiser les filtres
             </button>
@@ -61,7 +61,7 @@ export function ErreurCatalogue({
         <button
           type="button"
           onClick={onReessayer}
-          className="mt-4 min-h-11 rounded-[10px] border border-ink/25 px-5 text-sm font-medium text-ink hover:border-ink/50"
+          className="mt-4 min-h-11 rounded-lg border border-ink/25 px-5 text-sm font-medium text-ink hover:border-ink/50"
         >
           Réessayer
         </button>

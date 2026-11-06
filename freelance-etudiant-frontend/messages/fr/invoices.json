@@ -16,7 +16,7 @@
     "colDate": "Date",
     "colAmount": "Montant",
     "searchLabel": "Rechercher une facture",
-    "searchPlaceholder": "Numéro, mission, nom ou moyen",
+    "searchPlaceholder": "Numéro, référence de paiement, mission ou nom",
     "noResults": "Aucune facture ne correspond à cette recherche."
   },
   "detail": {

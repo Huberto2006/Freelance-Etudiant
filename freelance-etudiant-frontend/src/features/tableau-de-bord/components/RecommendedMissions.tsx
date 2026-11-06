@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { CalendarClock } from "lucide-react";
 
 import { useTranslations } from "next-intl";
@@ -155,18 +154,13 @@ function CorpsRecommandations({
         </p>
 
         <div className="flex flex-wrap gap-2">
-          <Link href="/missions" aria-label={t("explore")}>
-            <Button size="sm">{t("explore")}</Button>
-          </Link>
+          <Button href="/missions" aria-label={t("explore")} size="sm">{t("explore")}</Button>
 
-          <Link
+          <Button
             href="/tableau-de-bord/profil"
-            aria-label={t("completeProfile")}
-          >
-            <Button size="sm" variant="ghost">
+            aria-label={t("completeProfile")} size="sm" variant="ghost">
               {t("completeProfile")}
             </Button>
-          </Link>
         </div>
       </NoticeCard>
     );
@@ -192,7 +186,7 @@ function CorpsRecommandations({
             <Tag tone="ocre">{libelleCategorie(mission.categorie)}</Tag>
 
             <span
-              className="font-mono text-xs font-semibold text-ocre-dark"
+              className="tabular-nums text-xs font-semibold text-ocre-dark"
               title={t("scoreTitle")}
             >
               {t("match", { score: scoreCompatibilite })}
@@ -225,25 +219,21 @@ function CorpsRecommandations({
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ink/10 pt-3">
-              <p className="font-mono text-sm font-semibold text-ocre-dark">
+              <p className="tabular-nums text-sm font-semibold text-ocre-dark">
                 {formatArgent(mission.budget)}
               </p>
 
-              <p className="inline-flex items-center gap-1 text-xs text-ink-soft/70">
+              <p className="inline-flex items-center gap-1 text-xs text-ink-soft/85">
                 <CalendarClock size={12} aria-hidden="true" />
                 {t("before", { date: formatDateCourte(mission.dateLimite) })}
               </p>
             </div>
 
-            <Link
+            <Button
               href={`/missions/${mission.id}`}
-              className="self-start"
-              aria-label={t("viewMissionLabel", { titre: mission.titre })}
-            >
-              <Button size="sm" variant="secondary">
+              aria-label={t("viewMissionLabel", { titre: mission.titre })} size="sm" variant="secondary" className="self-start">
                 {t("viewMission")}
               </Button>
-            </Link>
           </div>
         </NoticeCard>
       ))}

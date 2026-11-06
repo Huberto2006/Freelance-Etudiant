@@ -41,9 +41,7 @@ export function ProjetsEnCours({
       <NoticeCard className="flex flex-col items-start gap-3">
         <p className="font-display font-medium">{videTitreLabel}</p>
         <p className="text-sm text-ink-soft">{videDescriptionLabel}</p>
-        <Link href={videHref} aria-label={videLibelleLabel}>
-          <Button size="sm">{videLibelleLabel}</Button>
-        </Link>
+        <Button href={videHref} aria-label={videLibelleLabel} size="sm">{videLibelleLabel}</Button>
       </NoticeCard>
     );
   }
@@ -71,18 +69,14 @@ export function ProjetsEnCours({
           )}
 
           {projet.detail && (
-            <p className="text-xs text-ink-soft/70">{projet.detail}</p>
+            <p className="text-xs text-ink-soft/85">{projet.detail}</p>
           )}
 
-          <Link
+          <Button
             href={projet.href}
-            className="mt-auto self-start"
-            aria-label={`${actionLabel} : ${projet.titre}`}
-          >
-            <Button size="sm" variant="ghost">
+            aria-label={`${actionLabel} : ${projet.titre}`} size="sm" variant="ghost" className="mt-auto self-start">
               {actionLabel}
             </Button>
-          </Link>
         </NoticeCard>
       ))}
     </div>

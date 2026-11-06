@@ -8,7 +8,7 @@
     "count": "{count, plural, one {# service available} other {# services available}}",
     "filterPlaceholder": "Design, development, writing…",
     "filterPrice": "Price (Ar)",
-    "emptyTitle": "No service matches these criteria for now.",
+    "emptyTitle": "No services match right now.",
     "emptyHint": "Try widening your filters or come back later: new services are published regularly.",
     "seeAll": "See all services"
   },

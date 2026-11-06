@@ -22,7 +22,11 @@ import { api, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { MultiSelectCreatable } from "@/components/ui/MultiSelectCreatable";
-import { NoticeCard, PageHeader } from "@/components/ui/Notice";
+import {
+  NoticeCard,
+  PageHeader,
+  ChargementPage,
+} from "@/components/ui/Notice";
 import { PhotoProfil } from "@/features/profils/components/PhotoProfil";
 import { COMPETENCES_PREDEFINIES, LANGUES_PREDEFINIES, SPECIALITES_PREDEFINIES } from "@/data/field-options";
 import type { EtudiantProfile, Utilisateur } from "@/types/utilisateurs";
@@ -59,22 +63,6 @@ const CLES_TYPE_FREELANCE: Record<string, string> = {
 const TELEPHONE_REGEX = /^\+?[0-9][0-9\s.-]{6,18}[0-9]$/;
 const URL_REGEX = /^https?:\/\/.+/i;
 
-/** Correspondance entre la clé backend d'un champ manquant et l'étape UI. */
-const ETAPE_PAR_CHAMP: Record<string, number> = {
-  photoUrl: 1,
-  ville: 1,
-  telephone: 1,
-  universite: 2,
-  niveauEtude: 2,
-  filiere: 2,
-  anneeEtude: 2,
-  langues: 2,
-  competences: 3,
-  disponibilite: 3,
-  tarifHoraire: 4,
-  description: 5,
-};
-
 function listify(valeur: string): string[] {
   return valeur
     .split(",")
@@ -102,6 +90,16 @@ export default function CompleterProfilPage() {
     useAuth();
   const router = useRouter();
   const t = useTranslations("profilePage");
+  const [profilCompletAuChargement, setProfilCompletAuChargement] =
+    useState<boolean | null>(null);
+
+  if (
+    profilCompletAuChargement === null &&
+    !chargement &&
+    utilisateur?.role === "etudiant"
+  ) {
+    setProfilCompletAuChargement(Boolean(completionProfil?.complete));
+  }
 
   /*
    * ==========================================================
@@ -122,14 +120,13 @@ export default function CompleterProfilPage() {
       router.replace("/tableau-de-bord");
       return;
     }
-    if (completionProfil?.complete) {
+    if (profilCompletAuChargement) {
       router.replace("/tableau-de-bord");
     }
-  }, [chargement, utilisateur, completionProfil, router]);
+  }, [chargement, utilisateur, profilCompletAuChargement, router]);
 
   const [etape, setEtape] = useState(1);
   const [initialise, setInitialise] = useState(false);
-  const [termine, setTermine] = useState(false);
 
   // ---- Étape 1 : informations personnelles ----
   const [ville, setVille] = useState("");
@@ -223,24 +220,16 @@ export default function CompleterProfilPage() {
     setInitialise(true);
   }
 
-  /* Une fois la dernière étape validée, on quitte le questionnaire dès
-     que le backend confirme que le profil est complet. */
-  useEffect(() => {
-    if (termine && completionProfil?.complete) {
-      router.replace("/tableau-de-bord");
-    }
-  }, [termine, completionProfil, router]);
-
   if (
     chargement ||
     !utilisateur ||
     utilisateur.role !== "etudiant" ||
-    completionProfil?.complete ||
+    profilCompletAuChargement !== false ||
     !initialise
   ) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-ink-soft">{t("complete.loading")}</p>
+        <ChargementPage libelle={t("complete.loading")} />
       </div>
     );
   }
@@ -395,9 +384,11 @@ export default function CompleterProfilPage() {
     }
 
     // Dernière étape : la source de vérité (complet ou non) vient
-    // exclusivement du recalcul serveur.
+    // exclusivement du recalcul serveur. La fin du questionnaire doit
+    // néanmoins toujours renvoyer au dashboard, qui reste accessible même
+    // si le backend signale encore des champs facultatifs ou manquants.
     await rafraichirProfil();
-    setTermine(true);
+    router.replace("/tableau-de-bord");
   }
 
   function precedent() {
@@ -407,7 +398,6 @@ export default function CompleterProfilPage() {
 
   function allerA(n: number) {
     setErreur(null);
-    setTermine(false);
     setEtape(n);
   }
 
@@ -444,64 +434,6 @@ export default function CompleterProfilPage() {
 
   function retirerUrlPortfolio(index: number) {
     setPortfolioUrls(portfolioUrls.filter((_, i) => i !== index));
-  }
-
-  /*
-   * ==========================================================
-   * ÉCRAN DE FIN (récapitulatif si le profil reste incomplet)
-   * ==========================================================
-   */
-  if (termine) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          icon={Sparkles}
-          eyebrow={t("complete.completion")}
-          title={t("complete.lastCheck")}
-        />
-
-        <NoticeCard>
-          {completionProfil?.complete ? (
-            <div className="flex items-center gap-3 text-rice">
-              <Check size={18} />
-              <p className="text-sm">
-                {t("complete.done")}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-5">
-              <div className="flex items-center gap-3 text-ocre-dark">
-                <CircleAlert size={18} />
-                <p className="text-sm font-medium">
-                  {t("complete.remaining")}
-                </p>
-              </div>
-
-              <ul className="flex flex-col gap-2">
-                {(completionProfil?.missingFields ?? []).map((champ, i) => (
-                  <li
-                    key={champ}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-ink/10 px-3 py-2"
-                  >
-                    <span className="text-sm text-ink">
-                      {t.has(`complete.missing.${champ}` as never) ? t(`complete.missing.${champ}` as never) : (completionProfil?.missingLabels[i] ?? champ)}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => allerA(ETAPE_PAR_CHAMP[champ] ?? 1)}
-                    >
-                      {t("complete.fix")}
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </NoticeCard>
-      </div>
-    );
   }
 
   /*
@@ -602,7 +534,7 @@ export default function CompleterProfilPage() {
 
         {erreur && (
           <p className="mt-5 flex items-center gap-2 text-sm text-brique">
-            <CircleAlert size={15} className="shrink-0" />
+            <CircleAlert size={16} className="shrink-0" />
             {erreur}
           </p>
         )}
@@ -667,7 +599,7 @@ function Stepper({
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+        <p className=" text-xs text-ink-soft font-medium">
           {t("complete.stepOf", { n: etapeActuelle, label: labelsEtapes[etapeActuelle - 1] })}
         </p>
       </div>
@@ -705,7 +637,7 @@ function Stepper({
               </span>
               <span
                 className={`hidden max-w-[6rem] text-center text-[0.6875rem] leading-tight sm:block ${
-                  active ? "text-ink" : "text-ink-soft/70"
+                  active ? "text-ink" : "text-ink-soft/85"
                 }`}
               >
                 {label}
@@ -752,7 +684,7 @@ function EtapePersonnelle({
             {utilisateur.nom}
           </p>
           <p className="text-sm text-ink-soft">{utilisateur.email}</p>
-          <p className="mt-1 text-xs text-ink-soft/70">
+          <p className="mt-1 text-xs text-ink-soft/85">
             {t("complete.photoHint")}
           </p>
         </div>
@@ -1011,7 +943,7 @@ function EtapeCompetences({
         </Field>
 
         <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-mono uppercase tracking-wider text-ink-soft">
+          <span className="text-xs text-ink-soft font-medium">
             {t("availability.title")} *
           </span>
           <label className="flex items-center gap-2.5 rounded-lg border border-ink/30 bg-paper-light px-3 py-2.5 text-sm text-ink">

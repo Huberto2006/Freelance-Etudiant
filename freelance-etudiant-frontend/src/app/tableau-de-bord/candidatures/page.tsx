@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ClipboardList, MessageCircle, Package } from "lucide-react";
+import {
+  ClipboardList,
+  MessageCircle,
+  Package,
+  FileText,
+} from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -17,7 +21,13 @@ import { useLabels } from "@/i18n/use-labels";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 
-import { NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
+import {
+  NoticeCard,
+  PageHeader,
+  Tag,
+  EtatVide,
+  ChargementPage,
+} from "@/components/ui/Notice";
 
 export default function CandidaturesPage() {
   const t = useTranslations("dashboardPages.candidatures");
@@ -151,16 +161,18 @@ export default function CandidaturesPage() {
           CHARGEMENT
           ===================================================== */}
       {chargement ? (
-        <p className="text-sm text-ink-soft">{t("loading")}</p>
-      ) : candidatures.length === 0 ? (
-        <NoticeCard>
-          <p className="text-sm text-ink-soft">
-            {t("empty")}{" "}
-            <Link href="/missions" className="text-ocre-dark hover:underline">
+        <ChargementPage libelle={t("loading")} />
+      ) : erreur && candidatures.length === 0 ? null : candidatures.length === 0 ? (
+        <EtatVide
+          icon={FileText}
+          action={
+            <Button href="/missions" variant="secondary" size="sm">
               {t("browseMissions")}
-            </Link>
-          </p>
-        </NoticeCard>
+            </Button>
+          }
+        >
+          {t("empty")}
+        </EtatVide>
       ) : (
         /* ===================================================
            LISTE DES CANDIDATURES (avec sous-menus par statut)
@@ -257,7 +269,7 @@ export default function CandidaturesPage() {
                       {candidature.mission?.titre ?? t("missionFallback")}
                     </p>
 
-                    <p className="mt-1 text-xs text-ink-soft/70">
+                    <p className="mt-1 text-xs text-ink-soft/85">
                       {t("proposed", {
                         prix: formatArgent(candidature.prixPropose),
                         jours: candidature.delaiPropose,
@@ -269,11 +281,9 @@ export default function CandidaturesPage() {
                       VOIR LA MISSION
                       ================================================= */}
                   {missionId && (
-                    <Link href={`/missions/${missionId}`}>
-                      <Button size="sm" variant="ghost">
+                    <Button href={`/missions/${missionId}`} size="sm" variant="ghost">
                         {t("viewMission")}
                       </Button>
-                    </Link>
                   )}
                 </div>
                 )}
@@ -334,41 +344,31 @@ export default function CandidaturesPage() {
                         DISCUSSION AVEC LE CLIENT
                         ============================================= */}
                     {clientId && (
-                      <Link
+                      <Button
                         href={`/tableau-de-bord/messages?contact=${encodeURIComponent(
                           clientId,
-                        )}&nom=${encodeURIComponent(clientNom)}`}
-                      >
-                        <Button
-                          size="sm"
-                          className="inline-flex items-center gap-2"
-                        >
+                        )}&nom=${encodeURIComponent(clientNom)}`} size="sm"
+                          className="inline-flex items-center gap-2">
                           <MessageCircle size={16} />
                           {t("chatWithClient")}
                         </Button>
-                      </Link>
                     )}
 
                     {/* =============================================
                         LIVRAISON
                         ============================================= */}
-                    <Link
+                    <Button
                       href={`/tableau-de-bord/livraisons?candidature=${encodeURIComponent(
                         candidature.id,
-                      )}&role=etudiant`}
-                    >
-                      <Button
-                        size="sm"
+                      )}&role=etudiant`} size="sm"
                         variant="ghost"
-                        className="inline-flex items-center gap-2"
-                      >
+                        className="inline-flex items-center gap-2">
                         <Package size={16} />
 
                         {candidature.livraison
                           ? t("trackDelivery")
                           : t("submitDelivery")}
                       </Button>
-                    </Link>
                   </div>
                 )}
 

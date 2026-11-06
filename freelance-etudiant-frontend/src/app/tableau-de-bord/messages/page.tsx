@@ -1,5 +1,6 @@
 "use client";
 
+import { ChargementPage } from "@/components/ui/Notice";
 import { PastilleActivite, PointsAttente } from "@/components/ui/motion/IndicateursActivite";
 import { ModalTransition } from "@/components/ui/motion/ModalTransition";
 import {
@@ -15,11 +16,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
-  Briefcase,
+  BriefcaseBusiness,
   Check,
   CheckCheck,
   ExternalLink,
-  Loader2,
+  LoaderCircle,
   MessageCircle,
   MoreVertical,
   Search,
@@ -74,14 +75,7 @@ export default function MessagesPage() {
     <Suspense
       fallback={
         <div className="flex h-[calc(100dvh-10rem)] min-h-[560px] items-center justify-center md:h-[calc(100dvh-11rem)]">
-          <div className="flex items-center gap-2 text-sm text-ink-soft">
-            <Loader2
-              size={16}
-              className="animate-spin"
-              aria-hidden="true"
-            />
-            {t("loadingConversations")}
-          </div>
+          <ChargementPage libelle={t("loadingConversations")} />
         </div>
       }
     >
@@ -1914,8 +1908,8 @@ function MessagesContent() {
             <div className="px-3 pt-3">
               <div className="relative">
                 <Search
-                  size={15}
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/85"
                   aria-hidden="true"
                 />
 
@@ -1986,7 +1980,7 @@ function MessagesContent() {
                         )
                       }
                       className={clsx(
-                        "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider transition-colors",
+                        "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors font-medium",
                         estActif
                           ? "border-ink bg-ink text-paper-light"
                           : "border-ink/20 bg-paper-light text-ink-soft hover:border-ink/50 hover:text-ink",
@@ -2049,12 +2043,11 @@ function MessagesContent() {
                   ),
                 )}
               </div>
-            ) : compteToutes ===
-              0 ? (
+            ) : erreur && compteToutes === 0 ? null : compteToutes === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-primary">
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-soft text-ocre-dark">
                   <MessageCircle
-                    size={22}
+                    size={20}
                   />
                 </span>
 
@@ -2142,7 +2135,7 @@ function MessagesContent() {
 
                             {ligne.nonLus >
                               0 && (
-                              <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brique px-1 font-mono text-[0.625rem] font-bold leading-none text-paper-light ring-2 ring-paper">
+                              <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brique px-1 tabular-nums text-[0.625rem] font-bold leading-none text-paper-light ring-2 ring-paper">
                                 {ligne.nonLus >
                                 9
                                   ? "9+"
@@ -2182,7 +2175,7 @@ function MessagesContent() {
 
                               {ligne.dernierDate &&
                                 !ligne.conversationVide && (
-                                  <span className="shrink-0 text-[0.65rem] font-mono text-ink-soft/60">
+                                  <span className="shrink-0 text-[0.65rem] tabular-nums text-ink-soft/85">
                                     {formaterDateListe(
                                       ligne.dernierDate,
                                     )}
@@ -2196,7 +2189,7 @@ function MessagesContent() {
                                 ligne.nonLus >
                                   0
                                   ? "text-ink-soft"
-                                  : "text-ink-soft/70",
+                                  : "text-ink-soft/85",
                               )}
                             >
                               {ligne.type ===
@@ -2235,9 +2228,9 @@ function MessagesContent() {
         >
           {!conversationActive ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-soft text-ocre-dark">
                 <MessageCircle
-                  size={26}
+                  size={20}
                 />
               </span>
 
@@ -2339,9 +2332,9 @@ function MessagesContent() {
                 "INDIVIDUEL" &&
                 missionAffichee && (
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-ink/10 bg-paper px-4 py-2.5 text-xs">
-                    <span className="inline-flex items-center gap-1.5 font-mono text-[0.65rem] uppercase tracking-wider text-ink-soft">
-                      <Briefcase
-                        size={13}
+                    <span className="inline-flex items-center gap-1.5 text-xs text-ink-soft font-medium">
+                      <BriefcaseBusiness
+                        size={14}
                         aria-hidden="true"
                       />
                       {t("mission")}
@@ -2397,9 +2390,9 @@ function MessagesContent() {
               >
                 {chargementFil ? (
                   <div className="flex h-full items-center justify-center gap-2 text-sm text-ink-soft">
-                    <Loader2
+                    <LoaderCircle
                       size={16}
-                      className="animate-spin"
+                      className="motion-safe:animate-spin"
                     />
                     {t("loadingConversation")}
                   </div>
@@ -2423,7 +2416,7 @@ function MessagesContent() {
                       {t("emptyThread")}
                     </p>
 
-                    <p className="text-xs text-ink-soft/70">
+                    <p className="text-xs text-ink-soft/85">
                       {t("emptyThreadHint")}
                     </p>
                   </div>
@@ -2456,7 +2449,7 @@ function MessagesContent() {
                         >
                           {nouveauJour && (
                             <div className="flex justify-center py-2">
-                              <span className="rounded-full bg-ink/5 px-3 py-1 text-[0.65rem] font-mono uppercase tracking-wider text-ink-soft/70">
+                              <span className="rounded-full bg-ink/5 px-3 py-1 text-xs text-ink-soft/85 font-medium">
                                 {formaterJourSeparateur(
                                   message.dateEnvoi,
                                 )}
@@ -2523,7 +2516,7 @@ function MessagesContent() {
                                     "text-xs italic",
                                     estMoi
                                       ? "text-paper-light/70"
-                                      : "text-ink-soft/70",
+                                      : "text-ink-soft/85",
                                   )}
                                 >
                                   {t("deletedMessage")}
@@ -2563,10 +2556,10 @@ function MessagesContent() {
 
                               <div
                                 className={clsx(
-                                  "mt-1 flex items-center justify-end gap-1 text-[0.65rem] font-mono leading-none",
+                                  "mt-1 flex items-center justify-end gap-1 text-[0.65rem] tabular-nums leading-none",
                                   estMoi
                                     ? "text-paper-light/70"
-                                    : "text-ink-soft/60",
+                                    : "text-ink-soft/85",
                                 )}
                               >
                                 <span>
@@ -2705,7 +2698,7 @@ function MessagesContent() {
                   </p>
                 )}
 
-                <p className="mt-2 hidden text-[0.65rem] font-mono text-ink-soft/50 sm:block">
+                <p className="mt-2 hidden text-[0.65rem] tabular-nums text-ink-soft/85 sm:block">
                   {t("keyboardHint")}
                 </p>
               </form>

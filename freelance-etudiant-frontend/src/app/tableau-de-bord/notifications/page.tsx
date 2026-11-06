@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirmation } from "@/components/ui/ConfirmDialog";
 import { StaggerContainer } from "@/components/ui/motion/StaggerContainer";
 import { useState } from "react";
 import Link from "next/link";
@@ -29,6 +30,8 @@ import { clsx } from "clsx";
 
 export default function NotificationsPage() {
   const t = useTranslations("manage.notificationsPage");
+  const { confirmer, dialogueConfirmation } = useConfirmation();
+  const tCommun = useTranslations("common");
   const { dateCourte } = useFormats();
   const {
     donnees,
@@ -168,9 +171,10 @@ export default function NotificationsPage() {
 
   async function toutSupprimer() {
     if (
-      !window.confirm(
-        t("confirmDeleteAll"),
-      )
+      !await confirmer({
+      titre: t("confirmDeleteAll"),
+      libelleConfirmer: tCommun("actions.delete"),
+    })
     ) {
       return;
     }
@@ -210,40 +214,41 @@ export default function NotificationsPage() {
   // ==========================================================
 
   return (
-    <div className="mx-auto max-w-2xl px-5 py-11">
+    <div className="max-w-3xl">
 
-      <div className="mb-7 flex items-center justify-between gap-4">
-        <PageHeader
+      <PageHeader
           icon={Bell}
           eyebrow={t("eyebrow")}
           title={t("title")}
-          className="mb-0"
-        />
+        actions={
+          <>
 
         <div className="flex shrink-0 items-center gap-2">
           {nonLues > 0 && (
             <Button
-              variant="secondary"
+              variant="ghost"
               className="gap-2"
               onClick={toutMarquerLu}
             >
-              <CheckCheck size={15} />
+              <CheckCheck size={16} />
               {t("markAllRead")}
             </Button>
           )}
 
           {notifications.length > 0 && (
             <Button
-              variant="danger"
+              variant="danger-ghost"
               className="gap-2"
               onClick={toutSupprimer}
             >
-              <Trash2 size={15} />
+              <Trash2 size={16} />
               {t("deleteAll")}
             </Button>
           )}
         </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Sous-menus : Toutes / Non lues / Lues */}
 
@@ -275,7 +280,7 @@ export default function NotificationsPage() {
 
       {chargement ? (
         <ChargementPage />
-      ) : notificationsFiltrees.length === 0 ? (
+      ) : erreur && notificationsFiltrees.length === 0 ? null : notificationsFiltrees.length === 0 ? (
         <EtatVide icon={BellOff}>
           {ongletActif === "toutes"
             ? t("emptyAll")
@@ -314,7 +319,7 @@ export default function NotificationsPage() {
                       {notification.message}
                     </p>
 
-                    <p className="mt-1.5 text-xs font-mono text-ink-soft/60">
+                    <p className="mt-1.5 text-xs tabular-nums text-ink-soft/85">
                       {dateCourte(
                         notification.dateCreation,
                       )}
@@ -387,6 +392,7 @@ export default function NotificationsPage() {
           )}
         </StaggerContainer>
       )}
+      {dialogueConfirmation}
     </div>
   );
 }

@@ -128,7 +128,7 @@ export function Button({
     >
       {loading && (
         <LoaderCircle
-          size={15}
+          size={16}
           aria-hidden="true"
           className="shrink-0 motion-safe:animate-spin"
         />

@@ -562,8 +562,8 @@
     "retry": "Andramo indray"
   },
   "dashboardHeader": {
-    "eyebrow": "Tabilao fanaraha-maso",
-    "greeting": "Salama, {prenom}"
+    "greeting": "Salama, {prenom}",
+    "greetingEvening": "Salama, {prenom}"
   },
   "recentActivity": {
     "emptyTitle": "Tsy misy hetsika amin'izao fotoana izao.",

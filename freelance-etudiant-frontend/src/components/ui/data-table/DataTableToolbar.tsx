@@ -2,7 +2,7 @@
 
 import { useId } from "react";
 import type { ReactNode } from "react";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Field";
@@ -64,13 +64,24 @@ export function DataTableToolbar({
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft"
             />
             <Input
-              type="search"
+              type="text"
+              role="searchbox"
               value={recherche}
               onChange={(event) => onRecherche(event.target.value)}
               placeholder={placeholderRecherche}
               aria-label={libelleRecherche ?? t("actions.search")}
-              className="pl-9"
+              className={recherche ? "pr-9 pl-9" : "pl-9"}
             />
+            {recherche !== "" && (
+              <button
+                type="button"
+                onClick={() => onRecherche("")}
+                aria-label={t("actions.clearSearch")}
+                className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md text-ink-soft hover:bg-ink/5 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink pointer-coarse:h-11 pointer-coarse:w-11"
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            )}
           </div>
         )}
         {filtres}

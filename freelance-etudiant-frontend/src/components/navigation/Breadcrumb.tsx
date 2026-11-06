@@ -105,7 +105,7 @@ export function Breadcrumb({
         : null,
   });
 
-  if ((scope === "dashboard") !== estDashboard || items.length === 0) {
+  if ((scope === "dashboard") !== estDashboard || items.length < 2) {
     return null;
   }
 
@@ -144,7 +144,7 @@ export function Breadcrumb({
                 <Ellipsis size={16} aria-hidden="true" />
                 <span className="sr-only">{t("showParents")}</span>
                 <ChevronDown
-                  size={13}
+                  size={14}
                   aria-hidden="true"
                   className="transition-transform group-open:rotate-180"
                 />

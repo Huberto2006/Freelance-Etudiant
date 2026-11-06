@@ -8,7 +8,7 @@
     "count": "{count, plural, one {# mission open for applications} other {# missions open for applications}}",
     "filterPlaceholder": "Showcase website, school management…",
     "filterBudget": "Budget (Ar)",
-    "emptyTitle": "No mission matches these criteria for now.",
+    "emptyTitle": "No missions match right now.",
     "emptyHint": "Try widening your filters or come back later: new missions are published regularly.",
     "seeAll": "See all missions"
   },

@@ -106,8 +106,22 @@
     "colAmount": "Vola",
     "colStatus": "Toe-javatra",
     "colActions": "Hetsika",
+    "details": "Antsipiriany",
+    "transactionDetails": "Antsipirian'ny fandoavana",
+    "detailClient": "Mpanjifa",
+    "detailStudent": "Mpianatra",
+    "detailMission": "Asa",
+    "detailReference": "Laharana",
+    "detailMethod": "Fomba fandoavana",
+    "detailStatus": "Toe-javatra",
+    "detailDate": "Daty",
+    "detailAmount": "Vola",
+    "filterStatus": "Sivanina araka ny toe-javatra",
+    "allStatuses": "Ny toe-javatra rehetra",
+    "filterMethod": "Sivanina araka ny fomba",
+    "allMethods": "Ny fomba rehetra",
     "searchLabel": "Hitady fandoavam-bola",
-    "searchPlaceholder": "Asa, fomba na laharana",
+    "searchPlaceholder": "Laharana, asa na mpampiasa",
     "noResults": "Tsy misy fandoavam-bola mifanaraka amin'ity fikarohana ity."
   }
 }

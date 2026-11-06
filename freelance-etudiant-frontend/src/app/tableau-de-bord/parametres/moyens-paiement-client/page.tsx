@@ -108,7 +108,7 @@ export default function MoyensPaiementClientPage() {
           <p className="text-sm leading-6 text-ink-soft">
             {t("intro")}
           </p>
-          <p className="mt-1 text-xs text-ink-soft/70">
+          <p className="mt-1 text-xs text-ink-soft/85">
             {t("security")}
           </p>
         </div>
@@ -147,7 +147,7 @@ export default function MoyensPaiementClientPage() {
 
       {chargement ? (
         <ChargementPage />
-      ) : moyens.length === 0 ? (
+      ) : erreur && moyens.length === 0 ? null : moyens.length === 0 ? (
         <EtatVide
           icon={Wallet}
           action={
@@ -333,10 +333,10 @@ function CarteMoyen({
                 )}
                 {!moyen.actif && <Tag tone="ink">{t("deactivated")}</Tag>}
               </div>
-              <p className="mt-1 font-mono text-sm text-ink-soft">
+              <p className="mt-1 tabular-nums text-sm text-ink-soft">
                 {moyen.numero}
               </p>
-              <p className="text-sm text-ink-soft/70">{moyen.nomTitulaire}</p>
+              <p className="text-sm text-ink-soft/85">{moyen.nomTitulaire}</p>
             </div>
 
             <div className="relative shrink-0">
@@ -364,7 +364,7 @@ function CarteMoyen({
                       }}
                       className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink transition hover:bg-ink/5"
                     >
-                      <Pencil size={15} />
+                      <Pencil size={16} />
                       {t("edit")}
                     </button>
                     {!moyen.principal && moyen.actif && (
@@ -376,7 +376,7 @@ function CarteMoyen({
                         }}
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink transition hover:bg-ink/5"
                       >
-                        <Star size={15} />
+                        <Star size={16} />
                         {t("setPrimary")}
                       </button>
                     )}
@@ -388,7 +388,7 @@ function CarteMoyen({
                       }}
                       className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink transition hover:bg-ink/5"
                     >
-                      {moyen.actif ? <X size={15} /> : <Check size={15} />}
+                      {moyen.actif ? <X size={16} /> : <Check size={16} />}
                       {moyen.actif ? t("deactivate") : t("reactivate")}
                     </button>
                     <button
@@ -399,7 +399,7 @@ function CarteMoyen({
                       }}
                       className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-brique transition hover:bg-brique/5"
                     >
-                      <Trash2 size={15} />
+                      <Trash2 size={16} />
                       {t("delete")}
                     </button>
                   </div>
@@ -521,7 +521,7 @@ function FormulaireMoyen({
             <option value="AIRTEL_MONEY">Airtel Money</option>
           </Select>
           {type !== "MVOLA" && (
-            <p className="mt-1.5 text-xs text-ink-soft/70">
+            <p className="mt-1.5 text-xs text-ink-soft/85">
               {t("onlyMvola")}
             </p>
           )}
@@ -564,7 +564,7 @@ function FormulaireMoyen({
           <Button type="button" variant="ghost" onClick={onFermer} disabled={envoi}>
             {t("cancel")}
           </Button>
-          <Button type="submit" variant="primary" disabled={envoi}>
+          <Button type="submit" variant="secondary" disabled={envoi}>
             {envoi ? t("saving") : estModification ? t("save") : t("add")}
           </Button>
         </div>

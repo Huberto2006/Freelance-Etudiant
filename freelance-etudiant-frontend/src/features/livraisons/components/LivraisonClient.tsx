@@ -3,12 +3,11 @@
 import {
   useState,
 } from "react";
-import Link from "next/link";
 import {
   MessageCircle,
   ExternalLink,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Clock,
   Star,
 } from "lucide-react";
@@ -381,7 +380,7 @@ export function LivraisonClient({
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+          <p className=" text-xs text-ink-soft font-medium">
             {t("deliveryReceived")}
           </p>
 
@@ -396,24 +395,19 @@ export function LivraisonClient({
         </div>
 
         {etudiantId && (
-          <Link
+          <Button
             href={`/tableau-de-bord/messages?contact=${encodeURIComponent(
               etudiantId,
             )}&nom=${encodeURIComponent(
               etudiantNom,
-            )}`}
-          >
-            <Button
-              size="sm"
+            )}`} size="sm"
               variant="ghost"
-              className="inline-flex items-center gap-2"
-            >
+              className="inline-flex items-center gap-2">
               <MessageCircle
                 size={16}
               />
               {t("chatWithStudent")}
             </Button>
-          </Link>
         )}
       </div>
 
@@ -453,7 +447,7 @@ export function LivraisonClient({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 break-all text-sm text-ocre-dark hover:underline"
           >
-            <ExternalLink size={15} />
+            <ExternalLink size={16} />
             {t("openDeliverable")}
           </a>
         </div>
@@ -461,7 +455,7 @@ export function LivraisonClient({
 
       {livraison.piecesJointes && livraison.piecesJointes.length > 0 && (
         <div className="mt-5">
-          <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+          <p className=" text-xs text-ink-soft font-medium">
             {t("deliveredFiles")}
           </p>
           <ul className="mt-2 space-y-2 text-sm">
@@ -478,7 +472,7 @@ export function LivraisonClient({
 
       {livraison.commentaireLivraison && (
         <div className="mt-5 rounded-lg border border-ink/10 bg-ink/5 p-4">
-          <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+          <p className=" text-xs text-ink-soft font-medium">
             {t("studentComment")}
           </p>
 
@@ -492,7 +486,7 @@ export function LivraisonClient({
 
       {livraison.historique && livraison.historique.length > 0 && (
         <section className="mt-5 border-t border-ink/15 pt-5">
-          <h3 className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+          <h3 className=" text-xs text-ink-soft font-medium">
             {t("deliveryHistory")}
           </h3>
           <ol className="cascade mt-3 space-y-3">
@@ -547,7 +541,7 @@ export function LivraisonClient({
         "correction_demandee" &&
         livraison.commentaireCorrection && (
           <div className="mt-5 rounded-lg border border-brique/20 bg-brique/5 p-4">
-            <p className="font-mono text-xs uppercase tracking-wider text-brique">
+            <p className=" text-xs text-brique font-medium">
               {t("correctionRequested")}
             </p>
 
@@ -563,7 +557,7 @@ export function LivraisonClient({
 
       {statut === "en_attente" && (
         <div className="mt-6 border-t border-ink/15 pt-6">
-          <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+          <p className=" text-xs text-ink-soft font-medium">
             {t("actions")}
           </p>
 
@@ -616,7 +610,7 @@ export function LivraisonClient({
               }
               disabled={envoi}
             >
-              <CheckCircle size={16} />
+              <CircleCheck size={16} />
 
               {envoi &&
               action === "valider"
@@ -640,7 +634,7 @@ export function LivraisonClient({
                 !commentaireCorrection.trim()
               }
             >
-              <XCircle size={16} />
+              <CircleX size={16} />
 
               {envoi &&
               action === "corriger"
@@ -670,13 +664,13 @@ export function LivraisonClient({
 
       {statut === "validee" && (
         <div className="mt-5 border-t border-ink/15 pt-5">
-          <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+          <p className=" text-xs text-ink-soft font-medium">
             {t("projectStatus")}
           </p>
 
           <ul className="mt-3 space-y-2 text-sm">
             <li className="flex items-center gap-2 text-rice">
-              <CheckCircle
+              <CircleCheck
                 size={16}
                 aria-hidden="true"
               />
@@ -691,32 +685,24 @@ export function LivraisonClient({
                     aria-hidden="true"
                   />
                   {t("paymentDeclared")}
-                  <Link href="/tableau-de-bord/paiements">
-                    <Button
-                      size="sm"
+                  <Button href="/tableau-de-bord/paiements" size="sm"
                       variant="ghost"
-                      className="border border-ocre/30 text-ocre hover:bg-ocre/10"
-                    >
+                      className="border border-ocre/30 text-ocre hover:bg-ocre/10">
                       {t("trackPayment")}
                     </Button>
-                  </Link>
                 </li>
               ) : paiementAnnule ? (
                 <li className="flex flex-wrap items-center gap-2 text-brique">
-                  <XCircle
+                  <CircleX
                     size={16}
                     aria-hidden="true"
                   />
                   {t("paymentCancelled")}
-                  <Link href="/tableau-de-bord/paiements">
-                    <Button
-                      size="sm"
+                  <Button href="/tableau-de-bord/paiements" size="sm"
                       variant="ghost"
-                      className="border border-brique/30 text-brique hover:bg-brique/10"
-                    >
+                      className="border border-brique/30 text-brique hover:bg-brique/10">
                       {t("retryPayment")}
                     </Button>
-                  </Link>
                 </li>
               ) : (
                 <li className="flex flex-wrap items-center gap-2 text-ocre">
@@ -725,21 +711,17 @@ export function LivraisonClient({
                     aria-hidden="true"
                   />
                   {t("paymentRequired")}
-                  <Link href="/tableau-de-bord/paiements">
-                    <Button
-                      size="sm"
+                  <Button href="/tableau-de-bord/paiements" size="sm"
                       variant="ghost"
-                      className="border border-ocre/30 text-ocre hover:bg-ocre/10"
-                    >
+                      className="border border-ocre/30 text-ocre hover:bg-ocre/10">
                       {t("payNow")}
                     </Button>
-                  </Link>
                 </li>
               ))}
 
             {paiementConfirme && (
               <li className="flex items-center gap-2 text-rice">
-                <CheckCircle
+                <CircleCheck
                   size={16}
                   aria-hidden="true"
                 />
@@ -750,7 +732,7 @@ export function LivraisonClient({
             {paiementConfirme &&
               (evaluationEffectuee ? (
                 <li className="flex items-center gap-2 text-rice">
-                  <CheckCircle
+                  <CircleCheck
                     size={16}
                     aria-hidden="true"
                   />
@@ -769,7 +751,7 @@ export function LivraisonClient({
 
           {projetTermine && (
             <p className="mt-3 inline-flex items-center gap-2 rounded-lg border border-rice/20 bg-rice/5 px-3 py-2 text-sm font-medium text-rice">
-              <CheckCircle
+              <CircleCheck
                 size={16}
                 aria-hidden="true"
               />
@@ -798,7 +780,7 @@ export function LivraisonClient({
             }
             className="mt-5 border-t border-ink/15 pt-5"
           >
-            <p className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+            <p className=" text-xs text-ink-soft font-medium">
               {t("reviewDelivery")}
             </p>
 
@@ -830,7 +812,7 @@ export function LivraisonClient({
                     className="rounded p-1 transition-colors hover:bg-ocre/10 disabled:opacity-50"
                   >
                     <Star
-                      size={22}
+                      size={20}
                       aria-hidden="true"
                       className={
                         valeur <= note
@@ -843,7 +825,7 @@ export function LivraisonClient({
               )}
 
               {note > 0 && (
-                <span className="ml-2 font-mono text-sm text-ocre-dark">
+                <span className="ml-2 tabular-nums text-sm text-ocre-dark">
                   {note}/5
                 </span>
               )}

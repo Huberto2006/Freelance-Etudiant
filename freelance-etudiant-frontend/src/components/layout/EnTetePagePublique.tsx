@@ -26,12 +26,12 @@ export function EnTetePagePublique({
         >
           <Icon size={20} />
         </span>
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
+        <p className=" text-xs text-ocre-dark font-medium">
           {eyebrow}
         </p>
       </div>
 
-      <h1 className="mt-4 font-display text-3xl font-semibold leading-tight text-ink sm:text-4xl">
+      <h1 className="mt-4 font-display text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
         {titre}
       </h1>
 

@@ -195,7 +195,7 @@ function ElementToast({
           aria-label={t("close")}
           className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-ink-soft transition-colors hover:bg-ink/5 hover:text-ink"
         >
-          <X size={15} aria-hidden="true" />
+          <X size={16} aria-hidden="true" />
         </button>
       </div>
 

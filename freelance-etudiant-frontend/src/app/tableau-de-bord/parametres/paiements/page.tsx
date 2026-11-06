@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/Button";
 import {
   NoticeCard,
   PageHeader,
+  EtatVide,
+  ChargementPage,
 } from "@/components/ui/Notice";
 import { MoyenPaiement, ActionMoyen } from "@/features/moyens-paiement/moyens-paiement.types";
 import { FormulaireAjoutMoyen } from "@/features/moyens-paiement/components/FormulaireAjoutMoyen";
@@ -131,7 +133,7 @@ export default function MoyensPaiementPage() {
             {t("intro")}
           </p>
 
-          <p className="mt-1 text-xs text-ink-soft/70">
+          <p className="mt-1 text-xs text-ink-soft/85">
             {t("privacy")}
           </p>
         </div>
@@ -181,43 +183,29 @@ export default function MoyensPaiementPage() {
 
       {chargement ? (
         <NoticeCard>
-          <p className="text-sm text-ink-soft">
-            {t("loading")}
-          </p>
+          <ChargementPage libelle={t("loading")} />
         </NoticeCard>
-      ) : moyens.length === 0 ? (
-        <NoticeCard>
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <span
-              className="
-                flex h-12 w-12 items-center justify-center
-                rounded-full bg-ocre/10 text-ocre-dark
-              "
-            >
-              <Wallet size={22} />
-            </span>
-
-            <h2 className="mt-4 font-display text-lg font-medium">
-              {t("emptyTitle")}
-            </h2>
-
-            <p className="mt-2 max-w-md text-sm leading-6 text-ink-soft">
-              {t("emptyDescription")}
-            </p>
-
+      ) : erreur && moyens.length === 0 ? null : moyens.length === 0 ? (
+        <EtatVide
+          icon={Wallet}
+          titre={t("emptyTitle")}
+          action={
             <Button
               variant="secondary"
-              className="mt-5"
+              size="sm"
+              className="gap-1.5"
               onClick={() => {
                 setErreur(null);
                 setAjoutOuvert(true);
               }}
             >
-              <Plus size={16} />
+              <Plus size={14} aria-hidden="true" />
               {t("addFirst")}
             </Button>
-          </div>
-        </NoticeCard>
+          }
+        >
+          {t("emptyDescription")}
+        </EtatVide>
       ) : (
         <div className="space-y-4">
           {moyens.map((moyen) => (

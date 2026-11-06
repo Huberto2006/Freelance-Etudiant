@@ -4,7 +4,6 @@ import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import {
-  Briefcase,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
@@ -12,7 +11,10 @@ import {
   User,
 } from "lucide-react";
 
-import { api } from "@/lib/api";
+import {
+  api,
+  ApiError,
+} from "@/lib/api";
 import type { Mission } from "@/types/missions";
 import type { ClientProfile } from "@/types/utilisateurs";
 import { useFormats } from "@/i18n/use-formats";
@@ -22,6 +24,8 @@ import {
   NoticeCard,
   Tag,
   toneStatut,
+  EtatVide,
+  ChargementPage,
 } from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
 import { ReactionProfil } from "@/features/reactions/components/ReactionProfil";
@@ -35,11 +39,13 @@ export default function ProfilClientPage({
 }) {
   const { id } = use(params);
   const t = useTranslations("profile");
+  const tc = useTranslations("common");
   const { argent: formatArgent, dateCourte: formatDateCourte } = useFormats();
   const { statutMission } = useLabels();
   const [client, setClient] = useState<ClientProfile | null>(null);
   const [missions, setMissions] = useState<Mission[]>([]);
   const [chargement, setChargement] = useState(true);
+  const [erreurChargement, setErreurChargement] = useState(false);
   useBreadcrumbTitle(client?.nomEntreprise || client?.utilisateur?.nom);
 
   useEffect(() => {
@@ -53,6 +59,13 @@ export default function ProfilClientPage({
         if (cancelled) return;
         setClient(profil);
         setMissions(toutesMissions.filter((m) => m.clientId === id));
+      })
+      .catch((err) => {
+        // Un 404 reste « introuvable » ; toute autre panne doit se distinguer.
+        if (cancelled) return;
+        if (!(err instanceof ApiError && err.status === 404)) {
+          setErreurChargement(true);
+        }
       })
       .finally(() => {
         if (!cancelled) setChargement(false);
@@ -79,9 +92,7 @@ export default function ProfilClientPage({
   if (chargement) {
     return (
       <div className="mx-auto max-w-5xl px-5 py-12">
-        <div className="animate-in-fade rounded-lg border border-ink/10 bg-paper-light p-8 text-sm text-ink-soft">
-          {t("public.client.loading")}
-        </div>
+        <ChargementPage libelle={t("public.client.loading")} />
       </div>
     );
   }
@@ -89,9 +100,9 @@ export default function ProfilClientPage({
   if (!client) {
     return (
       <div className="mx-auto max-w-5xl px-5 py-12">
-        <NoticeCard>
-          <p className="text-sm text-brique">{t("public.client.notFound")}</p>
-        </NoticeCard>
+        <EtatVide icon={Building2} tone="danger">
+          {erreurChargement ? tc("states.errLoadData") : t("public.client.notFound")}
+        </EtatVide>
       </div>
     );
   }
@@ -117,7 +128,7 @@ export default function ProfilClientPage({
               />
 
               <div className="min-w-0">
-                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-ink-soft/60">
+                <p className="mb-1 text-xs font-semibold text-ink-soft/85">
                   {estEntreprise
                     ? t("public.client.profileCompany")
                     : t("public.client.profileIndividual")}
@@ -136,9 +147,9 @@ export default function ProfilClientPage({
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Tag>
                     {estEntreprise ? (
-                      <Building2 size={13} className="mr-1.5 inline" />
+                      <Building2 size={14} className="mr-1.5 inline" />
                     ) : (
-                      <User size={13} className="mr-1.5 inline" />
+                      <User size={14} className="mr-1.5 inline" />
                     )}
                     {estEntreprise
                       ? t("public.client.company")
@@ -147,14 +158,14 @@ export default function ProfilClientPage({
 
                   {client.utilisateur?.emailVerifie && (
                     <Tag tone="rice">
-                      <ShieldCheck size={13} className="mr-1.5 inline" />
+                      <ShieldCheck size={14} className="mr-1.5 inline" />
                       {t("public.client.verified")}
                     </Tag>
                   )}
                 </div>
 
                 {/* Informations rapides */}
-                <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-xs text-ink-soft/75">
+                <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-xs text-ink-soft/85">
                   <span className="inline-flex items-center gap-1.5">
                     <BriefcaseBusiness size={14} />
                     {t("public.client.missionsPublished", { count: missions.length })}
@@ -194,7 +205,7 @@ export default function ProfilClientPage({
               <div className="h-8 w-1 rounded-full bg-ink" />
 
               <div>
-                <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+                <p className="text-xs font-semibold text-ink-soft/85">
                   {t("public.client.activity")}
                 </p>
 
@@ -218,13 +229,13 @@ export default function ProfilClientPage({
                   >
                     <NoticeCard className="flex h-full flex-col gap-2 transition hover:-translate-y-0.5 hover:border-ink/20 hover:shadow-md">
                       <div className="flex items-center gap-2 text-ocre-dark">
-                        <Briefcase size={14} />
+                        <BriefcaseBusiness size={14} />
                         <p className="font-display font-medium transition group-hover:text-ink">
                           {mission.titre}
                         </p>
                       </div>
 
-                      <p className="font-mono text-sm text-ink-soft">
+                      <p className="tabular-nums text-sm text-ink-soft">
                         {formatArgent(mission.budget)}
                       </p>
 
@@ -247,16 +258,16 @@ export default function ProfilClientPage({
         <aside className="space-y-6">
           {/* IDENTITÉ */}
           <section className="animate-in delay-1 rounded-lg border border-ink/10 bg-paper-light p-5">
-            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+            <p className="text-xs font-semibold text-ink-soft/85">
               {t("public.client.identity")}
             </p>
 
             <div className="mt-4 flex gap-3">
               <div className="mt-0.5 shrink-0">
                 {estEntreprise ? (
-                  <Building2 size={19} />
+                  <Building2 size={20} />
                 ) : (
-                  <User size={19} />
+                  <User size={20} />
                 )}
               </div>
 
@@ -278,7 +289,7 @@ export default function ProfilClientPage({
 
           {/* STATISTIQUES */}
           <section className="animate-in delay-2 rounded-lg border border-ink/10 bg-paper-light p-5">
-            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink-soft/60">
+            <p className="text-xs font-semibold text-ink-soft/85">
               {t("public.client.statistics")}
             </p>
 
@@ -288,7 +299,7 @@ export default function ProfilClientPage({
                   {t("public.client.openMissions")}
                 </span>
 
-                <span className="font-mono text-sm font-semibold">
+                <span className="tabular-nums text-sm font-semibold">
                   {missionsOuvertes}
                 </span>
               </div>
@@ -298,7 +309,7 @@ export default function ProfilClientPage({
                   {t("public.client.ongoingMissions")}
                 </span>
 
-                <span className="font-mono text-sm font-semibold">
+                <span className="tabular-nums text-sm font-semibold">
                   {missionsEnCours}
                 </span>
               </div>
@@ -308,7 +319,7 @@ export default function ProfilClientPage({
                   {t("public.client.completedMissions")}
                 </span>
 
-                <span className="font-mono text-sm font-semibold">
+                <span className="tabular-nums text-sm font-semibold">
                   {missionsTerminees}
                 </span>
               </div>

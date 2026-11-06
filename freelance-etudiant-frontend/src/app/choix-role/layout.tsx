@@ -22,7 +22,7 @@ export default function ChoixRoleLayout({
         <button
           type="button"
           onClick={deconnecter}
-          className="text-xs font-mono uppercase tracking-wider text-ink-soft transition-colors hover:text-brique"
+          className="text-xs text-ink-soft transition-colors hover:text-brique font-medium"
         >
           Se déconnecter
         </button>

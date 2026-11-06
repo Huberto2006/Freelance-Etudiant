@@ -56,7 +56,7 @@ export async function generateMetadata(): Promise<Metadata> {
 const themeInitScript = `
 (function() {
   try {
-    var themeId = localStorage.getItem('kianja-theme-id') || 'slate';
+    var themeId = localStorage.getItem('kianja-theme-id') || 'amber';
     var mode = localStorage.getItem('kianja-theme-mode') || localStorage.getItem('kianja-theme');
     if (!mode) {
       mode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'sombre' : 'clair';

@@ -346,7 +346,7 @@ export function FormulaireMoyen({
         <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
-            variant="secondary"
+            variant="ghost"
             onClick={onFermer}
             disabled={envoi}
           >
@@ -355,7 +355,7 @@ export function FormulaireMoyen({
 
           <Button
             type="submit"
-            variant="primary"
+            variant="secondary"
             disabled={envoi}
           >
             {envoi

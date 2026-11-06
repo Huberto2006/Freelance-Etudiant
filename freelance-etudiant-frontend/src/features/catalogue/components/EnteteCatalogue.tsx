@@ -21,10 +21,10 @@ export function EnteteCatalogue({
   return (
     <header className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
       <div className="min-w-0">
-        <p className="mb-1.5 font-mono text-[0.6875rem] uppercase tracking-[0.2em] text-ink-soft">
+        <p className="mb-1.5 text-xs text-ink-soft font-medium">
           {surtitre}
         </p>
-        <h1 className="font-display text-3xl font-bold text-ink sm:text-4xl">
+        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
           {titre}
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft">
@@ -32,7 +32,7 @@ export function EnteteCatalogue({
         </p>
         {indicateurs && (
           <p
-            className="mt-2 font-mono text-xs text-ink-soft/80"
+            className="mt-2 tabular-nums text-xs text-ink-soft/80"
             aria-live="polite"
           >
             {indicateurs}

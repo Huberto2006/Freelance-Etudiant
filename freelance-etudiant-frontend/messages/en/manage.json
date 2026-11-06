@@ -14,8 +14,8 @@
     "tabAll": "All",
     "tabUnread": "Unread",
     "tabRead": "Read",
-    "emptyAll": "You don't have any notifications yet.",
-    "emptyUnread": "No unread notifications.",
+    "emptyAll": "Nothing new yet. We'll let you know here as soon as something happens.",
+    "emptyUnread": "You're all caught up.",
     "emptyRead": "No read notifications.",
     "deleteOne": "Delete: {titre}",
     "confirmDeleteAll": "Delete all your notifications? This action is permanent."
@@ -29,7 +29,7 @@
     "invitationsTitle": "Group invitations ({count})",
     "openInvitation": "Open the invitation",
     "loadingGroups": "Loading your groups…",
-    "noGroups": "You are not part of any group yet.",
+    "noGroups": "You're not in a group yet. Create one to work with others.",
     "membersCount": "{count, plural, one {# member} other {# members}}",
     "membersLabel": "Members",
     "noMission": "No mission",
@@ -107,7 +107,7 @@
     "eyebrow": "Student area",
     "title": "My applications",
     "loading": "Loading…",
-    "emptyText": "You haven't applied to any mission yet.",
+    "emptyText": "You haven't applied yet. Have a look at the open missions, one of them might be right for you.",
     "browseMissions": "Browse missions",
     "tabs": {
       "all": "All",

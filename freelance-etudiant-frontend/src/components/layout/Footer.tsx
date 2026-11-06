@@ -76,7 +76,7 @@ export function Footer() {
             </span>
           </Link>
 
-          <p className="mt-1 text-[0.65rem] uppercase tracking-wider text-ink-soft/70">
+          <p className="mt-1 text-xs text-ink-soft/85 font-medium">
             {t("signature")}
           </p>
 
@@ -87,7 +87,7 @@ export function Footer() {
 
         {/* ------------------------------- EXPLORER */}
         <nav aria-label={t(colonnes[0].libelleAria as "exploreAria")}>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
+          <p className=" text-xs text-ocre-dark font-medium">
             {titreColonne(colonnes[0].titre)}
           </p>
 
@@ -107,7 +107,7 @@ export function Footer() {
 
         {/* ------------------------------- CATEGORIES */}
         <nav aria-label={t("categoriesAria")}>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
+          <p className=" text-xs text-ocre-dark font-medium">
             {t("categories")}
           </p>
 
@@ -128,7 +128,7 @@ export function Footer() {
         {/* ------------------------------- AIDE + COMPTE */}
         {colonnes.slice(1).map((colonne) => (
           <nav key={colonne.titre} aria-label={t(colonne.libelleAria as "helpAria")}>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
+            <p className=" text-xs text-ocre-dark font-medium">
               {titreColonne(colonne.titre)}
             </p>
 
@@ -150,9 +150,9 @@ export function Footer() {
 
       {/* ------------------------------- MENTIONS */}
       <div className="border-t border-ink/10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-5 py-5 text-xs text-ink-soft/70 sm:flex-row">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-5 py-5 text-xs text-ink-soft/85 sm:flex-row">
           <p>{t("copyright", { annee })}</p>
-          <p className="font-mono">
+          <p className="tabular-nums">
             {t("project")}
           </p>
         </div>

@@ -6,7 +6,7 @@
     "eyebrow": "Espace étudiant",
     "title": "Mes candidatures",
     "loading": "Chargement…",
-    "empty": "Vous n'avez pas encore postulé à une mission.",
+    "empty": "Vous n'avez pas encore postulé. Regardez les missions ouvertes : l'une d'elles est peut-être pour vous.",
     "browseMissions": "Parcourir les missions",
     "tabs": {
       "all": "Toutes",
@@ -136,7 +136,7 @@
     "invitations": "Invitations de groupe ({count})",
     "openInvitation": "Ouvrir l'invitation",
     "loading": "Chargement de vos groupes…",
-    "empty": "Vous ne faites partie d'aucun groupe pour le moment.",
+    "empty": "Vous n'êtes dans aucun groupe pour l'instant. Créez-en un pour travailler à plusieurs.",
     "memberCount": "{count, plural, one {# membre} other {# membres}}",
     "membersLabel": "Membres",
     "noMission": "Sans mission",
@@ -175,7 +175,7 @@
     "refusedMessage": "Demande d'amitié refusée.",
     "refuseError": "Impossible de refuser cette demande.",
     "loadingRelations": "Chargement de vos relations...",
-    "noFriendsTitle": "Vous n'avez pas encore d'amis",
+    "noFriendsTitle": "Votre réseau commence ici",
     "noFriendsDescription": "Ajoutez d'autres étudiants de Kianja pour échanger avec eux et développer votre réseau.",
     "discoverStudents": "Découvrir des étudiants",
     "noReceivedTitle": "Aucune demande reçue",
@@ -193,7 +193,7 @@
     "studentCount": "{count, plural, one {# étudiant} other {# étudiants}}",
     "community": "Communauté",
     "title": "Mes amis",
-    "subtitle": "Gérez vos relations avec les autres étudiants de Kianja.",
+    "subtitle": "Retrouvez les étudiants que vous connaissez et rencontrez-en de nouveaux.",
     "close": "Fermer",
     "relations": "Relations",
     "tabFriends": "Amis",
@@ -220,7 +220,7 @@
       "completedSub": "Projets livrés"
     },
     "loadingMissions": "Chargement de vos missions…",
-    "empty": "Vous n'avez pas encore publié de mission.",
+    "empty": "Vous n'avez pas encore publié de mission. Décrivez votre besoin et les étudiants pourront y répondre.",
     "tabs": {
       "all": "Toutes",
       "open": "Ouvertes",
@@ -562,11 +562,11 @@
     "retry": "Réessayer"
   },
   "dashboardHeader": {
-    "eyebrow": "Tableau de bord",
-    "greeting": "Bonjour, {prenom}"
+    "greeting": "Bonjour, {prenom}",
+    "greetingEvening": "Bonsoir, {prenom}"
   },
   "recentActivity": {
-    "emptyTitle": "Aucune activité pour le moment.",
+    "emptyTitle": "Rien à signaler pour l'instant.",
     "emptyDescription": "Vos candidatures, livraisons, paiements et messages apparaîtront ici.",
     "deleting": "Suppression…",
     "clearAll": "Tout effacer",
@@ -591,9 +591,9 @@
   "overview": {
     "loadingAccount": "Chargement de votre compte…",
     "loadingDashboard": "Chargement du tableau de bord",
-    "subtitleStudent": "Voici un résumé de votre activité.",
-    "subtitleClient": "Voici l'état de vos projets.",
-    "subtitleAdmin": "Vue globale de la plateforme.",
+    "subtitleStudent": "Voici où vous en êtes aujourd'hui.",
+    "subtitleClient": "Voici où en sont vos projets aujourd'hui.",
+    "subtitleAdmin": "Voici ce qui se passe sur Kianja aujourd'hui.",
     "confirmClear": "Effacer toute votre activité récente ?",
     "yourStats": "Vos statistiques",
     "statsLoadError": "Impossible de charger vos statistiques.",
@@ -646,11 +646,11 @@
     "allPayments": "Tous les paiements",
     "paymentsLoadError": "Impossible de charger vos paiements.",
     "loadingPayments": "Chargement des paiements",
-    "noPayment": "Aucun paiement pour le moment.",
+    "noPayment": "Pas encore de paiement.",
     "noPaymentHint": "Déclarez un paiement après validation d'une livraison pour sécuriser la transaction.",
     "declarePayment": "Déclarer un paiement",
     "missionFallback": "Mission",
-    "noActivity": "Aucune activité pour le moment.",
+    "noActivity": "Rien à signaler pour l'instant.",
     "noActivityClientHint": "Candidatures reçues, livraisons déposées et messages apparaîtront ici.",
     "reportsToHandle": "{count, plural, one {# signalement à traiter} other {# signalements à traiter}}",
     "reportsToHandleHint": "Des signalements de la communauté attendent une modération.",

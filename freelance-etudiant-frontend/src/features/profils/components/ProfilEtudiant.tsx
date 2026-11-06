@@ -515,7 +515,7 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
               {profil?.specialites?.length ? (
                 <div className="mt-4 border-t border-ink/10 pt-4">
-                  <p className="mb-2 text-xs uppercase tracking-wider text-ink-soft">
+                  <p className="mb-2 text-xs text-ink-soft font-medium">
                     {t("specialities")}
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -606,7 +606,7 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 </span>
 
                 <div>
-                  <p className="text-xs uppercase tracking-wider text-ink-soft">
+                  <p className="text-xs text-ink-soft font-medium">
                     {t("hourlyRate")}
                   </p>
 
@@ -646,7 +646,7 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 )}
 
                 <div>
-                  <p className="text-xs uppercase tracking-wider text-ink-soft">
+                  <p className="text-xs text-ink-soft font-medium">
                     {t("availability.title")}
                   </p>
 
@@ -729,7 +729,7 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
                   >
-                    <Link2 size={13} />
+                    <Link2 size={14} />
                     GitHub
                   </a>
                 )}
@@ -740,7 +740,7 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
                   >
-                    <Link2 size={13} />
+                    <Link2 size={14} />
                     GitLab
                   </a>
                 )}
@@ -751,7 +751,7 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
                   >
-                    <Link2 size={13} />
+                    <Link2 size={14} />
                     LinkedIn
                   </a>
                 )}
@@ -762,7 +762,7 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ocre hover:text-ocre-dark"
                   >
-                    <Globe size={13} />
+                    <Globe size={14} />
                     {t("website")}
                   </a>
                 )}
@@ -780,7 +780,7 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
         <NoticeCard>
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
+              <p className=" text-xs text-ocre-dark font-medium">
                 {t("management")}
               </p>
 
@@ -803,7 +803,7 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
           <div className="mb-6 flex flex-col gap-4 rounded-xl border border-ink/10 bg-paper-light p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-ocre-dark">{t("cvImport")}</p>
+                <p className=" text-xs text-ocre-dark font-medium">{t("cvImport")}</p>
                 <h3 className="mt-1 font-display text-xl font-semibold">{t("importMyCv")}</h3>
               </div>
               <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-ink/15 bg-paper px-3 py-2 text-sm text-ink transition-colors hover:bg-ink/5">
@@ -835,9 +835,9 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                     const value = Array.isArray(field.value) ? field.value.join(", ") : field.value;
                     return (
                       <div key={key} className="rounded-lg border border-ink/10 bg-paper p-3">
-                        <p className="text-[0.65rem] uppercase tracking-[0.2em] text-ink-soft">{label}</p>
+                        <p className="text-xs text-ink-soft font-medium">{label}</p>
                         <p className="mt-2 text-sm text-ink">{value}</p>
-                        <p className="mt-1 text-[0.65rem] uppercase tracking-[0.2em] text-ocre-dark">{t("confidence", { niveau: String(field.confidence) })}</p>
+                        <p className="mt-1 text-xs text-ocre-dark font-medium">{t("confidence", { niveau: String(field.confidence) })}</p>
                       </div>
                     );
                   })}
@@ -845,7 +845,7 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
                 {cvDraft.warnings.length > 0 && (
                   <div className="mt-4 rounded-lg border border-ocre/30 bg-ocre/10 p-3">
-                    <p className="text-xs font-mono uppercase tracking-[0.2em] text-ocre-dark">{t("verification")}</p>
+                    <p className="text-xs text-ocre-dark font-medium">{t("verification")}</p>
                     <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink">
                       {cvDraft.warnings.map((warning) => <li key={warning}>{warning}</li>)}
                     </ul>
@@ -1111,9 +1111,9 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                       aria-hidden="true"
                     >
                       {estImageUrl(url) ? (
-                        <ImageIcon size={13} />
+                        <ImageIcon size={14} />
                       ) : (
-                        <Globe size={13} />
+                        <Globe size={14} />
                       )}
                     </span>
 
@@ -1126,9 +1126,9 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                       onClick={() => retirerUrlPortfolio(index)}
                       disabled={envoi}
                       aria-label={t("removeFromPortfolio", { url })}
-                      className="shrink-0 text-ink-soft/60 transition-colors hover:text-brique disabled:opacity-50"
+                      className="shrink-0 text-ink-soft/85 transition-colors hover:text-brique disabled:opacity-50"
                     >
-                      <X size={15} />
+                      <X size={16} />
                     </button>
                   </li>
                 ))}
@@ -1186,11 +1186,7 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
 
             {message && <p className="text-sm text-rice">{message}</p>}
 
-            <div className="flex flex-wrap gap-3">
-              <Button type="submit" disabled={envoi}>
-                {envoi ? t("saving") : t("saveChanges")}
-              </Button>
-
+            <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
               <Button
                 type="button"
                 variant="ghost"
@@ -1198,6 +1194,10 @@ export function ProfilEtudiant({ utilisateur }: { utilisateur: Utilisateur }) {
                 disabled={envoi}
               >
                 {t("cancel")}
+              </Button>
+
+              <Button type="submit" variant="secondary" disabled={envoi}>
+                {envoi ? t("saving") : t("saveChanges")}
               </Button>
             </div>
           </form>

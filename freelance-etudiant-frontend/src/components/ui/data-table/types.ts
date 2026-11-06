@@ -36,6 +36,8 @@ export interface DataTableProps<T> {
   /** Premier chargement : squelette tant qu'aucune ligne n'est disponible. */
   chargement?: boolean;
   erreur?: string | null;
+  /** La page affiche déjà une panne : ne pas présenter la liste comme vide. */
+  masquerVide?: boolean;
   onReessayer?: () => void;
   reessaiEnCours?: boolean;
   iconeVide: ComponentType<LucideProps>;

@@ -1,14 +1,14 @@
 "use client";
 
+import { useConfirmation } from "@/components/ui/ConfirmDialog";
 import { StaggerContainer } from "@/components/ui/motion/StaggerContainer";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Archive,
   ArchiveRestore,
   BriefcaseBusiness,
   Layers3,
-  Loader2,
+  LoaderCircle,
   PauseCircle,
   Pencil,
   PlayCircle,
@@ -27,7 +27,13 @@ import { useTranslations } from "next-intl";
 import { PanneauFiltres, type Filtres } from "@/features/catalogue/components/PanneauFiltres";
 import { CarteMission } from "@/features/missions/components/CarteMission";
 import { CarteService } from "@/features/services/components/CarteService";
-import { MessageVide, NoticeCard, PageHeader, Tag } from "@/components/ui/Notice";
+import {
+  MessageVide,
+  NoticeCard,
+  PageHeader,
+  Tag,
+  EtatVide,
+} from "@/components/ui/Notice";
 import { Button } from "@/components/ui/Button";
 import { SqueletteCatalogue } from "@/features/catalogue/components/SqueletteCatalogue";
 
@@ -196,23 +202,22 @@ export default function MesPublicationsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <PageHeader
+      <PageHeader
           icon={Layers3}
           eyebrow={t("eyebrow")}
           title={t("title")}
-          className="mb-0"
-        />
+        actions={
+          <>
 
-        {(role === "client" || role === "etudiant") && (
-          <Link href={lienPublier}>
-            <Button variant="secondary" className="gap-2">
+        {(role === "client" || role === "etudiant") && (chargement || nbTotal > 0) && (
+          <Button href={lienPublier} variant="secondary" className="gap-2">
               <Plus size={16} />
               {role === "client" ? t("publishMission") : t("offerService")}
             </Button>
-          </Link>
         )}
-      </div>
+          </>
+        }
+      />
 
       {role === "admin" ? (
         <NoticeCard>
@@ -225,7 +230,7 @@ export default function MesPublicationsPage() {
           {/* --------------------------------- TYPE SELON LE RÔLE */}
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div
-              className="inline-flex items-center gap-1.5 rounded-full border border-ink/15 bg-paper-light px-3.5 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-ink"
+              className="inline-flex items-center gap-1.5 rounded-full border border-ink/15 bg-paper-light px-3.5 py-1.5 text-xs text-ink font-medium"
               aria-label={role === "client" ? t("myMissions") : t("myServices")}
             >
               {role === "client" ? (
@@ -266,52 +271,38 @@ export default function MesPublicationsPage() {
                       onClick={() => setDeclencheur((d) => d + 1)}
                       className="mt-3"
                     >
-                      <RotateCcw size={13} className="mr-1.5" />
+                      <RotateCcw size={14} className="mr-1.5" />
                       {t("retry")}
                     </Button>
                   </div>
                 </NoticeCard>
               ) : items.length === 0 ? (
-                <NoticeCard>
-                  <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-                    <span
-                      className="flex h-12 w-12 items-center justify-center rounded-full bg-ink/5 text-ink-soft"
-                      aria-hidden="true"
-                    >
-                      <Layers3 size={22} />
-                    </span>
-
-                    <MessageVide>
-                      {nbTotal === 0
-                        ? role === "client"
-                          ? t("emptyMissions")
-                          : t("emptyServices")
-                        : t("emptySearch")}
-                    </MessageVide>
-
-                    <Link href={lienPublier}>
-                      <Button variant="secondary" size="sm" className="gap-1.5 text-xs">
-                        <Plus size={14} />
-                        {role === "client" ? t("publishMission") : t("offerService")}
-                      </Button>
-                    </Link>
-                  </div>
-                </NoticeCard>
+                <EtatVide
+                  icon={Layers3}
+                  action={
+                    <Button href={lienPublier} variant="secondary" size="sm" className="gap-1.5">
+                      <Plus size={14} aria-hidden="true" />
+                      {role === "client" ? t("publishMission") : t("offerService")}
+                    </Button>
+                  }
+                >
+                  {nbTotal === 0
+                    ? role === "client"
+                      ? t("emptyMissions")
+                      : t("emptyServices")
+                    : t("emptySearch")}
+                </EtatVide>
               ) : (
                 <StaggerContainer className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                   {items.map((item) =>
                     item.type === "mission" ? (
                       <div key={`m-${item.id}`} className="flex flex-col gap-2">
                         <CarteMission mission={item.mission} />
-                        <Link
-                          href={`${LIEN_GERER_MISSIONS}?editer=${item.mission.id}`}
-                          className="self-start"
-                        >
-                          <Button variant="ghost" size="sm" className="gap-1.5 text-xs">
-                            <Pencil size={13} />
+                        <Button
+                          href={`${LIEN_GERER_MISSIONS}?editer=${item.mission.id}`} variant="ghost" size="sm" className="self-start gap-1.5 text-xs">
+                            <Pencil size={14} />
                             {t("edit")}
                           </Button>
-                        </Link>
                       </div>
                     ) : (
                       <CarteServiceGeree
@@ -349,6 +340,8 @@ function CarteServiceGeree({
   onMisAJour: (service: ServiceOffert) => void;
 }) {
   const t = useTranslations("dashboardPages.myPublications");
+  const { confirmer, dialogueConfirmation } = useConfirmation();
+  const tCommun = useTranslations("common");
   const [enCours, setEnCours] = useState<
     "disponibilite" | "archive" | "suppression" | null
   >(null);
@@ -394,9 +387,10 @@ function CarteServiceGeree({
   }
 
   async function supprimer() {
-    const confirmation = window.confirm(
-      t("confirmDelete", { titre: service.titre }),
-    );
+    const confirmation = await confirmer({
+      titre: t("confirmDelete", { titre: service.titre }),
+      libelleConfirmer: tCommun("actions.delete"),
+    });
     if (!confirmation) return;
 
     setEnCours("suppression");
@@ -422,12 +416,10 @@ function CarteServiceGeree({
           <Tag tone="ocre">{t("hidden")}</Tag>
         )}
 
-        <Link href={`${LIEN_GERER_SERVICES}?editer=${service.id}`}>
-          <Button variant="ghost" size="sm" className="gap-1.5 text-xs">
-            <Pencil size={13} />
+        <Button href={`${LIEN_GERER_SERVICES}?editer=${service.id}`} variant="ghost" size="sm" className="gap-1.5 text-xs">
+            <Pencil size={14} />
             {t("edit")}
           </Button>
-        </Link>
         <Button
           variant="ghost"
           size="sm"
@@ -436,11 +428,11 @@ function CarteServiceGeree({
           onClick={basculerDisponibilite}
         >
           {enCours === "disponibilite" ? (
-            <Loader2 size={13} className="animate-spin" />
+            <LoaderCircle size={14} className="motion-safe:animate-spin" />
           ) : service.disponible ? (
-            <PauseCircle size={13} />
+            <PauseCircle size={14} />
           ) : (
-            <PlayCircle size={13} />
+            <PlayCircle size={14} />
           )}
           {service.disponible ? t("pause") : t("activate")}
         </Button>
@@ -453,11 +445,11 @@ function CarteServiceGeree({
           onClick={basculerArchive}
         >
           {enCours === "archive" ? (
-            <Loader2 size={13} className="animate-spin" />
+            <LoaderCircle size={14} className="motion-safe:animate-spin" />
           ) : service.estArchive ? (
-            <ArchiveRestore size={13} />
+            <ArchiveRestore size={14} />
           ) : (
-            <Archive size={13} />
+            <Archive size={14} />
           )}
           {service.estArchive ? t("restore") : t("archive")}
         </Button>
@@ -470,15 +462,16 @@ function CarteServiceGeree({
           onClick={supprimer}
         >
           {enCours === "suppression" ? (
-            <Loader2 size={13} className="animate-spin" />
+            <LoaderCircle size={14} className="motion-safe:animate-spin" />
           ) : (
-            <Trash2 size={13} />
+            <Trash2 size={14} />
           )}
           {t("delete")}
         </Button>
       </div>
 
       {erreur && <p className="text-xs text-brique">{erreur}</p>}
+      {dialogueConfirmation}
     </div>
   );
 }

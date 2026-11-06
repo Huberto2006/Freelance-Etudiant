@@ -220,7 +220,7 @@ export function CarteMoyenPaiement({
           </div>
 
           <div className="mt-4">
-            <p className="font-mono text-base tracking-wide text-ink">
+            <p className="tabular-nums text-base tracking-wide text-ink">
               {moyen.numero}
             </p>
 

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import type { CompletionProfil } from "@/features/tableau-de-bord/utils/dashboard";
@@ -27,7 +26,7 @@ export function ProfilCompletion({
       <div className="flex items-center justify-between gap-3">
         <p className="font-display text-lg font-semibold">{t("title")}</p>
 
-        <p className="font-mono text-sm font-semibold text-ink">
+        <p className="tabular-nums text-sm font-semibold text-ink">
           {completion.pourcentage} %
         </p>
       </div>
@@ -66,15 +65,11 @@ export function ProfilCompletion({
         </p>
       )}
 
-      <Link
+      <Button
         href={complet ? "/tableau-de-bord/profil" : "/completer-profil"}
-        className="self-start"
-        aria-label={complet ? t("viewProfile") : t("completeProfile")}
-      >
-        <Button size="sm" variant={complet ? "ghost" : "secondary"}>
+        aria-label={complet ? t("viewProfile") : t("completeProfile")} size="sm" variant={complet ? "ghost" : "secondary"} className="self-start">
           {complet ? t("viewProfile") : t("completeProfile")}
         </Button>
-      </Link>
     </NoticeCard>
   );
 }

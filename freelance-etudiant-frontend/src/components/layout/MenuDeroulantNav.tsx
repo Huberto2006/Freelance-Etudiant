@@ -133,7 +133,7 @@ export function MenuDeroulantNav({
           strokeWidth={1.85}
           aria-hidden="true"
           className={clsx(
-            "transition-transform motion-reduce:transition-none text-ink-soft/70",
+            "transition-transform motion-reduce:transition-none text-ink-soft/85",
             ouvert && "rotate-180 text-ink",
           )}
         />

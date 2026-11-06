@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, Loader2, Plus, Users, X } from "lucide-react";
+import { Bell, LoaderCircle, Plus, Users, X } from "lucide-react";
 
 import { useTranslations } from "next-intl";
 import { api, ApiError, lienInterneSur } from "@/lib/api";
@@ -12,7 +12,12 @@ import type { NotificationItem } from "@/types/notifications";
 
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
-import { NoticeCard, PageHeader } from "@/components/ui/Notice";
+import {
+  NoticeCard,
+  PageHeader,
+  EtatVide,
+  ChargementPage,
+} from "@/components/ui/Notice";
 
 /**
  * Un groupe enrichi des informations affichées dans la liste (nombre de
@@ -106,15 +111,15 @@ export default function GroupesPage() {
   return (
     <div>
       {/* En-tête */}
-      <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
-        <PageHeader
+      <PageHeader
           icon={Users}
           eyebrow={t("eyebrow")}
           title={t("title")}
-          className="mb-0"
-        />
+        actions={
+          <>
 
-        <Button
+        {(chargement || groupes.length > 0 || afficherFormulaire || erreur) && (
+<Button
           variant="secondary"
           className="gap-2"
           onClick={() => setAfficherFormulaire((v) => !v)}
@@ -131,7 +136,10 @@ export default function GroupesPage() {
             </>
           )}
         </Button>
-      </div>
+        )}
+          </>
+        }
+      />
 
       {invitations.length > 0 && (
         <section className="mb-7">
@@ -147,7 +155,7 @@ export default function GroupesPage() {
                 <NoticeCard className="h-full transition-colors hover:border-ink/30">
                   <p className="font-display font-medium">{invitation.titre}</p>
                   <p className="mt-1 text-sm text-ink-soft">{invitation.message}</p>
-                  <p className="mt-2 text-xs text-ink-soft/70">
+                  <p className="mt-2 text-xs text-ink-soft/85">
                     {t("openInvitation")}
                   </p>
                 </NoticeCard>
@@ -178,23 +186,12 @@ export default function GroupesPage() {
 
       {/* Chargement */}
       {chargement ? (
-        <p className="flex items-center gap-2 text-sm text-ink-soft">
-          <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-          {t("loading")}
-        </p>
-      ) : groupes.length === 0 ? (
-        <NoticeCard>
-          <div className="flex flex-col items-center gap-3 py-6 text-center">
-            <span
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-ocre/10 text-ocre-dark"
-              aria-hidden="true"
-            >
-              <Users size={22} />
-            </span>
-            <p className="text-sm text-ink-soft">
-              {t("empty")}
-            </p>
-            {!afficherFormulaire && (
+        <ChargementPage libelle={t("loading")} />
+      ) : erreur && groupes.length === 0 ? null : groupes.length === 0 ? (
+        <EtatVide
+          icon={Users}
+          action={
+            !afficherFormulaire && (
               <Button
                 variant="secondary"
                 size="sm"
@@ -204,9 +201,11 @@ export default function GroupesPage() {
                 <Plus size={14} aria-hidden="true" />
                 {t("create")}
               </Button>
-            )}
-          </div>
-        </NoticeCard>
+            )
+          }
+        >
+          {t("empty")}
+        </EtatVide>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {groupes.map((groupe) => (
@@ -214,7 +213,7 @@ export default function GroupesPage() {
               <NoticeCard className="flex h-full flex-col gap-2 transition-colors hover:border-ink/30">
                 <p className="font-display text-lg font-medium">{groupe.nom}</p>
 
-                <p className="text-xs text-ink-soft/70">
+                <p className="text-xs text-ink-soft/85">
                   {groupe.nombreMembres !== undefined
                     ? t("memberCount", { count: groupe.nombreMembres })
                     : t("membersLabel")}
@@ -358,7 +357,7 @@ function FormulaireGroupe({
           <Button type="submit" disabled={envoi || !nom.trim()}>
             {envoi ? (
               <span className="inline-flex items-center gap-2">
-                <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+                <LoaderCircle size={16} className="motion-safe:animate-spin" aria-hidden="true" />
                 {t("creating")}
               </span>
             ) : (

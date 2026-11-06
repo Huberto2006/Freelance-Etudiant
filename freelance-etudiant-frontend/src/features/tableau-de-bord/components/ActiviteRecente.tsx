@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { Trash2 } from "lucide-react";
@@ -69,21 +70,16 @@ export function ActiviteRecente({
     <div>
       {onToutEffacer && (
         <div className="mb-3 flex justify-end">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onToutEffacer}
             disabled={effacementEnCours}
-            className="
-              inline-flex cursor-pointer items-center gap-1.5 rounded-lg
-              border border-ink/15 px-3 py-1.5 font-mono text-xs
-              uppercase tracking-wider text-ink-soft transition-colors
-              hover:border-brique/50 hover:text-brique
-              disabled:cursor-not-allowed disabled:opacity-50
-            "
+            className="gap-1.5"
           >
-            <Trash2 size={13} aria-hidden="true" />
+            <Trash2 size={14} aria-hidden="true" />
             {effacementEnCours ? t("deleting") : t("clearAll")}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -114,7 +110,7 @@ export function ActiviteRecente({
 
                 <time
                   dateTime={evenement.date}
-                  className="font-mono text-xs text-ink-soft/60"
+                  className="tabular-nums text-xs text-ink-soft/85"
                 >
                   {formatDateRelative(evenement.date, tl, dateCourte)}
                 </time>
@@ -145,12 +141,12 @@ export function ActiviteRecente({
                     aria-label={t("deleteLabel", { titre: evenement.titre })}
                     className="
                       mt-1 inline-flex cursor-pointer items-center gap-1
-                      text-xs text-ink-soft/50 transition-colors
+                      text-xs text-ink-soft/85 transition-colors
                       hover:text-brique disabled:cursor-wait
                       disabled:opacity-50
                     "
                   >
-                    <Trash2 size={11} aria-hidden="true" />
+                    <Trash2 size={12} aria-hidden="true" />
                     {suppressionEnCoursId === evenement.id
                       ? t("deleting")
                       : t("delete")}

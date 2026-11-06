@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { FileText, Loader2, Paperclip, X } from "lucide-react";
+import { FileText, LoaderCircle, Paperclip, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { api, ApiError, ouvrirDocument } from "@/lib/api";
 
@@ -71,7 +71,7 @@ export function SelecteurPieceJointe({
   if (valeur) {
     return (
       <div className="inline-flex items-center gap-2 rounded-full border border-ocre-dark/40 bg-ocre/10 px-3 py-1.5 text-xs text-ocre-dark">
-        <FileText size={13} />
+        <FileText size={14} />
         <span className="max-w-[160px] truncate">{valeur.nom}</span>
         <button
           type="button"
@@ -80,7 +80,7 @@ export function SelecteurPieceJointe({
           aria-label={t("attachment.remove")}
           className="text-ocre-dark/70 hover:text-brique"
         >
-          <X size={13} />
+          <X size={14} />
         </button>
       </div>
     );
@@ -98,9 +98,9 @@ export function SelecteurPieceJointe({
           className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ink/25 text-ink-soft transition-colors hover:border-ink/50 hover:text-ink disabled:cursor-wait disabled:opacity-60"
         >
           {envoi ? (
-            <Loader2 size={17} className="animate-spin" />
+            <LoaderCircle size={18} className="motion-safe:animate-spin" />
           ) : (
-            <Paperclip size={17} />
+            <Paperclip size={18} />
           )}
         </button>
         <input
@@ -129,9 +129,9 @@ export function SelecteurPieceJointe({
         className="inline-flex items-center gap-1.5 rounded-full border border-ink/25 px-3 py-1.5 text-xs text-ink-soft transition-colors hover:bg-ink/5 disabled:cursor-wait disabled:opacity-60"
       >
         {envoi ? (
-          <Loader2 size={13} className="animate-spin" />
+          <LoaderCircle size={14} className="motion-safe:animate-spin" />
         ) : (
-          <Paperclip size={13} />
+          <Paperclip size={14} />
         )}
         {envoi ? t("attachment.sending") : t("attachment.attach")}
       </button>
@@ -188,7 +188,7 @@ export function PieceJointeAffichage({
         disabled={ouverture}
         className="inline-flex items-center gap-1.5 rounded-full border border-ink/20 bg-ink/[0.03] px-3 py-1.5 text-xs text-ink-soft hover:bg-ink/[0.06] transition-colors disabled:cursor-wait disabled:opacity-60"
       >
-        {ouverture ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} />}
+        {ouverture ? <LoaderCircle size={14} className="motion-safe:animate-spin" /> : <FileText size={14} />}
         <span className="max-w-[200px] truncate">{nom ?? t("attachment.default")}</span>
       </button>
       {erreur && <span className="mt-1 text-xs text-brique">{erreur}</span>}

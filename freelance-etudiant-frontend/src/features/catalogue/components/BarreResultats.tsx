@@ -35,9 +35,9 @@ export function BarreResultats<T extends string>({
       <div className="flex items-center gap-2">
         <label
           htmlFor="tri-catalogue"
-          className="flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-ink-soft"
+          className="flex items-center gap-1.5 text-xs text-ink-soft font-medium"
         >
-          <ArrowUpDown size={13} aria-hidden="true" />
+          <ArrowUpDown size={14} aria-hidden="true" />
           <span className="hidden sm:inline">Trier par</span>
           <span className="sr-only sm:hidden">Trier par</span>
         </label>
@@ -45,7 +45,7 @@ export function BarreResultats<T extends string>({
           id="tri-catalogue"
           value={tri}
           onChange={(e) => onTri(e.target.value as T)}
-          className="kianja-field-control h-10 rounded-[10px] border-0 bg-paper-light px-3 text-sm text-ink outline-none focus:outline-none transition"
+          className="kianja-field-control h-10 rounded-lg border-0 bg-paper-light px-3 text-sm text-ink outline-none focus:outline-none transition"
         >
           {options.map((o) => (
             <option key={o.valeur} value={o.valeur}>

@@ -70,9 +70,7 @@ function ContenuVerificationEmail() {
       {etat.etat === "succes" && (
         <div className="flex flex-col gap-5">
           <p className="text-sm text-ink-soft">{etat.message}</p>
-          <Link href="/connexion">
-            <Button>{t("login")}</Button>
-          </Link>
+          <Button href="/connexion" >{t("login")}</Button>
         </div>
       )}
 
@@ -102,10 +100,10 @@ export default function VerificationEmailPage() {
   const t = useTranslations("auth.verify");
   return (
     <div className="mx-auto max-w-md px-5 pb-12">
-      <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
+      <p className="mb-3 text-xs font-semibold text-ocre-dark">
         {t("eyebrow")}
       </p>
-      <h1 className="mb-7 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+      <h1 className="mb-7 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
         {t("title")}
       </h1>
 

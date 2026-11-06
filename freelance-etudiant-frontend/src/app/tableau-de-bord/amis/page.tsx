@@ -1,11 +1,17 @@
 "use client";
 
+import {
+  PageHeader,
+  NoticeCard,
+  ChargementPage,
+} from "@/components/ui/Notice";
+import { useConfirmation } from "@/components/ui/ConfirmDialog";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
     Check,
-    Loader2,
+    LoaderCircle,
     MessageCircle,
     MoreHorizontal,
     Search,
@@ -147,12 +153,12 @@ function EtatVide({
     action?: React.ReactNode;
 }) {
     return (
-        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-ink/15 bg-paper-light px-6 py-10 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-ink/5 text-ink-soft">
+        <NoticeCard className="animate-in flex flex-col items-center py-8 text-center">
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary-soft text-ocre-dark" aria-hidden="true">
                 {icon}
             </div>
 
-            <h3 className="text-base font-semibold text-ink">
+            <h3 className="font-display text-base font-semibold text-ink">
                 {titre}
             </h3>
 
@@ -160,8 +166,8 @@ function EtatVide({
                 {description}
             </p>
 
-            {action ? <div className="mt-5">{action}</div> : null}
-        </div>
+            {action ? <div className="mt-4">{action}</div> : null}
+        </NoticeCard>
     );
 }
 
@@ -186,7 +192,7 @@ function OngletButton({
             onClick={onClick}
             className={[
                 "inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5",
-                "font-mono text-[0.6875rem] uppercase tracking-wider transition-colors",
+                " text-xs transition-colors font-medium",
                 actif
                     ? "border-ink bg-ink text-paper-light"
                     : "border-ink/20 bg-paper text-ink-soft hover:border-ink/50 hover:text-ink",
@@ -248,7 +254,7 @@ function MenuRetrait({
                         className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-ink-soft transition hover:bg-ink/5 hover:text-brique disabled:opacity-50"
                     >
                         {chargement ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" />
                         ) : (
                             <X className="h-4 w-4" />
                         )}
@@ -300,7 +306,7 @@ function CarteAmi({
                             {sousTitre}
                         </p>
                     ) : (
-                        <p className="mt-0.5 text-xs text-ink-soft/70">
+                        <p className="mt-0.5 text-xs text-ink-soft/85">
                             {t("kianjaStudent")}
                         </p>
                     )}
@@ -317,7 +323,7 @@ function CarteAmi({
                             ))}
 
                             {profil.competences.length > 3 ? (
-                                <span className="rounded-md px-1 py-1 text-[0.6875rem] text-ink-soft/70">
+                                <span className="rounded-md px-1 py-1 text-[0.6875rem] text-ink-soft/85">
                                     +{profil.competences.length - 3}
                                 </span>
                             ) : null}
@@ -401,7 +407,7 @@ function CarteDemandeRecue({
                     className="flex-1"
                 >
                     {chargement ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <LoaderCircle className="mr-2 h-4 w-4 motion-safe:animate-spin" />
                     ) : (
                         <Check className="mr-2 h-4 w-4" />
                     )}
@@ -527,7 +533,7 @@ function CarteEtudiant({
                     ))}
 
                     {etudiant.competences.length > 3 ? (
-                        <span className="rounded-md px-1 py-1 text-[0.6875rem] text-ink-soft/70">
+                        <span className="rounded-md px-1 py-1 text-[0.6875rem] text-ink-soft/85">
                             +{etudiant.competences.length - 3}
                         </span>
                     ) : null}
@@ -545,7 +551,7 @@ function CarteEtudiant({
                         className="w-full gap-2"
                     >
                         {chargement ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" />
                         ) : (
                             <UserPlus className="h-4 w-4" />
                         )}
@@ -577,7 +583,7 @@ function CarteEtudiant({
                             className="flex-1 gap-1.5"
                         >
                             {chargement ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" />
                             ) : (
                                 <Check className="h-4 w-4" />
                             )}
@@ -621,6 +627,8 @@ function CarteEtudiant({
 
 export default function AmisPage() {
     const t = useTranslations("dashboardPages.friends");
+  const { confirmer, dialogueConfirmation } = useConfirmation();
+  const tCommun = useTranslations("common");
     const { utilisateur, chargement: chargementAuth } = useAuth();
 
     const [onglet, setOnglet] = useState<Onglet>("amis");
@@ -845,9 +853,10 @@ export default function AmisPage() {
 
             const nom = nomProfilAmitie(relation.ami);
 
-            const confirme = window.confirm(
-                t("confirmRemove", { nom }),
-            );
+            const confirme = await confirmer({
+      titre: t("confirmRemove", { nom }),
+      libelleConfirmer: tCommun("actions.remove"),
+    });
 
             if (!confirme) return;
 
@@ -880,7 +889,7 @@ export default function AmisPage() {
                 setRetraitEnCours(null);
             }
         },
-        [amis, t],
+        [amis, t, tCommun, confirmer],
     );
 
     /* ======================================================
@@ -1010,7 +1019,7 @@ export default function AmisPage() {
             return (
                 <div className="flex min-h-[300px] items-center justify-center rounded-xl border border-ink/15 bg-paper-light">
                     <div className="flex items-center gap-3 text-sm text-ink-soft">
-                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <LoaderCircle className="h-5 w-5 motion-safe:animate-spin" />
                         {t("loadingRelations")}
                     </div>
                 </div>
@@ -1022,7 +1031,7 @@ export default function AmisPage() {
            -------------------------------------------------- */
 
         if (onglet === "amis") {
-            if (amis.length === 0) {
+            if (amis.length === 0 && !erreur) {
                 return (
                     <EtatVide
                         icon={<Users className="h-6 w-6" />}
@@ -1031,7 +1040,7 @@ export default function AmisPage() {
                         action={
                             <Button
                                 type="button"
-                                variant="primary"
+                                variant="secondary"
                                 size="sm"
                                 onClick={() =>
                                     setOnglet("decouvrir")
@@ -1068,7 +1077,7 @@ export default function AmisPage() {
            -------------------------------------------------- */
 
         if (onglet === "recues") {
-            if (demandesRecues.length === 0) {
+            if (demandesRecues.length === 0 && !erreur) {
                 return (
                     <EtatVide
                         icon={<UserPlus className="h-6 w-6" />}
@@ -1098,7 +1107,7 @@ export default function AmisPage() {
            -------------------------------------------------- */
 
         if (onglet === "envoyees") {
-            if (demandesEnvoyees.length === 0) {
+            if (demandesEnvoyees.length === 0 && !erreur) {
                 return (
                     <EtatVide
                         icon={<UserPlus className="h-6 w-6" />}
@@ -1142,7 +1151,7 @@ export default function AmisPage() {
             return (
                 <div className="flex min-h-[300px] items-center justify-center rounded-xl border border-ink/15 bg-paper-light">
                     <div className="flex items-center gap-3 text-sm text-ink-soft">
-                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <LoaderCircle className="h-5 w-5 motion-safe:animate-spin" />
                         {t("loadingStudents")}
                     </div>
                 </div>
@@ -1156,7 +1165,7 @@ export default function AmisPage() {
                 <div className="mb-5 rounded-xl border border-ink/15 bg-paper-light p-4">
                     <div className="relative">
                         <Search
-                            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-soft/70"
+                            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-soft/85"
                             aria-hidden="true"
                         />
 
@@ -1174,7 +1183,7 @@ export default function AmisPage() {
 
                 {/* RÉSULTATS */}
 
-                {etudiantsFiltres.length === 0 ? (
+                {erreur && etudiantsFiltres.length === 0 ? null : etudiantsFiltres.length === 0 ? (
                     <EtatVide
                         icon={<Search className="h-6 w-6" />}
                         titre={t("noStudentTitle")}
@@ -1240,6 +1249,7 @@ export default function AmisPage() {
         chargementAnnuaire,
         demandesEnvoyees,
         demandesRecues,
+        erreur,
         etudiantsFiltres,
         obtenirStatut,
         onglet,
@@ -1257,11 +1267,9 @@ export default function AmisPage() {
 
     if (chargementAuth) {
         return (
-            <main className="min-h-[calc(100vh-4rem)] bg-paper p-4 sm:p-6 lg:p-8">
-                <div className="flex min-h-[400px] items-center justify-center">
-                    <Loader2 className="h-6 w-6 animate-spin text-ink-soft" />
-                </div>
-            </main>
+            <div>
+                <ChargementPage className="justify-center py-12" />
+            </div>
         );
     }
 
@@ -1274,41 +1282,29 @@ export default function AmisPage() {
        ====================================================== */
 
     return (
-        <main className="min-h-[calc(100vh-4rem)] bg-paper p-4 sm:p-6 lg:p-8">
-            <div className="mx-auto w-full max-w-7xl">
+        <div>
+            <div>
                 {/* EN-TÊTE */}
 
-                <div className="mb-6">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                        <div>
-                            <div className="mb-2 flex items-center gap-2 text-sm text-ink-soft">
-                                <Users className="h-4 w-4" />
-                                {t("community")}
-                            </div>
-
-                            <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-                                {t("title")}
-                            </h1>
-
-                            <p className="mt-1 max-w-2xl text-sm leading-6 text-ink-soft">
-                                {t("subtitle")}
-                            </p>
-                        </div>
-
+                <PageHeader
+                    icon={Users}
+                    eyebrow={t("community")}
+                    title={t("title")}
+                    description={t("subtitle")}
+                    actions={
+                        (chargement || amis.length > 0 || Boolean(erreur)) && (
                         <Button
                             type="button"
                             variant="secondary"
-                            size="sm"
-                            onClick={() =>
-                                setOnglet("decouvrir")
-                            }
+                            onClick={() => setOnglet("decouvrir")}
                             className="gap-2"
                         >
-                            <UserPlus className="h-4 w-4" />
+                            <UserPlus size={16} aria-hidden="true" />
                             {t("findStudents")}
                         </Button>
-                    </div>
-                </div>
+                        )
+                    }
+                />
 
                 {/* ERREUR */}
 
@@ -1340,7 +1336,7 @@ export default function AmisPage() {
                         <button
                             type="button"
                             onClick={() => setMessage(null)}
-                            className="ml-auto shrink-0 text-ink-soft/70 hover:text-ink"
+                            className="ml-auto shrink-0 text-ink-soft/85 hover:text-ink"
                             aria-label={t("close")}
                         >
                             <X className="h-4 w-4" />
@@ -1396,6 +1392,7 @@ export default function AmisPage() {
 
                 {contenu}
             </div>
-        </main>
+        {dialogueConfirmation}
+        </div>
     );
 }

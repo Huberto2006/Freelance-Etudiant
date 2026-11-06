@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   Check,
-  Loader2,
+  LoaderCircle,
   MessageCircle,
   UserPlus,
   X,
@@ -289,7 +289,7 @@ export function BoutonRelation({
         size={taille}
         disabled
       >
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <LoaderCircle className="mr-2 h-4 w-4 motion-safe:animate-spin" />
         Chargement...
       </Button>
     );
@@ -308,7 +308,7 @@ export function BoutonRelation({
           disabled={actionEnCours}
         >
           {actionEnCours ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <LoaderCircle className="mr-2 h-4 w-4 motion-safe:animate-spin" />
           ) : (
             <Check className="mr-2 h-4 w-4" />
           )}
@@ -340,7 +340,7 @@ export function BoutonRelation({
             onClick={accepter}
           >
             {actionEnCours ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <LoaderCircle className="mr-2 h-4 w-4 motion-safe:animate-spin" />
             ) : (
               <Check className="mr-2 h-4 w-4" />
             )}
@@ -384,7 +384,7 @@ export function BoutonRelation({
             onClick={ouvrirConversation}
           >
             {actionEnCours ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <LoaderCircle className="mr-2 h-4 w-4 motion-safe:animate-spin" />
             ) : (
               <MessageCircle className="mr-2 h-4 w-4" />
             )}
@@ -402,7 +402,7 @@ export function BoutonRelation({
               title="Retirer de mes amis"
             >
               {actionEnCours ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" />
               ) : (
                 <UserMinus className="h-4 w-4" />
               )}
@@ -438,7 +438,7 @@ export function BoutonRelation({
         onClick={ajouterAmi}
       >
         {actionEnCours ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <LoaderCircle className="mr-2 h-4 w-4 motion-safe:animate-spin" />
         ) : (
           <UserPlus className="mr-2 h-4 w-4" />
         )}

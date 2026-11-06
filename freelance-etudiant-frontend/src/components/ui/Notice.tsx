@@ -53,7 +53,7 @@ export function StampBadge({
       title={t("reputationScore", { score: arrondi })}
     >
       <span className="text-lg font-bold leading-none">{arrondi}</span>
-      <span className="text-[0.625rem] uppercase tracking-wider mt-0.5">{t("score")}</span>
+      <span className="text-xs mt-0.5 font-medium">{t("score")}</span>
     </div>
   );
 }
@@ -203,7 +203,7 @@ export function MessageVide({
   children: ReactNode;
   className?: string;
 }) {
-  return <p className={clsx("text-sm text-ink-soft/70", className)}>{children}</p>;
+  return <p className={clsx("text-sm text-ink-soft/85", className)}>{children}</p>;
 }
 
 /**
@@ -244,7 +244,7 @@ export function PageHeader({
       )}
     >
       <div className="min-w-0">
-        <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">
+        <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-ink-soft">
           <Icon size={14} className={icones[tone]} aria-hidden="true" />
           {eyebrow}
         </p>
@@ -269,7 +269,7 @@ export function PageHeader({
 /**
  * État vide standard (liste sans résultat) : médaillon-icône + texte
  * centré, dans une NoticeCard. Avant ce composant, ce même geste visuel
- * (icône dans un médaillon `bg-ink/5`, texte `text-ink-soft/70`, `py-8
+ * (icône dans un médaillon `bg-ink/5`, texte `text-ink-soft/85`, `py-8
  * text-center`) était réécrit à la main dans chaque page — avec de
  * légères variations (icône nue vs médaillon, tailles différentes) qui
  * le rendaient visuellement moins cohérent d'une page à l'autre.
@@ -279,14 +279,20 @@ export function PageHeader({
  */
 export function EtatVide({
   icon: Icon,
+  titre,
   children,
   action,
+  tone = "neutre",
   className,
 }: {
   icon: ComponentType<LucideProps>;
-  children: ReactNode;
+  /** Intitulé facultatif, au-dessus du texte explicatif. */
+  titre?: ReactNode;
+  children?: ReactNode;
   /** Bouton optionnel sous le texte (ex. « Publier une mission »). */
   action?: ReactNode;
+  /** "danger" : ressource introuvable ou chargement en échec. */
+  tone?: "neutre" | "danger";
   className?: string;
 }) {
   return (
@@ -297,12 +303,27 @@ export function EtatVide({
       )}
     >
       <span
-        className="flex h-10 w-10 items-center justify-center rounded-lg bg-ink/5 text-ink-soft"
+        className={clsx(
+          "flex h-11 w-11 items-center justify-center rounded-full",
+          tone === "danger" ? "bg-brique/10 text-brique" : "bg-primary-soft text-ocre-dark",
+        )}
         aria-hidden="true"
       >
         <Icon size={20} />
       </span>
-      <p className="max-w-sm text-sm text-ink-soft">{children}</p>
+      {titre && (
+        <p className="font-display text-base font-semibold text-ink">{titre}</p>
+      )}
+      {children && (
+        <p
+          className={clsx(
+            "max-w-md text-sm leading-relaxed",
+            tone === "danger" ? "text-brique" : "text-ink-soft",
+          )}
+        >
+          {children}
+        </p>
+      )}
       {action}
     </NoticeCard>
   );
@@ -315,7 +336,14 @@ export function EtatVide({
  * toute évolution (icône animée, délai avant affichage...) aurait dû être
  * appliquée partout à la main.
  */
-export function ChargementPage({ className }: { className?: string }) {
+export function ChargementPage({
+  libelle,
+  className,
+}: {
+  /** Message propre à la page ; « Chargement… » par défaut. */
+  libelle?: ReactNode;
+  className?: string;
+}) {
   const t = useTranslations("common.states");
   return (
     // Apparition retardée de 200 ms : un chargement quasi instantané
@@ -330,11 +358,11 @@ export function ChargementPage({ className }: { className?: string }) {
       )}
     >
       <LoaderCircle
-        size={15}
+        size={16}
         aria-hidden="true"
         className="shrink-0 motion-safe:animate-spin"
       />
-      {t("loading")}
+      {libelle ?? t("loading")}
     </p>
   );
 }
@@ -369,14 +397,14 @@ export function StatCard({
     <NoticeCard className={clsx("flex flex-col gap-2", className)}>
       <p className="flex items-center gap-2 text-xs font-medium text-ink-soft">
         <Icon
-          size={15}
+          size={16}
           strokeWidth={2}
           className={clsx("shrink-0", icones[tone])}
           aria-hidden="true"
         />
         {label}
       </p>
-      <p className="font-display text-3xl font-semibold leading-none tabular-nums">
+      <p className="font-body text-3xl font-semibold leading-none tabular-nums">
         {typeof value === "number" && Number.isInteger(value) ? (
           <AnimatedCounter valeur={value} />
         ) : (

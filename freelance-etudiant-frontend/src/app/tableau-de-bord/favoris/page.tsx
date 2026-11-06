@@ -9,7 +9,12 @@ import type { ServiceOffert } from "@/types/services";
 import type { EtudiantProfile } from "@/types/utilisateurs";
 import { useTranslations } from "next-intl";
 import { useFormats } from "@/i18n/use-formats";
-import { EtatVide, NoticeCard, PageHeader } from "@/components/ui/Notice";
+import {
+  EtatVide,
+  NoticeCard,
+  PageHeader,
+  ChargementPage,
+} from "@/components/ui/Notice";
 import { FavoriBouton } from "@/features/favoris/components/FavoriBouton";
 import { useApiList } from "@/hooks/useApiList";
 
@@ -51,14 +56,11 @@ export default function FavorisPage() {
   const etudiants = donnees?.etudiants ?? {};
 
   if (chargement) {
-    return <p className="mx-auto max-w-3xl px-5 py-12 text-sm text-ink-soft">{t("loading")}</p>;
+    return <ChargementPage libelle={t("loading")} />;
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-11">
-      <div className="mb-4">
-      </div>
-
+    <div>
       <PageHeader icon={Heart} eyebrow={t("eyebrow")} title={t("title")} />
 
       {erreur && (
@@ -70,7 +72,7 @@ export default function FavorisPage() {
           {t("empty")}
         </EtatVide>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {favoris.map((favori) => {
             if (favori.cibleType === "mission") {
               const mission = missions[favori.cibleId];
@@ -79,7 +81,7 @@ export default function FavorisPage() {
                 <Link key={favori.id} href={`/missions/${mission.id}`}>
                   <NoticeCard className="relative flex flex-col gap-2">
                     <p className="font-display font-medium pr-8">{mission.titre}</p>
-                    <p className="font-mono text-sm text-ocre-dark">
+                    <p className="tabular-nums text-sm text-ocre-dark">
                       {argent(mission.budget)}
                     </p>
                     <div className="absolute right-4 top-4">
@@ -96,7 +98,7 @@ export default function FavorisPage() {
                 <Link key={favori.id} href={`/services/${service.id}`}>
                   <NoticeCard className="relative flex flex-col gap-2">
                     <p className="font-display font-medium pr-8">{service.titre}</p>
-                    <p className="font-mono text-sm text-ocre-dark">
+                    <p className="tabular-nums text-sm text-ocre-dark">
                       {argent(service.prix)}
                     </p>
                     <div className="absolute right-4 top-4">

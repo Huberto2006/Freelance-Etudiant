@@ -63,7 +63,7 @@ export function HeroAccueil({
       <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-5 sm:py-16 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center lg:gap-8 lg:py-16">
         <div>
           <p className="scene-in scene-1 mb-5 inline-flex items-center gap-2 rounded-md border border-ink/10 bg-ink/[0.03] px-2.5 py-1 text-xs font-medium text-ink-soft">
-            <GraduationCap size={13} aria-hidden="true" className="text-bleu-dark" />
+            <GraduationCap size={14} aria-hidden="true" className="text-bleu-dark" />
             {t("eyebrow")}
           </p>
 
@@ -109,7 +109,7 @@ export function HeroAccueil({
                   ? t("ariaSearchServices")
                   : t("ariaSearchMissions")
               }
-              className="kianja-field-control min-w-0 flex-1 bg-transparent px-3 text-sm text-ink outline-none focus:outline-none placeholder:text-ink-soft/60"
+              className="kianja-field-control min-w-0 flex-1 bg-transparent px-3 text-sm text-ink outline-none focus:outline-none placeholder:text-ink-soft/85"
             />
 
             <button
@@ -117,7 +117,7 @@ export function HeroAccueil({
               aria-label={t("searchSubmit")}
               className="flex w-12 shrink-0 cursor-pointer items-center justify-center bg-ink text-paper-light transition-colors duration-150 hover:bg-ink-soft"
             >
-              <Search size={17} aria-hidden="true" />
+              <Search size={18} aria-hidden="true" />
             </button>
           </form>
 

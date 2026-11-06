@@ -176,7 +176,7 @@ export function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
         <NoticeCard>
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <p className="font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
+              <p className=" text-xs text-ocre-dark font-medium">
                 {t("management")}
               </p>
 
@@ -226,11 +226,7 @@ export function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
 
             {message && <p className="text-sm text-rice">{message}</p>}
 
-            <div className="flex flex-wrap gap-3">
-              <Button type="submit" disabled={envoi}>
-                {envoi ? t("saving") : t("saveChanges")}
-              </Button>
-
+            <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
               <Button
                 type="button"
                 variant="ghost"
@@ -238,6 +234,10 @@ export function ProfilClient({ utilisateur }: { utilisateur: Utilisateur }) {
                 disabled={envoi}
               >
                 {t("cancel")}
+              </Button>
+
+              <Button type="submit" variant="secondary" disabled={envoi}>
+                {envoi ? t("saving") : t("saveChanges")}
               </Button>
             </div>
           </form>

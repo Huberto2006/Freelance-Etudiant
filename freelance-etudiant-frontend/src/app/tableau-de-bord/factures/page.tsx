@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { FileText } from "lucide-react";
 
@@ -13,6 +13,15 @@ import { useLabels } from "@/i18n/use-labels";
 
 import { DataTable, type ColonneDataTable } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/Notice";
+import {
+  FILTRES_FINANCIERS_VIDES,
+  FiltresFinanciers,
+  type ValeursFiltresFinanciers,
+} from "@/features/paiements/components/FiltresFinanciers";
+import {
+  filtrerFinancier,
+  filtresFinanciersActifs,
+} from "@/features/paiements/utils/filtrer-financier";
 
 export default function FacturesPage() {
   const { utilisateur } = useAuth();
@@ -23,6 +32,9 @@ export default function FacturesPage() {
   const [factures, setFactures] = useState<Facture[]>([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [filtres, setFiltres] = useState<ValeursFiltresFinanciers>({
+    ...FILTRES_FINANCIERS_VIDES,
+  });
 
   useEffect(() => {
     if (!utilisateur) return;
@@ -51,6 +63,16 @@ export default function FacturesPage() {
     };
   }, [utilisateur, t]);
 
+  const facturesFiltrees = useMemo(
+    () =>
+      filtrerFinancier(factures, filtres, {
+        methode: (facture) => facture.methode,
+        date: (facture) => facture.dateEmission,
+      }),
+    [factures, filtres],
+  );
+
+  // Après tous les hooks : leur ordre ne doit jamais dépendre de la session.
   if (!utilisateur) return null;
 
   const estEtudiant = utilisateur.role === "etudiant";
@@ -61,7 +83,8 @@ export default function FacturesPage() {
       id: "facture",
       entete: t("list.colInvoice"),
       valeurTri: (f) => f.numero,
-      texteRecherche: (f) => `${f.numero} ${f.titreMission}`,
+      texteRecherche: (f) =>
+        `${f.numero} ${f.referencePaiement} ${f.titreMission}`,
       cellule: (f) => (
         <Link
           href={`/tableau-de-bord/paiements/${f.transactionId}/facture`}
@@ -114,7 +137,7 @@ export default function FacturesPage() {
       id: "montant",
       entete: t("list.colAmount"),
       alignement: "droite",
-      classeCellule: "whitespace-nowrap font-mono font-medium text-ink",
+      classeCellule: "whitespace-nowrap tabular-nums font-medium text-ink",
       valeurTri: (f) => Number(f.montant),
       cellule: (f) => argent(f.montant),
     },
@@ -136,7 +159,7 @@ export default function FacturesPage() {
       </p>
 
       <DataTable
-        lignes={factures}
+        lignes={facturesFiltrees}
         colonnes={colonnes}
         cleLigne={(f) => f.id}
         legende={t("list.title")}
@@ -147,6 +170,12 @@ export default function FacturesPage() {
         messageAucunResultat={t("list.noResults")}
         placeholderRecherche={t("list.searchPlaceholder")}
         libelleRecherche={t("list.searchLabel")}
+        filtres={<FiltresFinanciers valeur={filtres} onChange={setFiltres} />}
+        filtresActifs={filtresFinanciersActifs(filtres)}
+        onReinitialiserFiltres={() =>
+          setFiltres({ ...FILTRES_FINANCIERS_VIDES })
+        }
+        cleFiltres={JSON.stringify(filtres)}
       />
     </div>
   );

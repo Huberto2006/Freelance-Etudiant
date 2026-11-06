@@ -106,7 +106,7 @@ export function MessagesLink() {
             rounded-full
             bg-brique
             px-1
-            font-mono
+            tabular-nums
             text-[0.625rem]
             font-bold
             leading-none

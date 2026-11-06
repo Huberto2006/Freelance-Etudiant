@@ -1,8 +1,9 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { CheckCircle2, Loader2, TriangleAlert } from "lucide-react";
+import { CircleCheck, TriangleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { api, ApiError } from "@/lib/api";
@@ -146,7 +147,7 @@ export function FormulaireContact() {
           aria-hidden="true"
           className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-rice/10 text-rice"
         >
-          <CheckCircle2 size={22} />
+          <CircleCheck size={20} />
         </span>
         <h2 className="mt-3 font-display text-xl font-semibold text-ink">
           {t("sentTitle")}
@@ -269,20 +270,15 @@ export function FormulaireContact() {
         onToken={setTurnstileToken}
       />
 
-      <button
+      <Button
         type="submit"
-        disabled={enEnvoi || !turnstileToken}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-ink bg-ink px-4 py-2.5 text-sm font-medium text-paper-light transition-colors hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        variant="secondary"
+        loading={enEnvoi}
+        disabled={!turnstileToken}
+        className="w-full sm:w-auto"
       >
-        {enEnvoi && (
-          <Loader2
-            size={15}
-            aria-hidden="true"
-            className="animate-spin motion-reduce:animate-none"
-          />
-        )}
         {enEnvoi ? t("sending") : t("send")}
-      </button>
+      </Button>
     </form>
   );
 }

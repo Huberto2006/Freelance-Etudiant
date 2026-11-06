@@ -67,9 +67,9 @@ export function SelecteurTheme({
             "
           >
             {mode === "sombre" ? (
-              <Sun size={15} className="text-amber-400" />
+              <Sun size={16} className="text-amber-400" />
             ) : (
-              <Moon size={15} className="text-ink" />
+              <Moon size={16} className="text-ink" />
             )}
           </button>
         </div>
@@ -105,7 +105,7 @@ export function SelecteurTheme({
                     style={{ backgroundColor: t.pastilleCouleur }}
                   >
                     {estActif && (
-                      <Check size={11} className="stroke-[3] text-white" />
+                      <Check size={12} className="stroke-[3] text-white" />
                     )}
                   </span>
                   <span className="mt-1 max-w-full truncate text-[0.625rem] font-medium text-ink-soft">

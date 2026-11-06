@@ -1162,16 +1162,17 @@ export class PaiementsService implements OnModuleInit, OnModuleDestroy {
   async findByClient(
     clientId: string,
   ): Promise<Transaction[]> {
-    return this.repo.find({
-      where: { clientId },
-      relations: [
-        'candidature',
-        'candidature.mission',
-      ],
-      order: {
-        dateCreation: 'DESC',
-      },
-    });
+    return this.repo
+      .createQueryBuilder('transaction')
+      .leftJoinAndSelect('transaction.candidature', 'candidature')
+      .leftJoinAndSelect('candidature.mission', 'mission')
+      .leftJoin('transaction.client', 'client')
+      .addSelect(['client.id', 'client.nom'])
+      .leftJoin('transaction.etudiant', 'etudiant')
+      .addSelect(['etudiant.id', 'etudiant.nom'])
+      .where('transaction.clientId = :clientId', { clientId })
+      .orderBy('transaction.dateCreation', 'DESC')
+      .getMany();
   }
 
   /**
@@ -1180,16 +1181,17 @@ export class PaiementsService implements OnModuleInit, OnModuleDestroy {
   async findByEtudiant(
     etudiantId: string,
   ): Promise<Transaction[]> {
-    return this.repo.find({
-      where: { etudiantId },
-      relations: [
-        'candidature',
-        'candidature.mission',
-      ],
-      order: {
-        dateCreation: 'DESC',
-      },
-    });
+    return this.repo
+      .createQueryBuilder('transaction')
+      .leftJoinAndSelect('transaction.candidature', 'candidature')
+      .leftJoinAndSelect('candidature.mission', 'mission')
+      .leftJoin('transaction.client', 'client')
+      .addSelect(['client.id', 'client.nom'])
+      .leftJoin('transaction.etudiant', 'etudiant')
+      .addSelect(['etudiant.id', 'etudiant.nom'])
+      .where('transaction.etudiantId = :etudiantId', { etudiantId })
+      .orderBy('transaction.dateCreation', 'DESC')
+      .getMany();
   }
 
   // ============================================================

@@ -29,7 +29,10 @@ import {
 } from "@/features/catalogue/components/SousMenuCatalogue";
 import { CarteMission } from "@/features/missions/components/CarteMission";
 import { CarteService } from "@/features/services/components/CarteService";
-import { NoticeCard } from "@/components/ui/Notice";
+import {
+  NoticeCard,
+  EtatVide,
+} from "@/components/ui/Notice";
 import { Button } from "@/components/ui/Button";
 import { SqueletteCatalogue } from "@/features/catalogue/components/SqueletteCatalogue";
 import { useAuth } from "@/lib/auth-context";
@@ -38,7 +41,7 @@ export default function PublicationsPage() {
   return (
     <Suspense
       fallback={
-        <div className="container mx-auto max-w-7xl px-4 pb-10 pt-7">
+        <div className="mx-auto max-w-7xl px-5 pb-7 pt-8 sm:pt-11">
           <SqueletteCatalogue nombre={6} />
         </div>
       }
@@ -327,12 +330,12 @@ function PublicationsContent() {
       {/* ---------------------------------------------------- EN-TÊTE */}
       <header className="mb-6 flex flex-col justify-between gap-4 border-b border-ink/10 pb-6 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-1 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-bleu-dark">
-            <Layers3 size={15} aria-hidden="true" />
+          <p className="mb-1 flex items-center gap-2 text-xs text-bleu-dark font-medium">
+            <Layers3 size={16} aria-hidden="true" />
             {t("eyebrow")}
           </p>
 
-          <h1 className="font-display text-3xl font-bold sm:text-4xl text-ink">
+          <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
             {t("title")}
           </h1>
 
@@ -342,15 +345,15 @@ function PublicationsContent() {
 
           {/* Badges de synthèse en direct */}
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-            <span className="inline-flex items-center rounded-full border border-ink/15 bg-paper-light px-2.5 py-0.5 font-mono text-[0.6875rem] font-medium text-ink">
+            <span className="inline-flex items-center rounded-full border border-ink/15 bg-paper-light px-2.5 py-0.5 tabular-nums text-[0.6875rem] font-medium text-ink">
               {chargement ? "…" : t("badges.total", { count: nbTotal })}
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-bleu/20 bg-bleu/10 px-2.5 py-0.5 font-mono text-[0.6875rem] font-medium text-bleu-dark">
-              <BriefcaseBusiness size={11} aria-hidden="true" />
+            <span className="inline-flex items-center gap-1 rounded-full border border-bleu/20 bg-bleu/10 px-2.5 py-0.5 tabular-nums text-[0.6875rem] font-medium text-bleu-dark">
+              <BriefcaseBusiness size={12} aria-hidden="true" />
               {chargement ? "…" : t("badges.missions", { count: nbMissionsTotal })}
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-ocre/20 bg-ocre/10 px-2.5 py-0.5 font-mono text-[0.6875rem] font-medium text-ocre-dark">
-              <Wrench size={11} aria-hidden="true" />
+            <span className="inline-flex items-center gap-1 rounded-full border border-ocre/20 bg-ocre/10 px-2.5 py-0.5 tabular-nums text-[0.6875rem] font-medium text-ocre-dark">
+              <Wrench size={12} aria-hidden="true" />
               {chargement ? "…" : t("badges.services", { count: nbServicesTotal })}
             </span>
           </div>
@@ -364,20 +367,16 @@ function PublicationsContent() {
         {utilisateur && (
           <div className="flex shrink-0 items-center gap-2">
             {utilisateur.role === "client" && (
-              <Link href="/tableau-de-bord/mes-missions">
-                <Button variant="primary" size="sm" className="gap-1.5 text-xs">
+              <Button href="/tableau-de-bord/mes-missions" variant="secondary" size="sm" className="gap-1.5">
                   <Plus size={14} aria-hidden="true" />
                   {t("actions.publishMission")}
                 </Button>
-              </Link>
             )}
             {utilisateur.role === "etudiant" && (
-              <Link href="/tableau-de-bord/mes-services">
-                <Button variant="primary" size="sm" className="gap-1.5 text-xs">
+              <Button href="/tableau-de-bord/mes-services" variant="secondary" size="sm" className="gap-1.5">
                   <Sparkles size={14} aria-hidden="true" />
                   {t("actions.offerService")}
                 </Button>
-              </Link>
             )}
           </div>
         )}
@@ -441,9 +440,9 @@ function PublicationsContent() {
         <div className="flex items-center gap-2">
           <label
             htmlFor="select-tri-publications"
-            className="flex items-center gap-1 font-mono text-xs uppercase tracking-wider text-ink-soft"
+            className="flex items-center gap-1 text-xs text-ink-soft font-medium"
           >
-            <ArrowUpDown size={13} aria-hidden="true" />
+            <ArrowUpDown size={14} aria-hidden="true" />
             <span className="hidden sm:inline">{t("sort.label")}</span>
           </label>
 
@@ -491,14 +490,14 @@ function PublicationsContent() {
                 href="/missions"
                 className="inline-flex items-center gap-1.5 text-bleu-dark hover:underline"
               >
-                <BriefcaseBusiness size={13} aria-hidden="true" />
+                <BriefcaseBusiness size={14} aria-hidden="true" />
                 <span>{t("targeted.missionsOnly")}</span>
               </Link>
               <Link
                 href="/services"
                 className="inline-flex items-center gap-1.5 text-bleu-dark hover:underline"
               >
-                <Wrench size={13} aria-hidden="true" />
+                <Wrench size={14} aria-hidden="true" />
                 <span>{t("targeted.servicesOnly")}</span>
               </Link>
             </div>
@@ -523,57 +522,48 @@ function PublicationsContent() {
                   }}
                   className="mt-3"
                 >
-                  <RotateCcw size={13} className="mr-1.5" />
+                  <RotateCcw size={14} className="mr-1.5" />
                   {t("actions.retry")}
                 </Button>
               </div>
             </NoticeCard>
           ) : publicationsFiltrees.length === 0 ? (
-            <NoticeCard>
-              <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-                <span
-                  className="flex h-12 w-12 items-center justify-center rounded-full bg-ink/5 text-ink-soft"
-                  aria-hidden="true"
-                >
-                  <Layers3 size={22} />
-                </span>
+            <EtatVide
+              icon={Layers3}
+              titre={
+                typeActif === "missions"
+                  ? t("empty.missions")
+                  : typeActif === "services"
+                  ? t("empty.services")
+                  : t("empty.all")
+              }
+              action={
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={reinitialiserFiltres}
+                                className="gap-1.5"
+                              >
+                                <RotateCcw size={14} />
+                                {t("empty.reset")}
+                              </Button>
 
-                <h3 className="font-display text-base font-semibold text-ink">
-                  {typeActif === "missions"
-                    ? t("empty.missions")
-                    : typeActif === "services"
-                    ? t("empty.services")
-                    : t("empty.all")}
-                </h3>
-
-                <p className="max-w-md text-xs leading-relaxed text-ink-soft">
-                  {t("empty.hint")}
-                </p>
-
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={reinitialiserFiltres}
-                    className="gap-1 text-xs"
-                  >
-                    <RotateCcw size={13} />
-                    {t("empty.reset")}
-                  </Button>
-
-                  {typeActif !== "toutes" && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setTypeActif("toutes")}
-                      className="text-xs"
-                    >
-                      {t("empty.showAll")}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </NoticeCard>
+                              {typeActif !== "toutes" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setTypeActif("toutes")}
+                                  className="text-xs"
+                                >
+                                  {t("empty.showAll")}
+                                </Button>
+                              )}
+                            </div>
+              }
+            >
+              {t("empty.hint")}
+            </EtatVide>
           ) : (
             <>
               <div className="mb-3 flex items-center justify-between text-xs text-ink-soft">

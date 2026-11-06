@@ -25,6 +25,8 @@ export function DashboardHeader({
   const t = useTranslations("dashboardPages.dashboardHeader");
   const { role } = useLabels();
   const prenom = utilisateur.nom.split(" ")[0] || utilisateur.nom;
+  // Rendu côté client uniquement (session requise) : l'heure est celle de la personne.
+  const heure = new Date().getHours();
 
   return (
     <header className={clsx("mb-7 flex items-center gap-4", className)}>
@@ -36,12 +38,9 @@ export function DashboardHeader({
       />
 
       <div className="min-w-0 flex-1">
-        <p className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
-          {t("eyebrow")}
-        </p>
 
-        <h1 className="font-display text-3xl font-semibold leading-tight">
-          {t("greeting", { prenom })}
+        <h1 className="font-display text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
+          {t(heure >= 18 ? "greetingEvening" : "greeting", { prenom })}
         </h1>
 
         <p className="mt-1 text-sm text-ink-soft">{sousTitre}</p>

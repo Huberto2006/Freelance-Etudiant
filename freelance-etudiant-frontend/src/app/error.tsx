@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import { useTranslations } from "next-intl";
 
 /** Frontière d'erreur traduite : propose de réessayer sans perdre la page. */
@@ -17,13 +18,9 @@ export default function ErreurPage({
         {t("title")}
       </h1>
       <p className="mt-2 text-sm text-ink-soft">{t("text")}</p>
-      <button
-        type="button"
-        onClick={reset}
-        className="mt-6 inline-flex items-center justify-center rounded-lg border border-ink bg-ink px-4 py-2.5 text-sm font-medium text-paper-light transition-colors hover:bg-ink-soft"
-      >
+      <Button variant="secondary" onClick={reset} className="mt-6">
         {t("retry")}
-      </button>
+      </Button>
     </main>
   );
 }

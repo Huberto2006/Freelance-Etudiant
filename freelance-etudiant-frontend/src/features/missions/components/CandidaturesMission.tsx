@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 
 import { api, ApiError } from "@/lib/api";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -221,7 +220,7 @@ export function CandidaturesMission({
                     )}
                   </p>
 
-                  <p className="text-xs text-ink-soft/70">
+                  <p className="text-xs text-ink-soft/85">
                     {formatArgent(candidature.prixPropose)}
                     {" · "}
                     {t("days", { count: candidature.delaiPropose })}
@@ -306,33 +305,27 @@ export function CandidaturesMission({
                       ----------------------------------------- */}
 
                   {etudiant && (
-                    <Link
+                    <Button
                       href={`/tableau-de-bord/messages?contact=${encodeURIComponent(
                         etudiant.id,
-                      )}&nom=${encodeURIComponent(etudiant.nom)}`}
-                    >
-                      <Button size="sm" variant="secondary">
+                      )}&nom=${encodeURIComponent(etudiant.nom)}`} size="sm" variant="secondary">
                         {t("chatWithStudent")}
                       </Button>
-                    </Link>
                   )}
 
                   {/* -----------------------------------------
                       LIVRAISON
                       ----------------------------------------- */}
 
-                  <Link
+                  <Button
                     href={`/tableau-de-bord/livraisons?candidature=${encodeURIComponent(
                       candidature.id,
-                    )}&role=client`}
-                  >
-                    <Button size="sm" variant="ghost">
+                    )}&role=client`} size="sm" variant="ghost">
                       {t("trackDelivery")}
                     </Button>
-                  </Link>
                 </div>
 
-                <p className="mt-2 text-xs text-ink-soft/70">
+                <p className="mt-2 text-xs text-ink-soft/85">
                   {t("deliveryHint")}
                 </p>
               </div>

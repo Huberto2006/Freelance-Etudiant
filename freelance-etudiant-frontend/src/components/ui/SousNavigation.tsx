@@ -38,7 +38,7 @@ export function SousNavigation({
     <nav
       aria-label={t("categoryFilters")}
       className="
-        -mx-1 mb-6 flex gap-2 overflow-x-auto pb-1
+        -mx-1 mb-6 flex px-1 gap-2 overflow-x-auto pb-1
         [scrollbar-width:thin]
       "
     >
@@ -52,7 +52,7 @@ export function SousNavigation({
             aria-current={estActif ? "true" : undefined}
             className={clsx(
               "inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5",
-              "font-mono text-[0.6875rem] uppercase tracking-wider transition-colors",
+              " text-xs transition-colors font-medium",
               estActif
                 ? "border-ink bg-ink text-paper-light"
                 : "border-ink/20 bg-paper text-ink-soft hover:border-ink/50 hover:text-ink",
@@ -93,7 +93,7 @@ export function SousNavigationLiens({
   return (
     <nav
       aria-label={t("subNav")}
-      className="-mx-1 mb-6 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]"
+      className="-mx-1 mb-6 flex px-1 gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]"
     >
       {liens.map((lien) => {
         const estActif = pathname === lien.href;
@@ -104,7 +104,7 @@ export function SousNavigationLiens({
             aria-current={estActif ? "page" : undefined}
             className={clsx(
               "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5",
-              "font-mono text-[0.6875rem] uppercase tracking-wider transition-colors",
+              " text-xs transition-colors font-medium",
               estActif
                 ? "border-ink bg-ink text-paper-light"
                 : "border-ink/20 bg-paper text-ink-soft hover:border-ink/50 hover:text-ink",

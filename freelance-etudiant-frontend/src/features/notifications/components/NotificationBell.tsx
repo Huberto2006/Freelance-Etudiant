@@ -9,6 +9,12 @@ import {
   CheckCheck,
   ChevronRight,
   X,
+  ClipboardList,
+  MessageCircle,
+  Package,
+  Wallet,
+  Star,
+  ThumbsUp,
 } from "lucide-react";
 
 import { api, lienInterneSur } from "@/lib/api";
@@ -67,14 +73,15 @@ function formatDate(
 
 function getIcon(type: string) {
   const valeur = type.toLowerCase();
-  if (valeur.includes("candidature")) return "📋";
-  if (valeur.includes("message")) return "💬";
-  if (valeur.includes("livraison")) return "📦";
-  if (valeur.includes("paiement")) return "💰";
-  if (valeur.includes("evaluation") || valeur.includes("évaluation")) return "⭐";
-  if (valeur.includes("commentaire")) return "💬";
-  if (valeur.includes("reaction") || valeur.includes("réaction")) return "👍";
-  return "🔔";
+  let Icone = Bell;
+  if (valeur.includes("candidature")) Icone = ClipboardList;
+  else if (valeur.includes("message")) Icone = MessageCircle;
+  else if (valeur.includes("livraison")) Icone = Package;
+  else if (valeur.includes("paiement")) Icone = Wallet;
+  else if (valeur.includes("evaluation") || valeur.includes("évaluation")) Icone = Star;
+  else if (valeur.includes("commentaire")) Icone = MessageCircle;
+  else if (valeur.includes("reaction") || valeur.includes("réaction")) Icone = ThumbsUp;
+  return <Icone size={16} aria-hidden="true" />;
 }
 
 export function NotificationBell() {
@@ -457,7 +464,7 @@ export function NotificationBell() {
               rounded-full
               bg-brique
               px-1
-              font-mono
+              tabular-nums
               text-[0.625rem]
               font-bold
               leading-none
@@ -541,7 +548,7 @@ export function NotificationBell() {
                       bg-brique/10
                       px-2
                       py-0.5
-                      font-mono
+                      tabular-nums
                       text-[0.625rem]
                       font-semibold
                       text-brique
@@ -649,7 +656,7 @@ export function NotificationBell() {
                   className="
                     h-6
                     w-6
-                    animate-spin
+                    motion-safe:animate-spin
                     rounded-full
                     border-2
                     border-ink/10
@@ -680,9 +687,9 @@ export function NotificationBell() {
                   "
                 >
                   <Bell
-                    size={21}
+                    size={20}
                     className="
-                      text-ink-soft/50
+                      text-ink-soft/85
                     "
                   />
                 </div>
@@ -797,11 +804,9 @@ export function NotificationBell() {
                           <p
                             className="
                               mt-1.5
-                              font-mono
+                              tabular-nums
                               text-[0.625rem]
-                              uppercase
-                              tracking-wide
-                              text-ink-soft/50
+                              text-ink-soft/85
                             "
                           >
                             {formatDate(

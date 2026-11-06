@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ImagePlus, Loader2, X } from "lucide-react";
+import { ImagePlus, LoaderCircle, X } from "lucide-react";
 import { api, ApiError, getFileUrl } from "@/lib/api";
 
 const TAILLE_MAX = 5 * 1024 * 1024; // 5 Mo
@@ -134,10 +134,10 @@ export function SelecteurImages({
             type="button"
             onClick={choisirImages}
             disabled={disabled || envoi}
-            className="flex h-24 w-24 flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-ink/25 text-ink-soft/60 transition-colors hover:text-ocre-dark disabled:cursor-wait"
+            className="flex h-24 w-24 flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-ink/25 text-ink-soft/85 transition-colors hover:text-ocre-dark disabled:cursor-wait"
           >
             {envoi ? (
-              <Loader2 size={20} className="animate-spin" />
+              <LoaderCircle size={20} className="motion-safe:animate-spin" />
             ) : (
               <ImagePlus size={20} />
             )}
@@ -146,7 +146,7 @@ export function SelecteurImages({
         )}
       </div>
 
-      <p className="mt-1.5 text-xs text-ink-soft/70">
+      <p className="mt-1.5 text-xs text-ink-soft/85">
         {t("multiHint", { max })}
       </p>
 

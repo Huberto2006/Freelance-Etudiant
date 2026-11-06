@@ -52,7 +52,7 @@ export function SectionCategories({
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-ink/[0.05] text-ink-soft transition-colors duration-150 group-hover:bg-bleu/10 group-hover:text-bleu-dark"
                 aria-hidden="true"
               >
-                <Icone size={17} />
+                <Icone size={18} />
               </span>
 
               <span className="min-w-0">

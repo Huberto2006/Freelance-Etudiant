@@ -10,6 +10,11 @@ import { useLabels } from "@/i18n/use-labels";
 import { useApiList } from "@/hooks/useApiList";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type ColonneDataTable } from "@/components/ui/data-table";
+import {
+  FiltrePeriode,
+  type PeriodeFiltre,
+} from "@/components/ui/data-table/FiltrePeriode";
+import { dateDansPeriode } from "@/components/ui/data-table/utils";
 import { Textarea } from "@/components/ui/Field";
 import { BadgeStatut, EtatVide, NoticeCard, PageHeader } from "@/components/ui/Notice";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -25,6 +30,10 @@ export default function AdminSignalementsPage() {
     api.get<Signalement[]>("/signalements"),
   );
   const signalements = useMemo(() => donnees ?? [], [donnees]);
+  const [periode, setPeriode] = useState<PeriodeFiltre>({
+    depuis: "",
+    jusqua: "",
+  });
   const [resolutions, setResolutions] = useState<Record<string, string>>({});
   const [enCours, setEnCours] = useState<string | null>(null);
 
@@ -53,7 +62,12 @@ export default function AdminSignalementsPage() {
   const premierChargement = chargement && donnees === null;
 
   const ouverts = signalements.filter((x) => x.statut !== "traite");
-  const traites = signalements.filter((x) => x.statut === "traite");
+  const traites = signalements.filter(
+    (x) =>
+      x.statut === "traite" &&
+      ((!periode.depuis && !periode.jusqua) ||
+        dateDansPeriode(x.dateSignalement, periode.depuis, periode.jusqua)),
+  );
 
   const colonnesTraites: ColonneDataTable<Signalement>[] = [
     {
@@ -68,6 +82,35 @@ export default function AdminSignalementsPage() {
           <span className="block max-w-xl text-xs leading-relaxed text-ink-soft">
             {s.description}
           </span>
+          <details className="mt-1 text-xs">
+            <summary className="w-fit cursor-pointer text-ink-soft underline underline-offset-2 hover:text-ink">
+              {t("reports.viewDetails")}
+            </summary>
+            <dl className="mt-2 grid gap-x-3 gap-y-1 text-ink-soft sm:grid-cols-2">
+              <div>
+                <dt className="inline font-medium">{t("reports.detailTargetId")}: </dt>
+                <dd className="inline break-all font-mono">{s.cibleId}</dd>
+              </div>
+              {s.signalePar && (
+                <div>
+                  <dt className="inline font-medium">{t("reports.detailReporter")}: </dt>
+                  <dd className="inline">{s.signalePar.nom}</dd>
+                </div>
+              )}
+              {s.signalePar?.email && (
+                <div>
+                  <dt className="inline font-medium">{t("reports.detailReporterEmail")}: </dt>
+                  <dd className="inline">{s.signalePar.email}</dd>
+                </div>
+              )}
+              {s.dateTraitement && (
+                <div>
+                  <dt className="inline font-medium">{t("reports.detailProcessedOn")}: </dt>
+                  <dd className="inline">{dateCourte(s.dateTraitement)}</dd>
+                </div>
+              )}
+            </dl>
+          </details>
           {/* Sur petit écran, les colonnes masquées passent sous le texte. */}
           {s.resolution && (
             <span className="mt-1 block text-xs italic text-ink-soft md:hidden">
@@ -157,7 +200,7 @@ export default function AdminSignalementsPage() {
             {t("reports.toProcess", { count: ouverts.length })}
           </h2>
 
-          {ouverts.length === 0 ? (
+          {erreur && ouverts.length === 0 ? null : ouverts.length === 0 ? (
             <EtatVide icon={Flag} className="mb-8">
               {t("reports.noneWaiting")}
             </EtatVide>
@@ -221,6 +264,7 @@ export default function AdminSignalementsPage() {
             {t("reports.processed")}
           </h2>
           <DataTable
+          masquerVide={Boolean(erreur)}
             lignes={traites}
             colonnes={colonnesTraites}
             cleLigne={(s) => s.id}
@@ -230,6 +274,14 @@ export default function AdminSignalementsPage() {
             messageAucunResultat={t("reports.noResults")}
             placeholderRecherche={t("reports.searchPlaceholder")}
             libelleRecherche={t("reports.searchLabel")}
+            filtres={
+              <FiltrePeriode valeur={periode} onChange={setPeriode} />
+            }
+            filtresActifs={Boolean(periode.depuis || periode.jusqua)}
+            onReinitialiserFiltres={() =>
+              setPeriode({ depuis: "", jusqua: "" })
+            }
+            cleFiltres={`${periode.depuis}|${periode.jusqua}`}
             triInitial={{ colonne: "date", direction: "desc" }}
           />
         </>

@@ -104,10 +104,10 @@ export function CarteService({
         {/* Pied : prix + delai + auteur */}
         <div className="mt-auto border-t border-ink/10 pt-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="font-mono text-sm font-semibold tabular-nums text-ocre-dark">
+            <p className="text-sm font-semibold tabular-nums text-ocre-dark">
               {argent(service.prix)}
             </p>
-            <p className="inline-flex items-center gap-1 text-xs text-ink-soft/70">
+            <p className="inline-flex items-center gap-1 text-xs text-ink-soft/85">
               <Timer size={12} aria-hidden="true" />
               {t("card.days", { count: service.delai })}
             </p>

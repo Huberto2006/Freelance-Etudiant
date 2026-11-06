@@ -47,7 +47,7 @@ export default function CompteGooglePage() {
   }
 
   return (
-    <div className="mx-auto max-w-xl">
+    <div className="max-w-xl">
       <PageHeader
         icon={Link2}
         eyebrow={t("google.eyebrow")}

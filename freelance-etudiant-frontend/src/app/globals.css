@@ -8,16 +8,16 @@
    ========================================================================== */
 
 :root {
-  /* Valeurs par défaut (Thème Slate / Gris-bleu Kianja) */
-  --theme-primary: #475569;
-  --theme-primary-dark: #334155;
-  --theme-primary-soft: rgba(71, 85, 105, 0.12);
-  --theme-secondary: #64748b;
-  --theme-accent: #475569;
-  --theme-paper: #f8fafc;
-  --theme-paper-light: #ffffff;
-  --theme-ink: #0f172a;
-  --theme-ink-soft: #334155;
+  /* Valeurs par défaut (thème Ocre Malagasy, chaleureux) */
+  --theme-primary: #a8501f;
+  --theme-primary-dark: #8a3f15;
+  --theme-primary-soft: rgba(168, 80, 31, 0.12);
+  --theme-secondary: #c2703a;
+  --theme-accent: #a8501f;
+  --theme-paper: #fbf7f1;
+  --theme-paper-light: #fffdf9;
+  --theme-ink: #2c2119;
+  --theme-ink-soft: #5a4a3e;
 
   --theme-font-display: "Zilla Slab", Georgia, serif;
   --theme-font-body: "Inter", -apple-system, sans-serif;
@@ -32,6 +32,10 @@
   --theme-bleu: #2563eb;
   --theme-bleu-dark: #1d4ed8;
   --theme-bleu-soft: rgba(37, 99, 235, 0.12);
+
+  /* Barre latérale : surface sombre stable, surchargée par le thème Ocre. */
+  --theme-panel: #0d2038;
+  --theme-panel-dark: #0b1b31;
 }
 
 /* --- THÈME : SLATE (Gris-bleu Kianja Classique) --- */
@@ -50,8 +54,7 @@
 }
 
 .dark[data-theme="slate"],
-[data-theme="slate"].dark,
-.dark:not([data-theme]) {
+[data-theme="slate"].dark {
   --theme-primary: #94a3b8;
   --theme-primary-dark: #cbd5e1;
   --theme-primary-soft: rgba(148, 163, 184, 0.15);
@@ -149,30 +152,42 @@
 
 /* --- THÈME : OCRE MALAGASY (Chaleureux & Terroir) --- */
 [data-theme="amber"] {
-  --theme-primary: #d97706;
-  --theme-primary-dark: #b45309;
-  --theme-primary-soft: rgba(217, 119, 6, 0.12);
-  --theme-secondary: #f59e0b;
-  --theme-accent: #d97706;
-  --theme-paper: #fffdfa;
-  --theme-paper-light: #ffffff;
-  --theme-ink: #291804;
-  --theme-ink-soft: #5c4018;
+  --theme-primary: #a8501f;
+  --theme-primary-dark: #8a3f15;
+  --theme-primary-soft: rgba(168, 80, 31, 0.12);
+  --theme-secondary: #c2703a;
+  --theme-accent: #a8501f;
+  --theme-paper: #fbf7f1;
+  --theme-paper-light: #fffdf9;
+  --theme-ink: #2c2119;
+  --theme-ink-soft: #5a4a3e;
+  /* Liens et états actifs dans la même famille que la palette. */
+  --theme-bleu: #a8501f;
+  --theme-bleu-dark: #8a3f15;
+  --theme-bleu-soft: rgba(168, 80, 31, 0.12);
+  --theme-panel: #2b2019;
+  --theme-panel-dark: #231a14;
   --theme-font-display: "Zilla Slab", Georgia, serif;
   --theme-font-body: "Inter", -apple-system, sans-serif;
 }
 
 .dark[data-theme="amber"],
-[data-theme="amber"].dark {
-  --theme-primary: #fbbf24;
-  --theme-primary-dark: #fde68a;
-  --theme-primary-soft: rgba(251, 191, 36, 0.15);
-  --theme-secondary: #f59e0b;
-  --theme-accent: #fbbf24;
-  --theme-paper: #201608;
-  --theme-paper-light: #32230e;
-  --theme-ink: #fef3c7;
-  --theme-ink-soft: #fcd34d;
+[data-theme="amber"].dark,
+.dark:not([data-theme]) {
+  --theme-primary: #e39a5b;
+  --theme-primary-dark: #f2c48d;
+  --theme-primary-soft: rgba(227, 154, 91, 0.16);
+  --theme-secondary: #c98a55;
+  --theme-accent: #e39a5b;
+  --theme-paper: #1f1711;
+  --theme-paper-light: #2b2119;
+  --theme-ink: #f6eee5;
+  --theme-ink-soft: #cdbcab;
+  --theme-bleu: #e39a5b;
+  --theme-bleu-dark: #f2c48d;
+  --theme-bleu-soft: rgba(227, 154, 91, 0.16);
+  --theme-panel: #17100b;
+  --theme-panel-dark: #120c08;
 }
 
 /* ==========================================================================
@@ -208,8 +223,8 @@
   /* PANEL — surfaces de navigation sombres de la Sidebar.
      Stable en mode clair comme en mode sombre (identité visuelle
      de la barre latérale : fond nuit permanent, indépendant du thème). */
-  --color-panel: #0d2038;
-  --color-panel-dark: #0b1b31;
+  --color-panel: var(--theme-panel);
+  --color-panel-dark: var(--theme-panel-dark);
 
   /* Typographie réactive au thème */
   --font-display: var(--theme-font-display);
@@ -238,9 +253,9 @@
      - carte    : surface posée (repos)
      - survol   : surface interactive survolée
      - flottant : menus, popovers, dialogues, toasts */
-  --shadow-carte: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-survol: 0 10px 24px -14px rgba(15, 23, 42, 0.28), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
-  --shadow-flottant: 0 18px 40px -18px rgba(15, 23, 42, 0.35), 0 4px 10px -6px rgba(15, 23, 42, 0.12);
+  --shadow-carte: 0 1px 2px rgba(44, 33, 25, 0.04);
+  --shadow-survol: 0 10px 24px -14px rgba(44, 33, 25, 0.28), 0 2px 4px -2px rgba(44, 33, 25, 0.06);
+  --shadow-flottant: 0 18px 40px -18px rgba(44, 33, 25, 0.35), 0 4px 10px -6px rgba(44, 33, 25, 0.12);
 }
 
 /* Durées du système de mouvement (utilisées par les classes ci-dessous).
@@ -370,15 +385,15 @@ aside :focus-visible {
   background: transparent;
 }
 .kianja-scrollbar-light::-webkit-scrollbar-thumb {
-  background: rgba(15, 23, 42, 0.12);
+  background: rgba(44, 33, 25, 0.12);
   border-radius: 9999px;
 }
 .kianja-scrollbar-light::-webkit-scrollbar-thumb:hover {
-  background: rgba(15, 23, 42, 0.22);
+  background: rgba(44, 33, 25, 0.22);
 }
 .kianja-scrollbar-light {
   scrollbar-width: thin;
-  scrollbar-color: rgba(15, 23, 42, 0.12) transparent;
+  scrollbar-color: rgba(44, 33, 25, 0.12) transparent;
 }
 
 /* ==========================================================================
@@ -950,7 +965,7 @@ input[type="radio"] {
   background-color: var(--color-paper-light);
   border: 1px solid color-mix(in srgb, var(--color-ink) 11%, transparent);
   border-radius: var(--radius-lg);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 1px 2px rgba(44, 33, 25, 0.04);
   transition:
     transform 180ms var(--ease-out-soft),
     box-shadow 180ms var(--ease-out-soft),
@@ -1004,7 +1019,6 @@ input[type="radio"] {
   background-color: color-mix(in srgb, var(--color-ocre) 8%, transparent);
   color: var(--color-ocre-dark);
   border-radius: 9999px;
-  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 

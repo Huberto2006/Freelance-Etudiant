@@ -6,7 +6,7 @@
     "eyebrow": "Student area",
     "title": "My applications",
     "loading": "Loading…",
-    "empty": "You haven't applied to a mission yet.",
+    "empty": "You haven't applied yet. Have a look at the open missions, one of them might be right for you.",
     "browseMissions": "Browse missions",
     "tabs": {
       "all": "All",
@@ -136,7 +136,7 @@
     "invitations": "Group invitations ({count})",
     "openInvitation": "Open the invitation",
     "loading": "Loading your groups…",
-    "empty": "You are not part of any group for now.",
+    "empty": "You're not in a group yet. Create one to work with others.",
     "memberCount": "{count, plural, one {# member} other {# members}}",
     "membersLabel": "Members",
     "noMission": "No mission",
@@ -175,7 +175,7 @@
     "refusedMessage": "Friend request declined.",
     "refuseError": "Unable to decline this request.",
     "loadingRelations": "Loading your relationships...",
-    "noFriendsTitle": "You don't have any friends yet",
+    "noFriendsTitle": "Your network starts here",
     "noFriendsDescription": "Add other Kianja students to chat with them and grow your network.",
     "discoverStudents": "Discover students",
     "noReceivedTitle": "No request received",
@@ -193,7 +193,7 @@
     "studentCount": "{count, plural, one {# student} other {# students}}",
     "community": "Community",
     "title": "My friends",
-    "subtitle": "Manage your relationships with other Kianja students.",
+    "subtitle": "Find the students you know and meet new ones.",
     "close": "Close",
     "relations": "Relationships",
     "tabFriends": "Friends",
@@ -220,7 +220,7 @@
       "completedSub": "Delivered projects"
     },
     "loadingMissions": "Loading your missions…",
-    "empty": "You haven't published a mission yet.",
+    "empty": "You haven't posted a mission yet. Describe what you need and students can respond.",
     "tabs": {
       "all": "All",
       "open": "Open",
@@ -562,11 +562,11 @@
     "retry": "Try again"
   },
   "dashboardHeader": {
-    "eyebrow": "Dashboard",
-    "greeting": "Hello, {prenom}"
+    "greeting": "Hello, {prenom}",
+    "greetingEvening": "Good evening, {prenom}"
   },
   "recentActivity": {
-    "emptyTitle": "No activity for now.",
+    "emptyTitle": "Nothing to report yet.",
     "emptyDescription": "Your applications, deliveries, payments and messages will appear here.",
     "deleting": "Deleting…",
     "clearAll": "Clear all",
@@ -591,9 +591,9 @@
   "overview": {
     "loadingAccount": "Loading your account…",
     "loadingDashboard": "Loading the dashboard",
-    "subtitleStudent": "Here is a summary of your activity.",
-    "subtitleClient": "Here is the status of your projects.",
-    "subtitleAdmin": "Global overview of the platform.",
+    "subtitleStudent": "Here's where things stand today.",
+    "subtitleClient": "Here's how your projects are doing today.",
+    "subtitleAdmin": "Here's what's happening on Kianja today.",
     "confirmClear": "Clear all your recent activity?",
     "yourStats": "Your statistics",
     "statsLoadError": "Unable to load your statistics.",
@@ -646,11 +646,11 @@
     "allPayments": "All payments",
     "paymentsLoadError": "Unable to load your payments.",
     "loadingPayments": "Loading payments",
-    "noPayment": "No payment for now.",
+    "noPayment": "No payments yet.",
     "noPaymentHint": "Declare a payment after a delivery is validated to secure the transaction.",
     "declarePayment": "Declare a payment",
     "missionFallback": "Mission",
-    "noActivity": "No activity for now.",
+    "noActivity": "Nothing to report yet.",
     "noActivityClientHint": "Applications received, deliveries submitted and messages will appear here.",
     "reportsToHandle": "{count, plural, one {# report to handle} other {# reports to handle}}",
     "reportsToHandleHint": "Community reports are waiting for moderation.",

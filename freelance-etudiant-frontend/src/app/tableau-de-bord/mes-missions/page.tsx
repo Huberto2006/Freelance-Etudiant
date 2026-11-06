@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BriefcaseBusiness, Loader2, MoreVertical, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { BriefcaseBusiness, MoreVertical, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 
 import { api, ApiError, getFileUrl } from "@/lib/api";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -17,7 +17,14 @@ import { useOptionLabels } from "@/i18n/use-option-labels";
 
 import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Field";
-import { NoticeCard, PageHeader, StatCard, Tag } from "@/components/ui/Notice";
+import {
+  NoticeCard,
+  PageHeader,
+  StatCard,
+  Tag,
+  EtatVide,
+  ChargementPage,
+} from "@/components/ui/Notice";
 import { ImageAvecRepli } from "@/components/ui/ImageAvecRepli";
 import { dateLimiteDepassee } from "@/lib/format";
 import { FormulaireMission } from "@/features/missions/components/FormulaireMission";
@@ -26,7 +33,7 @@ import { CandidaturesMission } from "@/features/missions/components/Candidatures
 export default function MesMissionsPage() {
   const t = useTranslations("dashboardPages.myMissions");
   return (
-    <Suspense fallback={<p className="text-sm text-ink-soft">{t("loading")}</p>}>
+    <Suspense fallback={<ChargementPage libelle={t("loading")} />}>
       <MesMissionsContent />
     </Suspense>
   );
@@ -201,15 +208,15 @@ function MesMissionsContent() {
 
   return (
     <div>
-      <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
-        <PageHeader
+      <PageHeader
           icon={BriefcaseBusiness}
           eyebrow={t("eyebrow")}
           title={t("title")}
-          className="mb-0"
-        />
+        actions={
+          <>
 
-        <Button
+        {(chargement || missions.length > 0 || afficherFormulaire || erreur) && (
+<Button
           variant="secondary"
           className="flex items-center justify-center gap-2"
           onClick={() => {
@@ -229,7 +236,10 @@ function MesMissionsContent() {
             </>
           )}
         </Button>
-      </div>
+        )}
+          </>
+        }
+      />
 
       {/* =====================================================
           ERREUR GLOBALE
@@ -300,22 +310,11 @@ function MesMissionsContent() {
           ===================================================== */}
 
       {chargement ? (
-        <p className="flex items-center gap-2 text-sm text-ink-soft">
-          <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-          {t("loadingMissions")}
-        </p>
-      ) : missions.length === 0 ? (
-        <NoticeCard>
-          <div className="flex flex-col items-center gap-3 py-6 text-center">
-            <span
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-ocre/10 text-ocre-dark"
-              aria-hidden="true"
-            >
-              <BriefcaseBusiness size={22} />
-            </span>
-            <p className="text-sm text-ink-soft">
-              {t("empty")}
-            </p>
+        <ChargementPage libelle={t("loadingMissions")} />
+      ) : erreur && missions.length === 0 ? null : missions.length === 0 ? (
+        <EtatVide
+          icon={BriefcaseBusiness}
+          action={
             <Button
               variant="secondary"
               size="sm"
@@ -325,8 +324,10 @@ function MesMissionsContent() {
               <Plus size={14} aria-hidden="true" />
               {t("publish")}
             </Button>
-          </div>
-        </NoticeCard>
+          }
+        >
+          {t("empty")}
+        </EtatVide>
       ) : (
         <>
           <SousNavigation
@@ -346,8 +347,8 @@ function MesMissionsContent() {
             <NoticeCard className="mb-6 mt-4 grid gap-3 sm:grid-cols-2">
               <div className="relative">
                 <Search
-                  size={15}
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/85"
                   aria-hidden="true"
                 />
                 <Input
@@ -427,7 +428,7 @@ function MesMissionsContent() {
                             {mission.titre}
                           </p>
 
-                          <p className="mt-1 text-xs text-ink-soft/70">
+                          <p className="mt-1 text-xs text-ink-soft/85">
                             {t("meta", {
                               count: mission.candidatures?.length ?? 0,
                               budget: formatArgent(mission.budget),
@@ -447,7 +448,7 @@ function MesMissionsContent() {
                               className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg text-ink-soft transition hover:bg-ink/5 hover:text-ink [&::-webkit-details-marker]:hidden"
                               aria-label={t("actionsFor", { titre: mission.titre })}
                             >
-                              <MoreVertical size={19} />
+                              <MoreVertical size={20} />
                             </summary>
 
                             <div className="absolute right-0 top-11 z-30 w-44 overflow-hidden rounded-xl border border-ink/10 bg-paper p-1.5 shadow-lg">
@@ -455,7 +456,7 @@ function MesMissionsContent() {
                                 href={`/missions/${mission.id}`}
                                 className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink transition hover:bg-ink/5"
                               >
-                                <Search size={15} />
+                                <Search size={16} />
                                 {t("view")}
                               </Link>
 
@@ -467,7 +468,7 @@ function MesMissionsContent() {
                                 }}
                                 className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink transition hover:bg-ink/5"
                               >
-                                <Pencil size={15} />
+                                <Pencil size={16} />
                                 {t("edit")}
                               </button>
 
@@ -478,7 +479,7 @@ function MesMissionsContent() {
                                     onClick={() => setMissionASupprimer(mission)}
                                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-brique transition hover:bg-brique/5"
                                   >
-                                    <Trash2 size={15} />
+                                    <Trash2 size={16} />
                                     {t("delete")}
                                   </button>
                                 )}

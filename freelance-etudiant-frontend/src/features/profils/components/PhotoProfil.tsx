@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Camera, Loader2, User as UserIcon } from "lucide-react";
+import { Camera, LoaderCircle, User as UserIcon } from "lucide-react";
 import { api, ApiError, getFileUrl } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { Utilisateur } from "@/types/utilisateurs";
@@ -142,7 +142,7 @@ export function PhotoProfil({
             aria-hidden="true"
           >
             {envoi ? (
-              <Loader2 size={size * 0.28} className="animate-spin" />
+              <LoaderCircle size={size * 0.28} className="motion-safe:animate-spin" />
             ) : (
               <Camera size={size * 0.28} />
             )}
@@ -158,7 +158,7 @@ export function PhotoProfil({
         />
       </div>
 
-      <p className="text-xs text-ink-soft/70">
+      <p className="text-xs text-ink-soft/85">
         {t("hint")}
       </p>
       {erreur && <p className="text-xs text-brique">{erreur}</p>}

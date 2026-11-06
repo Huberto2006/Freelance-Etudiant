@@ -1,9 +1,10 @@
 "use client";
 
 import { ModalTransition } from "@/components/ui/motion/ModalTransition";
-import { useEffect, useId, useRef } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
-import { AlertTriangle } from "lucide-react";
+import { TriangleAlert } from "lucide-react";
 import { NoticeCard } from "@/components/ui/Notice";
 import { Button } from "@/components/ui/Button";
 
@@ -131,7 +132,7 @@ export function ConfirmDialog({
       }}
     >
         <NoticeCard
-          className="shadow-[0_20px_50px_-15px_rgba(15,23,42,0.45)]"
+          className="shadow-[0_20px_50px_-15px_rgba(44,33,25,0.45)]"
           // Empêche un clic à l'intérieur de la carte de fermer la boîte
           // (seul le clic sur le fond assombri doit annuler).
           onClick={(event) => event.stopPropagation()}
@@ -142,7 +143,7 @@ export function ConfirmDialog({
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brique/10 text-brique"
                 aria-hidden="true"
               >
-                <AlertTriangle size={18} />
+                <TriangleAlert size={18} />
               </span>
             )}
             <div className="min-w-0 flex-1">
@@ -185,4 +186,64 @@ export function ConfirmDialog({
         </NoticeCard>
     </ModalTransition>
   );
+}
+
+interface OptionsConfirmation {
+  titre: string;
+  description?: string;
+  libelleConfirmer?: string;
+  destructif?: boolean;
+}
+
+/**
+ * Remplace `window.confirm()` sans transformer chaque appelant en machine à
+ * états : `await confirmer({ titre })` renvoie la réponse de l'utilisateur.
+ * Le composant doit rendre `dialogueConfirmation` une fois dans son JSX.
+ *
+ * Les options restent en mémoire après la fermeture : le texte ne disparaît
+ * pas pendant l'animation de sortie.
+ *
+ * Le dialogue est rendu dans `document.body` : l'appelant peut être une carte
+ * animée, et un `transform` parent décalerait un élément en `position: fixed`.
+ * Le portail n'existe qu'après la première demande, donc jamais à l'hydratation.
+ */
+export function useConfirmation() {
+  const [ouvert, setOuvert] = useState(false);
+  const [options, setOptions] = useState<OptionsConfirmation | null>(null);
+  const resolveur = useRef<((reponse: boolean) => void) | null>(null);
+
+  const confirmer = useCallback(
+    (nouvelles: OptionsConfirmation) =>
+      new Promise<boolean>((resolve) => {
+        resolveur.current?.(false);
+        resolveur.current = resolve;
+        setOptions(nouvelles);
+        setOuvert(true);
+      }),
+    [],
+  );
+
+  function repondre(reponse: boolean) {
+    resolveur.current?.(reponse);
+    resolveur.current = null;
+    setOuvert(false);
+  }
+
+  return {
+    confirmer,
+    dialogueConfirmation:
+      options &&
+      createPortal(
+        <ConfirmDialog
+          ouvert={ouvert}
+          titre={options.titre}
+          description={options.description}
+          libelleConfirmer={options.libelleConfirmer}
+          destructif={options.destructif}
+          onConfirmer={() => repondre(true)}
+          onAnnuler={() => repondre(false)}
+        />,
+        document.body,
+      ),
+  };
 }

@@ -35,7 +35,7 @@ export function SectionTitre({
       )}
     >
       <div className="min-w-0">
-        <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.08em] text-ink-soft">
+        <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-ink-soft">
           <Icon size={14} className="text-ocre-dark" aria-hidden="true" />
           {eyebrow}
         </p>

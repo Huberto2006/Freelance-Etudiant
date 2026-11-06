@@ -2,7 +2,7 @@ import { AnimatedGradient } from "@/components/ui/motion/AnimatedGradient";
 import { FloatingElement } from "@/components/ui/motion/FloatingElement";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { Briefcase, GraduationCap, UsersRound } from "lucide-react";
+import { BriefcaseBusiness, GraduationCap, UsersRound } from "lucide-react";
 
 /**
  * Colonne de présentation des pages de connexion et d'inscription (desktop
@@ -22,7 +22,7 @@ export function PanneauPresentation({
 
   const points = [
     { icone: GraduationCap, titre: t("panel.students.title"), texte: t("panel.students.text") },
-    { icone: Briefcase, titre: t("panel.clients.title"), texte: t("panel.clients.text") },
+    { icone: BriefcaseBusiness, titre: t("panel.clients.title"), texte: t("panel.clients.text") },
     { icone: UsersRound, titre: t("panel.community.title"), texte: t("panel.community.text") },
   ];
 
@@ -54,7 +54,7 @@ export function PanneauPresentation({
               style={{ animationDelay: `${80 + i * 40}ms` }}
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-ink/10 bg-paper-light text-ocre-dark">
-                <Icone size={17} aria-hidden="true" />
+                <Icone size={18} aria-hidden="true" />
               </span>
               <span>
                 <span className="block text-sm font-semibold text-ink">{titre}</span>

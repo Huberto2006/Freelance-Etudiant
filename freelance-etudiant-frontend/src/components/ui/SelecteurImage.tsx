@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ImagePlus, Loader2, X } from "lucide-react";
+import { ImagePlus, LoaderCircle, X } from "lucide-react";
 import { api, ApiError, getFileUrl } from "@/lib/api";
 
 const TAILLE_MAX = 5 * 1024 * 1024; // 5 Mo
@@ -193,15 +193,15 @@ export function SelecteurImage({
             type="button"
             onClick={choisirImage}
             disabled={disabled || envoi}
-            className="flex h-full w-full flex-col items-center justify-center gap-2 text-ink-soft/60 transition-colors hover:text-ocre-dark disabled:cursor-wait"
+            className="flex h-full w-full flex-col items-center justify-center gap-2 text-ink-soft/85 transition-colors hover:text-ocre-dark disabled:cursor-wait"
           >
             {envoi ? (
-              <Loader2
-                size={22}
-                className="animate-spin"
+              <LoaderCircle
+                size={20}
+                className="motion-safe:animate-spin"
               />
             ) : (
-              <ImagePlus size={22} />
+              <ImagePlus size={20} />
             )}
 
             <span className="text-xs">
@@ -214,9 +214,9 @@ export function SelecteurImage({
 
         {envoi && imageActuelle && (
           <div className="absolute inset-0 flex items-center justify-center bg-ink/40">
-            <Loader2
-              size={22}
-              className="animate-spin text-paper-light"
+            <LoaderCircle
+              size={20}
+              className="motion-safe:animate-spin text-paper-light"
             />
           </div>
         )}
@@ -231,7 +231,7 @@ export function SelecteurImage({
         className="sr-only"
       />
 
-      <p className="mt-1.5 text-xs text-ink-soft/70">
+      <p className="mt-1.5 text-xs text-ink-soft/85">
         {t("hint")}
       </p>
 

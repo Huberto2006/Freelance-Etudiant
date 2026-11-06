@@ -5,7 +5,7 @@
     "publish": "Post",
     "sending": "Sending…",
     "loading": "Loading…",
-    "emptyLoggedIn": "No comments yet.",
+    "emptyLoggedIn": "No comments yet. Start the conversation!",
     "emptyAnonymous": "No comments yet. Log in to leave one.",
     "defaultUser": "User",
     "editedDate": "{date} · edited",

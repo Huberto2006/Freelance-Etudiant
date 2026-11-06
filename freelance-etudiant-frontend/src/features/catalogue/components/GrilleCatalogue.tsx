@@ -33,13 +33,13 @@ export function GrilleCatalogue({
 
       {restants > 0 && (
         <div className="mt-8 flex flex-col items-center gap-2">
-          <p className="font-mono text-xs text-ink-soft">
+          <p className="tabular-nums text-xs text-ink-soft">
             {visibles} sur {elements.length}
           </p>
           <button
             type="button"
             onClick={() => setVisibles((v) => v + PAS)}
-            className="min-h-11 rounded-[10px] border border-ink/25 bg-paper-light px-6 text-sm font-medium text-ink transition-colors hover:border-ink/50"
+            className="min-h-11 rounded-lg border border-ink/25 bg-paper-light px-6 text-sm font-medium text-ink transition-colors hover:border-ink/50"
           >
             Afficher plus
           </button>

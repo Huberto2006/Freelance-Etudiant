@@ -13,6 +13,7 @@
     "close": "Close",
     "back": "Back",
     "search": "Search",
+    "clearSearch": "Clear search",
     "edit": "Edit",
     "send": "Send",
     "next": "Next",
@@ -33,12 +34,12 @@
     "loading": "Loading…",
     "saving": "Saving…",
     "sending": "Sending…",
-    "empty": "Nothing to show yet.",
-    "error": "Something went wrong.",
+    "empty": "There's nothing here yet.",
+    "error": "Something went wrong on our side.",
     "none": "None",
     "optional": "optional",
     "required": "required",
-    "errLoadData": "Unable to load the data. Please try again."
+    "errLoadData": "We couldn't load this just now. Please try again in a moment."
   },
   "currency": {
     "ariary": "Ar"
@@ -58,6 +59,8 @@
   },
   "dataTable": {
     "rowsPerPage": "Rows per page",
+    "dateFrom": "Start date",
+    "dateTo": "End date",
     "range": "Showing {debut} to {fin} of {total, plural, one {# result} other {# results}}",
     "pagination": "Pagination",
     "pageOf": "Page {page} of {totalPages}",

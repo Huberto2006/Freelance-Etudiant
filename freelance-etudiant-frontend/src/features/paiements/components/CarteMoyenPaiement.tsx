@@ -104,7 +104,7 @@ export function CarteMoyenPaiement({
 
           <div className="mt-3 flex items-center justify-between gap-3">
             <div>
-              <p className="font-mono text-sm font-medium">
+              <p className="tabular-nums text-sm font-medium">
                 {moyen.numero}
               </p>
 

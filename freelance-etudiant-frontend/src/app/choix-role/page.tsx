@@ -4,12 +4,15 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { clsx } from "clsx";
 import { useTranslations } from "next-intl";
-import { Briefcase, GraduationCap } from "lucide-react";
+import { BriefcaseBusiness, GraduationCap } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
 import { ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
-import { NoticeCard } from "@/components/ui/Notice";
+import {
+  NoticeCard,
+  ChargementPage,
+} from "@/components/ui/Notice";
 
 type RoleChoisi = "etudiant" | "client";
 
@@ -25,7 +28,7 @@ const OPTIONS: {
   {
     valeur: "client",
     
-    Icone: Briefcase,
+    Icone: BriefcaseBusiness,
   },
 ];
 
@@ -75,15 +78,15 @@ function ChoixRole() {
   }
 
   if (chargement || !utilisateur || utilisateur.role !== "a_definir") {
-    return <p className="text-sm text-ink-soft">{t("loading")}</p>;
+    return <ChargementPage libelle={t("loading")} />;
   }
 
   return (
     <div className="mx-auto max-w-xl">
-      <p className="mb-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
+      <p className="mb-3 text-xs font-semibold text-ocre-dark">
         {t("eyebrow")}
       </p>
-      <h1 className="mb-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+      <h1 className="mb-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
         {t("title")}
       </h1>
       <p className="mb-7 text-sm text-ink-soft">

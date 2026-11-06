@@ -1,5 +1,6 @@
 "use client";
 
+import { EnteteCatalogue } from "@/features/catalogue/components/EnteteCatalogue";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -17,7 +18,10 @@ import {
   type OngletCatalogue,
 } from "@/features/catalogue/components/SousMenuCatalogue";
 import { CarteMission } from "@/features/missions/components/CarteMission";
-import { NoticeCard } from "@/components/ui/Notice";
+import {
+  NoticeCard,
+  EtatVide,
+} from "@/components/ui/Notice";
 import { Button } from "@/components/ui/Button";
 import { SqueletteCatalogue } from "@/features/catalogue/components/SqueletteCatalogue";
 import { useAuth } from "@/lib/auth-context";
@@ -26,7 +30,7 @@ export default function MissionsPage() {
   return (
     <Suspense
       fallback={
-        <div className="container mx-auto max-w-7xl px-4 pb-8 pt-7">
+        <div className="mx-auto max-w-7xl px-5 pb-7 pt-8 sm:pt-11">
           <SqueletteCatalogue nombre={6} />
         </div>
       }
@@ -197,20 +201,16 @@ function MissionsContent() {
   return (
     <div className="container mx-auto max-w-7xl px-4 pb-8 pt-7">
       {/* ---------------------------------------- EN-TETE */}
-      <div className="mb-6">
-        <p className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-ocre-dark">
-          {t("list.eyebrow")}
-        </p>
-        <h1 className="font-display text-3xl font-bold">{t("list.title")}</h1>
-        <p className="mt-1 text-sm text-ink-soft">
-          {t("list.intro")}
-        </p>
-        <p className="mt-0.5 text-xs text-ink-soft/70">
-          {chargement
+      <EnteteCatalogue
+        surtitre={t("list.eyebrow")}
+        titre={t("list.title")}
+        description={t("list.intro")}
+        indicateurs={
+          chargement
             ? t("list.loading")
-            : t("list.count", { count: missions.length })}
-        </p>
-      </div>
+            : t("list.count", { count: missions.length })
+        }
+      />
 
       {/* ---------------------------------------- SOUS-MENU */}
       <div className="mb-6">
@@ -247,25 +247,17 @@ function MissionsContent() {
               <p className="text-sm text-brique">{erreur}</p>
             </NoticeCard>
           ) : missions.length === 0 ? (
-            <NoticeCard>
-              <div className="flex flex-col items-center gap-3 py-7 text-center">
-                <span
-                  className="flex h-12 w-12 items-center justify-center rounded-full bg-ocre/10 text-ocre-dark"
-                  aria-hidden="true"
-                >
-                  <BriefcaseBusiness size={22} />
-                </span>
-                <p className="text-sm text-ink-soft">
-                  {t("list.emptyTitle")}
-                </p>
-                <p className="max-w-sm text-xs text-ink-soft/70">
-                  {t("list.emptyHint")}
-                </p>
+            <EtatVide
+              icon={BriefcaseBusiness}
+              titre={t("list.emptyTitle")}
+              action={
                 <Button variant="secondary" size="sm" href="/missions">
                   {t("list.seeAll")}
                 </Button>
-              </div>
-            </NoticeCard>
+              }
+            >
+              {t("list.emptyHint")}
+            </EtatVide>
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {missions.map((mission) => (

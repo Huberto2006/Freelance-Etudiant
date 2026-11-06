@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   Check,
-  Loader2,
+  LoaderCircle,
   Plus,
 } from "lucide-react";
 
@@ -322,14 +322,15 @@ export function FormulaireService({
 
         <Button
           type="submit"
+          variant="secondary"
           className="flex items-center justify-center gap-2"
           disabled={chargement}
         >
           {chargement ? (
             <>
-              <Loader2
+              <LoaderCircle
                 size={16}
-                className="animate-spin"
+                className="motion-safe:animate-spin"
               />
               {t("saving")}
             </>

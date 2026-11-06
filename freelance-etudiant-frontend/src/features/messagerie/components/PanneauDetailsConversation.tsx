@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Briefcase,
+  BriefcaseBusiness,
   ExternalLink,
   FileText,
   Star,
@@ -88,9 +88,9 @@ export function PanneauDetailsConversation({
     return (
       <>
         <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
-          <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-ink-soft">
+          <h3 className="mb-3 flex items-center gap-1.5 text-xs text-ink-soft font-medium">
             <Users
-              size={13}
+              size={14}
               aria-hidden="true"
             />
             {t("group")}
@@ -99,7 +99,7 @@ export function PanneauDetailsConversation({
           <div className="flex items-center gap-3">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
               <Users
-                size={22}
+                size={20}
               />
             </span>
 
@@ -127,9 +127,9 @@ export function PanneauDetailsConversation({
         {piecesJointes.length >
           0 && (
           <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
-            <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-ink-soft">
+            <h3 className="mb-3 flex items-center gap-1.5 text-xs text-ink-soft font-medium">
               <FileText
-                size={13}
+                size={14}
               />
               {t("attachments", { count: piecesJointes.length })}
             </h3>
@@ -152,7 +152,7 @@ export function PanneauDetailsConversation({
                       }
                     />
 
-                    <p className="mt-1.5 text-[0.65rem] font-mono text-ink-soft/60">
+                    <p className="mt-1.5 text-[0.65rem] tabular-nums text-ink-soft/85">
                       {
                         piece.auteur
                       }{" "}
@@ -179,9 +179,9 @@ export function PanneauDetailsConversation({
     <>
       {missionAffichee && (
         <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
-          <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-ink-soft">
-            <Briefcase
-              size={13}
+          <h3 className="mb-3 flex items-center gap-1.5 text-xs text-ink-soft font-medium">
+            <BriefcaseBusiness
+              size={14}
             />
             {t("linkedMission")}
           </h3>
@@ -207,7 +207,7 @@ export function PanneauDetailsConversation({
 
           <dl className="mt-3 space-y-2 text-xs">
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-ink-soft/70">
+              <dt className="text-ink-soft/85">
                 {t("status")}
               </dt>
 
@@ -219,7 +219,7 @@ export function PanneauDetailsConversation({
             </div>
 
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-ink-soft/70">
+              <dt className="text-ink-soft/85">
                 {t("budget")}
               </dt>
 
@@ -231,7 +231,7 @@ export function PanneauDetailsConversation({
             </div>
 
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-ink-soft/70">
+              <dt className="text-ink-soft/85">
                 {t("deadline")}
               </dt>
 
@@ -251,16 +251,16 @@ export function PanneauDetailsConversation({
           >
             {t("viewMission")}
                       <ExternalLink
-              size={13}
+              size={14}
             />
           </Button>
         </section>
       )}
 
       <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
-        <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-ink-soft">
+        <h3 className="mb-3 flex items-center gap-1.5 text-xs text-ink-soft font-medium">
           <User
-            size={13}
+            size={14}
           />
           {t("correspondent")}
         </h3>
@@ -340,7 +340,7 @@ export function PanneauDetailsConversation({
           >
             {t("viewProfile")}
             <ExternalLink
-              size={13}
+              size={14}
             />
           </Button>
         )}
@@ -349,9 +349,9 @@ export function PanneauDetailsConversation({
       {piecesJointes.length >
         0 && (
         <section className="rounded-xl border border-ink/10 bg-paper-light p-4 shadow-sm">
-          <h3 className="mb-3 flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wider text-ink-soft">
+          <h3 className="mb-3 flex items-center gap-1.5 text-xs text-ink-soft font-medium">
             <FileText
-              size={13}
+              size={14}
             />
             {t("attachments", { count: piecesJointes.length })}
           </h3>
@@ -374,7 +374,7 @@ export function PanneauDetailsConversation({
                     }
                   />
 
-                  <p className="mt-1.5 text-[0.65rem] font-mono text-ink-soft/60">
+                  <p className="mt-1.5 text-[0.65rem] tabular-nums text-ink-soft/85">
                     {
                       piece.auteur
                     }{" "}

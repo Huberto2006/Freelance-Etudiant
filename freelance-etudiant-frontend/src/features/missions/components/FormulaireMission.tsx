@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Loader2 } from "lucide-react";
+import { Check, LoaderCircle } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api";
 import type { Mission } from "@/types/missions";
@@ -126,7 +126,7 @@ export function FormulaireMission({
       <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-5">
         {/* — 01 · VISUEL */}
 
-        <p className="font-mono text-[0.6875rem] uppercase tracking-[0.15em] text-ink-soft/70">
+        <p className=" text-xs text-ink-soft/85 font-medium">
           {t("sectionVisual")}
         </p>
 
@@ -172,7 +172,7 @@ export function FormulaireMission({
 
         {/* — 02 · CONTENU */}
 
-        <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[0.6875rem] uppercase tracking-[0.15em] text-ink-soft/70">
+        <p className="mt-2 border-t border-ink/10 pt-5 text-xs text-ink-soft/85 font-medium">
           {t("sectionContent")}
         </p>
 
@@ -205,7 +205,7 @@ export function FormulaireMission({
 
         {/* — 03 · PARAMÈTRES */}
 
-        <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[0.6875rem] uppercase tracking-[0.15em] text-ink-soft/70">
+        <p className="mt-2 border-t border-ink/10 pt-5 text-xs text-ink-soft/85 font-medium">
           {t("sectionSettings")}
         </p>
 
@@ -263,7 +263,7 @@ export function FormulaireMission({
 
         {/* — 04 · COMPÉTENCES */}
 
-        <p className="mt-2 border-t border-ink/10 pt-5 font-mono text-[0.6875rem] uppercase tracking-[0.15em] text-ink-soft/70">
+        <p className="mt-2 border-t border-ink/10 pt-5 text-xs text-ink-soft/85 font-medium">
           {t("sectionSkills")}
         </p>
 
@@ -290,7 +290,7 @@ export function FormulaireMission({
         {/* — ACTIONS */}
 
         <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-ink/10 pt-5">
-          <p className="mr-auto text-xs text-ink-soft/60">
+          <p className="mr-auto text-xs text-ink-soft/85">
             {t("optionalNote")}
           </p>
 
@@ -312,7 +312,7 @@ export function FormulaireMission({
             className="gap-2"
           >
             {envoi && (
-              <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+              <LoaderCircle size={14} className="motion-safe:animate-spin" aria-hidden="true" />
             )}
             {envoi
               ? enEdition

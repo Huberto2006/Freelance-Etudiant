@@ -15,6 +15,7 @@ import type { Transaction } from "@/types/paiements";
  */
 export function useColonnesTransaction(): ColonneDataTable<Transaction>[] {
   const t = useTranslations("payments");
+  const tTable = useTranslations("payments.table");
   const { argent, dateCourte } = useFormats();
   const { methodePaiement, statutTransaction } = useLabels();
 
@@ -38,7 +39,8 @@ export function useColonnesTransaction(): ColonneDataTable<Transaction>[] {
       id: "mission",
       entete: t("table.colMission"),
       valeurTri: titre,
-      texteRecherche: (x) => `${titre(x)} ${x.reference}`,
+      texteRecherche: (x) =>
+        `${titre(x)} ${x.reference} ${x.client?.nom ?? ""} ${x.etudiant?.nom ?? ""}`,
       classeCellule: "min-w-44",
       cellule: (x) => (
         <>
@@ -51,6 +53,49 @@ export function useColonnesTransaction(): ColonneDataTable<Transaction>[] {
             <span className="md:hidden"> · {dateCourte(x.dateCreation)}</span>
           </span>
           <span className="mt-1 block whitespace-nowrap sm:hidden">{statut(x)}</span>
+          <details className="mt-1 text-xs">
+            <summary className="w-fit cursor-pointer text-ink-soft underline underline-offset-2 hover:text-ink">
+              {tTable("details")}
+            </summary>
+            <dl className="mt-2 grid gap-x-3 gap-y-1 text-ink-soft sm:grid-cols-2">
+              <div>
+                <dt className="inline font-medium">{tTable("detailMission")}: </dt>
+                <dd className="inline">{titre(x)}</dd>
+              </div>
+              <div>
+                <dt className="inline font-medium">{tTable("detailReference")}: </dt>
+                <dd className="inline font-mono">{x.reference}</dd>
+              </div>
+              {x.client?.nom && (
+                <div>
+                  <dt className="inline font-medium">{tTable("detailClient")}: </dt>
+                  <dd className="inline">{x.client.nom}</dd>
+                </div>
+              )}
+              {x.etudiant?.nom && (
+                <div>
+                  <dt className="inline font-medium">{tTable("detailStudent")}: </dt>
+                  <dd className="inline">{x.etudiant.nom}</dd>
+                </div>
+              )}
+              <div>
+                <dt className="inline font-medium">{tTable("detailMethod")}: </dt>
+                <dd className="inline">{moyen(x)}</dd>
+              </div>
+              <div>
+                <dt className="inline font-medium">{tTable("detailStatus")}: </dt>
+                <dd className="inline">{statutTransaction(x.statut)}</dd>
+              </div>
+              <div>
+                <dt className="inline font-medium">{tTable("detailDate")}: </dt>
+                <dd className="inline">{dateCourte(x.dateCreation)}</dd>
+              </div>
+              <div>
+                <dt className="inline font-medium">{tTable("detailAmount")}: </dt>
+                <dd className="inline">{argent(x.montant)}</dd>
+              </div>
+            </dl>
+          </details>
         </>
       ),
     },
@@ -83,7 +128,7 @@ export function useColonnesTransaction(): ColonneDataTable<Transaction>[] {
       id: "montant",
       entete: t("table.colAmount"),
       alignement: "droite",
-      classeCellule: "whitespace-nowrap font-mono font-medium text-ocre-dark",
+      classeCellule: "whitespace-nowrap tabular-nums font-medium text-ocre-dark",
       valeurTri: (x) => Number(x.montant),
       cellule: (x) => argent(x.montant),
     },

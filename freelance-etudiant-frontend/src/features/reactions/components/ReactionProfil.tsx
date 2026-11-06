@@ -60,7 +60,7 @@ export function ReactionProfil({ utilisateurId }: { utilisateurId: string }) {
           : "border-ink/25 text-ink-soft hover:bg-ink/5",
       )}
     >
-      <ThumbsUp size={15} fill={info.jaiReagi ? "currentColor" : "none"} />
+      <ThumbsUp size={16} fill={info.jaiReagi ? "currentColor" : "none"} />
       {info.total > 0 ? info.total : t("label")}
     </button>
   );

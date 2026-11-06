@@ -14,8 +14,8 @@
     "tabAll": "Toutes",
     "tabUnread": "Non lues",
     "tabRead": "Lues",
-    "emptyAll": "Vous n'avez pas encore de notification.",
-    "emptyUnread": "Aucune notification non lue.",
+    "emptyAll": "Rien de nouveau pour l'instant. Nous vous préviendrons ici dès qu'il se passera quelque chose.",
+    "emptyUnread": "Vous avez tout lu.",
     "emptyRead": "Aucune notification lue.",
     "deleteOne": "Supprimer : {titre}",
     "confirmDeleteAll": "Supprimer toutes vos notifications ? Cette action est définitive."
@@ -29,7 +29,7 @@
     "invitationsTitle": "Invitations de groupe ({count})",
     "openInvitation": "Ouvrir l'invitation",
     "loadingGroups": "Chargement de vos groupes…",
-    "noGroups": "Vous ne faites partie d'aucun groupe pour le moment.",
+    "noGroups": "Vous n'êtes dans aucun groupe pour l'instant. Créez-en un pour travailler à plusieurs.",
     "membersCount": "{count, plural, one {# membre} other {# membres}}",
     "membersLabel": "Membres",
     "noMission": "Sans mission",
@@ -107,7 +107,7 @@
     "eyebrow": "Espace étudiant",
     "title": "Mes candidatures",
     "loading": "Chargement…",
-    "emptyText": "Vous n'avez pas encore postulé à une mission.",
+    "emptyText": "Vous n'avez pas encore postulé. Regardez les missions ouvertes : l'une d'elles est peut-être pour vous.",
     "browseMissions": "Parcourir les missions",
     "tabs": {
       "all": "Toutes",

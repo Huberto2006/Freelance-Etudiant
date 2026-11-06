@@ -50,10 +50,10 @@ const menuItemStyles = `
 `;
 
 const menuSectionStyles = `
-  px-4 pt-3 pb-1
-  text-[10px] font-semibold
-  uppercase tracking-wider
-  text-ink-soft/65
+ px-4 pt-3 pb-1
+ text-[10px] font-semibold
+
+ text-ink-soft/85
 `;
 
 export function Navbar({
@@ -341,12 +341,12 @@ export function Navbar({
           >
             <div className="relative w-52 lg:w-64 xl:w-72">
               <Search
-                size={15}
+                size={16}
                 className="
                   pointer-events-none
                   absolute left-3 top-1/2
                   -translate-y-1/2
-                  text-ink-soft/60
+                  text-ink-soft/85
                 "
                 aria-hidden="true"
               />
@@ -437,10 +437,10 @@ export function Navbar({
                 "
               >
                 {estDansDashboard ? (
-                  <House size={19} strokeWidth={2} />
+                  <House size={20} strokeWidth={2} />
                 ) : (
                   <LayoutDashboard
-                    size={19}
+                    size={20}
                     strokeWidth={2}
                   />
                 )}
@@ -503,62 +503,62 @@ export function Navbar({
                         : "w-10 justify-center rounded-full"
                     }
                   `}
-                >
+ >
 
-                  {/* AVATAR */}
+ {/* AVATAR */}
 
-                  <div
-                    className="
-                      flex h-8 w-8 shrink-0
-                      items-center justify-center
-                      overflow-hidden
-                      rounded-full
-                      border border-ink/10
-                      bg-ink/5
-                      text-ink-soft
-                    "
-                  >
-                    {utilisateur?.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={
-                          getFileUrl(utilisateur.photoUrl) ??
-                          undefined
-                        }
-                        alt={utilisateur.nom}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <User size={19} strokeWidth={1.8} />
-                    )}
-                  </div>
+ <div
+ className="
+ flex h-8 w-8 shrink-0
+ items-center justify-center
+ overflow-hidden
+ rounded-full
+ border border-ink/10
+ bg-ink/5
+ text-ink-soft
+ "
+ >
+ {utilisateur?.photoUrl ? (
+ // eslint-disable-next-line @next/next/no-img-element
+ <img
+ src={
+ getFileUrl(utilisateur.photoUrl) ??
+ undefined
+ }
+ alt={utilisateur.nom}
+ className="h-full w-full object-cover"
+ />
+ ) : (
+ <User size={20} strokeWidth={1.8} />
+ )}
+ </div>
 
-                  {/* NOM UTILISATEUR */}
+ {/* NOM UTILISATEUR */}
 
-                  {utilisateur && (
-                    <div className="hidden max-w-36 text-left leading-tight sm:block">
-                      <p className="truncate text-xs font-medium text-ink">
-                        {utilisateur.nom}
-                      </p>
+ {utilisateur && (
+ <div className="hidden max-w-36 text-left leading-tight sm:block">
+ <p className="truncate text-xs font-medium text-ink">
+ {utilisateur.nom}
+ </p>
 
-                      <p className="
-                        truncate
-                        font-mono
-                        text-[0.625rem]
-                        uppercase
-                        tracking-wider
-                        text-ink-soft/60
-                      ">
-                        {libelleRole(utilisateur.role)}
-                      </p>
-                    </div>
-                  )}
+ <p className="
+ truncate
 
-                  <ChevronDown
-                    size={13}
-                    className={`
+ text-xs
+
+
+ text-ink-soft/85
+ ">
+ {libelleRole(utilisateur.role)}
+ </p>
+ </div>
+ )}
+
+ <ChevronDown
+ size={14}
+ className={`
                       shrink-0
-                      text-ink-soft/70
+                      text-ink-soft/85
                       transition-transform
                       duration-150
                       ${

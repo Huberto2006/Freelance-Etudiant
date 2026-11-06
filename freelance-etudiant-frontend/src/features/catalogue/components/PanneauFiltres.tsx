@@ -102,7 +102,7 @@ export function PanneauFiltres({
       className="flex flex-col gap-5 rounded-xl border border-ink/20 bg-paper-light p-4"
     >
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-ink">
+        <h2 className="font-display text-sm font-semibold text-ink">
           {t("filters.title")}
         </h2>
 
@@ -110,7 +110,7 @@ export function PanneauFiltres({
           <button
             type="button"
             onClick={reinitialiser}
-            className="inline-flex items-center gap-1 text-xs text-ink-soft/70 hover:text-brique transition-colors"
+            className="inline-flex items-center gap-1 text-xs text-ink-soft/85 hover:text-brique transition-colors"
           >
             <X size={12} />
             {t("filters.reset")}
@@ -122,7 +122,7 @@ export function PanneauFiltres({
       <div>
         <label
           htmlFor="filtre-mots-cles"
-          className="mb-1.5 block text-xs font-mono uppercase tracking-wider text-ink-soft"
+          className="mb-1.5 block text-xs text-ink-soft font-medium"
         >
           {t("filters.keywords")}
         </label>
@@ -130,7 +130,7 @@ export function PanneauFiltres({
         <div className="relative">
           <Search
             size={16}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/85"
             aria-hidden="true"
           />
           <Input
@@ -147,7 +147,7 @@ export function PanneauFiltres({
       <div>
         <label
           htmlFor="filtre-competence"
-          className="mb-1.5 block text-xs font-mono uppercase tracking-wider text-ink-soft"
+          className="mb-1.5 block text-xs text-ink-soft font-medium"
         >
           {t("filters.skill")}
         </label>
@@ -155,7 +155,7 @@ export function PanneauFiltres({
         <div className="relative">
           <Wrench
             size={16}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/85"
             aria-hidden="true"
           />
           <Input
@@ -170,7 +170,7 @@ export function PanneauFiltres({
 
       {/* Budget / Prix */}
       <div>
-        <span className="mb-1.5 block text-xs font-mono uppercase tracking-wider text-ink-soft">
+        <span className="mb-1.5 block text-xs text-ink-soft font-medium">
           {budgetLabel}
         </span>
 
@@ -185,7 +185,7 @@ export function PanneauFiltres({
             aria-label={t("filters.minAria", { label: budgetLabel })}
             className="w-full rounded-lg py-2"
           />
-          <span className="text-ink-soft/60" aria-hidden="true">
+          <span className="text-ink-soft/85" aria-hidden="true">
             —
           </span>
           <Input
@@ -206,7 +206,7 @@ export function PanneauFiltres({
         variant="secondary"
         className="w-full flex items-center justify-center gap-2"
       >
-        <Search size={15} />
+        <Search size={16} />
         <span>{t("filters.submit")}</span>
       </Button>
     </form>

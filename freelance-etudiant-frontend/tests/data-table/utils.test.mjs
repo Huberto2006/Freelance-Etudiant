@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   calculerPagination,
   ELLIPSE,
+  dateDansPeriode,
   filtrerLignes,
   normaliserTexte,
   plagePages,
@@ -68,6 +69,13 @@ test("recherche : insensible à la casse et aux accents, sur les colonnes indiqu
   assert.equal(filtrerLignes(lignes, "eleo", [(l) => l.nom, (l) => l.email]).length, 2);
   assert.equal(filtrerLignes(lignes, "eleo", []).length, 2, "aucune colonne : pas de filtre");
   assert.equal(filtrerLignes(lignes, "   ", [(l) => l.nom]).length, 2);
+});
+
+test("filtre de période : bornes inclusives et dates invalides exclues", () => {
+  assert.equal(dateDansPeriode("2026-03-15T12:00:00", "2026-03-15", "2026-03-15"), true);
+  assert.equal(dateDansPeriode("2026-03-14T23:59:59", "2026-03-15", ""), false);
+  assert.equal(dateDansPeriode("2026-03-16T00:00:00", "", "2026-03-15"), false);
+  assert.equal(dateDansPeriode("date invalide", "", "2026-03-15"), false);
 });
 
 test("tri : nombres et dates par valeur, sans modifier le tableau reçu", () => {

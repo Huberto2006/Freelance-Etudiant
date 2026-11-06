@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Briefcase, GraduationCap } from "lucide-react";
+import { BriefcaseBusiness, GraduationCap } from "lucide-react";
 import { clsx } from "clsx";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
@@ -250,7 +250,7 @@ function FormulaireInscription() {
   const contenu = reponseInscription ? (
     <>
       <div className="scene-in rounded-xl border border-ink/10 bg-paper-light p-6 shadow-xs sm:p-8">
-        <p className="mb-2 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
+        <p className="mb-2 text-xs font-semibold text-ocre-dark">
           {t("verifyEyebrow")}
         </p>
         <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -315,7 +315,7 @@ function FormulaireInscription() {
     <>
       <div className="scene-in rounded-xl border border-ink/10 bg-paper-light p-6 shadow-xs sm:p-8">
         <div className="flex items-center justify-between gap-3">
-          <p className="font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-ocre-dark">
+          <p className=" text-xs font-semibold text-ocre-dark">
             {t("title")}
           </p>
           {!viaGoogle && (
@@ -367,7 +367,7 @@ function FormulaireInscription() {
                       },
                       {
                         valeur: "client",
-                        icone: Briefcase,
+                        icone: BriefcaseBusiness,
                         titre: t("imClient"),
                         texte: t("roleClientHint"),
                       },
@@ -386,7 +386,7 @@ function FormulaireInscription() {
                       )}
                     >
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-ink/10 bg-paper-light text-bleu-dark">
-                        <Icone size={19} aria-hidden="true" />
+                        <Icone size={20} aria-hidden="true" />
                       </span>
                       <span>
                         <span className="block text-sm font-semibold text-ink">

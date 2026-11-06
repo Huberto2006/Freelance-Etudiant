@@ -4,7 +4,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { BriefcaseBusiness, Loader2 } from "lucide-react";
+import { BriefcaseBusiness, } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import type { Mission } from "@/types/missions";
@@ -12,7 +12,12 @@ import { useFormats } from "@/i18n/use-formats";
 import { useLabels } from "@/i18n/use-labels";
 import { useOptionLabels } from "@/i18n/use-option-labels";
 import { getFileUrl } from "@/lib/api";
-import { NoticeCard, Tag } from "@/components/ui/Notice";
+import {
+  NoticeCard,
+  Tag,
+  EtatVide,
+  ChargementPage,
+} from "@/components/ui/Notice";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Field";
@@ -97,31 +102,16 @@ export default function MissionDetailPage({
 
   if (chargement) {
     return (
-      <p className="mx-auto flex max-w-3xl items-center justify-center gap-2 px-5 py-12 text-sm text-ink-soft">
-        <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-        {t("detail.loading")}
-      </p>
+      <ChargementPage libelle={t("detail.loading")} className="mx-auto max-w-3xl justify-center px-5 py-12" />
     );
   }
 
   if (!mission) {
     return (
       <div className="mx-auto max-w-3xl px-5 py-12">
-        <NoticeCard>
-          <div className="flex flex-col items-center gap-3 py-4 text-center">
-            <span
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-brique/10 text-brique"
-              aria-hidden="true"
-            >
-              <BriefcaseBusiness size={22} />
-            </span>
-            <p className="text-sm text-brique">
-              {erreurChargement
-                ? t("detail.loadError")
-                : t("detail.notFound")}
-            </p>
-          </div>
-        </NoticeCard>
+        <EtatVide icon={BriefcaseBusiness} tone="danger">
+          {erreurChargement ? t("detail.loadError") : t("detail.notFound")}
+        </EtatVide>
       </div>
     );
   }
@@ -149,7 +139,7 @@ export default function MissionDetailPage({
         <Tag tone="ink">{statutMission(mission.statut)}</Tag>
       </div>
 
-      <h1 className="mb-3 font-display text-3xl font-semibold sm:text-4xl">
+      <h1 className="mb-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
         {mission.titre}
       </h1>
       <p className="mb-7 text-sm text-ink-soft">
@@ -200,14 +190,14 @@ export default function MissionDetailPage({
         <aside className="flex w-full shrink-0 flex-col gap-5 lg:sticky lg:top-6 lg:w-72">
           {/* Carte annonce */}
           <NoticeCard>
-            <p className="mb-1 text-xs font-mono uppercase tracking-wider text-ink-soft">
+            <p className="mb-1 text-xs text-ink-soft font-medium">
               {t("detail.budget")}
             </p>
             <p className="font-display text-2xl text-ocre-dark">
               {formatArgent(mission.budget)}
             </p>
             <div className="mt-4 border-t border-ink/10 pt-4">
-              <p className="mb-1 text-xs font-mono uppercase tracking-wider text-ink-soft">
+              <p className="mb-1 text-xs text-ink-soft font-medium">
                 {t("detail.applicationDeadline")}
               </p>
               <p className="font-display text-2xl">
@@ -232,7 +222,7 @@ export default function MissionDetailPage({
                   <p className="truncate font-display font-medium hover:underline">
                     {mission.client.utilisateur?.nom ?? t("detail.clientKianjaFallback")}
                   </p>
-                  <p className="text-xs text-ink-soft/70">
+                  <p className="text-xs text-ink-soft/85">
                     {mission.client.nomEntreprise ??
                       (mission.client.typeClient === "entreprise"
                         ? t("detail.clientCompany")
@@ -240,11 +230,9 @@ export default function MissionDetailPage({
                   </p>
                 </div>
               </Link>
-              <Link href={`/clients/${mission.client.utilisateurId}`}>
-                <Button variant="ghost" size="sm" className="mt-4 w-full">
+              <Button href={`/clients/${mission.client.utilisateurId}`} variant="ghost" size="sm" className="mt-4 w-full">
                   {t("detail.viewProfile")}
                 </Button>
-              </Link>
             </NoticeCard>
           )}
 
