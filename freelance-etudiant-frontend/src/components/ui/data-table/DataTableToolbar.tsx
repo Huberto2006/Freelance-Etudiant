@@ -2,7 +2,7 @@
 
 import { useId } from "react";
 import type { ReactNode } from "react";
-import { Search, X } from "lucide-react";
+import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Field";
@@ -16,6 +16,7 @@ export function DataTableToolbar({
   placeholderRecherche,
   libelleRecherche,
   filtres,
+  filtresActifs,
   reinitialisable,
   onReinitialiser,
 }: {
@@ -26,6 +27,7 @@ export function DataTableToolbar({
   placeholderRecherche?: string;
   libelleRecherche?: string;
   filtres?: ReactNode;
+  filtresActifs: boolean;
   reinitialisable: boolean;
   onReinitialiser: () => void;
 }) {
@@ -84,7 +86,43 @@ export function DataTableToolbar({
             )}
           </div>
         )}
-        {filtres}
+        {filtres !== undefined && (
+          <details className="group relative">
+            <summary
+              aria-label={
+                filtresActifs
+                  ? t("dataTable.filtersActive")
+                  : t("dataTable.filters")
+              }
+              className="inline-flex min-h-9 cursor-pointer list-none items-center gap-2 rounded-md border border-ink/15 bg-paper-light px-3 text-sm font-medium text-ink transition-colors hover:border-ink/30 hover:bg-ink/[0.03] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink marker:hidden pointer-coarse:min-h-11 [&::-webkit-details-marker]:hidden"
+            >
+              <SlidersHorizontal size={15} aria-hidden="true" />
+              <span>{t("dataTable.filters")}</span>
+              {filtresActifs && (
+                <span
+                  aria-hidden="true"
+                  className="h-1.5 w-1.5 rounded-full bg-ocre"
+                />
+              )}
+              <ChevronDown
+                size={14}
+                aria-hidden="true"
+                className="transition-transform group-open:rotate-180"
+              />
+            </summary>
+            <div className="absolute right-0 z-30 mt-2 w-[min(42rem,calc(100vw-2rem))] rounded-lg border border-ink/10 bg-paper-light p-3 shadow-lg">
+              <p className="mb-2 text-xs font-semibold text-ink-soft">
+                {t("dataTable.filters")}
+                {filtresActifs && (
+                  <span className="ml-2 font-normal text-ocre-dark">
+                    {t("dataTable.filtersActive")}
+                  </span>
+                )}
+              </p>
+              <div className="flex flex-wrap items-center gap-2">{filtres}</div>
+            </div>
+          </details>
+        )}
         {reinitialisable && (
           <Button size="sm" variant="ghost" onClick={onReinitialiser}>
             {t("actions.reset")}

@@ -152,5 +152,34 @@
       "purple": "Créatif, raffiné et premium — Audace et distinction",
       "amber": "Chaleureux, terre cuite et accueillant — Esprit terroir et proximité"
     }
+  },
+  "sessions": {
+    "eyebrow": "Sécurité",
+    "title": "Sessions actives",
+    "description": "Consultez les appareils actuellement connectés à votre compte et déconnectez ceux que vous ne reconnaissez pas.",
+    "currentDeviceBadge": "Cet appareil",
+    "disconnectOthers": "Déconnecter tous les autres appareils",
+    "disconnectAll": "Tout déconnecter",
+    "disconnect": "Déconnecter",
+    "disconnecting": "Déconnexion…",
+    "lastActive": "Dernière activité",
+    "firstConnected": "Connecté le",
+    "ipAddress": "Adresse IP",
+    "deviceType": "Appareil",
+    "otherDevicesCount": "{count} autre(s) appareil(s) connecté(s)",
+    "confirmDisconnectTitle": "Déconnecter cet appareil ?",
+    "confirmDisconnectDesc": "La session sur cet appareil ({device}) sera immédiatement fermée.",
+    "confirmDisconnectOthersTitle": "Déconnecter tous les autres appareils ?",
+    "confirmDisconnectOthersDesc": "Toutes vos sessions actives sur les autres téléphones, ordinateurs ou tablettes seront immédiatement révoquées.",
+    "confirmDisconnectAllTitle": "Déconnecter toutes les sessions ?",
+    "confirmDisconnectAllDesc": "Toutes les sessions de votre compte seront révoquées, y compris celle de cet appareil. Vous devrez vous reconnecter.",
+    "sessionRevokedSuccess": "L'appareil a été déconnecté avec succès.",
+    "othersRevokedSuccess": "Tous les autres appareils ont été déconnectés.",
+    "errLoad": "Impossible de charger la liste des sessions.",
+    "errRevoke": "Impossible de révoquer cette session.",
+    "errRevokeOthers": "Impossible de révoquer les autres sessions.",
+    "errRevokeAll": "Impossible de révoquer toutes les sessions.",
+    "empty": "Aucune session active trouvée.",
+    "securityNotice": "Si vous observez un appareil ou un lieu suspect, déconnectez-le immédiatement et modifiez votre mot de passe pour protéger votre compte."
   }
 }

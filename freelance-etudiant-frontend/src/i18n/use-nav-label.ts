@@ -43,6 +43,7 @@ const CLES: Record<string, string> = {
   Paramètres: "settings",
   "Moyens de paiement": "paymentMethods",
   "Compte Google": "googleAccount",
+  "Sessions actives": "activeSessions",
   Favoris: "favorites",
   Administration: "administration",
   Gestion: "management",

@@ -58,6 +58,8 @@
     "label": "Retour"
   },
   "dataTable": {
+    "filters": "Filtres",
+    "filtersActive": "Filtres actifs",
     "rowsPerPage": "Lignes par page",
     "dateFrom": "Date de début",
     "dateTo": "Date de fin",

@@ -18,6 +18,10 @@ import {
   templatePaiementInitie,
   templatePaiementLibere,
 } from './templates/paiement.template';
+import {
+  EmailNouvelleConnexion,
+  templateNouvelleConnexion,
+} from './templates/nouvelle-connexion.template';
 
 interface ErreurSmtp extends Error {
   code?: string;
@@ -171,6 +175,14 @@ export class EmailService {
 
   async envoyerPaiementLibere(destinataire: string, data: EmailPaiement): Promise<boolean> {
     const { subject, html, text } = templatePaiementLibere(data);
+    return this.envoyerMail(destinataire, subject, html, text);
+  }
+
+  async envoyerAlerteNouvelleConnexion(
+    destinataire: string,
+    data: EmailNouvelleConnexion,
+  ): Promise<boolean> {
+    const { subject, html, text } = templateNouvelleConnexion(data);
     return this.envoyerMail(destinataire, subject, html, text);
   }
 }

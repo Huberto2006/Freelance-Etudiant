@@ -152,5 +152,34 @@
       "purple": "Mamorona, malefaka ary premium — Herim-po sy hasarobidy",
       "amber": "Mafana, tany masaka ary mihaza vahiny — Fanahy tanindrazana sy fifanakaiky"
     }
+  },
+  "sessions": {
+    "eyebrow": "Fiarovana",
+    "title": "Fitaovana mifandray",
+    "description": "Zahao ireo fitaovana mifandray amin'ny kaontinao amin'izao fotoana izao ary tapaho ireo tsy fantatrao.",
+    "currentDeviceBadge": "Ity fitaovana ity",
+    "disconnectOthers": "Atsaharo ny fitaovana hafa rehetra",
+    "disconnectAll": "Atsaharo avokoa",
+    "disconnect": "Atsaharo",
+    "disconnecting": "Manapaka…",
+    "lastActive": "Hetsika farany",
+    "firstConnected": "Nifandray voalohany",
+    "ipAddress": "Adiresy IP",
+    "deviceType": "Fitaovana",
+    "otherDevicesCount": "Fitaovana hafa {count} mifandray",
+    "confirmDisconnectTitle": "Hatsahatra ity fitaovana ity ?",
+    "confirmDisconnectDesc": "Hofaranana avy hatrany ny fidirana amin'ity fitaovana ity ({device}).",
+    "confirmDisconnectOthersTitle": "Hatsahatra ny fitaovana hafa rehetra ?",
+    "confirmDisconnectOthersDesc": "Hofoanana avy hatrany ny fidirana rehetra amin'ny finday, solosaina na takelaka hafa.",
+    "confirmDisconnectAllTitle": "Hatsahatra avokoa ny fidirana rehetra ?",
+    "confirmDisconnectAllDesc": "Hofoanana ny fidirana rehetra amin'ny kaontinao, anisan'izany ity fitaovana ity. Mila miditra indray ianao.",
+    "sessionRevokedSuccess": "Tapaka soa aman-tsara ny fifandraisan'ny fitaovana.",
+    "othersRevokedSuccess": "Tapaka ny fitaovana hafa rehetra.",
+    "errLoad": "Tsy afaka nalaina ny lisitry ny fitaovana.",
+    "errRevoke": "Tsy afaka notapahana ity fitaovana ity.",
+    "errRevokeOthers": "Tsy afaka notapahana ireo fitaovana hafa.",
+    "errRevokeAll": "Tsy afaka nofoanana ny fidirana rehetra.",
+    "empty": "Tsy misy fitaovana hafa mifandray.",
+    "securityNotice": "Raha mahita fitaovana na hetsika mampiahiahy ianao dia tapaho avy hatrany izany ary ovay ny tenimiafinao."
   }
 }

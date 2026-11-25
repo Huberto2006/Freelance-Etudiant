@@ -159,6 +159,7 @@ export function DataTable<T>({
         placeholderRecherche={placeholderRecherche}
         libelleRecherche={libelleRecherche}
         filtres={filtres}
+        filtresActifs={filtresActifs}
         reinitialisable={criteresActifs}
         onReinitialiser={reinitialiser}
       />

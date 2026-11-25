@@ -42,6 +42,7 @@ describe('AuthService - verification email', () => {
       email as unknown as EmailService,
       {} as GoogleTokenVerifierService,
       {} as never,
+      {} as never,
     );
     return { service, users, email };
   }

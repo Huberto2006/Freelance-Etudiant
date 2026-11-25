@@ -33,6 +33,7 @@
     "paymentMethods": "Payment methods",
     "googleAccount": "Google account",
     "favorites": "Favorites",
+    "activeSessions": "Active sessions",
     "administration": "Administration",
     "management": "Management",
     "reports": "Reports",
@@ -97,6 +98,7 @@
     "notifications": "Notifications",
     "paymentMethods": "Payment methods",
     "favorites": "Favorites",
+    "activeSessions": "Active sessions",
     "sectionPreferences": "Preferences",
     "logout": "Log out"
   },

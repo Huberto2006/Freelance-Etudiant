@@ -152,5 +152,34 @@
       "purple": "Creative, refined and premium — Boldness and distinction",
       "amber": "Warm, terracotta and welcoming — Local spirit and closeness"
     }
+  },
+  "sessions": {
+    "eyebrow": "Security",
+    "title": "Active sessions",
+    "description": "View devices currently signed in to your account and disconnect those you do not recognize.",
+    "currentDeviceBadge": "This device",
+    "disconnectOthers": "Sign out all other devices",
+    "disconnectAll": "Sign out everywhere",
+    "disconnect": "Sign out",
+    "disconnecting": "Signing out…",
+    "lastActive": "Last active",
+    "firstConnected": "First signed in",
+    "ipAddress": "IP address",
+    "deviceType": "Device",
+    "otherDevicesCount": "{count} other device(s) connected",
+    "confirmDisconnectTitle": "Sign out this device?",
+    "confirmDisconnectDesc": "The session on this device ({device}) will be terminated immediately.",
+    "confirmDisconnectOthersTitle": "Sign out all other devices?",
+    "confirmDisconnectOthersDesc": "All active sessions on your other phones, computers or tablets will be revoked immediately.",
+    "confirmDisconnectAllTitle": "Sign out of all sessions?",
+    "confirmDisconnectAllDesc": "All sessions on your account, including this device, will be revoked. You will need to sign in again.",
+    "sessionRevokedSuccess": "Device successfully signed out.",
+    "othersRevokedSuccess": "All other devices have been signed out.",
+    "errLoad": "Unable to load active sessions.",
+    "errRevoke": "Unable to revoke this session.",
+    "errRevokeOthers": "Unable to revoke other sessions.",
+    "errRevokeAll": "Unable to revoke all sessions.",
+    "empty": "No active sessions found.",
+    "securityNotice": "If you notice an unrecognized device or suspicious activity, disconnect it immediately and update your password."
   }
 }

@@ -179,6 +179,10 @@ export const BREADCRUMB_ROUTES: Record<string, RouteBreadcrumbNode> = {
     label: "Compte Google",
     parent: "/tableau-de-bord",
   },
+  "/tableau-de-bord/parametres/securite/sessions": {
+    label: "Sessions actives",
+    parent: "/tableau-de-bord",
+  },
   "/tableau-de-bord/parametres/paiements": {
     label: "Moyens de paiement",
     parent: "/tableau-de-bord",

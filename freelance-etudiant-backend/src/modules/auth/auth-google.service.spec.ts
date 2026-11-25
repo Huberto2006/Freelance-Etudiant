@@ -33,6 +33,7 @@ function creer() {
     findByEmailInsensible: jest.fn(),
     create: jest.fn(),
     save: jest.fn(async (u) => u),
+    findById: jest.fn(async () => utilisateur()),
     findByIdOrFail: jest.fn(),
     marquerPremiereConnexion: jest.fn().mockResolvedValue(true),
     definirRoleInitial: jest.fn(),
@@ -52,6 +53,13 @@ function creer() {
     findOne: jest.fn(),
   };
   const google = { verifier: jest.fn().mockResolvedValue(IDENTITE) };
+  const sessionsService = {
+    enregistrerSession: jest.fn().mockResolvedValue({ id: 'mock-session-id' }),
+    rafraichirSession: jest.fn().mockResolvedValue(undefined),
+    estSessionValide: jest.fn().mockResolvedValue(true),
+    revoquerSession: jest.fn().mockResolvedValue(undefined),
+    revoquerToutesSessions: jest.fn().mockResolvedValue({ message: 'ok', revoquees: 1 }),
+  };
   const service = new AuthService(
     users as never,
     jwt as never,
@@ -59,8 +67,9 @@ function creer() {
     {} as never,
     google as never,
     refreshRepo as never,
+    sessionsService as never,
   );
-  return { service, users, jwt, refreshRepo, google };
+  return { service, users, jwt, refreshRepo, google, sessionsService };
 }
 
 describe('AuthService - Google', () => {

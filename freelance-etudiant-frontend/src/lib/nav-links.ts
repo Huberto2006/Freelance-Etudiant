@@ -111,6 +111,10 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
           label: "Compte Google",
         },
         {
+          href: "/tableau-de-bord/parametres/securite/sessions",
+          label: "Sessions actives",
+        },
+        {
           href: "/tableau-de-bord/favoris",
           label: "Favoris",
         },
@@ -183,6 +187,10 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
           label: "Compte Google",
         },
         {
+          href: "/tableau-de-bord/parametres/securite/sessions",
+          label: "Sessions actives",
+        },
+        {
           href: "/tableau-de-bord/favoris",
           label: "Favoris",
         },
@@ -230,6 +238,10 @@ export const navigationParRole: Record<Role, GroupeNav[]> = {
         {
           href: "/tableau-de-bord/profil",
           label: "Mon profil",
+        },
+        {
+          href: "/tableau-de-bord/parametres/securite/sessions",
+          label: "Sessions actives",
         },
       ],
     },

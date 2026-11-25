@@ -33,6 +33,7 @@
     "paymentMethods": "Fomba fandoavana",
     "googleAccount": "Kaontim-Google",
     "favorites": "Tiana",
+    "activeSessions": "Fitaovana mifandray",
     "administration": "Fitantanana",
     "management": "Fitantanana",
     "reports": "Tatitra",
@@ -97,6 +98,7 @@
     "notifications": "Fampandrenesana",
     "paymentMethods": "Fomba fandoavana",
     "favorites": "Tiana",
+    "activeSessions": "Fitaovana mifandray",
     "sectionPreferences": "Safidy",
     "logout": "Hiala"
   },

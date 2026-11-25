@@ -45,6 +45,7 @@ import { RoleDefiniGuard } from './modules/auth/guards/role-defini.guard';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { GroupesModule } from './modules/groupes/groupes.module';
 import { AmitieModule } from './modules/amitie/amitie.module';
+import { SessionsModule } from './modules/sessions/sessions.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -113,6 +114,7 @@ import { HealthController } from './health.controller';
     ContactModule,
     GroupesModule,
     AmitieModule,
+    SessionsModule,
   ],
   controllers: [HealthController],
   providers: [

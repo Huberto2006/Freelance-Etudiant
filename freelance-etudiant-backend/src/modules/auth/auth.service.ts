@@ -41,6 +41,8 @@ import {
 } from "./google-token-verifier.service";
 import { ChoisirRoleDto } from "./dto/choisir-role.dto";
 import type { StringValue } from "ms";
+import type { Request } from "express";
+import { SessionsService } from "../sessions/sessions.service";
 
 const SALT_ROUNDS = 12;
 const RESET_PASSWORD_EXPIRE_MINUTES = 60;
@@ -109,6 +111,7 @@ export class AuthService {
     private readonly googleVerifier: GoogleTokenVerifierService,
     @InjectRepository(RefreshToken)
     private readonly refreshRepo: Repository<RefreshToken>,
+    private readonly sessionsService: SessionsService,
   ) {}
 
   // ------------------------------------------------------------------
@@ -223,7 +226,7 @@ export class AuthService {
     };
   }
 
-  async login(dto: LoginDto): Promise<SessionEmise> {
+  async login(dto: LoginDto, req?: Request): Promise<SessionEmise> {
     this.verifierBlocage(dto.email);
     const utilisateur = await this.usersService.findByEmail(dto.email);
 
@@ -268,6 +271,7 @@ export class AuthService {
       utilisateur.role,
       premiereConnexion,
       utilisateur.langue,
+      req,
     );
   }
 
@@ -291,6 +295,7 @@ export class AuthService {
   async loginAvecGoogle(
     idToken: string,
     acceptLanguage?: string,
+    req?: Request,
   ): Promise<SessionEmise> {
     const identite = await this.googleVerifier.verifier(idToken);
 
@@ -324,6 +329,7 @@ export class AuthService {
       utilisateur.role,
       premiereConnexion,
       utilisateur.langue,
+      req,
     );
   }
 
@@ -444,6 +450,7 @@ export class AuthService {
    */
   async refreshToken(
     refreshToken: string | null | undefined,
+    req?: Request,
   ): Promise<SessionEmise> {
     const refus = () =>
       new UnauthorizedException("Refresh token invalide ou expire");
@@ -459,7 +466,24 @@ export class AuthService {
     } catch {
       throw refus();
     }
-    if (payload.typ !== "refresh" || !payload.jti || !payload.sub) throw refus();
+    if (
+      payload.typ !== "refresh" ||
+      !payload.jti ||
+      !payload.sub ||
+      typeof payload.sid !== "string" ||
+      payload.sid.length === 0
+    ) {
+      throw refus();
+    }
+
+    // Verifie si la session UserSession n'a pas ete revoquee a distance
+    const sessionValide = await this.sessionsService.estSessionValide(
+      payload.sid,
+      payload.sub,
+    );
+    if (!sessionValide) {
+      throw refus();
+    }
 
     const ligne = await this.refreshRepo.findOne({
       where: { id: payload.jti, utilisateurId: payload.sub },
@@ -499,6 +523,8 @@ export class AuthService {
       utilisateur.role,
       false,
       utilisateur.langue,
+      req,
+      payload.sid,
     );
   }
 
@@ -511,11 +537,16 @@ export class AuthService {
         algorithms: ["HS256"],
         ignoreExpiration: true,
       });
-      if (payload.typ === "refresh" && payload.jti) {
-        await this.refreshRepo.update(
-          { id: payload.jti, utilisateurId: payload.sub, revoqueLe: IsNull() },
-          { revoqueLe: new Date() },
-        );
+      if (payload.typ === "refresh") {
+        if (payload.jti) {
+          await this.refreshRepo.update(
+            { id: payload.jti, utilisateurId: payload.sub, revoqueLe: IsNull() },
+            { revoqueLe: new Date() },
+          );
+        }
+        if (payload.sid && payload.sub) {
+          await this.sessionsService.revoquerSession(payload.sid, payload.sub);
+        }
       }
     } catch {
       /* jeton invalide : rien a revoquer */
@@ -528,6 +559,7 @@ export class AuthService {
       { utilisateurId, revoqueLe: IsNull() },
       { revoqueLe: new Date() },
     );
+    await this.sessionsService.revoquerToutesSessions(utilisateurId);
   }
 
   private empreinte(jeton: string): string {
@@ -753,10 +785,10 @@ export class AuthService {
   }
 
   /**
-   * Emet un couple access/refresh. L'access token est court (15 min) et
-   * porte typ=access ; le refresh token porte typ=refresh + jti, est signe
-   * avec un secret DEDIE et son empreinte est enregistree en base (session
-   * revocable, rotation a chaque usage).
+   * Emet un couple access/refresh associe a une session active (user_sessions).
+   * L'access token est court (15 min) et porte typ=access + sid (session ID).
+   * Le refresh token porte typ=refresh + jti + sid, est signe avec un secret DEDIE
+   * et son empreinte est enregistree en base (session revocable, rotation a chaque usage).
    */
   private async emettreSession(
     id: string,
@@ -764,9 +796,13 @@ export class AuthService {
     role: Role,
     premiereConnexion = false,
     langue?: unknown,
+    req?: Request,
+    existingSessionId?: string,
   ): Promise<SessionEmise> {
+    const sessionId = existingSessionId ?? crypto.randomUUID();
+
     const accessToken = this.jwtService.sign(
-      { sub: id, email, role, typ: "access" } satisfies JwtPayload,
+      { sub: id, email, role, typ: "access", sid: sessionId } satisfies JwtPayload,
       {
         expiresIn: (this.configService.get<string>("jwt.expiresIn") ??
           "15m") as StringValue,
@@ -775,7 +811,7 @@ export class AuthService {
 
     const jti = crypto.randomUUID();
     const refreshToken = this.jwtService.sign(
-      { sub: id, email, role, typ: "refresh", jti } satisfies JwtPayload,
+      { sub: id, email, role, typ: "refresh", jti, sid: sessionId } satisfies JwtPayload,
       {
         secret: this.configService.getOrThrow<string>("jwt.refreshSecret"),
         expiresIn: (this.configService.get<string>("jwt.refreshExpiresIn") ??
@@ -785,13 +821,41 @@ export class AuthService {
 
     const decode = this.jwtService.decode(refreshToken) as { exp?: number } | null;
     const refreshExp = decode?.exp;
+    const tokenHash = this.empreinte(refreshToken);
+    const dateExpiration = new Date((refreshExp ?? 0) * 1000);
 
     await this.refreshRepo.insert({
       id: jti,
       utilisateurId: id,
-      tokenHash: this.empreinte(refreshToken),
-      dateExpiration: new Date((refreshExp ?? 0) * 1000),
+      tokenHash,
+      dateExpiration,
     });
+
+    if (existingSessionId) {
+      await this.sessionsService.rafraichirSession(
+        existingSessionId,
+        tokenHash,
+        dateExpiration,
+        req,
+      );
+    } else {
+      const utilisateur = this.usersService.findById
+        ? await this.usersService.findById(id)
+        : null;
+      await this.sessionsService.enregistrerSession(
+        utilisateur ??
+          ({
+            id,
+            email,
+            role,
+            langue: normaliserLangue(langue),
+          } as Utilisateur),
+        tokenHash,
+        dateExpiration,
+        req,
+        sessionId,
+      );
+    }
 
     // Nettoyage opportuniste des sessions expirees de cet utilisateur.
     await this.refreshRepo.delete({

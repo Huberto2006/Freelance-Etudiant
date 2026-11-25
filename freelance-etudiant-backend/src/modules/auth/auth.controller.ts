@@ -113,8 +113,12 @@ export class AuthController {
   @UseGuards(TurnstileGuard)
   @TurnstileActions('connexion')
   @ApiOperation({ summary: 'Connexion' })
-  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
-    const session = await this.authService.login(dto);
+  async login(
+    @Body() dto: LoginDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const session = await this.authService.login(dto, req);
     return this.repondreSession(res, session);
   }
 
@@ -132,12 +136,14 @@ export class AuthController {
   @ApiOperation({ summary: "Connexion ou creation de compte avec Google (jeton d'identite)" })
   async google(
     @Body() dto: GoogleIdTokenDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
     @Headers('accept-language') acceptLanguage?: string,
   ) {
     const session = await this.authService.loginAvecGoogle(
       dto.idToken,
       acceptLanguage,
+      req,
     );
     return this.repondreSession(res, session);
   }
@@ -180,6 +186,7 @@ export class AuthController {
     try {
       const session = await this.authService.refreshToken(
         lireCookie(req, NOM_COOKIE_REFRESH),
+        req,
       );
       return this.repondreSession(res, session);
     } catch (error) {

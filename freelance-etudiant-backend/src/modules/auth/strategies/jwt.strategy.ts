@@ -7,12 +7,14 @@ import {
   JwtPayload,
 } from '../interfaces/authenticated-user.interface';
 import { UsersService } from '../../users/users.service';
+import { SessionsService } from '../../sessions/sessions.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     configService: ConfigService,
     private readonly usersService: UsersService,
+    private readonly sessionsService: SessionsService,
   ) {
     const secret = configService.get<string>('jwt.secret');
     // Correctif de securite : un secret vide ou absent romprait la
@@ -38,6 +40,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!user || user.estSuspendu || !user.estActif) {
       throw new UnauthorizedException('Compte introuvable, suspendu ou desactive');
     }
-    return { id: user.id, email: user.email, role: user.role };
+    if (typeof payload.sid !== 'string' || payload.sid.length === 0) {
+      throw new UnauthorizedException('Session invalide');
+    }
+    const valide = await this.sessionsService.validerEtActualiserActivite(
+      payload.sid,
+      payload.sub,
+    );
+    if (!valide) {
+      throw new UnauthorizedException('Session révoquée ou expirée');
+    }
+    return { id: user.id, email: user.email, role: user.role, sessionId: payload.sid };
   }
 }

@@ -23,4 +23,6 @@ export enum TypeNotification {
   MENTION = 'mention',
   /** La mission d'un client est arrivee a echeance (date limite depassee). */
   MISSION_EXPIREE = 'mission_expiree',
+  /** Connexion detectee depuis un nouvel appareil ou navigateur. */
+  NOUVELLE_CONNEXION = 'nouvelle_connexion',
 }

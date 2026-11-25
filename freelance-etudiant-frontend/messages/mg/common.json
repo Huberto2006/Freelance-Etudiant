@@ -58,6 +58,8 @@
     "label": "Hiverina"
   },
   "dataTable": {
+    "filters": "Sivana",
+    "filtersActive": "Misy sivana ampiasaina",
     "rowsPerPage": "Andalana isaky ny pejy",
     "dateFrom": "Daty fanombohana",
     "dateTo": "Daty famaranana",

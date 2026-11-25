@@ -9,11 +9,13 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleTokenVerifierService } from './google-token-verifier.service';
 import { TurnstileModule } from '../turnstile/turnstile.module';
 import { UsersModule } from '../users/users.module';
+import { SessionsModule } from '../sessions/sessions.module';
 import { RefreshToken } from './entities/refresh-token.entity';
 import type { StringValue } from 'ms';
 @Module({
   imports: [
     UsersModule,
+    SessionsModule,
     TurnstileModule,
     TypeOrmModule.forFeature([RefreshToken]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
