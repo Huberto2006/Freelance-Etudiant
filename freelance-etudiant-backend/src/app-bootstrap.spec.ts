@@ -152,6 +152,15 @@ describe('Bootstrap des modules NestJS (cycle Auth / Sessions / Notifications / 
       } as unknown as Socket;
       await expect(wsJwtGuard.authentifier(socketValide)).resolves.toBe('user-123');
 
+      jest.spyOn(usersService, 'findById').mockResolvedValueOnce({
+        id: 'user-123',
+        email: 'etudiant@kianja.mg',
+        role: Role.ETUDIANT,
+        estActif: true,
+        estSuspendu: true,
+      } as Awaited<ReturnType<UsersService['findById']>>);
+      await expect(wsJwtGuard.authentifier(socketValide)).resolves.toBeNull();
+
       const refreshToken = await jwtService.signAsync(
         {
           sub: 'user-123',
