@@ -1,4 +1,6 @@
-import { registerAs } from '@nestjs/config';
+import { ConfigModule, ConfigService, registerAs } from '@nestjs/config';
+import type { JwtModuleAsyncOptions } from '@nestjs/jwt';
+import type { StringValue } from 'ms';
 
 /**
  * Secrets JWT. Aucun repli par defaut : un secret absent, trop court (en
@@ -36,3 +38,29 @@ export default registerAs('jwt', () => {
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   };
 });
+
+/**
+ * Configuration partagee de JwtModule (AuthModule pour la signature/verification
+ * HTTP, RealtimeModule pour la verification des handshakes WebSocket).
+ * Partager ces options evite que RealtimeModule n'importe AuthModule, ce qui
+ * creait un cycle AuthModule -> SessionsModule -> NotificationsModule -> RealtimeModule -> AuthModule.
+ */
+export const jwtModuleAsyncOptions: JwtModuleAsyncOptions = {
+  imports: [ConfigModule],
+  inject: [ConfigService],
+  useFactory: (configService: ConfigService) => {
+    // Aucun secret de repli : jwt.config.ts refuse deja le demarrage
+    // si JWT_SECRET est absent.
+    const secret = configService.getOrThrow<string>('jwt.secret');
+    const expiresIn = configService.get<string>('jwt.expiresIn') ?? '15m';
+
+    return {
+      secret,
+      signOptions: {
+        expiresIn: expiresIn as StringValue,
+        algorithm: 'HS256' as const,
+      },
+      verifyOptions: { algorithms: ['HS256' as const] },
+    };
+  },
+};
